@@ -1,0 +1,205 @@
+BODY
+{
+}
+TABLE.GridActionFolder
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: white thin;
+    BORDER-LEFT: white thin;
+    BORDER-RIGHT: white thin;
+    BORDER-TOP: black 1px solid;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    WIDTH: 100%
+}
+TD.CellGridActionFolder
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: white thin;
+    BORDER-LEFT: white thin;
+    BORDER-RIGHT: white thin;
+    BORDER-TOP: white thin;
+    COLOR: blue;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 5px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 5px;
+    TEXT-DECORATION: none
+}
+A
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: none
+}
+BODY.BodyListMessages
+{
+    BACKGROUND-COLOR: white;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: normal;
+    MARGIN-LEFT: 0px;
+    MARGIN-TOP: 0px
+}
+TABLE.GridListMessages
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+TD.CellGridListMessages
+{
+    BACKGROUND-COLOR: #99ccff;
+    BORDER-BOTTOM: #066bbd 1px solid;
+    BORDER-LEFT: #066bbd 1px solid;
+    BORDER-RIGHT: #066bbd 1px solid;
+    BORDER-TOP: #066bbd 1px solid;
+    COLOR: blue;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 2px;
+    PADDING-LEFT: 2px;
+    PADDING-RIGHT: 2px;
+    PADDING-TOP: 2px
+}
+A.CellGridListMessages
+{
+    COLOR: blue;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: underline
+}
+TR.Cell2GridListMessages
+{
+}
+TD.CellGridHelpTender
+{
+    BACKGROUND-COLOR: silver;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    WIDTH: 20%
+}
+TABLE.GridHelpTender
+{
+    WIDTH: 100%
+}
+TD.CellGridListTender
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-ALIGN: left;
+    TEXT-DECORATION: none
+}
+TD.Cell1GridListMessages
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: white thin;
+    BORDER-LEFT: white thin;
+    BORDER-RIGHT: white thin;
+    BORDER-TOP: white thin;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: none
+}
+.FontTextMessages
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+.TextLink
+{
+    COLOR: blue;
+    CURSOR: hand;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: underline
+}
+.FontNewMessageUnderline
+{
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: underline
+}
+.FontReadMessageUnderline
+{
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: underline
+}
+.FontNewMessage
+{
+    COLOR: black;
+    CURSOR: hand;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+.FontReadMessage
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+.FontNewMessageNotLink
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+TD.CellGridIntestListTender
+{
+    BACKGROUND-COLOR: #99ccff;
+    COLOR: blue;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    TEXT-ALIGN: left
+}
+TABLE.GridListTender
+{
+    WIDTH: 100%
+}

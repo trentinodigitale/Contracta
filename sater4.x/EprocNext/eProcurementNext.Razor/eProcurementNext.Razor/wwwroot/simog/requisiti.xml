@@ -1,0 +1,15 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xb="xmlbeans.massload.simog.avlp.it">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <xb:inviaRequisiti>
+      <ticket>@@@TICKET@@@</ticket>
+      <indexCollaborazione>@@@INDEX@@@</indexCollaborazione>
+      <id_gara>@@@ID_GARA@@@</id_gara>
+
+        @@@START-REQUISITI@@@
+        @@@REQUISITI@@@
+        @@@END-REQUISITI@@@
+
+    </xb:inviaRequisiti>
+  </soapenv:Body>
+</soapenv:Envelope>

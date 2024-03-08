@@ -1,0 +1,127 @@
+﻿@page "/spid/LoginSSO.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.antiFixationModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using Microsoft.VisualBasic;
+@using System.Globalization
+@model eProcurementNext.Razor.Pages.spid.LoginSSOModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+
+    //'-------------------------------------------------------------------------------------------------------------------------------------------------------
+	//'---- QUESTA PAGINA DEVE ESSERE INVOCATA SOLO DOPO AVER EFFETTUATO UN LOGIN SPID CON SUCCESSO VERIFICANDO LA PRESENZA DELLO SPID CODE IN SESSIONE ------
+	//'-----------------------------------------------------------------------------------------------------------------------------------------
+	string attivaAccessoSSO = CStr(ApplicationCommon.Application["ATTIVA_SSO"]).ToUpper();
+
+	//'-- PER I CLIENTI SENZA L'INTEGRAZIONE SPID ATTIVA BLOCCHIAMO SUBITO
+	if(attivaAccessoSSO != "YES")
+	{
+		htmlToReturn.Write ("ACCESSO DISABILITATO");
+		throw new ResponseEndException(htmlToReturn.Out(), Response,"ACCESSO DISABILITATO");
+	}
+
+	//'-- recupero il Codice Fiscale dalla sessione
+	string CodiceFiscale = CStr(session["SPID_FISCALNUMBER"]);
+	//'CodiceFiscale = "XXXXXXXXX"
+	if(string.IsNullOrEmpty(CodiceFiscale))
+	{
+		htmlToReturn.Write("ACCESSO NON CONSENTITO.ERRORE NEL RECUPERO DEL CODICE FISCALE");
+		throw new ResponseEndException(htmlToReturn.Out(), Response,"ACCESSO NON CONSENTITO.ERRORE NEL RECUPERO DEL CODICE FISCALE");
+
+	}
+
+	TraceLogSPID(CodiceFiscale, "INIT", "1",HttpContext,session);
+	CodiceFiscale = CodiceFiscale.Replace("TINIT-", "");
+
+	//'-- verifico che il parametro non contenga dati pericolosi
+	validate( "CodiceFiscale",CodiceFiscale, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0,HttpContext,session);
+	validate( "idPfu",GetParamURL(Request.QueryString.ToString(), "idpfu"), TIPO_PARAMETRO_NUMERO, CInt(""), "", 0,HttpContext,session);
+
+    string TrustLevel = "alto";
+	string strVirtualDirectory = ApplicationCommon.Application["strVirtualDirectory"];
+	TSRecordSet? rsLOGIN = null;
+	string spidStatus = "SINGLE";
+
+	string strSQL = "select idpfu, pfulogin , pfuidAzi , aziRagioneSociale from profiliutente with(nolock) inner join aziende with(nolock) on pfuidazi = idazi and pfuDeleted = 0 and aziDeleted = 0 where pfuCodiceFiscale = '" + CodiceFiscale.Replace("'", "''") + "' ";
+
+	if(!string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "idpfu"))))
+	{
+		strSQL = strSQL + " and idpfu = " + CStr(CLng(GetParamURL(Request.QueryString.ToString(), "idpfu")));
+		spidStatus = "CONFIRM";
+	}
+
+	CommonDbFunctions cdb = new CommonDbFunctions();
+	rsLOGIN = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+
+	var accessGuid = "";
+	//'-- nel caso sia ritornato un solo utente si accede direttamente
+	if(rsLOGIN.RecordCount == 1)
+	{
+		session["idpfu"] = GetValueFromRS(rsLOGIN.Fields["idpfu"]);
+		TraceLogSPID(CodiceFiscale, spidStatus, "1", HttpContext,session);
+		rsLOGIN.MoveFirst();
+		
+		accessGuid = insertAccessBarrier(session,HttpContext);
+		throw new ResponseRedirectException("../login.asp?redirectback=yes&chiamante=/portale/&strMnemonicoMP=PA&acckey=" + URLEncode(CStr(accessGuid)), Response);
+	}
+
+	void drawContent()
+	{
+	    switch (rsLOGIN.RecordCount)
+	    {
+	        //'-- nel caso l'utente non è presente nel sistema
+	        case 0:
+	            TraceLogSPID(CodiceFiscale, "NOTFOUND", "1", HttpContext, session);
+	            htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+
+	            htmlToReturn.Write("<p>");
+
+	            htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato. La sua utenza non risulta nel sistema. Proceda con il censimento o al completamento delle sue informazioni collegandosi con la terna applicativa"));
+	            htmlToReturn.Write("</p>");
+
+	            htmlToReturn.Write("<br/>");
+
+	            htmlToReturn.Write($@"<a class=""button"" onclick=""logout();"" href=""#"" >Torna al login</a>");
+	            htmlToReturn.Write("</div>");
+	            return;
+	        case > 1:
+	        {
+	            TraceLogSPID(CodiceFiscale, "MULTI", "1", HttpContext, session);
+	            rsLOGIN.MoveFirst();
+
+	            htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+	            htmlToReturn.Write("    <p>");
+	            htmlToReturn.Write(ApplicationCommon.CNV("La sua utenza risulta collegata alle seguenti Aziende. Per proseguire e' necessario selezionarne una"));
+	            htmlToReturn.Write($@"    </p><br/><ul class=""ListaEnti"">");
+	            for (var i = 1; i <= rsLOGIN.RecordCount; i++)
+	            {
+	                htmlToReturn.Write($@"<li class=""Ente"">");
+	                //'-- Chiamo me stesso con la stessa querystring ( per non perdermi parametri eventualmente passanti ) e con l'aggiunta dell'idpfu scelto dalla lista delle aziende
+	                htmlToReturn.Write($@"<a href=""LoginSSO.asp?idpfu=" + CStr(rsLOGIN["idpfu"]) + $@"&" + GetQueryStringFromContext(Request.QueryString) + $@""">");
+	                htmlToReturn.Write(HtmlEncode(CStr(rsLOGIN["aziRagioneSociale"])));
+	                htmlToReturn.Write("</a>");
+	                rsLOGIN.MoveNext();
+	            }
+
+	            htmlToReturn.Write("</ul></div>");
+	            htmlToReturn.Write($@"<br/><a class=""button"" onclick=""logout();"" href=""#"">Torna al login</a>");
+	            return;
+	        }
+	    }
+	}
+
+	drawContent();	
+
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,271 @@
+﻿@page "/CTL_LIBRARY/CHAT/Chat.asp"
+@*@using ADODB*@
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.CommonModule.Const;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.HTML.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.CHAT.ChatModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@*<!-- #INCLUDE FILE="../functions/security.inc" -->*@
+@{
+
+    validate( "ACTION", GetParamURL(Request.QueryString.ToString(), "ACTION") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate( "Room", GetParamURL(Request.QueryString.ToString(), "Room") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate( "Time", GetParamURL(Request.QueryString.ToString(), "Time") , TIPO_PARAMETRO_DATA, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+    //'--Response.ContentType = "text/event-stream"
+
+    //on error resume next
+
+    bool WriteLog = false;
+    string strSQL = string.Empty;
+    TSRecordSet rs;
+
+    if  (!IsEmpty(session[eProcurementNext.Session.SessionProperty.IdPfu]) && CInt(session[eProcurementNext.Session.SessionProperty.IdPfu]) > 0)
+    {
+        bool Resp = false;
+        string Action = GetParamURL(Request.QueryString.ToString(), "ACTION");
+        string Room   = GetParamURL(Request.QueryString.ToString(), "ROOM"  );
+        string MyTime   = GetParamURL(Request.QueryString.ToString(), "TIME"  );
+        string? MSG = GetValueFromForm(Request, "AF_CHAT_MESSAGE");
+
+        if (string.IsNullOrEmpty(MSG) )
+        {
+            MSG = GetValueFromForm(Request, "AF_CHAT_MESSAGE_DOC");
+        }
+
+        MSG = Strings.Left(MSG, 1000);
+        MSG = bonificaMSG(MSG);
+
+        //'-- apro l'oggetto JSON in risposta'
+        htmlToReturn.Write("{");
+
+        var sqlParams = new Dictionary<string, object?>();
+        //'-- se non ho indicato una azione allora voglio aggiornare il contenuto delle Rooms'
+        if (string.IsNullOrEmpty(Action))
+        { 
+            int NumNotRead;
+            string LastTime = string.Empty;
+
+            NumNotRead = 0;
+
+            //'------------------------------------------------------------------------------------------------------------------------'
+            //'-- recupero tutte le stanze non OLD dove � coinvolto l'utente e per ogni stanza gli dico il numero di messaggi non letti'
+            //'------------------------------------------------------------------------------------------------------------------------'
+            sqlParams.Add("@IdPfu", CInt(session[eProcurementNext.Session.SessionProperty.IdPfu]));
+            sqlParams.Add("@MyTime", MyTime);
+            strSQL = "exec CHAT_ROOMS_USER @IdPfu, @MyTime";
+            rs = cdf.GetRSReadFromQuery_(strSQL , ApplicationCommon.Application["ConnectionString"], sqlParams);
+
+            if (rs.RecordCount > 0)
+            {
+                //'-- apro il vettore di oggetti che rappresentano le stanze'
+                htmlToReturn.Write($@"""ROOMS"":[");
+
+                rs.MoveFirst();
+                for (int i = 1; i <= rs.RecordCount; i++)
+                { //to rs.recordcount
+                    htmlToReturn.Write($@"{{""Name"":""" + CStr(rs["Title"]) + $@""", ""ID"":" +  CStr(rs["idHeader"]) + $@" ,""Num_Msg"":" + CStr(rs["NumNotRead"]) + $@",""Stato"":""" + CStr(rs["Chat_Stato"]) + $@""" }} ");
+
+                    if (i < rs.RecordCount)
+                    {
+                        htmlToReturn.Write(",");
+                    }
+
+                    NumNotRead = NumNotRead + CInt(rs["NumNotRead"]!);
+                    LastTime = CStr(rs["LastTime"]);
+
+                    rs.MoveNext();
+                }      
+
+                htmlToReturn.Write("]");
+
+                //'-- recupero il totale dei messaggi non letti'
+                htmlToReturn.Write( $@",""NumNotRead"":" +  NumNotRead);
+
+                htmlToReturn.Write( $@",""LastTime"":""" + LastTime + $@"""");
+
+
+                Resp = true;
+                WriteLog = true;
+            }
+        }
+
+        //'----------------------------------------------'
+        //'-- se devo inserire un messaggio in una chat  
+        //'----------------------------------------------'
+        if (Action == "NEW_MSG" && !string.IsNullOrEmpty(Room))
+        {
+            //'-- inserisco se lo stato della stanza è OPEN'
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CInt(session[eProcurementNext.Session.SessionProperty.IdPfu]));
+            sqlParams.Add("@Room", CInt(Room));
+            sqlParams.Add("@MSG", MSG);
+            strSQL = "exec CHAT_ROOM_ADD_MSG @IdPfu, @Room, @MSG";
+            cdf.Execute(strSQL , ApplicationCommon.Application["ConnectionString"], parCollection: sqlParams);
+
+            WriteLog = true;
+        }
+
+        //'----------------------------------------------'
+        //'-- se devo inserire un messaggio IN/ OUT in una chat  
+        //'----------------------------------------------'
+        if (( Action == "IN" ||  Action == "OUT" ) && !string.IsNullOrEmpty(Room) ) 
+        { 
+            //'-- inserisco se lo stato della stanza � OPEN'
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CInt(session[eProcurementNext.Session.SessionProperty.IdPfu]));
+            sqlParams.Add("@Room", CInt(Room));
+            sqlParams.Add("@Action", Action);
+            strSQL = "exec CHAT_ROOM_IN_OUT_USER @IdPfu, @Room, @Action";
+            cdf.Execute(strSQL, ApplicationCommon.Application["ConnectionString"], parCollection: sqlParams);
+
+            WriteLog = true;
+        }
+
+        //'-------------------------------------------------------------------------------------------'    
+        //'-- se ho passato il numero di una Room allora recupero tutti i messaggi dalla data indicata
+        //'-------------------------------------------------------------------------------------------'    
+        //'--non entrare con IN/OUT
+        if ( !string.IsNullOrEmpty(Room) && Action != "NEW_MSG"  && Action != "IN" && Action != "OUT" ){
+
+            //'-- se � passato time prendo tutti i messaggi della stanza con la data superiore altrimenti tutti i messaggi della stanza'
+            //'-- tutti i messaggi che hanno una data superiore all'ultimo accesso sulla stanza avranno una classe NOT_READ'
+            //'-- aggiorno la data ultima consultazione della stanza per l'utente in sessione'
+
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CInt(session[eProcurementNext.Session.SessionProperty.IdPfu]));
+            sqlParams.Add("@Room", CInt(Room));
+            sqlParams.Add("@MyTime", MyTime);
+            strSQL = "exec CHAT_ROOM_GET_MSGS @IdPfu, @Room, @MyTime";
+            rs = cdf.GetRSReadFromQuery_(strSQL , ApplicationCommon.Application["ConnectionString"], sqlParams);
+
+            if (rs.RecordCount > 0)
+            {
+                rs.MoveFirst();
+
+                //'-- '
+                if (Resp == true){
+                    htmlToReturn.Write(",");
+                }else{
+                    htmlToReturn.Write($@"""LastTime"":""" + CStr(rs["LastTime"]) + $@""",");
+                }
+
+                //'-- apro i messaggi della chat
+                htmlToReturn.Write($@"""CHAT"":""");
+
+                for (int i = 1; i <= rs.RecordCount; i++)
+                {
+                    MSG = "";
+
+                    //'-- MESSAGGIO'
+                    MSG = MSG +  $@"<div class=""AF_CHAT_MSG_OUT " + CStr(rs["Profilo"])  + $@"_OUT"" id=""CHAT_MSG_" + CStr(rs["id"]) + $@""" >"; //'& vbcrlf
+                    MSG = MSG +  $@"<div class=""AF_CHAT_MSG " +  CStr(rs["NotRead"])  + $@" " +  CStr(rs["Profilo"])  + $@""" id=""CHAT_MSG_" + CStr(rs["id"]) + $@""" >"; //'& vbcrlf
+
+                    //'-- azienda'
+                    MSG = MSG +  $@"<div class=""AF_CHAT_MSG_AZI"" >" + HtmlEncode(CStr(rs["aziRagioneSociale"])) + $@"</div>"; //'& vbcrlf
+
+                    //'-- utente'
+                    MSG = MSG +  $@"<div class=""AF_CHAT_MSG_USER"" >" + HtmlEncode( CStr(rs["pfuNome"]) ) + $@"</div>"; //'& vbcrlf        
+
+                    //'-- Messaggio'
+                    MSG = MSG +  $@"<div class=""AF_CHAT_MSG_TXT"" >" + HtmlEncode( CStr(rs["Message"]) )  + $@"</div>"; //'& vbcrlf
+
+                    //'--close'                
+                    MSG = MSG +  $@"</div>"; //'& vbcrlf
+                    MSG = MSG +  $@"</div>"; //'& vbcrlf
+
+                    //'-- orario'
+                    if ( CStr(rs["Type"]) != "IN" && CStr(rs["Type"]) != "OUT"){
+                        MSG = MSG +  $@"<div class=""AF_CHAT_MSG_TIME  " + CStr(rs["NotRead"] ) + $@"_TIME"" >" + HtmlEncode(CStr(rs["DataIns"])) + "</div>"; //'& vbcrlf
+                    } else {
+                        MSG = MSG +  $@"<div class=""AF_CHAT_MSG_TIME_" + CStr(rs["Type"]) + " " +  CStr(rs["NotRead"])  + $@"_TIME"" >" + HtmlEncode(CStr(rs["DataIns"])) + "</div>"; //'& vbcrlf
+                    }
+
+                    MSG = MSG.Replace($@"\" ,  $@"\\" );
+                    MSG = MSG.Replace($@"""" , $@"\""" );
+                    MSG = MSG.Replace($@"'" , $@"'" );
+                    MSG = MSG.Replace("\n", "<br>");
+                    MSG = MSG.Replace(Environment.NewLine, "<br>");
+                    //MSG = replace( MSG , vbcr ,  "<br>" )
+                    //MSG = replace( MSG , vblf ,  "<br>" )
+
+                    htmlToReturn.Write(MSG);
+
+                    rs.MoveNext();
+                }        
+
+                //'-- chiouso la chat'
+                htmlToReturn.Write($@"""");
+
+                Resp = true;
+                WriteLog = true;
+            }
+
+            //'-- verifico se c'� un cambiamento sulla chat dall'ultima data
+            sqlParams.Clear();
+            sqlParams.Add("@Room", CInt(Room));
+            sqlParams.Add("@MyTime", MyTime);
+            strSQL = "exec CHAT_ROOM_GET_INFO @Room, @MyTime";
+            rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application["ConnectionString"], sqlParams);
+            if (rs.RecordCount > 0)
+            {
+                rs.MoveFirst();
+                    
+                //'-- '
+                if (Resp == true ){
+                    htmlToReturn.Write(",");
+                }else{
+                    htmlToReturn.Write($@"""LastTime"":""" + rs.Fields["LastTime"] + @""",");
+                }
+            
+                htmlToReturn.Write($@"""Stato"":""" + rs.Fields["Chat_Stato"] + @"""");
+            }
+        }
+    
+        //'-- chiudo l'oggetto JSON'
+        htmlToReturn.Write("}");
+
+        if (WriteLog)
+        {
+        @*//%>      
+        //    <!-- #INCLUDE FILE="../functions/log.inc" --> //TODO: implemenrare log.inc
+        //<%*@
+        }
+
+    }
+
+    string bonificaMSG( string msg )
+    {
+        string strToReturn = string.Empty;
+        string caratteriValidi = $@" 0123456789-qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNMèé[+*]ò@à°#ù;,:._^ì?'=|\!""£$%&/()=€ "+ Environment.NewLine;
+
+        if (!string.IsNullOrEmpty(msg))
+        {
+            for (int i = 1; i <= msg.Length ; i++)
+            {
+                string carattere = Strings.Mid(msg, i, 1);
+
+			    //'-- se il carattere rientra nel subset consentito lo aggiunto all'output
+			    if ( caratteriValidi.Contains(carattere, StringComparison.Ordinal) )
+                {
+				    strToReturn = $"{strToReturn}{carattere}";
+			    }
+		    }
+	    }
+
+        return strToReturn;
+    }
+}
+@Html.Raw(htmlToReturn.Out())

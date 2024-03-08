@@ -1,0 +1,376 @@
+﻿@page "/CTL_LIBRARY/functions/FIELD/UploadAttachSigned.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.Extensions.Primitives;
+@using Microsoft.VisualBasic;
+@using System.Collections.Specialized
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.FIELD.UploadAttachSignedModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    //'-- *********************************************************************
+    //'-- * Versione=1&data=2014-05-13&Attvita=57183&Nominativo=Federico  *
+    //'-- * Versione=2&data=2018-11-23&Attvita=215854&Nominativo=Federico  *
+    //'-- *********************************************************************
+
+    validate( "TABLE", CStr(GetParamURL(Request.QueryString.ToString(), "TABLE")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext, session);
+    validate( "IDDOC", CStr(GetParamURL(Request.QueryString.ToString(), "IDDOC")) , TIPO_PARAMETRO_NUMERO, SOTTO_TIPO_VUOTO, "", 0,HttpContext, session);
+
+    string strPage;
+    strPage = "SaveAttachSigned.asp";
+
+    string strAddIdpfu = string.Empty;
+
+    //'-- se è presente la sys VIRTUALDIR_FIRME e quindi la virtual directory con relativo pool
+    if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["VIRTUALDIR_FIRME"]).Trim())) {
+
+        strPage = "/" + CStr(ApplicationCommon.Application["VIRTUALDIR_FIRME"]).Trim() + "/CTL_LIBRARY/functions/FIELD/" + strPage;
+
+        if (Strings.Right(GetQueryStringFromContext(Request.QueryString), 1) == "&")
+        {
+            strAddIdpfu = "UFP=" + CStr(session["IdPfu"]);
+        }
+        else
+        {
+            strAddIdpfu = "&UFP=" + CStr(session["IdPfu"]);
+        }
+    }
+
+    if (!string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "PAGE"))) 
+	{
+        strPage = GetParamURL(Request.QueryString.ToString(), "PAGE");
+    }
+
+    string idDoc = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+    string tableSign = GetParamURL(Request.QueryString.ToString(), "TABLE");
+    string paramCif = GetParamURL(Request.QueryString.ToString(), "CIF");
+
+    string idDocX = idDoc;
+
+    if (!string.IsNullOrEmpty(paramCif)) 
+	{
+        string[] vetCif = Strings.Split(paramCif, "~");
+
+        if ((vetCif.Length - 1) > 0) 
+		{
+            validate("CIF_TABLE", CStr(vetCif[1]), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+            string strSQL = "select idDoc from " + vetCif[1] + " where id = " + CStr(idDoc);
+            TSRecordSet rsSign1 = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+
+            if (rsSign1.RecordCount > 0)
+			{
+                rsSign1.MoveFirst();
+
+                idDocX = CStr(rsSign1["idDoc"]);
+            }
+        }
+    }
+
+    string addJumpSign = string.Empty;
+
+    if (!string.IsNullOrEmpty(idDoc) && ( string.IsNullOrEmpty(tableSign) || tableSign.ToUpper() == "CTL_DOC" || tableSign.ToUpper() == "CTL_DOC_SIGN" || tableSign.ToUpper() == "DOCUMENT_MICROLOTTO_FIRME" )) 
+	{
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@idDocX", CInt(idDocX));
+		string strSQL = "select tipodoc from CTL_DOC with(nolock) where id = @idDocX";
+
+        //'response.write strSQL
+        //'response.end
+
+        TSRecordSet rsSign = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rsSign.RecordCount > 0)
+		{
+            rsSign.MoveFirst();
+
+            string tipoDocSign = CStr(rsSign["tipodoc"]);
+
+            string? paramJumpSign = Get_Func_Property(tipoDocSign, "jumpsign", "DefaultValue", "NO", -1);
+
+            //'response.write paramJumpSign
+            //'response.end
+
+            if (paramJumpSign is not null && paramJumpSign.ToUpper() == "YES") 
+			{
+                addJumpSign = "&jumpsign=yes";
+            }
+        }
+    }
+
+    //'-- se è attiva la sys di jumpsign la aggiungiamo come costante alla querystring passata. qualsiasi file verrà accettato a prescindere dalla firma e del suo contenuto
+    if (CStr(ApplicationCommon.Application["JUMP_SIGN"]).ToUpper() == "YES") {
+        addJumpSign = "&jumpsign=yes";
+    }	
+
+    //'if ucase(cstr(Application("ATTIVA_ATTACH_64"))) = "YES" then
+    //'if ucase(cstr(Application("ATTIVA_ATTACH_64"))) = "YES" or request.querystring("TEST_ATTACH") = "1" then
+	TSRecordSet rsSYS = cdf.GetRSReadFromQuery_("select id from LIB_Dictionary with(nolock) where dzt_name = 'SYS_ATTIVA_ATTACH_64' and DZT_ValueDef = 'YES'", ApplicationCommon.Application.ConnectionString);
+
+    if (rsSYS.RecordCount > 0 || GetParamURL(Request.QueryString.ToString(), "TEST_ATTACH") == "1")
+	{
+        string accessGuid = insertAccessBarrier(session, HttpContext);
+
+        string strNomeDirectory = CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE_ALLEGATI"]);
+
+        if (string.IsNullOrEmpty(CStr(strNomeDirectory))) 
+		{
+            strNomeDirectory = "AF_WebFileManager";
+        }
+
+        throw new ResponseRedirectException($@"/" + strNomeDirectory + "/proxy/1.0/uploadattachsigned?acckey=" + URLEncode(CStr(accessGuid)) + "&" + GetQueryStringFromContext(Request.QueryString) + strAddIdpfu + addJumpSign + "&idPfu=" + CStr(session["idPfu"]), Response);
+    }
+
+    string? MAX_FILE_NAME = Get_Func_Property("Upload", "file", "MAX_FILE_NAME", "100", -1);
+
+@*
+<html>
+
+<head>
+<meta http-equiv=content-type content=text/html; charset=utf-8>
+<style>
+#loading{
+		position:absolute;
+		width:120%;
+		height:120%;
+		left:0px;
+		top:0px;
+		z-index:100;
+		background-color: #f1f1f1;
+		font:20px Arial, Helvetica, sans-serif;
+		color:black;
+		padding:20px;
+		display:none;
+		
+		/* Valido per Mozilla, Opera, Safari, Chrome */
+		opacity: 0.9;
+
+		/* Valido per gli antichi MS Explorer  5-7 */
+		filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
+
+		/* Valido per MS Explorer 8 e successivi */
+		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
+}
+</style>
+
+<link rel=stylesheet href="../../Themes/field.css" type="text/css">
+
+<%
+	if Request.QueryString("TITLE") = "" then
+%>
+<title>UpLoad Attach Signed</title>
+<%
+else
+
+	response.write "<title>" &  Request.QueryString("TITLE") & "</title>"
+
+end if
+%>
+</head>
+
+<body>
+
+<div id="loading">
+	<img src="../../images/ajax-loading.gif" alt="loading"/>
+<%
+	response.write cnv("Caricamento dell'allegato in corso. Per file di dimensioni elevate l'operazione puo richiedere qualche minuto")
+	'Loading...	
+%>
+</div>
+
+<form method="POST" ENCTYPE="multipart/form-data" action="<%=strPage%>?<%=Request.QueryString & strAddIdpfu & addJumpSign%>" id="form1" name="form1">
+
+  <table border="0" width="100%" height="100%" cellspacing="0" cellpadding="4">
+    <tr>
+      <td width="100%" height="100%" >
+        <table border="1" cellspacing="0" cellpadding="0" width="100%" height="100%" >
+          <tr>
+            <td width="100%" height="100%" valign="middle" align="center" >
+
+
+					
+
+								
+				<p><font face="Arial" size="2" color="#0000FF"><i><%=cnv("Selezionare un file p7m e premere ok.")%>
+				</i></font></p>
+				<p><font face="Arial" size="2" color="#0000FF"><i><%=cnv("Premendo sul bottone ""Sfoglia..."" si apre la finestra che consente la selezione del file")%>
+				</i></font></p>
+				<p><font face="Arial" size="2" color="#0000FF"><i>&nbsp;</i></font></p>					
+
+
+			</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+	<tr>
+		  <td width="100%">
+			<input type="file" name="FILE1" id="FILE1" value="" size="50" class="FldHier_button"  >
+		  </td>
+	</tr>
+	
+	<tr>
+		<td width="100%">
+			<input class="FldHier_button" type="button" value="<%=cnv("Ok")%>" name="B1" onclick="CheckTypeAttach();"/>
+			<input class="FldHier_button" type="reset" value="<%=cnv("Pulisci")%>" name="B2"/>
+		</td>
+	</tr>
+
+  </table>
+</form>
+
+</body>
+
+</html>
+
+<script language="javascript">
+
+window.onload=onOnLoad;
+
+/* function CheckFileSize restituisce 
+	-1 taglia non valida/Non trovo il file/Seleziona prima il file
+	 0  tutto ok
+	 1 controllo non possibile
+*/
+function CheckFileSize() {
+
+    var input, file;
+
+    if (typeof window.FileReader !== 'function') {
+        return 0;
+    }
+
+    input = document.getElementById('FILE1');
+    if (!input) {
+        alert('<%=CNV("Non trovo il file")%>');
+        return -1;
+    }
+    else if (!input.files) {
+        return 0;
+    }
+    else if (!input.files[0]) 
+	{
+        //alert('<%=CNV("Seleziona prima il file")%>');
+        //return -1;
+		return 0; // bisogna permettere di non selezionare il file così da poter cancellare un file inserito per sbaglio
+    }
+    else {
+        
+        file = input.files[0];
+        var lSizeMaxAttach = <%=application("MAX_SIZE_ATTACH")*1024*1024%>;
+        if ( file.size > lSizeMaxAttach ){
+			alert('<%=CNV("La dimensione del file supera il massimo consentito")%>');
+			return -1 
+        }
+        
+        return 0;
+        
+	}
+}
+
+function CheckTypeAttach(){
+	
+	//I controlli js sono una facility per l'utente, non un controllo di sicurezza (che è gestito server)
+	
+	//controllo dimensione file
+	var r = true;
+	var nCheckSize = CheckFileSize();
+	
+	if ( nCheckSize == -1 )
+		return;
+	
+	if ( nCheckSize == 1 ){
+		
+		var r=confirm('<%=CNV("Controllo dimensione del file non supportato dal tuo browser. Vuoi Continuare")%>');
+
+	}
+	
+	if ( r == true )
+	{
+	
+		var nomeFile=document.form1.FILE1.value;
+		if ( nomeFile != '' )
+		{
+			var l=nomeFile.length	
+			
+		
+			if ( l > <%=MAX_FILE_NAME%> )
+			{
+				alert('<%=replace(cnv("Attenzione, il nome del file selezionato supera il limite di X caratteri definito nel sistema, per proseguire e' necessario rinominare il file prima di selezionarlo"), "'","\'")%>');
+				return; //annulliamo l'upload
+			}
+				
+			
+		}
+	
+		var strNameAttach=document.form1.FILE1.value;
+		var l=strNameAttach.length
+		var strExt=strNameAttach.substring(l-3, l);
+	
+		strExt=strExt.toUpperCase()
+		
+		<%	
+			if cstr(request.querystring("SIGN_OR_ATTACH")) = "" then
+		%>
+			
+			if (strExt != 'P7M'  &&  strExt != 'PDF'  ){
+				alert('<%=replace(cnv("tipo allegato non accettato"),"'","\'")%>');
+				return;
+			}
+			
+		<%
+			end if
+		%>
+
+		document.getElementById('loading').style.display = 'block';
+		document.form1.submit();
+	}
+	
+}
+
+
+function onOnLoad()
+{
+	try
+	{	
+		windowResize();
+		window.focus();
+	}
+	catch(e)
+	{
+	}
+}
+
+function windowResize()
+{
+	try
+	{
+		var contentWidth = document.getElementById("form1").offsetWidth;
+		var contentHeight = document.getElementById("form1").offsetHeight;
+		window.resizeTo(contentWidth+150,contentHeight+150);
+	}
+	catch(e){}
+}
+
+var sessionvars = "&session_15 = <%=session(15)%>&session_16=<%=session(16)%>&session_17=<%=session(17)%>&session_18=<%=session(18)%>&session_19=<%=session(19)%>&session_20=<%=session(20)%>&session_21=<%=session(21)%>&session_22=<%=session(22)%>"
+
+//document.location = "/afwebservice/proxy/1.0/uploadattachsigned?<%=Request.QueryString & strAddIdpfu & addJumpSign%>&idPfu=<%=cstr(session("idPfu"))%>" + sessionvars;
+
+</script>
+*@
+}
+@Html.Raw(htmlToReturn.Out());

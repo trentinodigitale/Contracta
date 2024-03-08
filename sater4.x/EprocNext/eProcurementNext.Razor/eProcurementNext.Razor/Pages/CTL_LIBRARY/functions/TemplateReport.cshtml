@@ -1,0 +1,17 @@
+﻿@page "/CTL_LIBRARY/functions/TemplateReport.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.TemplateReportModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+
+
+}@Html.Raw(htmlToReturn.Out())

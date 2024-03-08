@@ -1,0 +1,119 @@
+[2023-01-18 17:50]
+Aggiornare file appsettings.json del web, chiave "Redirect". Riportare tutti i valori presenti sul master. non sono necessarie personalizzazioni
+
+[2023-01-19 11:00]
+Aggiornare file appsettings.json del web, chiave "Redirect". Riportare tutti i valori presenti sul master. non sono necessarie personalizzazioni
+
+[2023-01-30 17:40]
+Aggiornare file appsettings.json del web, nuova chiave "DB_PROFILER_EXEC_TIME" (aggiungere dopo DB_PROFILER_REFRESH, con default = 5)
+
+[2023-02-09 11:50]
+Aggiornare file appsettings.json del web, nuova pagina "*/SSO/checksso.asp" nella chiave "CheckSessionExcludePages"
+
+[2023-02-09 15:00]
+Aggiornare file appsettings.json del web, chiave "Redirect". Riportare tutti i valori presenti sul master. non sono necessarie personalizzazioni. c'era un errore sull'ultimo pezzetto
+
+[2023-02-22 12:00]
+Cancellare dal server di destinazione ( dalla directory web ) la DLL response
+
+[2023-02-23 13:00]
+Aggiornare file appsettings.json del web, nuova chiave "LayoutVersion". 
+
+[2023-02-23 13:00]
+Modifica file appsettings.json del web, aggiornamento della chiave "MODULI_GRUPPI". NON aggiornare per Regione Puglia!!!
+
+[2023-02-24 16.00]
+Modifica a file appsettings.json del web, aggiunta della chiave DebugFilterString tra le impostazioni di DebugTrace prima di //Configurazioni
+
+[2023-02-27 13:00]
+Aggiornare file appsettings.json del web, nuova chiave "JavascriptApiConstants". 
+
+[2023-03-01 12:00]
+Aggiornare file appsettings.json del web, nuova chiave "WebApiServer". 
+
+[2023-03-06 15:40]
+Aggiornare file appsettings.json del web, è stata eliminata la chiave padre "Email" ed è stata lasciata solo la chiave "Chilkat"
+
+[2023-03-09 15:00]
+Aggiornati file wwwroot:
+	- \CTL_LIBRARY\JScript\jquery\jquery-ui.css
+	- \CTL_LIBRARY\JScript\main.js
+	- \CustomDoc\JSApp\AZI_TO_DELETE_VERIFICATO.js (added)
+	- \CustomDoc\JSApp\BANDO_GARA.js
+	- \CustomDoc\JSApp\BANDO_SEMPLIFICATO.js
+	- \CustomDoc\JSApp\Carrello_ME.js
+	- \CustomDoc\JSApp\CONFIG_MODELLI.js
+	- \CustomDoc\JSApp\CONFIG_MODELLI_LOTTI.js
+	- \CustomDoc\JSApp\CONVENZIONE.JS
+	- \CustomDoc\JSApp\CONVENZIONE_ADD_PRODOTTI.js
+	- \CustomDoc\JSApp\CONVENZIONE_DEL_PRODOTTI.js
+	- \CustomDoc\JSApp\CONVENZIONE_PRZ_PRODOTTI.js
+	- \CustomDoc\JSApp\CONVENZIONE_UPD_PRODOTTI.js
+	- \CustomDoc\JSApp\DASHBOARD_VIEW_FORNITORI.js (added)
+	- \CustomDoc\JSApp\DM_POPOLAMENTO.js (added)
+	- \CustomDoc\JSApp\ESITO_AMMESSA.JS
+	- \CustomDoc\JSApp\ESTRAZIONE_LISTINI_CONVENZIONI.js (added)
+	- \CustomDoc\JSApp\GESTIONE_ESTRAZIONE_LISTINI_CONVENZIONI.js (added)
+	- \CustomDoc\JSApp\ISTANZA_AlboFornitori_RP.js 
+	- \CustomDoc\JSApp\ISTANZA_AlboLavori_RP.js
+	- \CustomDoc\JSApp\ISTANZA_AlboProf_RP.js
+	- \CustomDoc\JSApp\ISTANZA_SDA_RP.js
+	- \CustomDoc\JSApp\LISTINO_CONVENZIONE.js
+	- \CustomDoc\JSApp\LISTINO_ORDINI.js
+	- \CustomDoc\JSApp\LISTINO_ORDINI_OE.js
+	- \CustomDoc\JSApp\MODULO_TEMPLATE_REQUEST_VER2.js
+	- \CustomDoc\JSApp\NUOVA_PROCEDURA.js
+	- \CustomDoc\JSApp\ODA.js
+	- \CustomDoc\JSApp\OFFERTA.js
+	- \CustomDoc\JSApp\PARAMETRI_CONTROLLO_INIPEC.js (added)
+	- \CustomDoc\JSApp\PARAMETRI_ESTRAZIONE_LISTINI_CONVENZIONI.JS (added)
+	- \CustomDoc\JSApp\REPORT_LISTA_PROCEDURE_ENTE.js (added)
+	- \CustomDoc\JSApp\RICHIESTA_CIG.js
+	- \CustomDoc\JSApp\RIFERIMENTI.js (added)
+	- \CustomDoc\JSApp\TEMPLATE_REQUEST.js
+
+[2023-03-09 15:30]
+Aggiornare file appsettings.json del web, aggiornata chiave "CheckSessionExcludePages". 
+
+[2023-03-16 15:25]
+Aggiornare file appsettings.json del web aggiunta pagina "*/CTL_LIBRARY/DOCUMENT/DownloadAttach.asp" alla chiave "CheckSessionExcludePages"
+
+[2023-03-21 11.30]
+Aggiornare file appsettings.json del web con sezione "RegistroImprese".
+Eliminare EprocurementNext.RegistroImprese.dll
+Aggiornare il file System.ServiceModel.Primitives
+
+[2023-03-22 09.20]
+Aggiornare file appsettings.json del web, sezione "CheckSessionExcludePages", aggiunta riga "*/Report/CSV_Lotti.asp"
+
+[2023-03-27 15.00]
+Eliminare directory request_files e suo contenuto
+Eliminare tutte le pagine .asp presenti in tutti path e sotto path a partire da wwwroot/*
+
+
+[2023-04-03 12.50]
+Aggiornare file appsettings.json del web, sezione "CheckSessionExcludePages", aggiunta riga "*/BACKOFFICE/loginportale.asp"
+
+[2023-04-06 14.30]
+Aggiornare file appsettings.json del web, sezione "MODULI_GRUPPI", modificare il valore in "GESTIONE_Utente,GROUP_ACQUISTI,GROUP_Admin,GROUP_ALBO,GROUP_ALBO_SDA,GROUP_Albo_Telematico,GROUP_COM_DPE,GROUP_COMUNICAZIONI,GROUP_Configurazione_di_Sistema,GROUP_Dossier,GROUP_Gestione_Anagrafiche,GROUP_Gestione_Enti_Aderenti,GROUP_Gestione_Fabbisogni,GROUP_Gestione_Fornitori,GROUP_Gestione_Questionari,GROUP_Gestione_SDA,GROUP_Gestione_SEMPLIFICATO,GROUP_MIEI_BANDI,GROUP_MIEI_INVITI,GROUP_Pannello_Sicurezza,GROUP_Procedura_Gara,GROUP_Procedura_RDO,GROUP_Validazione_Anagrafiche,PERMESSI_AGGIUNTIVI,GROUP_Gestione_Questionari,GROUP_Procedura_AccordoQuadro,GROUP_MODULO_BASE,GROUP_HELP_DESK,GROUP_Richieste_Accesso_Atti,GROUP_AVCP,GROUP_REPORT,GROUP_Albo_Lavori,GROUP_ALBO_LAVORI_FORNITORE,GROUP_Procedura_Cottimo,GROUP_GESTIONE_ASTE,GROUP_Gestione_codifiche_classificazioni,GROUP_NOTIER,GROUP_Albo_Fornitori,GROUP_ALBO_FORNITORI_FORNITORE,GROUP_NOTIER_PA,GROUP_Albo_Professionisti,GROUP_ALBO_PROFESSIONISTI_FORNITORE,GROUP_DOC_TERZI,GROUP_Procedura_Gara_Rilancio_Competitivo,GROUP_Release_Notes,GROUP_Consultazioni_Preliminari_Mercato,GROUP_BANDO_CONSULTAZIONE,GROUP_CONTRATTI_FORN,GROUP_Configurazione_DGUE,GROUP_SIMOG,GROUP_Configurazione_Valori,GROUP_INTEGRAZIONE_PBM,GROUP_GESTIONE_PREGARA,GROUP_CONTROLLI_OE,GROUP_OCP_WS,GROUP_Formulari,GROUP_PROGRAMMAZIONE,GROUP_Monitoraggio_Sistema,GROUP_Gestione_Pubblicita_Legale,GROUP_Albo_Fornitori_IM,GROUP_Albo_Telematico_IM,GROUP_Buyer_IM,GROUP_Comunicazioni_Generiche_Buyer_IM,GROUP_Comunicazioni_Generiche_Fornitori_IM,GROUP_Configurazione_di_Sistema_IM,GROUP_Documentazione_IM,GROUP_Dossier_IM,GROUP_Gestione_Enti_Aderenti_IM,GROUP_Ordini_IM,GROUP_Ordini_F_IM,GROUP_Public_Folder_IM,GROUP_Supplier_IM,GROUP_Configurazione_Valori_IM,GROUP_Pannello_Sicurezza_IM,GROUP_GESTIONE_RDA,GROUP_Procedura_RDO_IM,GROUP_MIEI_INVITI_IM,GROUP_PARAMETRI_INFO_ADD,GROUP_Monitoraggio_Sistema_IM,COMUNICAZIONI_ENTE,GROUP_Gestione_Anagrafiche_IM,GROUP_ECERTIS,GROUP_OFFERTE_FORN,MODULO_ACCORDO_FABBISOGNI,GROUP_Gestione_Fornitori_IM,MODULO_ACCORDO_SDA,GROUP_Affidamenti_Semplificati,FASCICOLO_GARA,MODULO_APPALTO_PNRR_PNC,MODULO_MERCATO_ELETTRONICO_AVANZATO,MODULO_STRUTTURA_ENTI,ELENCO_PROCEDURE_RUP,ESTRAZIONE_LISTINI_CONVENZIONI,AFFIDAMENTO_DIRETTO_DUE_FASI,GESTIONE_INIPEC,GROUP_Acquisti_a_catalogo,GROUP_Gestione_Acquisti_a_catalogo,GROUP_CONVENZIONI_DA_GARE,LISTINO_ORDINI_CONVENZIONI,"
+Aggiornare il file main.js in wwwroot/CTL_LIBRARY/JScript/
+Aggiornare il file main_base.css in wwwroot/CTL_LIBRARY/Themes/
+
+[2023-04-06 15.55]
+Aggiornare la dll ChilkatDnCore con la versione regredita 9.5.0.82  (dalla .90 precedente)
+
+[2023-04-07 12:00]
+Modificare l'appsettings del web, chiave 'redirect' con il seguente valore
+"Redirect": "/<#ApplicationContext:NOMEAPPLICAZIONE#>/pdf.aspx,/<#ApplicationContext:APPLEGACY#>/pdf.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/afdocgen.aspx,/<#ApplicationContext:APPLEGACY#>/afdocgen.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/cava.aspx,/<#ApplicationContext:APPLEGACY#>/cava.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/docarea.aspx,/<#ApplicationContext:APPLEGACY#>/docarea.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/docer.aspx,/<#ApplicationContext:APPLEGACY#>/docer.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/eCertis.aspx,/<#ApplicationContext:APPLEGACY#>/eCertis.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/filehash.aspx,/<#ApplicationContext:APPLEGACY#>/filehash.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/folium.aspx,/<#ApplicationContext:APPLEGACY#>/folium.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/GetDettaglioProcedura.aspx,/<#ApplicationContext:APPLEGACY#>/GetDettaglioProcedura.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/GetListaProcedure.aspx,/<#ApplicationContext:APPLEGACY#>/GetListaProcedure.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/pbmGare.aspx,/<#ApplicationContext:APPLEGACY#>/pbmGare.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/smart.aspx,/<#ApplicationContext:APPLEGACY#>/smart.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/xmlutil.aspx,/<#ApplicationContext:APPLEGACY#>/xmlutil.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_AIC.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_AIC.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_ATC.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_ATC.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_CND.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_CND.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_DM.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_DM.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_FormaFarm.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_FormaFarm.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_PrincAtt.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_PrincAtt.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/BRD_IC/GetDomain_ViaSomministr.aspx,/<#ApplicationContext:APPLEGACY#>/BRD_IC/GetDomain_ViaSomministr.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/Conservazione/odc.aspx,/<#ApplicationContext:APPLEGACY#>/Conservazione/odc.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/CustomDoc/buste_offerta.aspx,/<#ApplicationContext:APPLEGACY#>/CustomDoc/buste_offerta.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/CustomDoc/simulatore_buste_offerta.aspx,/<#ApplicationContext:APPLEGACY#>/CustomDoc/simulatore_buste_offerta.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/DocER/Parer.aspx,/<#ApplicationContext:APPLEGACY#>/DocER/Parer.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/ESPD/importResponse.aspx,/<#ApplicationContext:APPLEGACY#>/ESPD/importResponse.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/ESPD/inviaEspdResp.aspx,/<#ApplicationContext:APPLEGACY#>/ESPD/inviaEspdResp.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/GAAC/acquisizioneSoggetti.aspx,/<#ApplicationContext:APPLEGACY#>/GAAC/acquisizioneSoggetti.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/associaOrdine.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/associaOrdine.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/caricamentoDDT.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/caricamentoDDT.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/deregistrazione.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/deregistrazione.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/dettaglio.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/dettaglio.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/downloadZip.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/downloadZip.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/elaboraMDN.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/elaboraMDN.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/iscrizione.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/iscrizione.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/iscrizionePA.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/iscrizionePA.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/Lista.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/Lista.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/lookup.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/lookup.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/testNoTIER.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/testNoTIER.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/OpenID/access.aspx,/<#ApplicationContext:APPLEGACY#>/OpenID/access.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/OpenID/login.aspx,/<#ApplicationContext:APPLEGACY#>/OpenID/login.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/Report/esporta_xlsx_listini.aspx,/<#ApplicationContext:APPLEGACY#>/Report/esporta_xlsx_listini.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/Report/esporta_xlsx_offerte.aspx,/<#ApplicationContext:APPLEGACY#>/Report/esporta_xlsx_offerte.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/Report/fab_q.aspx,/<#ApplicationContext:APPLEGACY#>/Report/fab_q.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/Report/prospettoconfronto_new.aspx,/<#ApplicationContext:APPLEGACY#>/Report/prospettoconfronto_new.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/Report/RICERCA_OE_INFO_AGGIUNTIVE.aspx,/<#ApplicationContext:APPLEGACY#>/Report/RICERCA_OE_INFO_AGGIUNTIVE.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/consultaCIG.aspx,/<#ApplicationContext:APPLEGACY#>/simog/consultaCIG.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/consultaGara.aspx,/<#ApplicationContext:APPLEGACY#>/simog/consultaGara.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/gestioneCIG.aspx,/<#ApplicationContext:APPLEGACY#>/simog/gestioneCIG.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/pubblica.aspx,/<#ApplicationContext:APPLEGACY#>/simog/pubblica.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/requisiti.aspx,/<#ApplicationContext:APPLEGACY#>/simog/requisiti.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/selezionaUfficio.aspx,/<#ApplicationContext:APPLEGACY#>/simog/selezionaUfficio.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/SmartCIG.aspx,/<#ApplicationContext:APPLEGACY#>/simog/SmartCIG.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/simog/testLogin.aspx,/<#ApplicationContext:APPLEGACY#>/simog/testLogin.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/SITAR/istanziaAggiudicazione.aspx,/<#ApplicationContext:APPLEGACY#>/SITAR/istanziaAggiudicazione.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/SITAR/istanziaContratto.aspx,/<#ApplicationContext:APPLEGACY#>/SITAR/istanziaContratto.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/SITAR/istanziaDocumentazione.aspx,/<#ApplicationContext:APPLEGACY#>/SITAR/istanziaDocumentazione.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/SITAR/istanziaEsito.aspx,/<#ApplicationContext:APPLEGACY#>/SITAR/istanziaEsito.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/SITAR/istanziaGara.aspx,/<#ApplicationContext:APPLEGACY#>/SITAR/istanziaGara.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/SITAR/istanziaImprese.aspx,/<#ApplicationContext:APPLEGACY#>/SITAR/istanziaImprese.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/spid/assertion_consumer.aspx,/<#ApplicationContext:APPLEGACY#>/spid/assertion_consumer.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/spid/get_metadata.aspx,/<#ApplicationContext:APPLEGACY#>/spid/get_metadata.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/ted/aggiudicazioneTED.aspx,/<#ApplicationContext:APPLEGACY#>/ted/aggiudicazioneTED.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/ted/deltaGaraTED.aspx,/<#ApplicationContext:APPLEGACY#>/ted/deltaGaraTED.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/ted/pubblicaTED.aspx,/<#ApplicationContext:APPLEGACY#>/ted/pubblicaTED.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/ted/verificaTED.aspx,/<#ApplicationContext:APPLEGACY#>/ted/verificaTED.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/TS_AEC/checkStatus.aspx,/<#ApplicationContext:APPLEGACY#>/TS_AEC/checkStatus.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/TS_AEC/GetOrder.aspx,/<#ApplicationContext:APPLEGACY#>/TS_AEC/GetOrder.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/TS_AEC/SendCompany.aspx,/<#ApplicationContext:APPLEGACY#>/TS_AEC/SendCompany.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/TS_AEC/SendCompanyCPM.aspx,/<#ApplicationContext:APPLEGACY#>/TS_AEC/SendCompanyCPM.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/TS_AEC/sendRDA.aspx,/<#ApplicationContext:APPLEGACY#>/TS_AEC/sendRDA.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/TS_AEC/sendRDA_ALY.aspx,/<#ApplicationContext:APPLEGACY#>/TS_AEC/sendRDA_ALY.aspx;/<#ApplicationContext:NOMEAPPLICAZIONE#>/WS_SITAR/istanzia.aspx,/<#ApplicationContext:APPLEGACY#>/WS_SITAR/istanzia.aspx",
+Ed aggiungere manualmente alla fine, tra l'elenco delle pagine in redirect, la pagina custom di puglia. nel dubbio chiedere
+
+[2023-05-05 12:22]
+modificare l'appsettings del web, chiave 'CheckSessionExcludePages'. aggiungere il valore "*/modal/partecipa_joomla.asp",
+Ed aggiungere manualmente alla fine, tra l'elenco delle pagine in redirect, la pagina custom di puglia. nel dubbio chiedere
+
+
+[2023-05-04 13.00]
+Modificare nell'appsettings.json la chiave di redirect : /<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/annullaIscrizione_DDT_Fatture.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/annullaIscrizione_DDT_Fatture.aspx
+
+[2023-05-04 13.00]
+Modificare nell'appsettings.json la chiave di redirect : /<#ApplicationContext:NOMEAPPLICAZIONE#>/NoTIER/inscrizione_DDT_Fatture.aspx,/<#ApplicationContext:APPLEGACY#>/NoTIER/inscrizione_DDT_Fatture.aspx

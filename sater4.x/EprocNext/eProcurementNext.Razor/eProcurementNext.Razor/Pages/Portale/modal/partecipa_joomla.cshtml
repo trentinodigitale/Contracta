@@ -1,0 +1,85 @@
+@page "/portale/modal/partecipa_joomla.asp"
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.Portale.modal.partecipa_joomlaModel
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	htmlToReturn.Write("<html>");
+	htmlToReturn.Write("<head>");
+	htmlToReturn.Write($@"<link rel=""stylesheet"" type=""text/css"" href=""./css_joomla/print.css"" media=""print"" />");
+	htmlToReturn.Write($@"<link rel=""stylesheet"" type=""text/css"" href=""./css_joomla/style.css"" media=""screen,projection"" />");
+	if (IsMasterPageNew())
+	{
+		htmlToReturn.Write($@"<link rel=""stylesheet"" type=""text/css"" href=""../Portale/css/vaporPortale.css"" />");
+		htmlToReturn.Write($@"<link rel=""stylesheet"" type=""text/css"" href=""../Portale/css/customColorPortale.css"" />");
+	}
+	htmlToReturn.Write($@"<link rel=""shortcut icon"" href=""favicon.ico"" type=""image/x-icon"" />");
+	htmlToReturn.Write(@"<script type=""text/javascript"" src=""./js/mootools.js""></script>");
+	htmlToReturn.Write(@"<script type=""text/javascript"" src=""./js/common.js""></script>");
+	htmlToReturn.Write(@"<script type=""text/javascript"" src=""./js/forms.js""></script>");
+	htmlToReturn.Write("</head>");
+	htmlToReturn.Write($@"<body style=""height: 300px;""");
+	htmlToReturn.Write($@"<div id=""mb_box"" class="""" style=""height:200px;"">");
+
+	htmlToReturn.Write($@"<p>{ApplicationCommon.CNV("Inserisci codice di accesso")}</p>");
+	htmlToReturn.Write($@"<p>{ApplicationCommon.CNV("Se non sei registrato")} <a onclick=""window.parent.location = '/{ApplicationCommon.Application["NOMEAPPLICAZIONE"]}/portale/registrazione_oe.asp';"" href=""#"">{ApplicationCommon.CNV("qui")}!</a> {ApplicationCommon.CNV("e registrati ora")}.</p>");
+
+	var strurlpartecipa = GetParamURL(Request.QueryString.ToString(), "STRURLPARTECIPA");
+	var url = GetParamURL(Request.QueryString.ToString(), "URL");
+
+	if (string.IsNullOrEmpty(strurlpartecipa))
+	{
+		var subTypeSearch = GetParamURL(Request.QueryString.ToString(), "SUBTYPESEARCH");
+		var idMsg = GetParamURL(Request.QueryString.ToString(), "IDMSG");
+		var strParam = GetParamURL(Request.QueryString.ToString(), "STRPARAM");
+		var subType = GetParamURL(Request.QueryString.ToString(), "SUBTYPE");
+
+		url += $"?SUBTYPESEARCH={subTypeSearch}&IdMsgPar={idMsg}&strParam={strParam}#55#{subType}";
+	}
+	else
+	{
+		url = strurlpartecipa;
+	}
+
+	htmlToReturn.Write($@"<form action=""/{ApplicationCommon.Application["NOMEAPPLICAZIONE"]}/login.asp?redirectback=yes&chiamante=/modal/partecipa_joomla.asp"" method=""post"" id=""restorepwd"" autocomplete=""off"">");
+
+	htmlToReturn.Write($@"<input type=""hidden"" name=""ajax"" value=""0"" />");
+	htmlToReturn.Write($@"<input type=""hidden"" name=""closeparent"" value=""1"" />");
+	htmlToReturn.Write($@"<input type=""hidden"" name=""strCheckIscrizione"" value=""1"" />");
+	htmlToReturn.Write($@"<input type=""hidden"" name=""strMnemonicoMP"" value=""{ApplicationCommon.Application["MarketPlace"]}"" />");
+	htmlToReturn.Write($@"<input type=""hidden"" name=""STRURLPARTECIPA"" value=""{htmlEncodeValue(url)}"" />");
+
+	var errore = GetParamURL(Request.QueryString.ToString(), "errore");
+
+	if (!string.IsNullOrEmpty(errore))
+	{
+		htmlToReturn.Write(@"<div id=""errormsg"">");
+		htmlToReturn.Write(@$"<p><strong>{ApplicationCommon.CNV("Attenzione")}</strong>{HtmlEncode(errore)}</p>");
+		htmlToReturn.Write("</div>");
+	}
+
+	htmlToReturn.Write("<fieldset>");
+	htmlToReturn.Write($@"<div><label for=""CodiceAccesso"">*" + ApplicationCommon.CNV("Codice Accesso") + $@" <input type=""text"" name=""IDAZIENDA"" class=""txt required""></label></div>");
+	htmlToReturn.Write($@"<div><label for=""Login"">* " + ApplicationCommon.CNV("Nome Utente") + $@"<input type=""text"" name=""USERNAME"" class=""txt required""></label></div>");
+	htmlToReturn.Write($@"<div><label for=""Login"">* " + ApplicationCommon.CNV("Password") + $@"<input type=""password"" name=""PASSWORD"" class=""txt required""></label></div>");
+	htmlToReturn.Write("</fieldset>");
+
+	htmlToReturn.Write($@"<div class=""btns"">");
+	htmlToReturn.Write($@"<input type=""submit"" value="""+ApplicationCommon.CNV("Accedi")+$@"""/>"); 
+
+	htmlToReturn.Write("</div>");
+				
+	htmlToReturn.Write("</form>");
+	htmlToReturn.Write("</div>");
+
+	htmlToReturn.Write("</body>");
+	htmlToReturn.Write("</html>");
+
+}@Html.Raw(htmlToReturn.Out())

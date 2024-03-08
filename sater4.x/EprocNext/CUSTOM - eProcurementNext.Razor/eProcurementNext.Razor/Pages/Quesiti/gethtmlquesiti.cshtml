@@ -1,0 +1,222 @@
+﻿@page "/Quesiti/gethtmlquesiti.asp"
+@model eProcurementNext.Razor.Pages.Quesiti.gethtmlquesitiModel
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    //'la funzione pone crea una stringa con uno 0 avanti se il parametro di input è u valoro < di 9
+    //' es. strI_var = 8 la funzione restituisce 08 se è 10 restituisce 10
+    //capire tipo di ritorno
+    string  addZero(string  strI_var)
+    {
+        string addZero;
+        //'controllo che il valore sia diverso da "" , in questo caso la funzione restitisce ""
+        if (!(string.IsNullOrEmpty(strI_var)))
+        {
+            if (CInt(strI_var) <= 9)
+            {
+                addZero = "0" + strI_var;
+            }
+            else
+            {
+                addZero = strI_var;
+            }
+
+
+        }
+        else
+        {
+            addZero = strI_var;
+        }
+
+        return addZero;
+    }
+    // --recupero parametri
+    string EXPIRYDATE = GetParamURL(Request.QueryString.ToString(), "EXPIRYDATE");
+    string IDDOC_GUID = GetParamURL(Request.QueryString.ToString(), "IDDOC_GUID");
+    string PROTOCOLLOBANDO = GetParamURL(Request.QueryString.ToString(), "PROTOCOLLOBANDO");
+    string SUBTYPE_ORIGIN = GetParamURL(Request.QueryString.ToString(), "SUBTYPE_ORIGIN");
+    string FASCICOLO = GetParamURL(Request.QueryString.ToString(), "FASCICOLO");
+    string DOCUMENT = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+    string CODIFICARICHIESTAQUESITO = GetParamURL(Request.QueryString.ToString(), "CODIFICARICHIESTAQUESITO");
+
+    string QUESITOANONIMO = GetParamURL(Request.QueryString.ToString(), "QUESITOANONIMO");//'--1 anonimo 0 non anonimo
+    string INFO_OE_ANONIME = GetParamURL(Request.QueryString.ToString(), "INFO_OE_ANONIME");
+    if (string.IsNullOrEmpty(INFO_OE_ANONIME))
+    {
+        INFO_OE_ANONIME = "NO";
+    } 
+
+    //'--calcolo della data attuale in formato stringa aaaa-mm-ggThh:mm:ss
+    string strYearNow = CStr(DateAndTime.Year(DateTime.Now));
+
+    string strMonthNow = addZero(CStr(DateAndTime.Month(DateTime.Now)));
+    string strDayNow = addZero(CStr(DateAndTime.Day(DateTime.Now)));
+    string  strTimeNow = CStr(DateAndTime.Now);
+    string strHourNow = addZero(CStr(DateAndTime.Hour(DateAndTime.Now)));
+    string strMinNow = addZero(CStr(DateAndTime.Minute(DateAndTime.Now)));
+    string strSecNow = addZero(CStr(DateAndTime.Second(DateAndTime.Now)));
+    //'strDataNow=strYearNow & "-" & strMonthNow & "-" & strDayNow & "T" & strHourNow & ":" & strMinNow & ":" & strSecNow 
+    string strDataNow = strYearNow + "-" + strMonthNow + "-" + strDayNow + " " + strHourNow + ":" + strMinNow + ":" + strSecNow;
+
+    //'--sostituisco la T con spazio se esiste nella EXPIRYDATE
+    EXPIRYDATE = EXPIRYDATE.Replace("T", " ");
+
+    htmlToReturn.Write($@"<table id=""template_doc"">");
+    htmlToReturn.Write("<thead>");
+    htmlToReturn.Write("<tr>");
+    htmlToReturn.Write($@"<th colspan=""4"" align=""left"" class=""nowrap"">" + ApplicationCommon.CNV("Chiarimenti") + $@"</th>");
+    htmlToReturn.Write("</tr>");
+    htmlToReturn.Write("</thead>");
+
+    htmlToReturn.Write("<tbody>");
+    //'response.write "DATA-SCAD:" & EXPIRYDATE & "<br/>"
+    //'response.write "DATA-NOW:" & strDataNow
+    //'response.write QUESITOANONIMO
+    //<!--area per inserire un quesito se il bando ancora incorso-->
+    int MaxLenQuesito = CInt(Get_Func_Property("INSERT_QUESITO", "Quesito", "MaxLen", CStr(-1), -1 ));
+
+    if (string.IsNullOrEmpty((EXPIRYDATE).Trim()) || CDate(EXPIRYDATE).Ticks > CDate(strDataNow).Ticks|| string.Equals(CStr(EXPIRYDATE).Trim(),"1900-01-01 00:00:00") && string.Equals(CODIFICARICHIESTAQUESITO,"2"))
+    {
+        //<!--inserire area per inserimento quesito in base attributo di sistema-->   
+        htmlToReturn.Write($@"<tr id=""AreaInsertQuesito"">");
+        htmlToReturn.Write($@"<td colspan=""4"">");
+        if( QUESITOANONIMO != "0")
+        {
+            htmlToReturn.Write($@"<form name=""FormInsQuesito"" id=""FormInsQuesito"" action="""" method=""post"">");
+            htmlToReturn.Write($@"<div id=""accordion"">") ;   
+            htmlToReturn.Write($@"<div class=""display_none"">");
+            htmlToReturn.Write($@"<h3 class=""toggler atStart"" ></h3>");
+            htmlToReturn.Write($@" <div class=""element atStart"" ></div>");		   
+            htmlToReturn.Write($@"<h3 class=""toggler atStart"" id=""h3rapleg"">bbbbbb</h3>");			 	
+            htmlToReturn.Write($@"<div class=""element atStart"" ></div>");
+            htmlToReturn.Write("</div>");
+            htmlToReturn.Write($@"<h3 id=""insertquesito"" class=""toggler atStart"" onclick=""HideFormInvioQuesito();"" >"+ApplicationCommon.CNV("Per inviare un quesito")+$@"</h3>");
+            htmlToReturn.Write($@" <div class=""element atStart"" id=""campi_invio_quesito"">");
+            htmlToReturn.Write("<fieldset>");
+            if( MaxLenQuesito > 0)
+            {
+                htmlToReturn.Write($@"
+                 <label id=""Label_Quesito"" for=""Quesito"">*"+ApplicationCommon.CNV("Quesito") +  $@" ( caratteri disponibili " + MaxLenQuesito + $@" su " + MaxLenQuesito + $@")"+$@"</label>  
+				<textarea maxlength="""+MaxLenQuesito +$@""" onchange=""Quesito_MaxLen( this, """+ MaxLenQuesito +$@""")"" class=""Text required""  id=""Quesito"" name=""Quesito"" rows=""3"" cols=""60"" ></textarea>");
+            }
+            else
+            {
+                htmlToReturn.Write($@"<label for=""Quesito"">*" + ApplicationCommon.CNV("Quesito") + $@"</label>
+								  <textarea class=""Text required""   id=""Quesito"" name=""Quesito"" rows=""3"" cols=""60""></textarea>");
+            }
+
+            if (INFO_OE_ANONIME != "YES")
+            {
+                htmlToReturn.Write($@"<div><label for=""OperatoreEconomico"">*" + ApplicationCommon.CNV("Denominazione") + $@"</label> <input type=""text"" class=""Text required"" name=""OperatoreEconomico""  id=""OperatoreEconomico"" value=""""/></div>");
+                htmlToReturn.Write($@"<div><label for=""Telefono"">*" + ApplicationCommon.CNV("Telefono") + $@"</label> <input type=""text"" class=""Text required"" name=""Telefono"" id=""Telefono"" onchange=""@validateField('^\\+?[0-9|\\ |\\(|\\)|\\-|\\/]{{8,20}}$',this);"" value=""""/></div>");
+                htmlToReturn.Write($@"<div><label for=""Fax"">" + ApplicationCommon.CNV("Fax") + $@"</label> <input type=""text"" class=""Text"" name=""Fax"" id=""Fax"" onchange=""@validateField('^\\+?[0-9|\\ |\\(|\\)|\\-|\\/]{{8,20}}$',this);"" value=""""/></div>");
+                htmlToReturn.Write($@"<div><label for=""EMail"">*" + ApplicationCommon.CNV("E-mail") + $@"</label> <input type=""text"" class=""Text email required"" name=""EMail"" id=""EMail"" onchange=""@verifyEmail(this);"" value=""""/></div>");
+            }
+
+            htmlToReturn.Write($@"<!-- *** Tolgo il controllo del captcha sui quesiti provenienti dall'interno (da un utente loggato) ***
+                <div>
+                        <label class=""labelsx""><img id=""imgCaptcha"" src=""/" + ApplicationCommon.Application["NOMEAPPLICAZIONE"] + @"/captcha.asp"" alt=""captcha"" /><label class=""labelancora"" onclick=""RefreshImageCatcha('imgCaptcha')"">" + ApplicationCommon.CNV( "Cambia Immagine") + $@"</label></label>
+                        <label class=""labelsx"">" + ApplicationCommon.CNV("Riporta codice alfanumerico") + $@"<input class=""txt required"" name=""captchacode"" type=""text"" id=""captchacode"" size=""10"" value=""""/></label>
+                </div>                         
+            -->");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""statoform_invioquesito"" name=""statoform_invioquesito"" value=""1"" />");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""GUID_DOC"" name=""GUID_DOC"" value="""+HtmlEncode(IDDOC_GUID)+$@"""/>");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""PROTOCOLLOBANDO"" name=""PROTOCOLLOBANDO"" value="""+HtmlEncode(PROTOCOLLOBANDO)+$@""" />");
+            htmlToReturn.Write($@" <input type=""hidden"" id=""SUBTYPE_ORIGIN"" name=""SUBTYPE_ORIGIN"" value="""+ HtmlEncode(SUBTYPE_ORIGIN) +$@""" />");  					 
+            htmlToReturn.Write($@"<input type=""hidden"" id=""backoffice"" name=""backoffice"" value=""yes"" />");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""FASCICOLO"" name=""FASCICOLO"" value="""+HtmlEncode(FASCICOLO)+$@""" />");
+            htmlToReturn.Write($@" <input type=""hidden"" id=""DOCUMENT"" name=""DOCUMENT"" value="""+HtmlEncode(DOCUMENT)+$@""" />");
+
+            htmlToReturn.Write($@"<div id=""texterror"" style=""display: none""><p><strong>"+ApplicationCommon.CNV("Attenzione")+"</strong><span>"+ApplicationCommon.CNV("I campi evidenziati non sono stati compilati correttamente!")+"</span></p></div>");
+            htmlToReturn.Write($@"<!-- <div id=""captchaerror"" style=""display:none;""><p><strong>" + ApplicationCommon.CNV("Attenzione") + $@"</strong><span>" + ApplicationCommon.CNV("Il captcha inserito non è corretto!") + $@"</span></p></div> -->");
+            htmlToReturn.Write("<div>");
+           
+            htmlToReturn.Write($@"<input type=""button"" class=""btn"" value="""+ ApplicationCommon.CNV("Invia quesito")+$@""" name=""Invia"" id=""Invia"" onclick=""javascript: if ( validateForm('FormInsQuesito') ) {{ getObj('esitoquesito').style.display=''; getObj('esitoquesito').innerHTML='<p class=loading>Loading...</p>'; xmlhttpPost('"+ ApplicationCommon.Application["strVirtualDirectory"]+$@"/quesiti/InserisceQuesito.asp','FormInsQuesito', 'esitoquesito', ''); getObj('Quesito').value=''; HideFormInvioQuesito();getObj('Quesito').onchange();  }} else {{ return false; }}"" />");
+            
+            
+            htmlToReturn.Write($@"<input type=""button"" class=""btn"" value="""+ApplicationCommon.CNV("Chiudi")+$@""" name=""Chiudi"" id=""Chiudi"" onclick=""javascript:HideFormInvioQuesito();""/>");
+            htmlToReturn.Write("</div>");
+            htmlToReturn.Write("</fieldset>");
+            htmlToReturn.Write("</div>");
+            htmlToReturn.Write("</div>");
+            htmlToReturn.Write("</form>");
+        }
+        else
+        {
+            //<!--bottone per richiesta chiarimenti-->
+            
+            htmlToReturn.Write($@"<input id=""RichiestaChiarimenti"" type=""button"" class=""btn"" value="""+ApplicationCommon.CNV("RichiestaChiarimenti")+$@" onclick=""javascript:Partecipa('modalerichiestachiarimenti');""/>");
+        }
+        htmlToReturn.Write("</td>");
+        htmlToReturn.Write("</tr>");
+        htmlToReturn.Write("<tr>");
+        htmlToReturn.Write($@"<td colspan=""4"">");
+        htmlToReturn.Write($@"<div id=""esitoquesito"" style=""display:none"">");
+        htmlToReturn.Write($@"<p class=""loading"" >Loading...</p>");
+        htmlToReturn.Write("</div>");
+        htmlToReturn.Write("</td>");
+        htmlToReturn.Write("</tr>");
+
+    }
+    else
+    {
+        htmlToReturn.Write($@"<input type=""hidden"" class="""" id=""backoffice"" name=""backoffice"" value=""yes"" />");
+    }
+    //<!--l'area di ricerca e la lista dei quesiti deve essere inserita in funzione di un attributo del documento-->
+    // <!--area per cercare un quesito -->
+    htmlToReturn.Write($@"<tr id=""arearicercaquesiti"">");
+    htmlToReturn.Write($@"<th colspan=""1"" align=""left"">" + ApplicationCommon.CNV("Chiarimenti Pubblicati") + "</th>");
+    htmlToReturn.Write($@"<th colspan=""2"" style=""text-align:justify; font-weight:normal;"" width=""70%"">");
+    htmlToReturn.Write($@"<label for=""FiltroQuesito"">"+ApplicationCommon.CNV("Per ricercare nei quesiti")+"</label>");
+    htmlToReturn.Write($@"<a style=""text-decoration:underline;"" href=""javascript:getObj('FiltroQuesito').value='';CercaQuesito();"">	"+ApplicationCommon.CNV("qui")+"</a>");
+    htmlToReturn.Write("</th>");
+
+    htmlToReturn.Write($@"<th colspan=""1"" align=""right"">");
+    htmlToReturn.Write($@"<form name=""FormCercaQuesito"" id=""FormCercaQuesito"" action="""" method=""get"" onsubmit=""javascript:CercaQuesito();return false;"">");
+
+    htmlToReturn.Write($@"<input class=""Text text_cerca_quesiti"" type=""text"" id=""FiltroQuesito"" name=""FiltroQuesito"" value=""""/>");
+    htmlToReturn.Write($@"<a href=""#"" onclick=""javascript:CercaQuesito();return false"">");
+    
+    htmlToReturn.Write($@"<img src=""/"+ApplicationCommon.Application["NOMEAPPLICAZIONE"]+$@"/images/lente.png"" style=""cursor:pointer;"" alt="""+ApplicationCommon.CNV("Cerca protocollo o quesito")+"\" /></a>");
+
+    htmlToReturn.Write("</form>");
+    htmlToReturn.Write("</th>");
+    htmlToReturn.Write("</tr>");
+
+    htmlToReturn.Write($@"<tr id=""areapdfquesiti"">");
+    htmlToReturn.Write($@"<th colspan=""1"" align=""left""></th>");
+    htmlToReturn.Write($@"<th colspan=""3"" style=""text-align:justify; font-weight:normal;"" >");
+    htmlToReturn.Write($@"<label for=""FiltroQuesito"">"+ApplicationCommon.CNV("Per scaricare pdf dei quesiti")+"</label>");
+
+
+    htmlToReturn.Write($@"<a href=""#"" onclick=""javascript:Pdf_Quesiti();return false"" >");
+    
+    htmlToReturn.Write($@"<img src=""/"""+ ApplicationCommon.Application["NOMEAPPLICAZIONE"]+$@"/images/pdficon.gif"" style=""cursor:pointer;"" alt="""+ApplicationCommon.CNV("lista Quesiti in Pdf")+$@""" title="""+ApplicationCommon.CNV("lista Quesiti in Pdf")+$@"""/>");
+    htmlToReturn.Write("</a>");
+    htmlToReturn.Write("</th>");
+    htmlToReturn.Write("</tr>");	
+    // <!--area lista dei quesiti -->
+    htmlToReturn.Write("<tr>");
+    htmlToReturn.Write($@"<td colspan=""4""><div id=""grigliaquesiti""></div></td>");
+    htmlToReturn.Write("</tr>"); 
+
+    htmlToReturn.Write("</tbody>");
+    htmlToReturn.Write("</table>");
+
+}@Html.Raw(htmlToReturn.Out())

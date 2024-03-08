@@ -1,0 +1,213 @@
+﻿@page "/Report/Determina_Liquidazione.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.Determina_LiquidazioneModel;
+@model eProcurementNext.Razor.Pages.Report.Determina_LiquidazioneModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+	htmlToReturn.Write("<html>");
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	
+}
+@{
+	//'-- nel caso il valore del numero passato sia zero ritorna stringa vuota
+	string NumF(string strNum)
+	{
+		string viewDate = "";
+		viewDate = strNum;
+		if(Strings.InStr(1, CStr(0.5), ".")>0)
+		{
+			viewDate = viewDate.Replace(".", "A");
+
+			viewDate = viewDate.Replace(",", ".");
+
+			viewDate = viewDate.Replace("A",",");
+		}
+		return viewDate;
+	}
+	htmlToReturn.Write($@"
+	<STYLE>
+	BODY
+	{{ 
+		FONT - SIZE: 10pt;
+		FONT-FAMILY: Arial
+	}}
+	TABLE
+	{{
+		FONT - SIZE: 10pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.size1
+	{{
+		FONT - SIZE: 12pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.size2
+	{{
+		FONT - SIZE: 14pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.size5
+	{{
+		FONT - SIZE: 16pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.BORD
+	{{
+		BORDER - RIGHT: black 1px solid;
+		BORDER-TOP: black 1px solid;
+	    BORDER-LEFT: black 1px solid;
+	    BORDER-BOTTOM: black 1px solid 
+	}}
+
+	</STYLE>");
+	//'--dim rsA
+	//'--dim bATI
+	string strSQL = "";
+	TSRecordSet rsB = null;
+	//'--set rsA = GetRS( "select * from aziende where idazi = " & DOC_FieldTecnical( "TESTATA", "idAggiudicatrice" ) )
+	//'-- recupero i dati base 
+	rsB = cdf.GetRSReadFromQuery_("select top 1 * from Document_DatiBilancio order by BP_Anno desc ", ApplicationCommon.Application.ConnectionString);
+
+	htmlToReturn.Write($@"
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+	<title>PORTALE GARE&nbsp; DIREZIONE GARE E CONTRATTI</title>
+	</head>
+
+	<body>");
+		<!-- Intestazione foglio -->
+		htmlToReturn.Write($@"
+		<div align=""center"">
+			<b><font class=""size5"">AMMINISTRAZIONE PORTALE GARE</font></b>
+			<br>
+			<br>
+			<b><font class=""size5""><i>AREA SEGRETERIA GENERALE</i></font></b><br>
+			<br>
+			<b><font class=""size5""><i>DIREZIONE GARE E CONTRATTI</i></font></b><br>
+			</div>");
+	<!-- LOGO -->
+	htmlToReturn.Write($@"
+			<div align=""center""  >
+			<table border=""0"" valign=""top"">
+			  <tr>
+			    <td ><img src=""logo2.jpg""  border=""0""></td>  
+			  </tr>
+			</table>
+			</div>");
+
+	htmlToReturn.Write($@"
+			<br>
+			<br>");
+
+	htmlToReturn.Write($@"<!-- testata -->");
+	htmlToReturn.Write($@"
+		<table border=""0""  width=""100%""  >
+
+				<tr><td align=""left"" width=""5%"">&nbsp;<td>
+					<td align=""left"" width=""90%"" ><font class=""size1"">
+
+					Prot. Informatico &nbsp " + DOC_Field("TESTATA", "ProtocolloGenerale") + $@"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp;del &nbsp;" + DOC_Field("TESTATA", "DataProt") + $@"
+					<br>
+					<br>
+					DETERMINAZIONE N. &nbsp" + DOC_Field("TESTATA", "NRDeterminazione") + $@"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp; DEL &nbsp;" + DOC_Field("TESTATA", "DataDetermina") + $@"
+					<br>");
+	htmlToReturn.Write($@"<!-- Responsabile del procedimento: &nbsp; " + DOC_Field( "TESTATA", "ResponsabileContratto" ) + $@" -->");
+	htmlToReturn.Write($@"
+					<br>
+					<br>
+					<div style=""text-align : justify"" valign=""top"" ><font class=""size1"">
+					OGGETTO: " + DOC_Field("TESTATA", "OggettoDet") + $@"
+					</font></div>
+					<br>
+
+					</font></td><td align=""left"" width=""5%"">&nbsp;<td>
+				</tr>
+
+			</table>
+
+			<br>
+			<br>");
+	string testo = "";
+	testo = (DOC_Field("TESTATA", "TestoDetermina")).Replace(Environment.NewLine, "<br>");
+
+	//'testo = replace( testo ,"[Salto Pagina]", "<div style=""page-break-after : always""></div>" )
+	string[] v = null;
+	string v1 = "";
+
+	v = testo.Split("[GRID]");
+	//'for x = 0 to ubound( v ) / 3 + 1
+	string IBAN = v[1];
+	int i = 0;
+	string str = "";
+	str = $@"<table border=""1""  cellpadding=5 cellspacing=0 ><tr>";
+	for(i= 1;i<IBAN.Length;i++)
+	{
+		str = str + "<td>" + Strings.Mid(IBAN, i, 1) + "</td>";
+
+	}
+	str = str + "</tr></table>";
+
+	testo = testo.Replace("[GRID]" + IBAN + "[GRID]", str);
+	//'next
+
+	//'response.write testo
+	string[] VetPage = null;
+
+	VetPage = testo.Split("[Salto Pagina]");
+
+	for(i = 0;i<VetPage.Length-1;i++)
+	{
+		htmlToReturn.Write($@"
+			<table border=""0""  width=""100%""  >
+
+				<tr><td align=""left"" width=""5%"">&nbsp;<td>
+					<td align=""left"" width=""90%"" >
+
+						<div style=""text-align : justify"" valign=""top"" ><font class=""size1"">
+
+
+							"+VetPage[i]+$@"
+
+
+						</font></div>
+
+					</td><td align=""left"" width=""5%"">&nbsp;
+					<td>
+				</tr>
+			</table>");
+		if(i<VetPage.Length-1)
+		{
+			htmlToReturn.Write($@"<div style=""page-break-after : always""></div>");
+		}
+	}
+	htmlToReturn.Write($@"
+		</div>
+	</body>");
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+
+} @Html.Raw(htmlToReturn.Out())

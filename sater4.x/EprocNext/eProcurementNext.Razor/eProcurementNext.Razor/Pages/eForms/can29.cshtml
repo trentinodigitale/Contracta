@@ -1,0 +1,62 @@
+﻿@page "/eforms/can29.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.Xml;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.eForms.Can29Model
+@{
+
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var idProc = GetParamURL(Request.QueryString.ToString(), "ID");
+    var idPfu = GetParamURL(Request.QueryString.ToString(), "IDPFU");
+    var operation = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+    var lotto = GetParamURL(Request.QueryString.ToString(), "LOTTO");
+    var idContrConv = GetParamURL(Request.QueryString.ToString(), "ID_CONTR_CONV");
+
+    validate("ID", idProc, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("IDPFU", idPfu, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+    validate("OPERATION", operation, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("LOTTO", lotto, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_LISTANUMERI, "", 0, HttpContext, session);
+    validate("ID_CONTR_CONV", idContrConv, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+
+    var id = CInt(idProc);
+    var iduser = CInt(idPfu);
+    var idContrattoConv = CInt(idContrConv);
+
+    switch (operation.ToUpper())
+    {
+        case "DOWNLOAD":
+
+            try
+            {
+                var xmlOut = Model.DownloadCan29(id);
+
+                HttpContext.Response.ContentType = "TEXT/XML";
+                HttpContext.Response.Headers.Add("Content-Disposition", "attachment; filename=CONTRACT_AWARD_NOTICE.XML");
+
+                @Html.Raw(xmlOut)
+            }
+            catch (XmlException ex)
+            {
+                @Html.Raw($"0#{ex.Message}")
+            }
+            catch (Exception e)
+            {
+                @Html.Raw($"0#{e.ToString()}")
+            }
+
+            break;
+        default:
+            
+            var esito = Model.GenerateXml(id, iduser, lotto, operation, idContrattoConv);
+
+            @Html.Raw(esito)
+
+            return;
+    }
+
+}

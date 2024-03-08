@@ -1,0 +1,74 @@
+﻿@page "/CTL_LIBRARY/erroreApplicativo.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.erroreApplicativoModel;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@*
+<!-- #Include File="./Functions/verificabrowser.inc" -->
+<!-- #Include File="./Functions/CheckSession.inc" -->
+<!-- #INCLUDE FILE="./functions/security.inc" -->
+<!-- #Include File="./functions/trace_in_log_utente.inc" -->
+*@
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.erroreApplicativoModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+
+    //'--Versione=1&data=2016-05-06&Attvita=108225&Nominativo=Leone
+
+    //on error resume next
+
+    string msg = CStr(GetParamURL(Request.QueryString.ToString(), "msg"));
+
+    if (string.IsNullOrEmpty(msg)){
+        msg = "Errore di sistema";
+    }
+
+    //'--se sono nella versione non accessible
+
+    //'--setto il messaggio in session eper essere visualizzato
+    session["MSG_ERROR"] = "ML=yes&MSG=" + msg + "&CAPTION=Stop&ICO=2";
+
+    if (CStr(GetParamURL(Request.QueryString.ToString(), "legacy")).ToLower() == "yes")
+    {
+
+        //'-- se � stato passato il parametro legacy ricarico la pagina corrente dello stack invece di tornare indietro di 1.
+        //'-- questo perch� sono in un giro nel quale l'ultima pagina invocata non � entrata nello stack (perch� ad esempio � una pagina di servizio)
+
+        if (IsEmpty(session["stack_path"]) == false)
+        {
+            dynamic[,] mp_stackMatrix = session["stack_path"];
+            int posCorrente = CInt(session["stack_index"]);
+            throw new ResponseRedirectException("../" + mp_stackMatrix[posCorrente, 1], Response);
+        }
+
+    }
+    else
+    {
+
+        //'--torno alla briciola di pane precedente
+        popBreadCrumb("../", session, Response);
+
+    }
+
+	//'-- Se il pop fatto sopra fallisce faccio una redirect di sicurezza
+	throw new ResponseRedirectException("../home/main.asp?lo=base&GROUPS_NAME=" + CStr(session["GROUPS_NAME"]), Response);
+
+	//'-- nel metodo popBreadCrumb viene effettuata una redirect. non dovrei arrivare a questa response.end � messa qui solo per sicurezza per non far proseguire la pagina in caso di errore
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+
+	
+}
+@Html.Raw(htmlToReturn.Out())

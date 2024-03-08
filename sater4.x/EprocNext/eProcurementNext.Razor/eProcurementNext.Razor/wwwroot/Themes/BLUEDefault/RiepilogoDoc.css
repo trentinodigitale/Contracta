@@ -1,0 +1,99 @@
+TABLE.GridRiepilogoDoc {
+
+}
+TABLE.GridTab1RiepilogoDoc {
+WIDTH: 100%
+}
+TD.CellGridLinkRiepilogoDoc {
+
+}
+TABLE.GridTab2RiepilogoDoc {
+WIDTH: 100%
+}
+TD.CellGridInfoRiepilogoDoc {
+TEXT-ALIGN: left
+}
+TD.CellGridScadRiepilogoDoc {
+TEXT-ALIGN: right
+}
+INPUT.TextFieldRiepilogo {
+
+}
+.FontTextRiepilogo {
+FONT-SIZE: 8pt;
+ COLOR: black;
+ FONT-FAMILY: Arial
+}
+INPUT.TextFieldLocked {
+BORDER-RIGHT: thin inset;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: thin inset;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: thin inset;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: thin inset;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: whitesmoke;
+ TEXT-DECORATION: none
+}
+.FontTextIceRiepilogo {
+FONT-SIZE: 8pt;
+ COLOR: #808080;
+ FONT-FAMILY: Arial
+}
+.FontTextLinkRiepilogo {
+FONT-SIZE: 8pt;
+ CURSOR: hand;
+ COLOR: navy;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: underline
+}
+TD.CellGridStateRiepilogoDoc {
+TEXT-ALIGN: right
+}
+TD.BorderCellGridStateRiepilogoDoc {
+BORDER-RIGHT: black 1px solid;
+ BORDER-TOP: black 1px solid;
+ BORDER-LEFT: black 1px solid;
+ BORDER-BOTTOM: black 1px solid
+}
+.FontDescr {
+FONT-WEIGHT: bold;
+ FONT-SIZE: 10pt;
+ COLOR: black;
+ FONT-FAMILY: Arial
+}
+.FontTextTender {
+FONT-WEIGHT: bold;
+ FONT-SIZE: 10pt;
+ COLOR: black;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: none
+}
+.FontValue {
+FONT-WEIGHT: normal;
+ FONT-SIZE: 10pt;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial
+}
+INPUT.TextTime {
+FONT-SIZE: 8pt;
+ WIDTH: 20px;
+ FONT-FAMILY: Arial
+}
+.FontTime {
+FONT-SIZE: 10pt;
+ FONT-FAMILY: Arial;
+ TEXT-ALIGN: center
+}
+.ButtonHyerarchiesVerticalModel {
+BORDER-RIGHT: peru 1px outset;
+ BORDER-TOP: peru 1px outset;
+ FONT-SIZE: 8pt;
+ BORDER-LEFT: peru 1px outset;
+ BORDER-BOTTOM: peru 1px outset;
+ BACKGROUND-COLOR: goldenrod
+}

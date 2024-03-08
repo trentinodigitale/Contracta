@@ -1,0 +1,64 @@
+<style type="text/css">
+BODY
+{
+    FONT-SIZE: 3px;
+    BACKGROUND-REPEAT: repeat;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+DIV
+{
+    FONT-SIZE: 5px
+}
+.BodyDetailOAP
+{
+    BACKGROUND-COLOR: white;
+    cellspacing: 0;
+    cellpadding: 0
+}
+.GridContainerDetailOAP
+{
+    BORDER-RIGHT: white;
+    BORDER-TOP: white;
+    MARGIN: 0px;
+    BORDER-LEFT: white;
+    WIDTH: 100%;
+    BORDER-BOTTOM: white;
+    BACKGROUND-COLOR: white
+}
+.CellContainerDetailOAP
+{
+    BORDER-RIGHT: white;
+    BORDER-TOP: white;
+    MARGIN: 0px;
+    BORDER-LEFT: white;
+    BORDER-BOTTOM: white;
+    BACKGROUND-COLOR: black
+}
+.GridDetailOAP
+{
+    WIDTH: 100%;
+    BACKGROUND-COLOR: white
+}
+.GridRiepilogoOAP
+{
+    BORDER-RIGHT: white;
+    BORDER-TOP: white;
+    MARGIN: 1px;
+    BORDER-LEFT: white;
+    WIDTH: 100%;
+    BORDER-BOTTOM: white;
+    BACKGROUND-COLOR: white
+}
+.CellRiepilogoOAP
+{
+    FONT-SIZE: 10pt;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: black
+}
+.CellDetailOAP
+{
+    BACKGROUND-COLOR: white
+}
+</style>

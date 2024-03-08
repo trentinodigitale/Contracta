@@ -1,0 +1,118 @@
+﻿@page "/CTL_LIBRARY/functions/GetHtmlModello.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.DocumentPermissionModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.GetHtmlModelloModel
+
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	string mp_valori = string.Empty;
+	string mp_strModello = string.Empty;
+	Model mp_objModel = new Model();   
+	string mp_Suffix = string.Empty;
+	long mp_User = 0;
+	string[] v;
+	int i = 0;
+	string strFilter = string.Empty;
+	string NameField = string.Empty;
+	string ValueField = string.Empty;
+
+
+	mp_User = CLng(session["IdPfu"]);
+	LibDbModelExt objDB;
+	objDB = new LibDbModelExt();
+
+	mp_Suffix = CStr(session[eProcurementNext.Session.SessionProperty.SESSION_SUFFIX]);
+
+	if (String.IsNullOrEmpty(mp_Suffix))
+	{
+		mp_Suffix = "I";
+	}
+
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+	validate("NOMEMODELLO", CStr(GetParamURL(Request.QueryString.ToString(), "NOMEMODELLO")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 1, HttpContext, session);
+	validate("VALORI", CStr(GetParamURL(Request.QueryString.ToString(), "VALORI")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);	
+	validate("READONLY", GetParamURL(Request.QueryString.ToString(), "READONLY"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("SEC_FIELD", GetParamURL(Request.QueryString.ToString(), "SEC_FIELD"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	bool bEditable;
+	bEditable = true;
+	if (CStr(GetParamURL(Request.QueryString.ToString(), "READONLY")).ToUpper() == "YES")
+	{
+		bEditable = false;
+	}
+	mp_strModello = GetParamURL(Request.QueryString.ToString(), "NOMEMODELLO");
+
+
+
+	if (String.IsNullOrEmpty(mp_strModello))
+	{
+		htmlToReturn.Write("");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+	//'--effettuo il controllo di accesso al modello
+	CheckDocPermission(HttpContext, "SP_PERMISSION_MODELLO", mp_strModello, mp_User, "", session, htmlToReturn, Request, Response, 1);
+
+	mp_valori = GetParamURL(Request.QueryString.ToString(), "VALORI");
+
+
+	mp_objModel = objDB.GetFilteredModel(mp_strModello, mp_Suffix, mp_User, 0, ApplicationCommon.Application.ConnectionString, bEditable, session);
+
+
+	if (CStr(GetParamURL(Request.QueryString.ToString(), "SEC_FIELD")).ToUpper() == "YES")
+	{
+		mp_objModel.id = mp_strModello + "_MODEL";
+		mp_objModel.UseNameOnField = 1;
+		//mp_Mod.id = Id + "_MODEL";
+		//mp_Mod.UseNameOnField = 1;
+	}
+
+	if (mp_objModel.Fields.Count() > 0)
+	{
+		
+		
+		if (!String.IsNullOrEmpty(mp_valori))
+		{
+			v = mp_valori.Split("~~~");
+			
+			for (i = 0; i <= v.Length - 1; i++)
+			{
+				strFilter = v[i];
+				ValueField = CommonModule.Basic.GetValue_FromAttrib_Filter(strFilter, ref NameField);
+
+				if (mp_objModel.Fields.ContainsKey(NameField))
+				{
+					mp_objModel.Fields[NameField].Value = ValueField;					
+				}
+			}
+		}		
+		
+		mp_objModel.Html(htmlToReturn);
+
+		htmlToReturn.Write("");
+	}
+	else //NON HA TROVATO IL MODELLO
+	{
+		htmlToReturn.Write("");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+
+	
+	
+}@Html.Raw(htmlToReturn.Out())

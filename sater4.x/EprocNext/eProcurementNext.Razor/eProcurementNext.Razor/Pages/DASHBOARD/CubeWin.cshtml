@@ -1,0 +1,81 @@
+﻿@page "/DASHBOARD/CubeWin.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.DashBoard
+@using eProcurementNext.HTML
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.DASHBOARD.CubeWinModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//dim ObjSession
+	//
+	//ObjSession = session("Session")
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+	//session("Session") = ObjSession
+	htmlToReturn.Write("<html><head>    <meta http-equiv=content-type content=text/html; charset=utf-8>");
+
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/caption.css"" type=""text/css"">");
+	htmlToReturn.Write("</head><body>");
+
+	htmlToReturn.Write($@"<table width=""100%"" height=""100%""  border=""0"" cellspacing=""0"" cellpadding=""0"">");
+
+	string mp_Caption = "";
+	mp_Caption = GetParamURL(Request.QueryString.ToString(), "Caption");
+	if(mp_Caption != "")
+	{
+		Caption mp_ObjCaption;
+		mp_ObjCaption = new Caption();
+		htmlToReturn.Write("<tr><td>");
+		if(GetParamURL(Request.QueryString.ToString(), "Exit") != "si")
+		{
+			mp_ObjCaption.OnExit = "top.location='../login.asp';";
+		}
+
+		if(GetParamURL(Request.QueryString.ToString(), "ShowExit") == "0" )
+		{
+			mp_ObjCaption.ShowExit = false;
+		}
+		mp_ObjCaption.Init(session["Session"]);
+		if(GetParamURL(Request.QueryString.ToString(), "GROUPNAME") != "" )
+		{
+			htmlToReturn.Write(mp_ObjCaption.SetCaption(ApplicationCommon.CNV(mp_Caption.Trim()) + " - " + GetParamURL(Request.QueryString.ToString(), "GROUPNAME")));
+		}
+		else
+		{
+			htmlToReturn.Write(mp_ObjCaption.SetCaption(ApplicationCommon.CNV(mp_Caption.Trim())));
+		}
+
+		htmlToReturn.Write("</td></tr>");
+	}
+	if(GetParamURL(Request.QueryString.ToString(), "ALLCUBE") != "yes" )
+	{
+		htmlToReturn.Write($@"<tr>");
+		htmlToReturn.Write($@"<td width=""100%"" height=""100%"" style=""height:100%"" >");
+		htmlToReturn.Write($@"<div id=""DivCube"" style=""height:100%; width:100%"" >");
+		htmlToReturn.Write($@"<iframe border=""0"" frameborder=""0"" style=""height:100%; width:100%""  id=""DivCube"" name=""DivCube"" src=""../dashboard/Cube.asp?"""+GetQueryStringFromContext(Request.QueryString)+$@" marginheight=""0"" marginwidth=""0"" scrolling=""no"" >");
+		htmlToReturn.Write($@"</iframe></div>");
+		htmlToReturn.Write($@"</td>");
+		htmlToReturn.Write("</tr>");
+
+	}
+	else
+	{
+		htmlToReturn.Write("<tr>");
+		htmlToReturn.Write($@"<td width=""100%"" height=""100%"" style=""height:100%"" >");
+		htmlToReturn.Write($@"<div id=""DivCubeGriglia"" style=""height:100%; width:100%"" >");
+		htmlToReturn.Write($@"<iframe border=""0"" frameborder=""1"" style=""height:100%; width:100%""  id=""CubeGriglia"" name=""CubeGriglia"" src=""../dashboard/CubeGrid.asp?"""+GetQueryStringFromContext(Request.QueryString)+$@" marginheight=""0"" marginwidth=""0"" scrolling=""no"" > ");
+		htmlToReturn.Write("</iframe></div>");
+		htmlToReturn.Write("</td>");
+		htmlToReturn.Write("</tr>"); 
+	}
+	htmlToReturn.Write("</table>");
+
+}@Html.Raw(htmlToReturn.Out())

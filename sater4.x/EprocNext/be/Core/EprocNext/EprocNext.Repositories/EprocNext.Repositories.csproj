@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Description>Cloud eProcurement Next Repository models implementations - Contains all SQL Domain for eProcurement Next.</Description>
+    <Version>1.0.0.70</Version>
+    <PackageId>EprocNext.Repositories</PackageId>
+    <Authors>Enterprise Solutions Team eProcurement Next</Authors>
+    <Company>Team System SpA</Company>
+    <Product>API - EprocNext.Repositories</Product>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+    <IncludeSource>true</IncludeSource>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AssemblyVersion>1.0.0.69</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\An01Aziende.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.9" />
+    <PackageReference Include="MongoDB.Bson" Version="2.12.4" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="TSQL.Parser" Version="1.5.2" />
+    <PackageReference Include="xxHash.Core" Version="0.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\Customizations\" />
+    <Folder Include="Repositories\Models\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CommonCore\Core.Repositories\Core.Repositories.csproj" />
+  </ItemGroup>
+
+</Project>

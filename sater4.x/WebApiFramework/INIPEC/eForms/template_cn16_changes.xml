@@ -1,0 +1,8 @@
+<efac:Changes>
+	<efbc:ChangedNoticeIdentifier>@@@CHANGED_NOTICE_IDENTIFIER@@@</efbc:ChangedNoticeIdentifier>
+	@@@CHANGE_LIST@@@
+	<efac:ChangeReason>
+		<cbc:ReasonCode listName="change-corrig-justification">@@@CHANGE_REASON_CODE@@@</cbc:ReasonCode>
+		<efbc:ReasonDescription languageID="ITA">@@@CHANGE_REASON_DESC@@@</efbc:ReasonDescription>
+	</efac:ChangeReason>
+</efac:Changes>

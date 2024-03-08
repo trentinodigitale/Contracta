@@ -1,0 +1,60 @@
+﻿@page "/CustomDoc/CONTROLLO_CLASSE_ALTRI_BANDI.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.initialize_ComponentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.CONTROLLO_CLASSE_ALTRI_BANDI;
+@using Microsoft.VisualBasic;
+@*
+<!-- #Include File="../ctl_library/functions/verificabrowser.inc" -->
+<!-- #INCLUDE FILE="../ctl_library/Functions/CheckSession.inc" -->
+<!-- #INCLUDE FILE="../ctl_library/functions/security.inc" -->
+<!-- #Include File="../ctl_library/functions/trace_in_log_utente.inc" -->
+*@
+@model eProcurementNext.Razor.Pages.CustomDoc.CONTROLLO_CLASSE_ALTRI_BANDI
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdb = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+    var SqlParameters = new Dictionary<string, object?>();
+
+    string classi_sel = Replace(GetParamURL(Request.QueryString.ToString(), "classi_sel"), "'", "''");
+    string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+    //'-------------------------------------
+    //'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+    //'-------------------------------------
+    validate( "IDDOC", IDDOC , TIPO_PARAMETRO_NUMERO, 0, "", 0, HttpContext, session);
+    validate( "classi_sel", Replace(classi_sel,"#","") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+    string strSQL = string.Empty;
+
+    if(!string.IsNullOrEmpty(classi_sel))
+    {
+        SqlParameters.Add("@idDoc", CInt(IDDOC));
+        SqlParameters.Add("@classi_sel", classi_sel);
+        strSQL = "Declare @blocco int; Exec SP_CAN_INSERT_CLASSI_BANDO @idDoc, @classi_sel, @blocco  output, 1";
+    }
+    //'response.write strSQL
+    //'response.end
+
+    //'--recupero info azienda
+    TSRecordSet? rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, SqlParameters);
+    if (rs is not null && rs.RecordCount > 0) 
+    {
+        rs.MoveFirst();
+
+        htmlToReturn.Write(CStr(rs["esito"]));
+    }
+    else 
+    {
+        htmlToReturn.Write("");
+    }
+}
+@Html.Raw(htmlToReturn.Out())

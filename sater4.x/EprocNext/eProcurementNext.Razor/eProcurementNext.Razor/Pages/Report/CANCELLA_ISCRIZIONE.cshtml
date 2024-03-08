@@ -1,0 +1,294 @@
+﻿@page "/Report/CANCELLA_ISCRIZIONE.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.CANCELLA_ISCRIZIONEModel;
+@model eProcurementNext.Razor.Pages.Report.CANCELLA_ISCRIZIONEModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	var sqlParams = new Dictionary<string, object?>();
+	//objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument non ok
+
+	htmlToReturn.Write($@"
+	<html>
+	<head>");
+
+
+
+	addMetaTag(htmlToReturn);
+
+	htmlToReturn.Write($@"
+	</head>
+
+	<body style=""margin-left:50px; margin-right:50px; margin-top:10px; margin-bottom:10px"">
+
+
+	<table height=""100%"" width=""100%"" border=""0"" style=""height: 1390px;"">
+
+		<tr>
+			<td align=""center""> 
+
+				<table  width=""100%"" style=""margin-top:0px"" align=""center"">
+					<tr>
+						<td style=""border:0px;"" align=""center"">
+							<table style=""font-weight:bold; align:center"">
+								<tr>
+									<td align=""center"" style=""border:0px; align:center; vertical-align=middle;"">
+										<img width=""200px"" src=""./logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@""" />
+									</td>
+								</tr>
+								<tr>
+									<td style=""font-size:9px"">
+										" + ApplicationCommon.CNV("HEADER_DATI_REGISTRAZIONE_FORNITORE") + $@"
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>
+
+		<tr>
+
+			<td height=""100%"" align=""top"" valign=""top"">
+
+				<br/><br/><br/><br/><br/>");
+
+	string tipologia = "Accettazione";
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+	sqlParams.Clear();
+	sqlParams.Add("@id", CStr(CLng(id)));
+	string strSql = "select pfu.pfuNomeUtente + ' ' + pfu.pfuCognome as Responsabile , ";
+	strSql = strSql + "	 	 i.Titolo,  " + Environment.NewLine;
+	strSql = strSql + "	 	 istp.pfuNomeUtente + ' ' + istp.pfuCognome as Dest,   " + Environment.NewLine;
+	strSql = strSql + "	 	 isnull(pfu2.pfuTitolo,'') as PfuTitolo,   " + Environment.NewLine;
+	strSql = strSql + "	 	 azidest.aziRagioneSociale,   " + Environment.NewLine;
+	strSql = strSql + "	 	 azidest.aziE_Mail,  " + Environment.NewLine;
+	strSql = strSql + "	 	 attr1.attValue as UfficioDiAppartenenza,  " + Environment.NewLine;
+	strSql = strSql + "	 	 isnull(d.body,'') as OggettoComunicazione,  " + Environment.NewLine;
+	strSql = strSql + "	 	 isnull(d.note,'') as Comunicazione,  " + Environment.NewLine;
+	strSql = strSql + "	 	 isnull(i.tipodoc,'') as TipoDoc  " + Environment.NewLine;
+	strSql = strSql + "	  FROM CTL_DOC  d   " + Environment.NewLine;
+	strSql = strSql + "	  	inner join CTL_DOC i on d.LinkedDoc = i.id   " + Environment.NewLine;
+	strSql = strSql + "	  	left join CTL_DOC_VIEW bando ON bando.id = d.LinkedDoc   " + Environment.NewLine;
+	strSql = strSql + "	  	left join profiliutente pfu ON pfu.idpfu = bando.ResponsabileProcedimento " + Environment.NewLine;
+	strSql = strSql + "	  	left join ProfiliUtenteAttrib attr1 ON pfu.idpfu = attr1.IdPfu and attr1.dztNome = 'AreaDiAppartenenza' and isnull(attr1.attValue,'') <> ''  " + Environment.NewLine;
+	strSql = strSql + "	  	left join profiliutente pfu2 ON pfu2.idpfu = i.idpfu   " + Environment.NewLine;
+
+	strSql = strSql + "	 	left join CTL_DOC_Destinatari dest ON dest.idHeader = i.id and idazi = d.Destinatario_Azi  " + Environment.NewLine;
+	strSql = strSql + "	 	left join ctl_doc istanza with(nolock) ON istanza.id = dest.Id_Doc  " + Environment.NewLine;
+	strSql = strSql + "	 	left join profiliutente istp with(nolock) ON istp.idpfu = istanza.idpfu " + Environment.NewLine;
+	strSql = strSql + "	 	left join aziende aziDest ON aziDest.idazi = d.Destinatario_Azi  " + Environment.NewLine;
+	strSql = strSql + "where d.id = @id" ;
+
+	TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if(rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+	}
+	else
+	{
+
+		HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+	string nomeBando = HtmlEncode(GetValueFromRS(rs.Fields["Titolo"]));
+	string nomeResponsabile = HtmlEncode(GetValueFromRS(rs.Fields["Responsabile"]));// '"Alessia Orsi"
+	string UfficioDiAppartenenza = HtmlEncode(GetValueFromRS(rs.Fields["UfficioDiAppartenenza"]));// 'Area ICT
+
+	string utenteDestinatario = HtmlEncode(GetValueFromRS(rs.Fields["Dest"]));
+
+	string aziDestRagSoc = HtmlEncode(GetValueFromRS(rs.Fields["aziRagioneSociale"]));
+	string aziDestEmailPec = HtmlEncode(GetValueFromRS(rs.Fields["aziE_Mail"]));
+
+	string tipoDoc = GetValueFromRS(rs.Fields["TipoDoc"]);
+
+	//'pfuTitolo = server.htmlencode(rs("PfuTitolo"))
+	string pfuTitolo = "";
+	string oggetto = "";
+	if(tipoDoc == "BANDO_SDA")
+	{
+		oggetto = $@"Abilitazione al Bando del Sistema Dinamico di Acquisizione '" + nomeBando + "' – <strong>Cancellazione abilitazione</strong>";
+	}
+	else if(tipoDoc == "BANDO")
+	{
+		oggetto = $@"Abilitazione al Bando di Mercato Elettronico '" + nomeBando + "' - <strong>Cancellazione abilitazione</strong>";
+	}
+	else
+	{
+		oggetto = $@"Abilitazione al Bando '" + nomeBando + "' - <strong>Cancellazione abilitazione</strong>";
+	}
+
+	string comunicazione = HtmlEncode(GetValueFromRS(rs.Fields["Comunicazione"]));
+	comunicazione = comunicazione.Replace(Environment.NewLine, "<br/>");
+	htmlToReturn.Write($@"<table width=""100 % "">
+					<tr>
+						<td colspan=""2"" align=""left"">
+						"+UfficioDiAppartenenza+$@"<br/>
+						<strong>" + nomeResponsabile + $@"</strong> <br/>
+						<br/>
+						</td>
+					</tr>
+					<tr>
+						<td colspan=""2"" align=""right"">
+						Spett.le Ditta<br/>
+						"+aziDestRagSoc + $@"<br/>
+						Indirizzo PEC " + aziDestEmailPec + $@"<br/>
+						<strong>NOTIFICATO TRAMITE PEC</strong><br/>
+						</td>
+					</tr>
+
+	</table>");
+
+	htmlToReturn.Write("<br/><br/>");
+
+	htmlToReturn.Write("<strong>Oggetto:</strong> " + oggetto + $@" <br/>");
+
+	htmlToReturn.Write("<br/><br/>");
+	htmlToReturn.Write("Egr. " + pfuTitolo + " " + utenteDestinatario);
+	htmlToReturn.Write("<br/><br/>");
+	htmlToReturn.Write("Con riferimento alla Sua abilitazione al bando in oggetto, si comunica che la stessa &egrave; stata annullata per la seguente motivazione: <br/><br/>");
+
+	htmlToReturn.Write(comunicazione);
+
+	htmlToReturn.Write("<br/><br/><br/>");
+	htmlToReturn.Write($@"<!--
+
+	<table width=""100%"">
+
+	<tr>
+
+	<td align=""right"">
+	" + nomeResponsabile + $@" <br/>
+	Firmato digitalmente
+	</td>
+
+	</tr>		
+
+	</table>
+
+	-->");
+	htmlToReturn.Write($@"
+		</td>
+		</tr>
+		<tr>
+			<td>
+
+				<table border=""0"" height=""50%"" width=""100%"" style=""vertical-align: text-bottom; margin-bottom: 0px"">
+					<tr>
+						<td align=""center"" style=""vertical-align: bottom;"">
+							");
+	htmlToReturn.Write(ApplicationCommon.CNV("footer_stampe_custom_1") + "<br/>");
+	htmlToReturn.Write(ApplicationCommon.CNV("footer_stampe_custom_2"));
+	htmlToReturn.Write($@"
+						</td>
+					</tr>
+					"); 
+	sqlParams.Clear();
+	sqlParams.Add("@tipoDoc", "SCARTO_ISCRIZIONE");
+	strSql = "select indiceTitolario, titolario from Document_protocollo_docER where tipoDoc = @tipoDoc";
+	rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if(rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+
+		string indice = GetValueFromRS(rs.Fields["indiceTitolario"]);
+		string titolario = GetValueFromRS(rs.Fields["titolario"]);
+
+		string lvl1 = GetValueFromRS(rs.Fields["titolario"]);
+		string lvl2 = "";
+		string lvl3 = "";
+		string lvl4 = "";
+		string lvl5 = "";
+		string[] arr = null;
+		try
+		{
+			arr = GetValueFromRS(rs.Fields["titolario"]).Split(".");
+			lvl1 = arr[0];
+			lvl2 = arr[1];
+			lvl3 = arr[2];
+			lvl4 = arr[3];
+			lvl5 = arr[4];
+
+		}
+		catch
+		{
+
+		}
+		
+		htmlToReturn.Write("<tr>");
+		htmlToReturn.Write($@"<td align=""center"" style=""vertical-align: bottom;font-size:7"">");
+		htmlToReturn.Write($@"<table width=""30%"" style=""font-size:10; padding: 0px;text-align:center; border-spacing: 0; border-collapse: collapse"" align=""center"">");
+		htmlToReturn.Write("<tr>");
+		htmlToReturn.Write("<td>");
+		htmlToReturn.Write("</td>");
+		
+		htmlToReturn.Write("<td>");
+		htmlToReturn.Write("LIV.1");
+		htmlToReturn.Write("</td>");
+		htmlToReturn.Write("<td>");
+		htmlToReturn.Write("LIV.2");
+		htmlToReturn.Write("</td>");
+		htmlToReturn.Write("<td>");
+		htmlToReturn.Write("LIV.3");
+		htmlToReturn.Write("</td>");
+		
+		htmlToReturn.Write("</tr>");
+		htmlToReturn.Write("<tr>");
+		htmlToReturn.Write("<td>");
+		htmlToReturn.Write("Classif.");
+		htmlToReturn.Write("</td>");
+
+
+		htmlToReturn.Write($@"<td style=""border: 1px solid black;"">");
+		htmlToReturn.Write(lvl1);
+		htmlToReturn.Write("</td>");
+
+		htmlToReturn.Write($@"<td style=""border: 1px solid black;"">");
+		htmlToReturn.Write(lvl2);
+		htmlToReturn.Write("</td>");
+
+		htmlToReturn.Write($@"<td style=""border: 1px solid black;"">");
+		htmlToReturn.Write(lvl3);
+		htmlToReturn.Write("</td>");
+
+
+		htmlToReturn.Write("</tr>");
+		htmlToReturn.Write("</table>");
+		htmlToReturn.Write("</td>");
+		htmlToReturn.Write("</tr>");
+	}
+	htmlToReturn.Write($@"
+						</table>
+
+			</td>
+		</tr>
+	</table>
+
+	</body>
+	</html>"); 
+
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+
+}@Html.Raw(htmlToReturn.Out())

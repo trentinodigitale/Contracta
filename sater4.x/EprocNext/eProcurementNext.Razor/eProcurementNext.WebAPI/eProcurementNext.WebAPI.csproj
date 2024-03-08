@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ddb32382-8701-44e9-bba6-d70506db0c85</UserSecretsId>
+	<GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+    <AssemblyVersion>1.0.0.6</AssemblyVersion>
+    <FileVersion>1.0.0.6</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication\eProcurementNext.Authentication.csproj" />
+    <ProjectReference Include="..\EprocNext.CommonModule\eProcurementNext.CommonModule.csproj" />
+    <ProjectReference Include="..\eProcurementNext.Core\eProcurementNext.Core.csproj" />
+  </ItemGroup>
+
+</Project>

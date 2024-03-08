@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AssemblyVersion>1.0.0.2</AssemblyVersion>
+    <FileVersion>1.0.0.2</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Tests\eProcurementNext.CtlProcess.Test\**" />
+    <EmbeddedResource Remove="Tests\eProcurementNext.CtlProcess.Test\**" />
+    <None Remove="Tests\eProcurementNext.CtlProcess.Test\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="BizDB\Utils\CommonDbFunction.cs" />
+    <Compile Remove="CommonDB\DebugTrace.cs" />
+    <Compile Remove="CommonDB\DebugTrace_.cs" />
+    <Compile Remove="CtlProcess\Interfaces\IDbProfiler.cs" />
+    <Compile Remove="CtlProcess\Lib\DbProfiler.cs" />
+    <Compile Remove="Email\Lib\RecoverMail.cs" />
+    <Compile Remove="HTML\MultiDimensionalGrid.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.96.0" />
+    <PackageReference Include="ChilkatDnCore" Version="9.5.0.82" />
+    <PackageReference Include="coverlet.collector" Version="3.1.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.RazorPages" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Redis" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.18.0" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.18.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="6.0.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication\eProcurementNext.Authentication.csproj" />
+    <ProjectReference Include="..\EprocNext.CommonModule\eProcurementNext.CommonModule.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BizDB\Utils\" />
+  </ItemGroup>
+
+</Project>

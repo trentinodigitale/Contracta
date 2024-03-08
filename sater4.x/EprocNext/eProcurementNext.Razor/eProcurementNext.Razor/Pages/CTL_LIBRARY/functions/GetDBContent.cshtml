@@ -1,0 +1,89 @@
+﻿@page "/CTL_LIBRARY/functions/GetDBContent.asp"
+@inject eProcurementNext.Session.ISession session;
+@using Newtonsoft.Json.Linq;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.DocumentPermissionModel;
+@using Newtonsoft.Json;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.GetHtmlModelloModel
+
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	long mp_User = 0;
+	mp_User = CLng(session["IdPfu"]);
+	string STORED_SQL = string.Empty;
+	string Parametro = string.Empty;
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+	validate("STORED_SQL", CStr(GetParamURL(Request.QueryString.ToString(), "STORED_SQL")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 1, HttpContext, session);	
+	validate("PARAMETRO", CStr(GetParamURL(Request.QueryString.ToString(), "PARAMETRO")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+
+	STORED_SQL = GetParamURL(Request.QueryString.ToString(), "STORED_SQL");
+	//'--effettuo il controllo di accesso alla SP
+	CheckDocPermission(HttpContext, "SP_PERMISSION_STORED", STORED_SQL, mp_User, "", session, htmlToReturn, Request, Response, 1);
+
+	if (String.IsNullOrEmpty(STORED_SQL) || mp_User==0 )
+	{
+		htmlToReturn.Write("");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+
+
+	Parametro = GetParamURL(Request.QueryString.ToString(), "PARAMETRO");
+	string strSQL = string.Empty;
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@idpfu", mp_User);
+	sqlParams.Add("@parametro", Parametro);
+	strSQL = "Exec " + STORED_SQL + " @idpfu, @parametro";
+
+	TSRecordSet? rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rs is not null && rs.RecordCount > 0)
+	{
+
+		var jsonArray = new Newtonsoft.Json.Linq.JArray();
+		int k;
+		rs.MoveFirst();
+		while (!rs.EOF)
+		{
+			var jsonObject = new Newtonsoft.Json.Linq.JObject();
+			// Aggiungi le coppie chiave-valore al tuo oggetto JSON			
+			for (k = 0; k < rs.Columns.Count; k++)
+			{
+				string key = rs.Columns[k].ColumnName;
+				object value = GetValueFromRS(rs.Fields[k]);
+
+				jsonObject.Add(new JProperty(key, value));
+			}
+
+			jsonArray.Add(jsonObject);
+			rs.MoveNext();
+		}
+
+		// Converti l'array JSON in una stringa JSON
+		string jsonString = jsonArray.ToString();		
+		htmlToReturn.Write(jsonString);
+		
+	}
+	else //NON HA TROVATO NULLA
+	{
+		htmlToReturn.Write("");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+
+	
+	
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,1130 @@
+﻿@page "/CustomDoc/DM_LOAD.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+    DebugTrace dt = new();
+
+    objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+
+    string ID_DOC_POPOLAMENTO;
+    string IDOFF;
+    string TYPEDOC;
+
+    ID_DOC_POPOLAMENTO = GetParamURL(Request.QueryString.ToString(), "ID_DOC_POPOLAMENTO");
+    IDOFF = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+    TYPEDOC = GetParamURL(Request.QueryString.ToString(), "TYPEDOC");
+
+    if (string.IsNullOrEmpty(ID_DOC_POPOLAMENTO))
+    {
+        OPEN_DOCUMENT_POPOLAMENTO();
+    }
+    else
+    {
+        NEXT_STEP();
+    }
+
+    void OPEN_DOCUMENT_POPOLAMENTO()
+    {
+        int idPopolamento;
+
+        validate("IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+        validate("TYPEDOC", GetParamURL(Request.QueryString.ToString(), "TYPEDOC"), CInt(TYPEDOC), SOTTO_TIPO_PARAMETRO_TABLE, "", 1, HttpContext, session);
+
+        //'-- verifica la presenza di un documento non ancora completato per l'ente/Anno richiesto in quel caso lo apre
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@IDDOC", CInt(GetParamURL(Request.QueryString.ToString(), "IDDOC")));
+        string sql = " select Id from CTL_DOC with(nolock) where TipoDoc = 'DM_POPOLAMENTO' and StatoFunzionale not in ( 'Completato' , 'Pubblicato' )  and LinkedDoc = @IDDOC";
+        TSRecordSet rs = GetRS(sql, sqlParams);
+
+        //'-- se esiste prendo l'id Per riaprirlo
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+
+            idPopolamento = CInt(rs["id"]!);
+        }
+        else
+        {
+            //'-- creiamo un nuovo documento
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CLng(CStr(session["IdPfu"])));
+            sqlParams.Add("@IDOFF", CInt(IDOFF));
+            sqlParams.Add("@TYPEDOC", TYPEDOC);
+            sql = $"set nocount on {Environment.NewLine}";
+            sql = $"{sql} insert into CTL_DOC ( TipoDoc , IdPfu , LinkedDoc , StatoFunzionale, JumpCheck ) values ( 'DM_POPOLAMENTO' ,  @IdPfu , @IDOFF , 'InLavorazione', @TYPEDOC ){Environment.NewLine}";
+            sql = $"{sql} select scope_identity() as id";
+
+            rs = GetRS(sql, sqlParams);
+            if (rs.RecordCount > 0)
+            {
+                rs.MoveFirst();
+
+                idPopolamento = CInt(rs["id"]!);
+            }
+            else
+            {
+                string ErrText = "Errore nella generazione del processo di popolamento, si prega di ripetere l'operazione";
+                int ICON_MSG = 3;
+                string CAPTION_MSG = "ERRORE";
+
+                throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=" + ""/*MakeML*/ + "&MSG=" + URLEncode(TruncateMessage(ErrText)) + "&CAPTION=" + CAPTION_MSG + "&ICO=" + ICON_MSG, Response);
+            }
+        }
+
+        //'-- reidirizzo la pagina sull'apertura del documento
+        throw new ResponseRedirectException("../ctl_library/document/document.asp?MODE=SHOW&COMMAND=RELOAD&JScript=DM_POPOLAMENTO&DOCUMENT=DM_POPOLAMENTO&IDDOC=" + idPopolamento + "&CUR_FLD_SELECTED_ON_DOC=&lo=" + GetParamURL(Request.QueryString.ToString(), "lo") + "&SHOWCAPTION=" + GetParamURL(Request.QueryString.ToString(), "SHOWCAPTION") + "&NEW_WIN=" + GetParamURL(Request.QueryString.ToString(), "NEW_WIN"), Response);
+    }
+
+    void NEXT_STEP()
+    {
+        string ID_DOC_POPOLAMENTO;
+        int idStep;
+        //dim idPopolamento
+        string outJSON;
+        int idRow;
+        string codiceEan;
+        string CodiceDitta;
+        string CodiceRepertorio;
+        int NumDM = 0;
+        int TotRow = 0;
+        string invokeWS;
+        string PartitaIva = string.Empty;
+        string CodiceFiscale = string.Empty;
+
+        validate("IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+        validate("ID_DOC_POPOLAMENTO", GetParamURL(Request.QueryString.ToString(), "ID_DOC_POPOLAMENTO"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+        validate("STEP", GetParamURL(Request.QueryString.ToString(), "STEP"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+        validate("TYPEDOC", TYPEDOC, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 1, HttpContext, session);
+
+        ID_DOC_POPOLAMENTO = GetParamURL(Request.QueryString.ToString(), "ID_DOC_POPOLAMENTO");
+        idStep = CInt(GetParamURL(Request.QueryString.ToString(), "STEP"));
+        string IDOFF = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+        //--da id del doc sorgente recupero il codice fiscale e la partita iva del fornitore
+
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@IDOFF", CInt(IDOFF));
+        string sql = @"select isnull(aziPartitaIVA,'') as PartitaIva,  isnull(vatValore_FT,'') as CodiceFiscale
+									from CTL_DOC with (nolock)
+									inner join Aziende with (nolock)  on Destinatario_Azi = idazi
+									left join  DM_Attributi with(nolock) on lnk = idazi and dztNome = 'codicefiscale'
+									where isnull(Destinatario_Azi, 0) <> 0 and Id = @IDOFF";
+
+        TSRecordSet rsForn = GetRS(sql, sqlParams);
+
+        //'-- legge esito
+        if (rsForn.RecordCount > 0)
+        {
+            rsForn.MoveFirst();
+            PartitaIva = Trim(CStr(rsForn["PartitaIva"]));
+            CodiceFiscale = Trim(CStr(rsForn["CodiceFiscale"]));
+
+            //'--tolgo IT dalla partitaiva se inizia per IT
+            if (!string.IsNullOrEmpty(PartitaIva) && MidVb6(PartitaIva, 1, 2).ToUpper() == "IT")
+            {
+                PartitaIva = MidVb6(PartitaIva, 3);
+            }
+        }
+
+        //--nome della sezione del doc sorgente in cui sono i prodotti
+        string sectionName = "PRODOTTI";
+
+        int nr = CInt(DOC_NumRow(sectionName, ""));
+
+        string TIPOLOGIA_DM = string.Empty;
+
+        //' step iniziale
+        if (idStep == -1)
+        {
+            //' in caso di step iniziale conta le righe totali e i codici aic valorizzati
+            NumDM = 0;
+            TotRow = nr;
+
+            for (int i = 0; i <= nr - 1; i++)
+            {// to nr-1
+
+                idRow = CInt(DOC_FieldIdRowTab(sectionName, i));
+                codiceEan = Trim(DOC_FieldRow(sectionName, "CODICE_EAN", i));
+                CodiceDitta = Trim(DOC_FieldRow(sectionName, "CODICE_ARTICOLO_FORNITORE", i));
+                CodiceRepertorio = Trim(DOC_FieldRowTecnical(sectionName, "NumeroRepertorio", i));
+
+                if (CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx")
+                {
+                    TIPOLOGIA_DM = Trim(DOC_FieldRowTecnical(sectionName, "TIPOLOGIA_DM", i));
+                }
+
+                //''if codiceEan<> "" or(CodiceDitta<> "" and CodiceRepertorio<> "") or(CodiceDitta<> "" and(PartitaIva<> "" or CodiceFiscale<> "")) then
+                if (((!string.IsNullOrEmpty(codiceEan) || (!string.IsNullOrEmpty(CodiceDitta) && !string.IsNullOrEmpty(CodiceRepertorio)) || (!string.IsNullOrEmpty(CodiceDitta) && (!string.IsNullOrEmpty(PartitaIva) || !string.IsNullOrEmpty(CodiceFiscale)))) && CStr(ApplicationCommon.Application["DM_URL_PAGE"]) != "BD_Info_Prod/GetEnabledDataSet.aspx") || (!string.IsNullOrEmpty(CodiceRepertorio) && !string.IsNullOrEmpty(TIPOLOGIA_DM) && CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx"))
+                //if ((codiceEan<> "" or(CodiceDitta<> "" and CodiceRepertorio<> "") or(CodiceDitta<> "" and(PartitaIva<> "" or CodiceFiscale<> ""))) and(cstr(application("DM_URL_PAGE")) <> "BD_Info_Prod/GetEnabledDataSet.aspx") ) or(CodiceRepertorio<> "" and TIPOLOGIA_DM<> "" and cstr(application("DM_URL_PAGE")) = "BD_Info_Prod/GetEnabledDataSet.aspx") then
+                {
+                    NumDM = NumDM + 1;
+                }
+            }
+        }
+
+        //' step successivi
+        if (idStep > -1)
+        {
+            TotRow = CInt(GetParamURL(Request.QueryString.ToString(), "TotRow"));
+            NumDM = CInt(GetParamURL(Request.QueryString.ToString(), "NumDM"));
+
+            validate("TotRow", GetParamURL(Request.QueryString.ToString(), "TotRow"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+            validate("NumDM", GetParamURL(Request.QueryString.ToString(), "NumDM"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+            //' se l'indice corrente � minore del numero di righe
+            if (idStep < TotRow)
+            {
+
+                //' cerca il primo codice EON valorizzato successivo all'indice corrente ovvero con indice >=  idStep
+                for (int i = CInt(idStep); i <= nr - 1; i++)
+                { //to nr-1
+
+                    idRow = CInt(DOC_FieldIdRowTab(sectionName, i));
+                    codiceEan = Trim(DOC_FieldRow(sectionName, "CODICE_EAN", i));
+                    CodiceDitta = Trim(DOC_FieldRow(sectionName, "CODICE_ARTICOLO_FORNITORE", i));
+                    CodiceRepertorio = Trim(DOC_FieldRowTecnical(sectionName, "NumeroRepertorio", i));
+
+                    if (CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx")
+                    {
+                        TIPOLOGIA_DM = Trim(DOC_FieldRowTecnical(sectionName, "TIPOLOGIA_DM", i));
+                    }
+
+                    //if (!string.IsNullOrEmpty(codiceEan) || (!string.IsNullOrEmpty(CodiceDitta) && !string.IsNullOrEmpty(CodiceRepertorio)) || (!string.IsNullOrEmpty(CodiceDitta) && (!string.IsNullOrEmpty(PartitaIva) || !string.IsNullOrEmpty(CodiceFiscale))))
+                    if (((!string.IsNullOrEmpty(codiceEan) || (!string.IsNullOrEmpty(CodiceDitta) && !string.IsNullOrEmpty(CodiceRepertorio)) || (!string.IsNullOrEmpty(CodiceDitta) && (!string.IsNullOrEmpty(PartitaIva) || !string.IsNullOrEmpty(CodiceFiscale)))) && CStr(ApplicationCommon.Application["DM_URL_PAGE"]) != "BD_Info_Prod/GetEnabledDataSet.aspx") || (!string.IsNullOrEmpty(CodiceRepertorio) && !string.IsNullOrEmpty(TIPOLOGIA_DM) && CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx"))
+                    //if ((codiceEan<> "" or(CodiceDitta<> "" and CodiceRepertorio<> "") or(CodiceDitta<> "" and(PartitaIva<> "" or CodiceFiscale<> ""))) and(cstr(application("DM_URL_PAGE")) <> "BD_Info_Prod/GetEnabledDataSet.aspx") ) or(CodiceRepertorio<> "" and TIPOLOGIA_DM<> "" and cstr(application("DM_URL_PAGE")) = "BD_Info_Prod/GetEnabledDataSet.aspx") then
+                    {
+                        //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                        //' chiama il web service per ottenere i dati a partire dal codiceEan o dalla coppia CodiceDitta,CodiceRepertorio
+                        //' ottimizzazione: prima di chiamare il WS va a vedere se ha gi� elaborato quel codice prima
+                        //' in quel caso non richiama il WS ma si riprende i dati output dalla chiamata precedente
+                        //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                        int ChiamaWS;
+                        //dim obj
+                        int idRowSource;
+
+                        idRowSource = -1;
+                        invokeWS = "";
+
+                        if (i > 0)
+                        {
+                            //' vede se ha già elaborato quel codice AIC nelle righe precedenti
+                            if (CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx")
+                            {
+                                idRowSource = CercaElabPrev2(TIPOLOGIA_DM, CodiceRepertorio, i, sectionName);
+                            }
+                            else
+                            {
+                                idRowSource = CercaElabPrev(codiceEan, CodiceDitta, CodiceRepertorio, CodiceFiscale, PartitaIva, i, sectionName);
+                            }
+                        }
+
+                        if (idRowSource < 0)
+                        {
+                            //' codice non elaborato in precedenza
+                            ChiamaWS = 1;
+                            idRowSource = idRow;
+                        }
+                        else
+                        {
+                            //' codice gi� elaborato prima, non chiama il WS ma si riprende i dati
+                            //' dalla chiamata precedente
+                            ChiamaWS = 0;
+                            invokeWS = "1#OK";
+                        }
+
+                        if (ChiamaWS == 1)
+                        {
+
+                            //'--cancello le entrate dalla document_microlotti_doc_value per idriga corrente con dse_id='DM_GET' e Dztname not in ('Esito','DataEsito')
+                            //'--lascio solo esito e dataesito delle chiamate andate in errore
+                            //'--condiviso con sabato per uniformit� con l'altra non la facciamo per adesso
+                            //'if idRow <> "" then
+
+                            //'	sql1 = "delete Document_Microlotti_DOC_Value where idheader =  " & idRow & " and dse_id='DM_GET' and Dztname not in ('Esito','DataEsito') "
+
+                            //'	ExecSQL sql1
+
+                            //'end if
+
+                            string urlToInvoke = string.Empty;
+
+                            if (CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx")
+                            {
+                                urlToInvoke = ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"] + CStr(ApplicationCommon.Application["strVirtualDirectory_WS_AIC"]) + "/" + CStr(ApplicationCommon.Application["DM_URL_PAGE"]) + "?IdDoc=" + idRow + "&Operation=GET_RDM&Repertorio=" + CodiceRepertorio + "&TIPOLOGIA_DM=" + TIPOLOGIA_DM;
+                            }
+                            else
+                            {
+                                urlToInvoke = ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"] + CStr(ApplicationCommon.Application["strVirtualDirectory"]) + "/" + CStr(ApplicationCommon.Application["DM_URL_PAGE"]) + "?IdDoc=" + idRow + "&Operation=get&codiceEan=" + codiceEan + "&codiceRepertorio=" + CodiceRepertorio + "&CodiceDitta=" + CodiceDitta + "&CodiceFiscaleDitta=" + CodiceFiscale + "&PartitaIvaDitta=" + PartitaIva;
+                            }
+
+                            //'-- timeouts a 25 secondi
+                            //call obj.setTimeouts (100000,100000,100000,100000)
+                            //obj.open "GET", urlToInvoke ,False
+                            //obj.send
+
+                            ////' invokeWS � l'output del web service
+                            //if err.number > 0 or obj.status <> 200 then
+                            //	invokeWS =  "0#" & err.description	& cstr(obj.statusText)
+                            //else
+                            //	invokeWS = obj.ResponseText
+                            //end if
+
+                            //set obj = nothing
+
+                            invokeWS = invokeUrl(urlToInvoke);
+
+                        }       //'''if ChiamaWS = 1 then
+
+                        //' aggiorna i dati del documento offerta in base a quelli restituiti dal WS
+                        AggiornaDati(invokeWS, IDOFF, CStr(idRow), ""/*CodiceRegionale*/ , CStr(idRowSource), sectionName);
+
+                        break;
+
+                    }   //'''if CodiceAIC <> "" then
+                }
+            }       //'''if idStep < TotRow  then
+        }           //'''if idStep > -1  then
+
+        idStep = idStep + 1;
+
+        //' se entro qui ho finito e aggiorno stato del documento
+        if (idStep >= TotRow)
+        {
+            sqlParams.Clear();
+            sqlParams.Add("@ID_DOC_POPOLAMENTO", CInt(ID_DOC_POPOLAMENTO));
+            sql = $"set nocount on {Environment.NewLine}";
+            sql = $"{sql} update CTL_DOC set StatoFunzionale = 'Completato' where Id = @ID_DOC_POPOLAMENTO";
+
+            cdf.Execute(sql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+        }
+
+        //' output JSON della pagina
+        outJSON = @"{""TotRow"":""" + TotRow + @""",""NumDM"":""" + NumDM + @""",""Step"":""" + idStep + @"""}";
+
+        //'outJSON="{""TotRow"":"""& TotRow & """,""NumDM"":""" & NumDM & """,""Step"":""" & idStep & """,""invokeWS"":""" & invokeWS & """}"
+        //'outJSON="{""TotRow"":""1"",""NumDM"":""1"",""Step"":""" & idStep & """,""urlToInvoke"":""" & urlToInvoke & """}"
+
+        htmlToReturn.Write(outJSON);
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+    }
+
+    void AggiornaDati(string invokeWS, string IDOFF, string idRow, string CodiceRegionale, string idRowSource, string sectionName)
+    {
+        string esito;
+        string esitoRiga;
+        string condition_warning;
+        string condition_error;
+        TSRecordSet rsAttr;
+        int IsEditable;
+        dynamic valore;
+        dynamic valoreOld;
+        int indice_riga;
+        int id_prodotto;
+        int modificato_prodotto;
+        TSRecordSet? rsModelloProd = null;
+        int presente_nel_modello;
+
+        condition_warning = @"<br><img src=""../images/Domain/State_Warning.gif""><br>";
+        condition_error = @"<br><img src=""../images/Domain/State_ERR.gif""><br>";
+
+        esito = "";
+        esitoRiga = "";
+
+        modificato_prodotto = 0;
+
+        //' chiamata al WS OK
+        if (CStr(invokeWS) == "1#OK")
+        {
+
+            //' chiamata al WS OK
+
+            //' controlla esito esistenza codice AIC
+            var sqlParams = new Dictionary<string, object?>();
+            sqlParams.Add("@idRowSource", CInt(idRowSource));
+            string sql = " select top 1 Value from Document_Microlotti_DOC_Value with (nolock)  where IdHeader=@idRowSource and DSE_ID='DM_GET' and DZT_Name='Esito' order by IdRow desc";
+            TSRecordSet rs = GetRS(sql, sqlParams);
+
+            //'-- legge esito
+            if (rs.RecordCount > 0)
+            {
+                rs.MoveFirst();
+                esito = CStr(rs["Value"]);
+            }
+
+            //'' leggo esito riga sulla microlotti dettagli
+            //' se esito not ok aggiorna esito riga in warning (codice AIC non valido)
+            sql = " select isnull(esitoRiga,'') as esitoRiga from Document_MicroLotti_Dettagli with (nolock) where id = @idRowSource";
+            dt.Write($"leggo esito riga sulla microlotti dettagli - query di selezione: {sql}");
+
+            rs = GetRS(sql, sqlParams);
+
+            //'-- se esiste aggiorno il dato
+            if (rs.RecordCount > 0)
+            {
+                rs.MoveFirst();
+                esitoRiga = CStr(rs["esitoRiga"]);
+            }
+
+            dt.Write($"esito riga: {esitoRiga}");
+
+            //' chiamata al WS not OK
+            if (CStr(esito) != "OK")
+            {
+                sqlParams.Clear();
+                sqlParams.Add("@EsitoRiga", $"{condition_warning}{esito}");
+                sqlParams.Add("@idRow", CInt(idRow));
+                string sql1 = "update Document_MicroLotti_Dettagli set EsitoRiga = ";
+                if (esitoRiga == @"<img src=""../images/Domain/State_OK.gif"">" || string.IsNullOrEmpty(esitoRiga))
+                {
+                    sql1 = $"{sql1} @EsitoRiga";
+                }
+                else
+                {
+                    sql1 = $"{sql1} EsitoRiga + @EsitoRiga";
+                }
+                sql1 = $"{sql1} where id = @idRow";
+                dt.Write($"chiamata al WS not OK - query di aggiornamento: {sql1}");
+
+                cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                dt.Write($"chiamata al WS not OK - query di aggiornamento eseguita");
+            }
+            else
+            {      //' in caso di esito Ok aggiorna i dati del doc sorgente
+
+                sqlParams.Clear();
+                sqlParams.Add("@idRow", CInt(idRow));
+                //'--svuoto esitoriga
+                string sql1 = "update Document_MicroLotti_Dettagli set EsitoRiga = '' where id = @idRow";
+                dt.Write($"chiamata al WS caso OK - query di aggiornamento: {sql1}");
+                cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                //TSRecordSet rs1 = GetRS(sql1, sqlParams);
+                dt.Write($"chiamata al WS caso OK - query di aggiornamento eseguita");
+
+                //' leggge il recordset degli attributi che sono editabili per il documento e la sezione interessati
+                sqlParams.Clear();
+                sqlParams.Add("@IDOFF", CInt(IDOFF));
+                sqlParams.Add("@sectionName", sectionName);
+                sql = @"select MA_DZT_Name, isnull( MAP_Value , 1 ) as MAP_Value, replace(replace(case when ML_Description is null then MA_DescML else cast(ML_Description as varchar(500)) end,'<div class=""Grid_CaptionObblig"">',''),'</div>','') as ML_Description from ctl_doc_section_model x with (nolock) inner join CTL_ModelAttributes  WITH(INDEX(IX_CTL_ModelAttributes_MA_MOD_ID_MA_DZT_Name_MA_DescML_MA_Pos) nolock) on MA_MOD_ID = x.MOD_Name left join CTL_ModelAttributeProperties with (nolock) on [MAP_MA_MOD_ID]=MA_MOD_ID and [MAP_MA_DZT_Name]=MA_DZT_Name and [MAP_Propety]='Editable' left outer join LIB_Multilinguismo with (nolock) on ML_KEY = MA_DescML and ML_LNG = 'I' where x.IdHeader = @IDOFF and x.DSE_ID = @sectionName";
+                rsAttr = GetRS(sql, sqlParams);
+
+                //' cerca nel vettore in memoria l'indice riga che corrisponde a quella chiave idRow
+                indice_riga = GetIndiceRiga(idRow, sectionName);
+
+                string Segnalazioni = string.Empty;
+                string Segnalazioni2 = string.Empty;
+
+                //' vede se esiste il prodotto in ambito dispositivi medici per codiceregionale
+                id_prodotto = -1;
+
+                sqlParams.Clear();
+                sqlParams.Add("@CodiceRegionale", CodiceRegionale);
+                sql = " select id from Document_MicroLotti_Dettagli WITH(NOLOCK) where tipodoc = 'prodotto' and Posizione = '2' and CODICE_REGIONALE = @CodiceRegionale";
+                rs = GetRS(sql, sqlParams);
+
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    id_prodotto = CInt(rs["id"]!);
+
+                    //' se esiste preleva il modello prodotto farmaci per conoscere gli attributi
+                    sql = "select b.value as DZT_Name from ctl_doc WITH(NOLOCK) inner join CTL_DOC_Value a WITH(NOLOCK) on a.IdHeader = id and a.DSE_ID = 'AMBITO' and a.DZT_Name = 'MacroAreaMerc' inner join CTL_DOC_Value b WITH(NOLOCK) on b.IdHeader = id and b.DSE_ID = 'MODELLI' and b.DZT_Name = 'DZT_Name' where tipodoc='config_modelli' and Deleted = 0 and StatoFunzionale = 'Pubblicato' and JumpCheck = 'CODIFICA_PRODOTTI' and a.value='1'";
+                    rsModelloProd = GetRS(sql);
+                }
+
+                //'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                //' aggiorno i dati offerta
+                //'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                //' se il dato � editabile lo sovrascrivo altrimenti no
+                //' in ogni caso traccia la cosa nell'esito riga (solo se il valore � cambiato)
+
+                //' matrice dei campi da aggiornare (la prima colonna � il nome del campo tornato dal ws, la seconda � il nome
+                //' dell'attributo nel documento, la terza dice se il campo � alfanumerico attraverso il char '
+                //' la quarta colonna dice se deve aggiornare il prodotto per quell'attributo
+                //' la quinta colonna contiene il valore ritornato dal WS
+
+                dynamic vMatrix;
+                int cnt1;
+                int cnt2;
+                string descrAttr = "";
+                int bValoreOldVuoto;
+                int bValoreNewVuoto;
+
+                int nSize = 0;
+
+                cnt1 = 0;
+                cnt2 = 0;
+
+                if (CStr(ApplicationCommon.Application["DM_URL_PAGE"]) == "BD_Info_Prod/GetEnabledDataSet.aspx")
+                {
+                    nSize = 5;
+
+                    vMatrix = new dynamic[5, 6]; //6 righe e 5 colonne. zero based
+
+                    vMatrix[0, 0] = "classificazioneCND";
+                    vMatrix[1, 0] = "CODICE_CND";
+                    vMatrix[2, 0] = "'";
+                    vMatrix[3, 0] = "";
+                    vMatrix[4, 0] = "";
+
+                    vMatrix[0, 1] = "CLASSE_CE";
+                    vMatrix[1, 1] = "ClasseCE";
+                    vMatrix[2, 1] = "'";
+                    vMatrix[3, 1] = "";
+                    vMatrix[4, 1] = "";
+
+                    vMatrix[0, 2] = "codicecatalogofabbr";
+                    vMatrix[1, 2] = "CodiceAttribuitoFabbricante";
+                    vMatrix[2, 2] = "'";
+                    vMatrix[3, 2] = "";
+                    vMatrix[4, 2] = "";
+
+                    vMatrix[0, 3] = "DENOMINAZIONECOMMERCIALE";
+                    vMatrix[1, 3] = "NomeCommercialeModello";
+                    vMatrix[2, 3] = "'";
+                    vMatrix[3, 3] = "";
+                    vMatrix[4, 3] = "";
+
+                    vMatrix[0, 4] = "partitaiva_vatnumber";
+                    vMatrix[1, 4] = "PartitaIVAFabbricante";
+                    vMatrix[2, 4] = "'";
+                    vMatrix[3, 4] = "";
+                    vMatrix[4, 4] = "";
+
+                    vMatrix[0, 5] = "fabbricante";
+                    vMatrix[1, 5] = "RagioneSocialeFabbricante";
+                    vMatrix[2, 5] = "'";
+                    vMatrix[3, 5] = "";
+                    vMatrix[4, 5] = "";
+                }
+                else
+                {
+                    nSize = 19;
+
+                    vMatrix = new dynamic[5, 20]; //20 righe e 5 colonne. zero based
+
+                    vMatrix[0, 0] = "numeroumperconf";
+                    vMatrix[1, 0] = "PEZZI_PER_CONFEZIONE";
+                    vMatrix[2, 0] = "";
+                    vMatrix[3, 0] = "";
+                    vMatrix[4, 0] = "";
+
+                    vMatrix[0, 1] = "Tipodm";
+                    vMatrix[1, 1] = "TIPO_REPERTORIO";
+                    vMatrix[2, 1] = "'";
+                    vMatrix[3, 1] = "";
+                    vMatrix[4, 1] = "";
+
+                    vMatrix[0, 2] = "Codicerepertorio";
+                    vMatrix[1, 2] = "NumeroRepertorio";
+                    vMatrix[2, 2] = "'";
+                    vMatrix[3, 2] = "";
+                    vMatrix[4, 2] = "";
+
+                    vMatrix[0, 3] = "aic";
+                    vMatrix[1, 3] = "CodiceAIC";
+                    vMatrix[2, 3] = "'";
+                    vMatrix[3, 3] = "";
+                    vMatrix[4, 3] = "";
+
+                    vMatrix[0, 4] = "Codiceean";
+                    vMatrix[1, 4] = "CODICE_EAN";
+                    vMatrix[2, 4] = "'";
+                    vMatrix[3, 4] = "";
+                    vMatrix[4, 4] = "";
+
+                    vMatrix[0, 5] = "descrizione";
+                    vMatrix[1, 5] = "DENOMINAZIONE_ARTICOLO_FORNITORE";
+                    vMatrix[2, 5] = "'";
+                    vMatrix[3, 5] = "";
+                    vMatrix[4, 5] = "";
+
+                    vMatrix[0, 6] = "denominazioneregionale";
+                    vMatrix[1, 6] = "DESCRIZIONE_CODICE_REGIONALE";
+                    vMatrix[2, 6] = "'";
+                    vMatrix[3, 6] = "";
+                    vMatrix[4, 6] = "";
+
+                    vMatrix[0, 7] = "codiceformafarmaceutica";
+                    vMatrix[1, 7] = "FormaFarmaceutica";
+                    vMatrix[2, 7] = "'";
+                    vMatrix[3, 7] = "";
+                    vMatrix[4, 7] = "";
+
+                    vMatrix[0, 8] = "Flgftalatifree";
+                    vMatrix[1, 8] = "Ftalati_free";
+                    vMatrix[2, 8] = "'";
+                    vMatrix[3, 8] = "";
+                    vMatrix[4, 8] = "";
+
+                    vMatrix[0, 9] = "Flglatexfree";
+                    vMatrix[1, 9] = "LATEX_FREE";
+                    vMatrix[2, 9] = "'";
+                    vMatrix[3, 9] = "";
+                    vMatrix[4, 9] = "";
+
+                    vMatrix[0, 10] = "codiceprincipioattivo";
+                    vMatrix[1, 10] = "PrincipioAttivo";
+                    vMatrix[2, 10] = "'";
+                    vMatrix[3, 10] = "";
+                    vMatrix[4, 10] = "";
+
+                    vMatrix[0, 11] = "Flgsterile";
+                    vMatrix[1, 11] = "STERILE";
+                    vMatrix[2, 11] = "'";
+                    vMatrix[3, 11] = "";
+                    vMatrix[4, 11] = "";
+
+                    vMatrix[0, 12] = "codiceregionale";
+                    vMatrix[1, 12] = "CODICE_BDR";
+                    vMatrix[2, 12] = "'";
+                    vMatrix[3, 12] = "";
+                    vMatrix[4, 12] = "";
+
+                    vMatrix[0, 13] = "CODICE_CND";
+                    vMatrix[1, 13] = "CODICE_CND";
+                    vMatrix[2, 13] = "'";
+                    vMatrix[3, 13] = "";
+                    vMatrix[4, 13] = "";
+
+                    vMatrix[0, 14] = "DESCRIZIONE_CND";
+                    vMatrix[1, 14] = "DESCRIZIONE_CND";
+                    vMatrix[2, 14] = "'";
+                    vMatrix[3, 14] = "";
+                    vMatrix[4, 14] = "";
+
+                    vMatrix[0, 15] = "CODICE_FISCALE_PRODUTTORE";
+                    vMatrix[1, 15] = "CODICE_FISCALE_PRODUTTORE";
+                    vMatrix[2, 15] = "'";
+                    vMatrix[3, 15] = "";
+                    vMatrix[4, 15] = "";
+
+                    vMatrix[0, 16] = "RagSocProduttore";
+                    vMatrix[1, 16] = "RagSocProduttore";
+                    vMatrix[2, 16] = "'";
+                    vMatrix[3, 16] = "";
+                    vMatrix[4, 16] = "";
+
+                    vMatrix[0, 17] = "CODICE_REF";
+                    vMatrix[1, 17] = "CODICE_REF";
+                    vMatrix[2, 17] = "'";
+                    vMatrix[3, 17] = "";
+                    vMatrix[4, 17] = "";
+
+                    vMatrix[0, 18] = "MODALITA_DI_CONSERVAZIONE_DOM";
+                    vMatrix[1, 18] = "MODALITA_DI_CONSERVAZIONE_DOM";
+                    vMatrix[2, 18] = "'";
+                    vMatrix[3, 18] = "";
+                    vMatrix[4, 18] = "";
+
+                    vMatrix[0, 19] = "Dosaggio";
+                    vMatrix[1, 19] = "Dosaggio";
+                    vMatrix[2, 19] = "'";
+                    vMatrix[3, 19] = "";
+                    vMatrix[4, 19] = "";
+                }
+
+                string ValoreDefault = "";
+
+                //' ciclo di aggiornamento
+                for (int ind = 0; ind <= nSize; ind++)
+                {
+                    //'bUpdate = true
+
+                    //' vede se il campo e' editabile
+                    IsEditable = IsEdit(rsAttr, vMatrix[1, ind], ref descrAttr);
+
+                    bValoreOldVuoto = 0;
+                    bValoreNewVuoto = 0;
+
+                    //' legge il valore restituito dal ws
+                    sqlParams.Clear();
+                    sqlParams.Add("@idRowSource", CInt(idRowSource));
+                    sqlParams.Add("@DZT_Name", CStr(vMatrix[0, ind]));
+                    sql = " select top 1 Value from Document_Microlotti_DOC_Value with (nolock)  where IdHeader=@idRowSource and DSE_ID='DM_GET' and DZT_Name=@DZT_Name order by IdRow desc";
+                    rs = GetRS(sql, sqlParams);
+
+                    //'-- se esiste il valore vedo se devo aggiornare
+                    if (rs.RecordCount > 0)
+                    {
+                        rs.MoveFirst();
+                        valore = CStr(rs["Value"]);
+
+                        //' legge il valore sul documento (lo prende dalla memoria)
+                        //'valoreOld = DOC_FieldRow( sectionName, vMatrix(1,ind), indice_riga )
+                        valoreOld = DOC_FieldRowTecnical(sectionName, vMatrix[1, ind], indice_riga);
+
+                        //' caso dei campi numerici con valore vuoto
+                        if (vMatrix[1, ind] == "PEZZI_PER_CONFEZIONE")
+                        {
+                            if (string.IsNullOrEmpty(valoreOld) || !IsNumeric(valoreOld))
+                            {
+                                valoreOld = "NULL";
+                                bValoreOldVuoto = 1;
+                            }
+                            // odiros 13/06/2023
+                            if (string.IsNullOrEmpty(valore) || !IsNumeric(valore) || valore == "0")
+                            {
+                                bValoreNewVuoto = 1;
+                            }
+                        }
+                        else
+                        {
+                            valoreOld = Trim(CStr(valoreOld));
+                            if (valoreOld == "")
+                            {
+                                bValoreOldVuoto = 1;
+                            }
+                            //odiros 13/06/2023
+                            if (string.IsNullOrEmpty(valore.Trim()) || valore.Trim() == "0")
+                            {
+                                bValoreNewVuoto = 1;
+                            }
+                        }
+
+                        //'--se il dato � alfanumerico
+                        if (CStr(vMatrix[2, ind]) == "'")
+                        {
+                            valore = Trim(Replace(CStr(valore), "'", "''"));
+                            //odiros 13/06/2023
+                            if (string.IsNullOrEmpty(valore.Trim()) || valore.Trim() == "0")
+                            {
+                                bValoreNewVuoto = 1;
+                            }
+                        }
+                        else
+                        {
+
+                            //'--campi numerici
+                            if (IsNumeric(valoreOld))
+                            {
+                                valoreOld = Strings.Replace(valoreOld, ",", ".");
+                                valoreOld = CDbl(valoreOld);
+                            }
+
+                            if (IsNumeric(valore))
+                            {
+                                valore = Strings.Replace(valore, ",", ".");
+                                valore = CDbl(valore);
+                                // odiros 13/06/2023
+                                if (valore == 0)
+                                {
+                                    bValoreNewVuoto = 1;
+                                }
+                            }
+                        }
+
+                        //' odiros 16/06/2021
+                        if (vMatrix[1, ind] == "PEZZI_PER_CONFEZIONE")
+                        {
+
+                            //'--EP se il valore � vuoto ed in partenza no ho nulla
+                            if (CStr(valore) == "")
+                            {
+
+                                valore = "NULL";
+                            }
+                        }
+
+                        // 23/01/2024 in caso di valore vuoto vede se deve applicare una scritta custom per il cliente
+                        ValoreDefault = "";
+                        if (IsEditable == 1 && (valore=="" || bValoreNewVuoto == 1) && CStr(vMatrix[2, ind]) == "'")
+                        {
+                            ValoreDefault = Get_Func_Property("DM_LOAD", vMatrix[1, ind], "ValoreDefault", "");
+                            if (ValoreDefault != "")
+                                valore = ValoreDefault;
+                        }
+                        
+                        //' salva il valore in 4� colonna
+                        vMatrix[4, ind] = valore;
+
+                        //' aggiorniamo solo se l'attributo � editabile e il valore � differente
+                        if (CStr(valoreOld) != CStr(valore))
+                        {
+
+                            if (IsEditable == 1 && !(bValoreNewVuoto == 1 && bValoreOldVuoto == 0))
+                            {   
+                                //' aggiornamento del dato sul documento sorgente
+                                sql1 = "update Document_MicroLotti_Dettagli set " + vMatrix[1, ind] + "=" + vMatrix[2, ind] + valore + vMatrix[2, ind] + " where id=" + idRow;
+                                cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString);
+
+                                //' dà la segnalazione di aggiornamento solo se il valore non era vuoto
+                                if (bValoreOldVuoto == 0)
+                                {
+                                    if (string.IsNullOrEmpty(Segnalazioni2))
+                                    {
+                                        Segnalazioni2 = descrAttr; //'-- & "(valoreOld=" & valoreOld & "---valore=" & valore & ")" & "SQL:" & sql1
+                                        cnt2 = cnt2 + 1;
+                                    }
+                                    else
+                                    {
+                                        cnt2 = cnt2 + 1;
+                                        if ((CInt(cnt2) % 2) != 0)
+                                        {
+                                            Segnalazioni2 = Segnalazioni2 + "<br>" + descrAttr; //'--& "(valoreOld=" & valoreOld & "---valore=" & valore & ")" & "SQL:" & sql1
+                                        }
+                                        else
+                                        {
+                                            Segnalazioni2 = Segnalazioni2 + " , " + descrAttr; //'--& "(valoreOld=" & valoreOld & "---valore=" & valore & ")" & "SQL:" & sql1
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                //' se il dato non � editabile non lo aggiorno e segnalo un warning in esito riga
+                                if (IsEditable == 0)
+                                {
+
+                                    if (string.IsNullOrEmpty(Segnalazioni))
+                                    {
+                                        //'Segnalazioni = condition_warning & "Il campo " & vMatrix(1,ind) & " non viene aggiornato perch� non editabile"
+                                        //'Segnalazioni = condition_warning & "Il campo " & descrAttr & " non viene aggiornato perch� non editabile"
+                                        Segnalazioni = descrAttr;
+                                        cnt1 = cnt1 + 1;
+                                    }
+                                    else
+                                    {
+                                        //'Segnalazioni = Segnalazioni & "<br>" &  "Il campo " & vMatrix(1,ind) & " non viene aggiornato perch� non editabile"
+                                        //'Segnalazioni = Segnalazioni & "<br>" &  "Il campo " & descrAttr & " non viene aggiornato perch� non editabile"
+                                        cnt1 = cnt1 + 1;
+                                        if ((CInt(cnt1) % 2) != 0)
+                                        {
+                                            Segnalazioni = Segnalazioni + "<br>" + descrAttr;
+                                        }
+                                        else
+                                        {
+                                            Segnalazioni = Segnalazioni + " , " + descrAttr;
+                                        }
+                                    }
+                                }
+                            }      //'' if IsEditable = 1 then
+                        }        //'' if valoreOld <> valore then
+
+                        //' se esiste il prodotto codificato vede se deve aggiornare il dato anche
+                        //' sul prodotto (solo se il valore � differente ed esiste nel modello)
+                        if (id_prodotto > 0)
+                        {
+                            presente_nel_modello = IsInModel(rsModelloProd, vMatrix[1, ind]);
+
+                            if (presente_nel_modello == 1)
+                            {
+
+                                //' questa select serve a capire se il valore sul prodotto � diverso
+                                string sql2 = "select id from Document_MicroLotti_Dettagli WITH(NOLOCK) where id = " + id_prodotto + " and " + vMatrix[1, ind] + " <> " + vMatrix[2, ind] + valore + vMatrix[2, ind];
+                                TSRecordSet rs2 = GetRS(sql2);
+
+                                if (rs2.RecordCount > 0)
+                                {
+                                    //' aggiorna il prodotto se il valore � differente
+                                    //'sql1 = "update Document_MicroLotti_Dettagli set " & vMatrix(1,ind) &  "=" & vMatrix(2,ind) & valore & vMatrix(2,ind) & " where id=" & id_prodotto
+                                    //'set rs1 = GetRS(sql1)
+                                    vMatrix[3, ind] = "1";
+                                    modificato_prodotto = 1;
+                                }
+                            }    //''''if presente_nel_modello = 1 then
+                        }  //'''if id_prodotto > 0 then
+                    }     //'''if rs.recordcount > 0 then  (se esiste valore tornato dal WS)
+                }
+
+                //'response.write instr(cstr(esitoRiga) , "../images/Domain/State_OK.gif")
+                //'response.end
+
+                //' vede se deve aggiornare esito riga per segnalare campi non editabili non aggiornati
+                if (!string.IsNullOrEmpty(Segnalazioni) || !string.IsNullOrEmpty(Segnalazioni2))
+                {
+                    //'if cstr(esitoRiga) = "<img src=""../images/Domain/State_OK.gif"">" or cstr(esitoRiga) = "" then
+                    //'if instr(cstr(esitoRiga) , "../images/Domain/State_OK.gif") > 0 or cstr(esitoRiga) = "" then
+                    string SegnalazioniAll = condition_warning;
+
+                    if (!string.IsNullOrEmpty(Segnalazioni))
+                    {
+                        if (cnt1 == 1)
+                        {
+                            SegnalazioniAll = $@"{SegnalazioniAll}Il campo {Segnalazioni} <br>non viene modificato in quanto non editabile ma il valore ritornato dall'Integrazione DM è differente";
+                        }
+                        else
+                        {
+                            SegnalazioniAll = $@"{SegnalazioniAll}I campi {Segnalazioni} <br>non vengono modificati in quanto non editabili ma il valore ritornato dall'Integrazione DM è differente";
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(Segnalazioni2))
+                    {
+                        if (cnt2 == 1)
+                        {
+                            SegnalazioniAll = $"{SegnalazioniAll}<br>Il campo {Segnalazioni2}<br>è stato aggiornato dall'Integrazione DM ma il valore precedente era differente";
+                        }
+                        else
+                        {
+                            SegnalazioniAll = $"{SegnalazioniAll}<br>I campi {Segnalazioni2}<br>sono stati aggiornati dall'Integrazione DM ma il valore precedente era differente";
+                        }
+                    }
+
+                    sqlParams.Clear();
+                    sqlParams.Add("@SegnalazioniAll", SegnalazioniAll);
+                    sqlParams.Add("@idRow", CInt(idRow));
+                    sql1 = "update Document_MicroLotti_Dettagli set EsitoRiga = @SegnalazioniAll where id = @idRow";
+
+                    cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                }    //''''if Segnalazioni <> "" or Segnalazioni2 <> "" then
+
+                //' se � stato modificato qualcosa sul prodotto crea documento di variazione
+                //' ed effettua la variazione
+                if (modificato_prodotto == 1)
+                {
+                    dynamic newId;
+
+                    //' chiama la stored per creare eventuale documento storico di default
+                    sqlParams.Clear();
+                    sqlParams.Add("@SegnalazioniAll", id_prodotto);
+                    sql1 = "exec CREATE_STORICO_PROD @id_prodotto, -20";
+                    cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                    //' MODIFICA LA RIGA DI PRODOTTO
+                    for (int ind = 0; ind <= nSize; ind++)
+                    {// to nSize
+
+                        if (vMatrix[3, ind] == "1")
+                        {
+                            valore = vMatrix[4, ind];
+                            sql1 = "update Document_MicroLotti_Dettagli set " + vMatrix[1, ind] + "=" + vMatrix[2, ind] + valore + vMatrix[2, ind] + " where id=" + id_prodotto;
+                            //rs1 = GetRS(sql1);
+                            cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString);
+                        }
+                    }
+
+                    //' CREA IL DOCUMENTO DI VARIAZIONE
+                    sqlParams.Clear();
+                    sqlParams.Add("@id_prodotto", id_prodotto);
+                    sql1 = "exec CODIFICA_PROD_DOC_CREATE_FROM_MODIFICA @id_prodotto, -20";
+                    TSRecordSet rs1 = GetRS(sql1, sqlParams);
+
+                    if (rs1.RecordCount > 0)
+                    {
+                        rs1.MoveFirst();
+                        newId = rs1["id"]!;
+                        //' se la chiamata alla stored � andata a buon fine
+                        if (IsNumeric(newId))
+                        {
+                            //' aggiorna stato
+                            sqlParams.Clear();
+                            sqlParams.Add("@newId", CInt(newId));
+                            string sql2 = "Update CTL_DOC set caption='Modifica Prodotto da Integrazione BDR-DM',StatoFunzionale='Inviato',Statodoc='Sended',datainvio=getdate() where id=@newId";
+                            cdf.Execute(sql2, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                            //' schedula processo per calcolo del protocollo
+                            sql2 = "INSERT INTO CTL_Schedule_Process (IdDoc, IdUser, DPR_DOC_ID, DPR_ID, State, dateIn) values (@newId, -20, 'CODIFICA_PROD_DOC', 'PROTOCOLLA', 0, getdate())";
+                            cdf.Execute(sql2, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                        }
+                    }
+                }   //'''if modificato_prodotto = 1 then
+            }       //'''else di if cstr(esito) <> "OK" then
+        }
+        else
+        {
+            //'' se entro qui la chiamata al WS ha dato errore
+            string[] sss;
+            string strErr;
+
+            sss = Strings.Split(CStr(invokeWS), "#");
+
+            if (CStr(sss[0]) == "0")
+            {
+                //' aggiorna stato esito riga con errore
+
+                // test odiros
+                // test odiros 2
+                //strErr = "Errore chiamata al web service BDR_DM - " + sss[1];
+                strErr = sss[1];
+                esitoRiga = "";
+
+                //' se esito not ok aggiorna esito riga in errore (codice EON/coppia codiceditta-codicereportorio non valido)
+                //' legge esito riga attuale
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@idRowSource", idRowSource);
+                string sql = " select isnull(esitoRiga,'') as esitoRiga from Document_MicroLotti_Dettagli with (nolock) where id = @idRowSource";
+                dt.Write($"legge esito riga attuale - query di selezione: {sql}");
+
+                TSRecordSet? rs = GetRS(sql, sqlParams);
+
+                //'-- se esiste aggiorno il dato
+                if (rs is not null && rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    esitoRiga = CStr(rs["esitoRiga"]);
+                }
+                
+                dt.Write($"esito riga: {esitoRiga}");
+
+                sqlParams.Clear();
+                sqlParams.Add("@EsitoRiga", $"{condition_error}{strErr}");
+                sqlParams.Add("@idRow", CInt(idRow));
+                string sql1 = "update Document_MicroLotti_Dettagli set EsitoRiga = ";
+                if (CStr(esitoRiga) == @"<img src=""../images/Domain/State_OK.gif"">" || CStr(esitoRiga) == "")
+                {
+                    sql1 = $"{sql1}@EsitoRiga ";
+                }
+                else
+                {
+                    sql1 = $"{sql1}EsitoRiga + @EsitoRiga ";
+                }
+                sql1 = $"{sql1}where id = @idRow";
+
+                dt.Write($"se entro qui la chiamata al WS ha dato errore - query di update: {sql1}");
+                cdf.Execute(sql1, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                dt.Write($"chiamata al WS caso OK - query di aggiornamento eseguita");
+            }       //'''if cstr(sss(0))="0" then
+        }       //''' else di if cstr(invokeWS) = "1#OK" then
+    }
+
+    int CercaElabPrev(string CodiceEAN, string CodiceDitta, string CodiceRepertorio, string CodiceFiscale, string PartitaIva, int i, string nome_sezione)
+    {
+        int idRowOut;
+        string CodiceEAN_2;
+        string CodiceDitta_2;
+        string CodiceRepertorio_2;
+        int intToReturn;
+        intToReturn = -1;
+
+        //' cerca nelle righe precedenti gi� elaborato se gi� c'era quel codice EAN oppure la coppia CodiceDitta-CodiceRepertorio
+        //' se lo trova ritorna l'id della microlotti da cui prendere i valori
+        for (int j = 0; j <= i - 1; j++)
+        {// to i-1
+
+            idRowOut = CInt(DOC_FieldIdRowTab(nome_sezione, j));
+            CodiceEAN_2 = Trim(CStr(DOC_FieldRow(nome_sezione, "CODICE_EAN", j)));
+            CodiceDitta_2 = Trim(CStr(DOC_FieldRow(nome_sezione, "CODICE_ARTICOLO_FORNITORE", j)));
+            CodiceRepertorio_2 = Trim(CStr(DOC_FieldRow(nome_sezione, "NumeroRepertorio", j)));
+
+            //'--se ho codice ean valorizzato alloro controllo che non ho fatto la chiamata per codice ean
+            if (CStr(CodiceEAN_2) != "" && CStr(CodiceEAN_2) == CStr(CodiceEAN))
+            {
+                intToReturn = idRowOut;
+                break;
+            }
+
+            //'--se ho CodiceDitta e CodiceRepertorio valorizzati verifico che ho fatto la chiamata per questa coppia
+            if (CStr(CodiceDitta_2) != "" && CStr(CodiceRepertorio_2) != "" && CStr(CodiceDitta_2) == CStr(CodiceDitta) && CStr(CodiceRepertorio_2) == CStr(CodiceRepertorio))
+            {
+                intToReturn = idRowOut;
+                break;
+            }
+
+            //	'--se ho solo CodiceDitta valorizzato vedo se ho fatto la chiamata per codicefiscale/partitaiva
+            if (!string.IsNullOrEmpty(CodiceDitta_2) && (!string.IsNullOrEmpty(CodiceFiscale) || !string.IsNullOrEmpty(PartitaIva)) && CodiceDitta_2 == CodiceDitta)
+            {
+                intToReturn = idRowOut;
+                break;
+            }
+        }
+
+        return intToReturn;
+    }
+
+    int CercaElabPrev2(string TIPOLOGIA_DM, string CodiceRepertorio, int i, string nome_sezione)
+    {
+        int idRowOut;
+        string TIPOLOGIA_DM_2;
+        string CodiceRepertorio_2;
+        int intToReturn;
+        intToReturn = -1;
+
+        //' cerca nelle righe precedenti gi� elaborato se gi� c'era quel codice EAN oppure la coppia CodiceDitta-CodiceRepertorio
+        //' se lo trova ritorna l'id della microlotti da cui prendere i valori
+        for (int j = 0; j <= i - 1; j++)
+        {// to i-1
+
+            idRowOut = CInt(DOC_FieldIdRowTab(nome_sezione, j));
+            TIPOLOGIA_DM_2 = Trim(CStr(DOC_FieldRowTecnical(nome_sezione, "TIPOLOGIA_DM", j)));
+            CodiceRepertorio_2 = Trim(CStr(DOC_FieldRowTecnical(nome_sezione, "NumeroRepertorio", j)));
+
+            //'--se ho codice ean valorizzato alloro controllo che non ho fatto la chiamata per codice ean
+            if (CStr(TIPOLOGIA_DM_2) != "" && CStr(TIPOLOGIA_DM_2) == CStr(TIPOLOGIA_DM) && CStr(CodiceRepertorio_2) == CStr(CodiceRepertorio))
+            {
+                intToReturn = idRowOut;
+                break;
+            }
+        }
+
+        return intToReturn;
+    }
+
+    int IsEdit(TSRecordSet rsAttr, dynamic attribName, ref string descrAttr)
+    {
+        int intToReturn;
+        intToReturn = -1;
+        descrAttr = "";
+
+        if (rsAttr.RecordCount > 0)
+        {
+            rsAttr.MoveFirst();
+
+            rsAttr.Find($"MA_DZT_Name = '{attribName}'");
+            if (!rsAttr.EOF)
+            {
+                intToReturn = 0;
+
+                if (CInt(rsAttr["MAP_Value"]!) == 1)
+                {
+                    intToReturn = 1;
+                }
+
+                descrAttr = CStr(rsAttr["ML_Description"]);
+            }
+        }
+        return intToReturn;
+    }
+
+    int IsInModel(TSRecordSet? rsAttr, dynamic attribName)
+    {
+        int intToReturn;
+        intToReturn = 0;
+
+        if (rsAttr is not null && rsAttr!.RecordCount > 0)
+        {
+            rsAttr.MoveFirst();
+
+            rsAttr.Find($"DZT_Name = '{CStr(attribName)}'");
+            if (!rsAttr.EOF)
+            {
+                intToReturn = 1;
+            }
+        }
+
+        return intToReturn;
+    }
+
+    int GetIndiceRiga(string idRow, string sectionName)
+    {
+        int intToReturn = -1;
+
+        int nr = CInt(DOC_NumRow(sectionName, ""));
+
+        for (int i = 0; i <= nr - 1; i++)
+        { //to nr-1
+            dynamic idRiga = DOC_FieldIdRowTab(sectionName, i);
+
+            if (CLng(idRiga) == CLng(idRow))
+            {
+                return intToReturn;
+            }
+        }
+
+        return intToReturn;
+    }
+}
+@Html.Raw(htmlToReturn.Out())

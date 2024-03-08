@@ -1,0 +1,588 @@
+TABLE{ border-collapse:collapse;}
+
+TABLE#TableContainer TD.Cell1GridProducts1{ border:1px solid #ccc; padding:3px;}
+TABLE#TableContainer TD.CellIntestNotAttributesObblig{border:1px solid #666;}
+
+<style type="text/css">
+BODY
+{
+    FONT-SIZE: 3px;
+    BACKGROUND-REPEAT: repeat;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+DIV
+{
+    FONT-SIZE: 12px
+}
+.GridProductsDoc
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    WIDTH: 100%;
+    BORDER-BOTTOM: medium none;
+    BACKGROUND-COLOR: white;
+    cellspacing: 0;
+    cellpadding: 0;
+	margin-top:10px ;
+}
+TABLE#TableContainer TD Table td{ border:none;}
+
+.CellIntestGridProductsDoc
+{
+    FONT-SIZE: 12px;
+    PADDING: 5px;
+    MARGIN: 1px;
+    COLOR: #ececec;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    HEIGHT: 20px;
+    BACKGROUND-COLOR: #515151;
+    TEXT-DECORATION: none
+}
+.Cell1GridProducts3
+{
+    BORDER-RIGHT: 1px solid;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: 1px solid;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: 1px solid;
+    LINE-HEIGHT: 12px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    HEIGHT: 20px;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-DECORATION: none
+}
+.Cell1GridProducts1
+{
+	/*border:1px solid #ccc;*/
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 3px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    LINE-HEIGHT: 12px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    HEIGHT: 20px;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none;
+	border:1px solid #666;
+}
+.Cell1GridProducts2
+{
+    BORDER-RIGHT: 1px solid;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: 1px solid;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: 1px solid;
+    LINE-HEIGHT: 12px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    HEIGHT: 20px;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-DECORATION: none
+}
+.Foglie
+{
+    FONT-SIZE: 12px;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.TextFieldGridProductsDoc
+{
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.SelectFieldGridProductsDoc
+{
+    FONT-SIZE: 12px;
+    WIDTH: 200px;
+    COLOR: #333;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.ButtonGridProductsDoc
+{
+    BORDER-RIGHT: #161A74 1px solid;
+    BORDER-TOP: #161A74 1px solid;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: #161A74 1px solid;
+    COLOR: #333;
+    LINE-HEIGHT: 12px;
+    BORDER-BOTTOM: #161A74 1px solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #E9EDF3;
+    TEXT-DECORATION: none
+}
+.DataGridSeparatorStyle
+{
+    BORDER-RIGHT: #ffffff;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: #000000;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: #000000;
+    LINE-HEIGHT: 1pt;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: #ffffff;
+    BACKGROUND-COLOR: #838383
+}
+BODY.BodyProducts
+{
+    BORDER-RIGHT: 1px;
+    BORDER-TOP: 1px;
+    BORDER-LEFT: 1px;
+    BORDER-BOTTOM: 1px;
+    BACKGROUND-COLOR: white
+}
+TD.CellIntestGrid1ProductsDoc
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: 1px solid;
+    COLOR: #161a74;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: lightsteelblue
+}
+.TextLinkProducts
+{
+    FONT-SIZE: 12px;
+    CURSOR: hand;
+    COLOR: #CB1D15;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+TD.CellIntestNotAttributesObblig
+{
+	/*border:1px solid #ccc;*/
+    FONT-SIZE: 12px;
+    COLOR: #ececec;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR:#888;
+	height:20px;
+	border:1px solid #666;
+}
+TD.CellGridTypeRow0
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: white
+}
+TD.CellGridTypeRow1
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #3366ff;
+}
+TD.CellGridTypeRow2
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #88a6ff
+}
+TD.CellGridTypeRow3
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #b0c5ff
+}
+TD.CellGridTypeRow4
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #d7e1ff
+}
+TD.CellGridTypeRow5
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: mediumblue
+}
+TD.CellGridTypeRow6
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #cc99ff
+}
+TD.CellGridTypeRow10
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #dadada
+}
+TD.CellGridTypeRow0_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: white
+}
+TD.CellGridTypeRow1_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #3366ff
+}
+TD.CellGridTypeRow2_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #88a6ff
+}
+TD.CellGridTypeRow3_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #b0c5ff
+}
+TD.CellGridTypeRow4_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #ececec;
+    TEXT-DECORATION: none
+}
+TD.CellGridTypeRow4_Bold_Numeric
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #ececec;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: none
+}
+TD.CellGridTypeRow5_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: mediumblue
+}
+TD.CellGridTypeRow6_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #cc99ff
+}
+TD.CellGridTypeRow10_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #dadada
+}
+.FontCellIntestGridEnhanced
+{
+    COLOR: #ff0000
+}
+TD.CellGridTypeRow50_Bold
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: red
+}
+TD.CellGridTypeRow50
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: red
+}
+.Cell2GridProducts2
+{
+    BORDER-RIGHT: 1pt solid;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: 1pt solid;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: 1pt solid;
+    LINE-HEIGHT: 12px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: 1pt solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-DECORATION: none
+}
+.GridProductsDoc1
+{
+    BORDER-RIGHT: thin;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: thin;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: thin;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: thin;
+    cellspacing: 0;
+    cellpadding: 0
+}
+.textfieldInvisible
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: medium none;
+    COLOR: #333;
+    BORDER-BOTTOM: medium none;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: lightyellow
+}
+.FoglieBluSott
+{
+    FONT-SIZE: 12px;
+    COLOR: #161a74;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.ButtonHyerarchiesVerticalModel
+{
+    BORDER-RIGHT: darkred 1px solid;
+    BORDER-TOP: darkred 1px solid;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: darkred 1px solid;
+    BORDER-BOTTOM: darkred 1px solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: goldenrod
+}
+TD.CellGridListMessages
+{
+    BORDER-TOP: 2px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    WIDTH: 150px;
+    COLOR: #333;
+    BORDER-BOTTOM: 2px solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TD.Cell1GridListMessages
+{
+    FONT-SIZE: 12px;
+    WIDTH: 150px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: left
+}
+.FontNewMessageNotLink
+{
+    FONT-WEIGHT: 800;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.cellgridriepilogo
+{
+    BORDER-TOP: 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TD.desclittle
+{
+    FONT-SIZE: 7pt;
+    WIDTH: 210px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TABLE.GridListMessages
+{
+    WIDTH: 10in
+}
+TD.CellNumeric
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 12px;
+    COLOR: darkred;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: khaki;
+    TEXT-ALIGN: right
+}
+TD.CellNumeric1
+{
+    BORDER-RIGHT: 1pt solid;
+    BORDER-TOP: 1pt solid;
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: 1pt solid;
+    COLOR: #333;
+    BORDER-BOTTOM: 1pt solid;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: right
+}
+TD.CellNumericBold
+{
+    BORDER-TOP: 0pt solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: right
+}
+TD.cellgridriepilogo1
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TD.DescrRagSoc
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TD.lockedHead
+{
+    FONT-SIZE: 12px;
+    COLOR: #161a74;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: lightsteelblue
+}
+A:link
+{
+    COLOR: #CB1D15;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TABLE.AreaFirma
+{
+    BORDER-RIGHT: blue 2px;
+    BORDER-TOP: blue 2px;
+    LEFT: 550px;
+    BORDER-LEFT: blue 2px;
+    BORDER-BOTTOM: blue 2px;
+    POSITION: absolute;
+    TOP: 50px
+}
+
+</style>

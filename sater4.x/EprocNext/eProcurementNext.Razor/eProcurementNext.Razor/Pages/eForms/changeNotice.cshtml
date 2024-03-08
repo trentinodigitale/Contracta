@@ -1,0 +1,57 @@
+﻿@page "/eforms/changeNotice.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.Xml;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.eForms.Cn16Model
+@{
+
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var idDoc = GetParamURL(Request.QueryString.ToString(), "ID"); // è l'id del documento di rettifica / proroga / revoca
+    var idPfu = GetParamURL(Request.QueryString.ToString(), "IDPFU");
+    var operation = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+
+    validate("ID", idDoc, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("IDPFU", idPfu, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("OPERATION", operation, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+    var id = CInt(idDoc);
+    var iduser = CInt(idPfu);
+
+    switch (operation.ToUpper())
+    {
+        case "DOWNLOAD":
+
+            try
+            {
+                var xmlOut = Model.DownloadChangeNotice(id);
+
+                HttpContext.Response.ContentType = "TEXT/XML";
+                HttpContext.Response.Headers.Add("Content-Disposition", "attachment; filename=CHANGE_NOTICE.XML");
+
+                @Html.Raw(xmlOut)
+            }
+            catch (XmlException ex)
+            {
+                @Html.Raw($"0#{ex.Message}")
+            }
+            catch (Exception e)
+            {
+                @Html.Raw($"0#{e.ToString()}")
+            }
+
+            break;
+        default:
+            
+            var esito = Model.GenerateXml(id, iduser, operation);
+
+            @Html.Raw(esito)
+
+            return;
+    }
+
+}

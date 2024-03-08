@@ -1,0 +1,7 @@
+<efac:Change>
+	<efbc:ChangeDescription languageID="ITA">@@@CHANGE_DESCRIPTION@@@</efbc:ChangeDescription>
+	<efbc:ProcurementDocumentsChangeIndicator>@@@CHANGE_DOCUMENTS_INDICATOR@@@</efbc:ProcurementDocumentsChangeIndicator>
+	<efac:ChangedSection>
+		<efbc:ChangedSectionIdentifier>@@@CHANGE_SEC_ID@@@</efbc:ChangedSectionIdentifier>
+	</efac:ChangedSection>
+</efac:Change>

@@ -1,0 +1,548 @@
+
+/*icone Funzioni lato Ente*/
+
+#button_GESTIONE_Utente_Group_Close::before, #button_GESTIONE_Utente_Group_Open::before{
+	content:"\f4fe";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Gestione_Enti_Aderenti_Group_Close::before, #button_GROUP_Gestione_Enti_Aderenti_Group_Open::before{
+	content:"\f66f";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Gestione_Fornitori_Group_Close::before, #button_GROUP_Gestione_Fornitori_Group_Open::before{
+	content:"\f275";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Validazione_Anagrafiche_Group_Close::before, #button_GROUP_Validazione_Anagrafiche_Group_Open::before{
+	content:"\f0ae";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Monitoraggio_Sistema_Group_Close::before, #button_GROUP_Monitoraggio_Sistema_Group_Open::before{
+	content:"\f201";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Pannello_Sicurezza_Group_Close::before, #button_GROUP_Pannello_Sicurezza_Group_Open::before{
+	content:"\f502";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Configurazione_di_Sistema_Group_Close::before, #button_GROUP_Configurazione_di_Sistema_Group_Open::before{
+	content:"\f013";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Configurazione_Valori_Group_Close::before, #button_GROUP_Configurazione_Valori_Group_Open::before{
+	content:"\f0ac";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Configurazione_DGUE_Group_Close::before, #button_GROUP_Configurazione_DGUE_Group_Open::before{
+	content:"\f682";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Procedura_Gara_Group_Close::before, #button_GROUP_Procedura_Gara_Group_Open::before{
+	content:"\f0e3";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	left:12px;
+}
+
+#button_GROUP_Dossier_Group_Close::before, #button_GROUP_Dossier_Group_Open::before{
+	content:"\f07c";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_REPORT_Group_Close::before, #button_GROUP_REPORT_Group_Open::before{
+	content:"\f200";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Release_Notes_Group_Close::before, #button_GROUP_Release_Notes_Group_Open::before{
+	content:"\f518";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Albo_Fornitori_Group_Close::before, #button_GROUP_Albo_Fornitori_Group_Open::before{
+	content:"\f4ce";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Albo_Lavori_Group_Close::before, #button_GROUP_Albo_Lavori_Group_Open::before{
+	content:"\f807";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Albo_Professionisti_Group_Close::before, #button_GROUP_Albo_Professionisti_Group_Open::before{
+	content:"\f568";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Gestione_Fabbisogni_Group_Close::before, #button_GROUP_Gestione_Fabbisogni_Group_Open::before{
+	content:"\f4c1";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_GESTIONE_PREGARA_Group_Close::before, #button_GROUP_GESTIONE_PREGARA_Group_Open::before{
+	content:"\f64a";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Procedura_RDO_Group_Close::before, #button_GROUP_Procedura_RDO_Group_Open::before{
+	content:"\f4c0";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Consultazioni_Preliminari_Mercato_Group_Close::before, #button_GROUP_Consultazioni_Preliminari_Mercato_Group_Open::before{
+	content:"\f0a1";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	left:10px;
+}
+#button_GROUP_Procedura_Cottimo_Group_Close::before, #button_GROUP_Procedura_Cottimo_Group_Open::before{
+	content:"\f662";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_GESTIONE_ASTE_Group_Close::before, #button_GROUP_GESTIONE_ASTE_Group_Open::before{
+	content:"\f0e7";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_COM_DPE_Group_Close::before, #button_GROUP_COM_DPE_Group_Open::before{
+	content:"\f658";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	left:10px;
+}
+
+
+#button_GROUP_Cataloghi_ME_Group_Close::before, #button_GROUP_Cataloghi_ME_Group_Open::before{
+	content:"\f07a";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}																							  
+/*icone funzioni lato Fornitore*/
+
+#button_GROUP_Gestione_Anagrafiche_Group_Close::before, #button_GROUP_Gestione_Anagrafiche_Group_Open::before{
+	content:"\f2bb";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_MIEI_BANDI_Group_Close::before, #button_GROUP_MIEI_BANDI_Group_Open::before{
+	content:"\f0e3";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_MIEI_INVITI_Group_Close::before, #button_GROUP_MIEI_INVITI_Group_Open::before{
+	content:"\f64a";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_OFFERTE_FORN_Group_Close::before, #button_GROUP_OFFERTE_FORN_Group_Open::before{
+	content:"\f571";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_CONTRATTI_FORN_Group_Close::before, #button_GROUP_CONTRATTI_FORN_Group_Open::before{
+	content:"\f2b5";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_DOC_TERZI_Group_Close::before, #button_GROUP_DOC_TERZI_Group_Open::before{
+	content:"\f4fd";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_ALBO_FORNITORI_FORNITORE_Group_Close::before, #button_GROUP_ALBO_FORNITORI_FORNITORE_Group_Open::before{
+	content:"\f4ce";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_ALBO_LAVORI_FORNITORE_Group_Close::before, #button_GROUP_ALBO_LAVORI_FORNITORE_Group_Open::before{
+	content:"\f807";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_ALBO_PROFESSIONISTI_FORNITORE_Group_Close::before, #button_GROUP_ALBO_PROFESSIONISTI_FORNITORE_Group_Open::before{
+	content:"\f568";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_BANDO_CONSULTAZIONE_Group_Close::before, #button_GROUP_BANDO_CONSULTAZIONE_Group_Open::before{
+	content:"\f0a1";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_COMUNICAZIONI_Group_Close::before, #button_GROUP_COMUNICAZIONI_Group_Open::before{
+	content:"\f658";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Admin_Group_Close::before, #button_GROUP_Admin_Group_Open::before{
+	content:"\f509";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_ACQUISTI_Group_Close::before, #button_GROUP_ACQUISTI_Group_Open::before{
+	content:"\f291";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_NOTIER_Group_Close::before, #button_GROUP_NOTIER_Group_Open::before{
+	content:"\f570";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#nascondi_menu::before{
+	content:"\f0c9";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	margin-right:0.3em;
+}
+
+#mostra_menu::before{
+	content:"\f03a";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	margin-right:0.3em;
+}
+#button_GROUP_Affidamenti_Semplificati_Group_Close::before, #button_GROUP_Affidamenti_Semplificati_Group_Open::before{
+	content:"\e068";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+/*Background select white*/
+select[multiple], select[size]{
+	background:#fff;
+} 
+#button_GROUP_Albo_Telematico_Group_Close::before, #button_GROUP_Albo_Telematico_Group_Open::before, #button_GROUP_ALBO_Group_Close::before, #button_GROUP_ALBO_Group_Open::before{
+	content:"\f54e";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Gestione_SEMPLIFICATO_Group_Close::before, #button_GROUP_Gestione_SEMPLIFICATO_Group_Open::before, #button_GROUP_ALBO_SDA_Group_Close::before, #button_GROUP_ALBO_SDA_Group_Open::before{
+	content:"\f56c";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	left: 12px;
+}
+#button_GROUP_Richieste_Accesso_Atti_Group_Open::before, #button_GROUP_Richieste_Accesso_Atti_Group_Close::before{
+	content:"\f51c";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Acquisti_a_catalogo_Group_Close::before, #button_GROUP_Acquisti_a_catalogo_Group_Open::before{
+	content:"\f54f";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Formulari_Group_Close::before, #button_GROUP_Formulari_Group_Open::before{
+	content:"\f187";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Procedura_Gara_Rilancio_Competitivo_Group_Close::before, #button_GROUP_Procedura_Gara_Rilancio_Competitivo_Group_Open::before{
+	content:"\f1d8";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Gestione_Acquisti_a_catalogo_Group_Close::before, #button_GROUP_Gestione_Acquisti_a_catalogo_Group_Open::before{
+	content:"\f0c0";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Gestione_SDA_Group_Close::before, #button_GROUP_Gestione_SDA_Group_Open::before{
+	content:"\f15c";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_AVCP_Group_Close::before, #button_GROUP_AVCP_Group_Open::before{
+	content:"\f3ed";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	left: 10px;
+}
+
+#button_GROUP_Gestione_codifiche_classificazioni_Group_Close::before, #button_GROUP_Gestione_codifiche_classificazioni_Group_Open::before {
+	content: "\f02a";
+	/* display: block; */
+	font-size: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: bold;
+}
+
+#button_GROUP_Procedura_AccordoQuadro_Group_Close::before, #button_GROUP_Procedura_AccordoQuadro_Group_Open::before {
+	content: "\e591";
+	/* display: block; */
+	font-size: 1.5em;
+	margin-bottom: 0.5em;
+	font-weight: bold;
+}
+#button_GROUP_CUSTOM_1_Group_Close::before, #button_GROUP_CUSTOM_1_Group_Open::before{
+	content:"\f802";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+
+
+
+/*icone Funzioni lato Ente*/
+
+#button_GROUP_Gestione_Enti_Aderenti_IM_Group_Close::before, #button_GROUP_Gestione_Enti_Aderenti_IM_Group_Open::before{
+	content:"\f66f";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Gestione_Fornitori_IM_Group_Close::before, #button_GROUP_Gestione_Fornitori_IM_Group_Open::before{
+	content:"\f275";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Albo_Telematico_IM_Group_Close::before, #button_GROUP_Albo_Telematico_IM_Group_Open::before{
+	content:"\f0ae";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Documentazione_IM_Group_Close::before, #button_GROUP_Documentazione_IM_Group_Open::before{
+	content:"\f518";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+
+#button_GROUP_Comunicazioni_Generiche_Buyer_IM_Group_Close::before, #button_GROUP_Comunicazioni_Generiche_Buyer_IM_Group_Open::before{
+	content:"\f658";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_GESTIONE_RDA_Group_Close::before, #button_GROUP_GESTIONE_RDA_Group_Open::before{
+	content:"\f570";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Procedura_RDO_IM_Group_Close::before, #button_GROUP_Procedura_RDO_IM_Group_Open::before{
+	content:"\f4c0";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Dossier_IM_Group_Close::before, #button_GROUP_Dossier_IM_Group_Open::before{
+	content:"\f07c";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Configurazione_di_Sistema_IM_Group_Close::before, #button_GROUP_Configurazione_di_Sistema_IM_Group_Open::before{
+	content:"\f013";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Pannello_Sicurezza_IM_Group_Close::before, #button_GROUP_Pannello_Sicurezza_IM_Group_Open::before{
+	content:"\f502";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Monitoraggio_Sistema_IM_Group_Close::before, #button_GROUP_Monitoraggio_Sistema_IM_Group_Open::before{
+	content:"\f201";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+/* icone Funzioni lato fornitore*/
+#button_GROUP_Gestione_Anagrafiche_IM_Group_Close::before, #button_GROUP_Gestione_Anagrafiche_IM_Group_Open::before{
+	content:"\f2bb";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Albo_Fornitori_IM_Group_Close::before, #button_GROUP_Albo_Fornitori_IM_Group_Open::before{
+	content:"\f0ae";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+	}
+
+#button_GROUP_MIEI_INVITI_IM_Group_Close::before, #button_GROUP_MIEI_INVITI_IM_Group_Open::before{
+	content:"\f4c0";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Comunicazioni_Generiche_Fornitori_IM_Group_Close::before, #button_GROUP_Comunicazioni_Generiche_Fornitori_IM_Group_Open::before{
+	content:"\f658";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+#button_GROUP_Public_Folder_IM_Group_Close::before, #button_GROUP_Public_Folder_IM_Group_Open::before{
+	content:"\f518";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+#button_GROUP_Template_Group_Close::before, #button_GROUP_Template_Group_Open::before{
+	content:"\F570";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+
+
+

@@ -1,0 +1,188 @@
+BODYVERTICALMODEL
+{
+}
+.StampaCol
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold
+}
+.StampaCont
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt
+}
+.TextFieldVerticalModel
+{
+    BORDER-BOTTOM: #182782 1px solid;
+    BORDER-LEFT: #182782 1px solid;
+    BORDER-RIGHT: #182782 1px solid;
+    BORDER-TOP: #182782 1px solid;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.TextFieldVerticalModelBig
+{
+    BORDER-BOTTOM: #182782 1px solid;
+    BORDER-LEFT: #182782 1px solid;
+    BORDER-RIGHT: #182782 1px solid;
+    BORDER-TOP: #182782 1px solid;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    WIDTH: 200px
+}
+.SelectFieldVerticalModel
+{
+    BORDER-BOTTOM: #182782 1px solid;
+    BORDER-LEFT: #182782 1px solid;
+    BORDER-RIGHT: #182782 1px solid;
+    BORDER-TOP: #182782 1px solid;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.SelectFieldLockedVerticalModel
+{
+    BORDER-BOTTOM: #182782 1px solid;
+    BORDER-LEFT: #182782 1px solid;
+    BORDER-RIGHT: #182782 1px solid;
+    BORDER-TOP: #182782 1px solid;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.ButtonVerticalModel
+{
+    BACKGROUND-COLOR: #066bbd;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    BORDER-LEFT: lightgrey 1px inset;
+    BORDER-RIGHT: lightgrey 1px inset;
+    BORDER-TOP: lightgrey 1px inset;
+    COLOR: white;
+    FONT-SIZE: 8pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+TABLE.GridBodyVerticalModel
+{
+    WIDTH: 100%
+}
+TD.CellDescGridBodyVerticalModel
+{
+}
+TD.CellValueGridBodyVerticalModel
+{
+    WIDTH: 80%
+}
+.FontDescTextObblig
+{
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+.FontDescText
+{
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: none
+}
+.FontDescGroups
+{
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 9pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: underline
+}
+.ButtonHyerarchiesVerticalModel
+{
+    BACKGROUND-COLOR: #066bbd;
+    BORDER-BOTTOM: silver 1px outset;
+    BORDER-LEFT: silver 1px outset;
+    BORDER-RIGHT: silver 1px outset;
+    BORDER-TOP: silver 1px outset;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    MARGIN: 0px 0px 2px 2px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 1px;
+    TEXT-DECORATION: none
+}
+TABLE.GridInternalVerticalModel
+{
+    BORDER-BOTTOM: silver 2px solid;
+    BORDER-LEFT: silver 2px solid;
+    BORDER-RIGHT: silver 2px solid;
+    BORDER-TOP: silver 2px solid;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    WIDTH: 100%
+}
+TD.CellDescGridInternalVerticalModel
+{
+    WIDTH: 20%
+}
+TD.CellValueGridInternalModel
+{
+    WIDTH: 80%
+}
+.TextFieldLocked
+{
+    BACKGROUND-COLOR: whitesmoke;
+    BORDER-BOTTOM: #182782 1px solid;
+    BORDER-LEFT: #182782 1px solid;
+    BORDER-RIGHT: #182782 1px solid;
+    BORDER-TOP: #182782 1px solid;
+    FONT-SIZE: 8pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: none
+}
+.FontSubtitle
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold
+}
+TEXTAREA.FontTextAreaNotesNotEdit
+{
+    BACKGROUND-COLOR: whitesmoke;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    WIDTH: 100%
+}
+TEXTAREA.FontTextAreaNotesEditable
+{
+    BACKGROUND-COLOR: white;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    WIDTH: 100%
+}

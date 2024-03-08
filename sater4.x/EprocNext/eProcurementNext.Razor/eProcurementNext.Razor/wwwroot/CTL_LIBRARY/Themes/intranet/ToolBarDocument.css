@@ -1,0 +1,27 @@
+.ToolBar_button
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: #161a74;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: left;
+    TEXT-DECORATION: underline
+}
+TABLE.Toolbar
+{
+    PADDING-RIGHT: 3px;
+    BORDER-TOP: thin;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 3px;
+    PADDING-TOP: 3px;
+    BORDER-BOTTOM: 1px solid
+}
+BODY
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px
+}

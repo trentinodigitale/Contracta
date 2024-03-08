@@ -1,0 +1,101 @@
+﻿@page "/CustomDoc/RisultatoDiGaraCTL.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.RisultaroDiGaraCTLModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.RisultaroDiGaraCTLModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	int lIdMsgPub = CInt(GetParamURL(Request.QueryString.ToString(), "IDDOC"));
+	//'-- verifico la presenza del documento 
+	TSRecordSet? rsMsg = null;
+	int idNewDoc = 0;
+	string strSQL = string.Empty;
+	string strOggetto = string.Empty;
+	var SqlParameters = new Dictionary<string, object?>();
+	SqlParameters.Add("@tipo","BANDO");
+	SqlParameters.Add("@id", -lIdMsgPub);
+	try
+	{
+		rsMsg = cdf.GetRSReadFromQuery_("select Id from Document_RisultatoDiGara where TipoDoc_src = @tipo and ID_MSG_BANDO = @id", ApplicationCommon.Application.ConnectionString, SqlParameters);
+	}
+	catch
+	{
+		ShowError("Errore durante il recupero del documento, ripetere l'operazione");
+	}
+
+	if (rsMsg is not null && rsMsg!.RecordCount > 0)
+	{
+		rsMsg.MoveFirst();
+		idNewDoc = CInt(rsMsg["Id"]!);
+	}
+	else
+	{
+		strOggetto = $"Bando:{DOC_Field("TESTATA", "Protocollo")} - {DOC_Field("COPERTINA", "Body")}";
+		SqlParameters.Clear();
+		SqlParameters.Add("@id", (-lIdMsgPub));
+		SqlParameters.Add("@oggetto", strOggetto);
+		SqlParameters.Add("@bando", "BANDO");
+		//'-- se non esiste lo creo 
+		strSQL = "insert into Document_RisultatoDiGara ( ID_MSG_BANDO , Oggetto ,TipoDoc_src ) values (@id , @oggetto , @bando)";
+
+		try
+		{
+			cdf.Execute(strSQL, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+		}
+		catch
+		{
+			//'if Err.number <> 0 then call ShowError( "Errore in creazione documento di comunicazione, ripetere l'operazione - " & err.Description  & "[" & strSQL & "]")
+			ShowError($"[{strSQL}]");
+		}
+		try
+		{
+			SqlParameters.Clear();
+			SqlParameters.Add("@bando", "BANDO");
+			SqlParameters.Add("@id",  -lIdMsgPub);
+			rsMsg = cdf.GetRSReadFromQuery_("select Id from Document_RisultatoDiGara where  TipoDoc_src = @bando and ID_MSG_BANDO = @id", ApplicationCommon.Application.ConnectionString, SqlParameters);
+			if(rsMsg.RecordCount >0)
+			{
+				rsMsg.MoveFirst();
+				idNewDoc = CInt(rsMsg["Id"]!);
+			}
+		}
+		catch
+		{
+			ShowError("Errore in creazione documento , ripetere l'operazione");
+		}
+		//'-- inserisce le righe del template
+		//'//strSQL = "insert into DOCUMENT_RisultatoDiGara_ROW ( idHeader , DescrizioneVer , Allegato , Versione ) select " & idNewDoc & " as idheader , DescrizioneVer ,  Allegato , Versione from DOCUMENT_RisultatoDiGara_ROW where idheader = -1  "
+		//'call obj.ExecSql( cstr(strSql ) , cstr(session("Session")(8)) )
+
+	}
+
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+	//'-- reidirizzo la pagina sull'apertura del documento
+	throw new ResponseRedirectException("../ctl_library/document/document.asp?MODE=SHOW&JScript=&DOCUMENT=RISULTATODIGARA&IDDOC=" + idNewDoc, Response);
+	void ShowError(string ErrText )
+	{
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=yes&MSG=" + URLEncode(TruncateMessage(ErrText)) + "&CAPTION=Errore&ICO=2", Response);
+	}
+}
+@Html.Raw(htmlToReturn.Out())

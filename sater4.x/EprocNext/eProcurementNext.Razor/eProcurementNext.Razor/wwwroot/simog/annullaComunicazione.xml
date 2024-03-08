@@ -1,0 +1,12 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:smar="smartCig.ws.comunicazioni_v1.0.0" xmlns:smar1="smartCig.user">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <smar:annullaComunicazioneRequest>
+      <smar:cig>@@@CIG@@@</smar:cig>
+      <smar:user>
+        <smar1:ticket>@@@TICKET@@@</smar1:ticket>
+        <smar1:index>@@@INDEX@@@</smar1:index>
+      </smar:user>
+    </smar:annullaComunicazioneRequest>
+  </soapenv:Body>
+</soapenv:Envelope>

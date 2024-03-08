@@ -1,0 +1,50 @@
+﻿@page "/CTL_LIBRARY/reloadFunz.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.BizDB
+@using eProcurementNext.CommonDB
+@inject eProcurementNext.Session.ISession session;
+@inject eProcurementNext.CommonModule.IEprocResponse htmlToReturn;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.reloadFunzModel
+@{
+    try
+    {
+        LoadSession(HttpContext, session);
+
+        CommonDbFunctions cdf = new();
+
+        string idpfu = CStr(session["idPfu"]);
+
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@idpfu", CInt(idpfu));
+
+        string strSql = "UPDATE ProfiliUtente";
+        strSql = strSql + " SET pfufunzionalita = dbo.XOR_FUNZIONALITA_FROM_IDPFU (idpfu), ";
+        strSql = strSql + " pfuprofili = dbo.MERGE_PFUPROFILO_FROM_IDPFU(idpfu)";
+        strSql = strSql + " WHERE idpfu = @idpfu";
+
+        var obj = new TabManage(ApplicationCommon.Configuration);
+        obj.ExecSql(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+        string strSQL = "select pfufunzionalita,pfunome from profiliutente  with(nolock) where idpfu = @idpfu";
+        TSRecordSet rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+        if (!(rs.EOF && rs.BOF))
+        {
+            rs.MoveFirst();
+
+            string funzionalita = CStr(rs["pfufunzionalita"]);
+            string UserName = CStr(rs["pfunome"]);
+
+            session["Funzionalita"] = funzionalita;
+            session["UserName"] = UserName;
+        }
+        htmlToReturn.Write("1#OK");
+    }
+    catch (Exception ex)
+    {
+        eProcurementNext.CommonDB.Basic.TraceErr(ex, ApplicationCommon.Application.ConnectionString, "reloadFunz");
+        htmlToReturn.Write("0#" + ex.Message);
+    }
+}
+@(htmlToReturn.Out());

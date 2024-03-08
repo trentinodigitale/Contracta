@@ -1,0 +1,154 @@
+﻿@page "/CTL_LIBRARY/functions/infoNodoGeo.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.infoNodoGeoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+	CommonDbFunctions cdf = new();
+
+	//'-- Parametri di input
+	//'--		cod 	: Codice del nodo selezionato
+	//'--		fldname : field name. Per quale field sto invocando questa pagina.
+	//'--					può essere ( stato o localita )
+
+	//'-- Output
+	//'--		output nella forma  "1###" + ... per esito positivo
+	//'--							"0###" + ... per esito negativo
+	//'--
+	//'--		per esito positivo dopo i 3 cancelletti ci sarà per lo stato : DESC-STATO
+
+	string cod =  GetParamURL(Request.QueryString.ToString(), "cod");
+	string fldname =  GetParamURL(Request.QueryString.ToString(),"fldname");
+	string connectionString = ApplicationCommon.Application.ConnectionString;
+
+	validate( "cod", cod.Replace("-",""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0,HttpContext,session);
+	validate("fldname", fldname, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	TSRecordSet? rs = null;
+	var sqlParams = new Dictionary<string, object?>();
+	if(string.Equals(fldname.ToLower().Trim(),"stato"))
+	{
+		sqlParams.Add("@id", "geo"); 
+		sqlParams.Add("@cod", cod);
+		string strSql = "select DMV_DescML from LIB_DomainValues with (nolock) where DMV_DM_ID = @id and DMV_Cod = @cod";
+
+		rs = cdf.GetRSReadFromQuery_(strSql, connectionString, sqlParams);
+		if (rs.RecordCount >0)
+		{
+			rs.MoveFirst();
+			htmlToReturn.Write($"1###{CStr(rs["DMV_DescML"])}");
+		}
+		else
+		{
+			htmlToReturn.Write("0###Stato non trovato");
+		}
+	}
+	else if(string.Equals(fldname.ToLower().Trim(),"localita"))
+	{
+		string descCitta = "";
+		string codCitta = "";
+		string descProv = "";
+		string codProv = "";
+		string descStato = "";
+		string codStato = "";
+		string descRegione = "";
+		string codRegione = "";
+		string[] vet ;
+		sqlParams.Clear();
+		sqlParams.Add("@id", "geo"); 
+		sqlParams.Add("@cod", cod); 
+		string strSql = "select DMV_DescML, DMV_Level from LIB_DomainValues with (nolock) where DMV_DM_ID = @id and DMV_Cod = @cod";
+		rs =  cdf.GetRSReadFromQuery_(strSql, connectionString, sqlParams);
+		if (rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+			//'-- se mi è stato passato un comune
+			if (CInt(rs["DMV_Level"]!) == 7)
+			{
+				descCitta = CStr(rs["DMV_DescML"]);
+				codCitta = cod;
+
+				//-- Recupero la provincia a partire dal figlio ( il comune ) che ha selezionato
+
+				vet = cod.Split("-");
+				// ubound(vet)
+				string tmpCodeProv = vet[vet.Length - 1];
+				codProv = cod.Replace("-" + tmpCodeProv, "");
+				descProv = "";
+				sqlParams.Clear();
+				sqlParams.Add("@id", "geo");
+				sqlParams.Add("@cod", codProv);
+				strSql = "select DMV_DescML, DMV_Level from LIB_DomainValues with (nolock) where DMV_DM_ID = @id and DMV_Cod = @cod";
+				rs = cdf.GetRSReadFromQuery_(strSql, connectionString, sqlParams);
+				if (rs.RecordCount > 0)
+				{
+					rs.MoveFirst();
+					descProv = CStr(rs["DMV_DescML"]);
+				}
+			}
+			else if (CInt(rs["DMV_Level"]!) == 6)
+			{
+				//'-- se mi è stata passata una provincia
+				codProv = cod;
+				descProv = CStr(rs["DMV_DescML"]);
+			}
+			//'-- Recupero lo stato
+			vet = cod.Split("-");
+			codStato = $"{vet[0]}-{vet[1]}-{vet[2]}-{vet[3]}";
+			sqlParams.Clear();
+			sqlParams.Add("@id", "geo");
+			sqlParams.Add("@cod", codStato);
+			strSql = "select DMV_DescML, DMV_Level from LIB_DomainValues with (nolock) where DMV_DM_ID = @id and DMV_Cod = @cod";
+			rs = cdf.GetRSReadFromQuery_(strSql, connectionString, sqlParams);
+			if (rs.RecordCount > 0)
+			{
+				rs.MoveFirst();
+				descStato = CStr(rs["DMV_DescML"]);
+			}
+			//on error resume next
+
+			try
+			{
+				//'-- Recupero la regione
+				codRegione = $"{vet[0]}-{vet[1]}-{vet[2]}-{vet[3]}-{vet[4]}-{vet[5]}";
+			}
+			catch
+			{
+
+			}
+
+			//on error goto 0
+			sqlParams.Clear();
+			sqlParams.Add("@id", "geo");
+			sqlParams.Add("@cod", cod);
+			sqlParams.Add("@level", "5");
+			strSql = "select DMV_DescML, DMV_Level from LIB_DomainValues with (nolock) where DMV_DM_ID = @id and DMV_Level = @level and DMV_Father = left( @cod , len( DMV_Father))";
+			rs = cdf.GetRSReadFromQuery_(strSql, connectionString, sqlParams);
+
+			if (rs.RecordCount > 0)
+			{
+				rs.MoveFirst();
+				descRegione = CStr(rs["DMV_DescML"]);
+				//'descRegione = strSql
+			}
+			htmlToReturn.Write($"1###{codCitta}#@#{descCitta}#@#{codProv}#@#{descProv}#@#{codStato}#@#{descStato}#@#{codRegione}#@#{descRegione}");
+		}
+		else
+		{
+			htmlToReturn.Write("0###Codice localita non trovato");
+		}
+	}
+	else
+	{
+		htmlToReturn.Write("0###fldname non gestito");
+	}
+}@Html.Raw(htmlToReturn.Out())

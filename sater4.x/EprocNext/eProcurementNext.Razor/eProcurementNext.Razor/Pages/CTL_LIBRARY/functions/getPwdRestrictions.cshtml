@@ -1,0 +1,102 @@
+﻿@page "/CTL_LIBRARY/functions/getPwdRestrictions.asp" 
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.getPwdRestrictionsModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	try
+	{
+		CommonDbFunctions cdb = new();
+		TSRecordSet rs = cdb.GetRSReadFromQuery_("select dzt_name, dzt_valuedef from lib_dictionary where dzt_name in ('SYS_PWD_CARSPECIALI','SYS_PWD_MAIUSCOLE','SYS_PWD_MINUSCOLE','SYS_PWD_NUMERI','SYS_PWD_TOTCHAR')", ApplicationCommon.Application.ConnectionString);
+		//err.number = 0
+		if (rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+			while (!rs.EOF)
+			{
+				if (string.Equals(GetValueFromRS(rs.Fields["dzt_name"]), "SYS_PWD_CARSPECIALI"))
+				{
+					htmlToReturn.Write("document.getElementById('minSpecia').value = '" + GetValueFromRS(rs.Fields["dzt_valuedef"]) + "';");
+				}
+				else
+				{
+					if (string.Equals(GetValueFromRS(rs.Fields["dzt_name"]), "SYS_PWD_MAIUSCOLE"))
+					{
+						htmlToReturn.Write("document.getElementById('minMaiusc').value = '" + GetValueFromRS(rs.Fields["dzt_valuedef"]) + "';");
+					}
+					else
+					{
+						if (string.Equals(GetValueFromRS(rs.Fields["dzt_name"]), "SYS_PWD_MINUSCOLE"))
+						{
+							htmlToReturn.Write("document.getElementById('minMinusc').value = '" + GetValueFromRS(rs.Fields["dzt_valuedef"]) + "';");
+						}
+						else
+						{
+							if (string.Equals(GetValueFromRS(rs.Fields["dzt_name"]), "SYS_PWD_NUMERI"))
+							{
+								htmlToReturn.Write("document.getElementById('minNumber').value = '" + GetValueFromRS(rs.Fields["dzt_valuedef"]) + "';");
+							}
+							else
+							{
+								if (string.Equals(GetValueFromRS(rs.Fields["dzt_name"]), "SYS_PWD_TOTCHAR"))
+								{
+									htmlToReturn.Write("document.getElementById('minCaratt').value = '" + GetValueFromRS(rs.Fields["dzt_valuedef"]) + "';");
+								}
+							}
+						}
+					}
+				}
+				rs.MoveNext();
+			}
+		}
+		else
+		{
+
+			//default
+			<script type="text/javascript">
+				document.getElementById('minNumber').value = '2';
+				document.getElementById('minMinusc').value = '3';
+				document.getElementById('minMaiusc').value = '2';
+				document.getElementById('minSpecia').value = '1';
+				document.getElementById('minCaratt').value = '8';
+			</script>
+
+			//'<input type="text" name="minNumber" id = "minNumber" value="2"/>
+			//'<input type="text" name="minMinusc" id = "minMinusc" value="3"/>
+			//'<input type="text" name="minMaiusc" id = "minMaiusc" value="2"/>
+			//'<input type="text" name="minSpecia" id = "minSpecia" value="1"/>
+			//'<input type="text" name="minCaratt" id = "minCaratt" value="8"/>
+		}
+	}
+	catch
+	{
+
+		//default
+		<script type="text/javascript">
+			document.getElementById('minNumber').value = '2';
+			document.getElementById('minMinusc').value = '3';
+			document.getElementById('minMaiusc').value = '2';
+			document.getElementById('minSpecia').value = '1';
+			document.getElementById('minCaratt').value = '8';
+		</script>
+
+		//'<input type="text" name="minNumber" id = "minNumber" value="2"/>
+		//'<input type="text" name="minMinusc" id = "minMinusc" value="3"/>
+		//'<input type="text" name="minMaiusc" id = "minMaiusc" value="2"/>
+		//'<input type="text" name="minSpecia" id = "minSpecia" value="1"/>
+		//'<input type="text" name="minCaratt" id = "minCaratt" value="8"/>
+	}
+
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.RazorPages" Version="2.2.5" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EprocNext.Cache\EprocNext.Cache.csproj" />
+    <ProjectReference Include="..\EprocNext.CommonModule\EprocNext.CommonModule.csproj" />
+    <ProjectReference Include="..\EprocNext.Response\EprocNext.Response.csproj" />
+    <ProjectReference Include="..\EprocNext.Session\EprocNext.Session.csproj" />
+  </ItemGroup>
+
+</Project>

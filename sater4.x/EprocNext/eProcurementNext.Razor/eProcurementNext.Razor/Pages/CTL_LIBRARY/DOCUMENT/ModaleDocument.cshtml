@@ -1,0 +1,22 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/ModaleDocument.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject ITabManage _tabManage;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.initialize_ComponentModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.ModaleDocumentModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+   htmlToReturn.Write($@"<iframe scrolling=""auto"" src=""../ctl_library/document/document.asp?"+ GetQueryStringFromContext(Request.QueryString) + $@"""  noresize marginwidth=""0"" marginheight=""0"" frameborder=0>loading...</iframe>");
+}
+@Html.Raw(htmlToReturn.Out())

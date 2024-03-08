@@ -1,0 +1,248 @@
+﻿@page "/Report/avvisi_di_rettifica.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.avvisi_di_rettificaModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.avvisi_di_rettificaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string strSQL = string.Empty;
+
+	string iddoc = GetParamURL(Request.QueryString.ToString(), "IDDOC");//'-- l'id della ctl_doc per il documento nuovo
+	string document = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");// '-- DOCUMENTO_GENERICO se documento generico, altrimenti coincide con il TipoDoc del doc nuovo
+	string operation = GetParamURL(Request.QueryString.ToString(), "OPERATION");// '-- DISPLAY/DOWNLOAD (ritorna html/aggiunge gli allegati ad una cartella per il download)
+	string guid = GetParamURL(Request.QueryString.ToString(), "GUID");//		 '-- il GUID/IDDOC per il documento generico.
+
+	validate("IDDOC", iddoc, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate("GUID", guid, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate("DOCUMENT", document, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate("OPERATION", operation, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	//'Response.Write  "IDDOC=" & guid & "<br>DOCUMENT=" & DOCUMENT 
+	//'Response.Write "<br>OPERATION=" & OPERATION 
+	//'Response.Write "<br>FOLDER=" & session("TEMP_FOLDER_DOWNLOAD") 
+	//'Response.End
+
+	//if ucase(document) = "BANDO_GARA"  then	
+	//??
+	//if ucase(document) <> "DOCUMENTO_GENERICO" and ucase(document) <> "" then
+	//'--OPERATION=DOWNLOAD
+	SaveAttachInFolderTemp(iddoc);
+
+	//if ucase(document) = "DOCUMENTO_GENERICO" or ucase(document) = "" then
+	//
+	//iddoc = guid
+	//
+	//strSQL = "select top 1* from tab_messaggi_fields where IdDoc = '" & replace(iddoc,"'","''") & "' order by IdMsg asc"
+	//
+	//set rs = objDB.GetRSReadFromQuery( cstr(strSQL) , Application("ConnectionString"))
+	//
+	//if rs.recordcount > 0 then
+	//
+	//	rs.movefirst
+	//	
+	//	dim idMsg
+	//	idMsg = rs("IdMsg").value
+	//	
+	//	if operation="" or operation="DISPLAY" then
+	//		
+	//		'--restituisco html della griglia allegati
+	//		strSQL = "select b.* from ctl_doc a	inner join ctl_doc_allegati b on idheader = id where a.tipodoc = 'RETTIFICA_GARA' and jumpcheck in ('55;167','55;48','55;68') and LinkedDoc = " & idMsg
+	//
+	//		set rs = nothing
+	//	
+	//		set rs = objDB.GetRSReadFromQuery( cstr(strSQL) , Application("ConnectionString"))
+	//	
+	//		if rs.recordcount > 0 then
+	//			
+	//			response.write "<table>"
+	//			response.write "	<tr>"
+	//			response.write "		<td class=""CellIntestGrid"" align=""center"">"
+	//			response.write "			" & cnv("Descrizione")
+	//			response.write "		</td>"
+	//			response.write "		<td class=""CellIntestGrid"" align=""center"">"
+	//			response.write "			" & cnv("Allegato")
+	//			response.write "		</td>"
+	//			response.write "	</tr>"
+	//	
+	//			rs.movefirst
+	//			
+	//			on error resume next
+	//			
+	//			while not rs.eof and err.number = 0
+	//			
+	//				response.write "<tr>"
+	//			
+	//				response.write "<td>"
+	//				response.write "<label>"
+	//				
+	//				response.write rs("Descrizione").value
+	//				
+	//				response.write "</label>"
+	//				response.write "</td>"
+	//				
+	//				response.write "<td class=""linkAttachment"">"
+	//				response.write "<label class=""Attach_label"" onclick=""window.open('" & application("WEBSERVERAPPLICAZIONE") & "/application/CTL_Library/functions/field/DisplayAttach.ASP?OPERATION=DISPLAY&amp;FIELD=Allegato&amp;PATH=%2E%2E%2F&amp;TECHVALUE=" & rs("Allegato").value & "&amp;FORMAT=I%2CN');"" title="""">"
+	//				
+	//				response.write left( rs("Allegato").value , InStr(rs("Allegato").value,"*")-1 )
+	//				
+	//				response.write "</label>"
+	//				response.write "</td>"
+	//			
+	//				response.write "</tr>"
+	//				rs.movenext
+	//				
+	//			wend 
+	//			
+	//			response.write "</table>"
+	//
+	//		end if
+	//		
+	//	else
+	//		
+	//		'--OPERATION=DOWNLOAD
+	//		SaveAttachInFolderTemp( idMsg )
+	//		
+	//	end if
+	//end if
+	//
+	//set rs = nothing
+	//set objDB = nothing
+	//
+	//end if
+
+	//'--sub per salvare gli allegati sul disco
+	//Sub SaveBinaryData(FileName, fld)
+	//
+	//dim Temp
+	//Const adTypeBinary = 1
+	//Const adSaveCreateOverWrite = 2
+	//  
+	//'Create Stream object
+	//Dim BinaryStream
+	//Set BinaryStream = CreateObject("ADODB.Stream")
+	//
+	//
+	//  
+	//'Specify stream type - we want To save binary data.
+	//BinaryStream.Type = adTypeBinary
+	//   
+	//   
+	//'Open the stream And write binary data To the object
+	//BinaryStream.Open
+	//
+	//  
+	//Do
+	//	
+	//	Temp= fld.GetChunk(10240)
+	//    If IsNull(Temp) Then Exit Do
+	//    BinaryStream.Write Temp
+	//              
+	// Loop While LenB(Temp) = 10240
+	//
+	//
+	//   
+	//'Save binary data To disk
+	//BinaryStream.SaveToFile FileName, adSaveCreateOverWrite
+	//
+	//
+	//End sub  
+	string CheckEsitenza_RenameFileAllegato( string strNomeFile)
+	{
+		int CurrentVersion = 1;
+
+		string[] aInfoFile = Strings.Split(strNomeFile, ".");
+		string ExtFile = aInfoFile[(aInfoFile.Length - 1)];
+
+		//'--se stiamo nel caso di allegato firmato e c'� la doppia estensione metto il versioning prima del penultimo punto
+		//'--es. test.pdf.p7m -> test[1].pdf.p7m
+		if ((aInfoFile.Length -1) >= 2 ){
+			ExtFile = aInfoFile[(aInfoFile.Length - 1) - 1] + "." + aInfoFile[aInfoFile.Length - 1];
+		}
+
+		string strHeadFile = Strings.Left(strNomeFile, strNomeFile.Length - (ExtFile.Length + 1));
+
+		while (CommonStorage.ExistsFile(session["TEMP_FOLDER_DOWNLOAD"] + strNomeFile))
+		{
+			strNomeFile = $"{strHeadFile}[{CurrentVersion}].{ExtFile}";
+			CurrentVersion = CurrentVersion + 1;
+		}
+
+		return strNomeFile;
+	}
+	//'--recupero gli attach e li salva nella cartella temporanea
+	void SaveAttachInFolderTemp(string IdDocumento )
+	{
+		//'--aggiungo gli allegati ad una cartella che poi verrà zippata
+		string strHashAttach = string.Empty;
+		//'--recupero hash degli allegati
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@IdDocumento", CInt(IdDocumento));
+		strSQL = "Select allegato FROM DOWNLOAD_ATTACH_LISTA_ALLEGATI_EXTRA where id = @IdDocumento";
+		//'Response.Write strSQL
+		//'Response.End
+		TSRecordSet RsHashAttach = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if(RsHashAttach.RecordCount >0)
+		{
+			RsHashAttach.MoveFirst();
+			while(!RsHashAttach.EOF)
+			{
+				if(!string.IsNullOrEmpty(CStr(RsHashAttach["allegato"])))
+				{
+					//'--prendo solo la 3 posizione che contiene l'hash dell'allegato
+					string[] aInfoHash = CStr(RsHashAttach["allegato"]).Split("*");
+					if(string.IsNullOrEmpty(strHashAttach))
+					{
+						strHashAttach = $"'{aInfoHash[3]}'";
+					}
+					else
+					{
+						strHashAttach = $"{ strHashAttach},'{aInfoHash[3]}'";
+					}
+				}
+				RsHashAttach.MoveNext();
+			}
+		}
+		//'Response.Write strHashAttach
+		//'Response.End
+		if(!string.IsNullOrEmpty(strHashAttach))
+		{
+			//'--recupero blob degli allegati
+			strSQL = "select Att_Name as Nomefile from CTL_Attach with(nolock) where ATT_Hash in (" + strHashAttach + ")";
+			//'Response.Write strSQL
+			//'Response.End
+			TSRecordSet RsAttach = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+			if(RsAttach.RecordCount >0)
+			{
+				RsAttach.MoveFirst();
+				while(!RsAttach.EOF)
+				{
+					//'--salvo il file sul disco in una cartella temporanea
+					string nomefile = CStr(RsAttach["Nomefile"]);
+					//'--se esiste un file con lo stesso nome aggiungo un contatore prima dell'estensione 
+					nomefile = CheckEsitenza_RenameFileAllegato(nomefile);
+				
+					//SaveBinaryData(session["TEMP_FOLDER_DOWNLOAD"] + nomefile, GetValueFromRS(RsAttach.Fields["BlobFile"]))
+					eProcurementNext.CommonDB.Basic.saveFileFromRecordSet("Att_Obj", "CTL_Attach", "ATT_Hash", strHashAttach, $"{CStr(session["TEMP_FOLDER_DOWNLOAD"])}{nomefile}", ApplicationCommon.Application.ConnectionString);
+					//'Response.Write err.Description & "-" & err.number
+					//'Response.End
+					RsAttach.MoveNext();
+				}
+			}
+		}
+	}
+}
+@Html.Raw(htmlToReturn.Out())

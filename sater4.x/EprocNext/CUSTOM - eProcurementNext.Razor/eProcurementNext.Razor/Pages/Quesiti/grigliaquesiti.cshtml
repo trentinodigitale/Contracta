@@ -1,0 +1,270 @@
+﻿@page "/Quesiti/grigliaquesiti.asp"
+@model eProcurementNext.Razor.Pages.Quesiti.grigliaquesitiModel
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+    CommonDbFunctions cdb = new CommonDbFunctions();
+}
+@{
+    string backoffice = GetParamURL(Request.QueryString.ToString(), "backoffice");
+
+    validate("GUID_DOC", GetParamURL(Request.QueryString.ToString(), "GUID_DOC"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("SUBTYPE_ORIGIN", GetParamURL(Request.QueryString.ToString(), "SUBTYPE_ORIGIN"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("DOCUMENT", GetParamURL(Request.QueryString.ToString(), "DOCUMENT"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("Filtro", GetParamURL(Request.QueryString.ToString(), "Filtro"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+
+    string GUID_DOC = GetParamURL(Request.QueryString.ToString(), "GUID_DOC");
+    string SUBTYPE_ORIGIN = GetParamURL(Request.QueryString.ToString(), "SUBTYPE_ORIGIN");
+    string Filtro = CStr(GetParamURL(Request.QueryString.ToString(), "Filtro"));//'gia validato
+    string DOCUMENT = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+    string strSql = "";
+    if (!(string.IsNullOrEmpty(Filtro)))
+    {
+        Filtro = Filtro.Replace(" ", "%");
+        Filtro = Filtro.Replace("'", "''");
+    }
+    TSRecordSet? rs1 = null;
+    if (!(string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "FOR_PDF"))))
+    {
+        string accessGUID = GetParamURL(Request.QueryString.ToString(), "acckey");
+
+        session["IdPfu"] = getAccessFromGuid(accessGUID);
+        //'response.write accessGUID
+        //'response.end
+        backoffice = "NO";
+    }
+    if (!(string.IsNullOrEmpty(DOCUMENT)))
+    {
+        if (string.IsNullOrEmpty(Filtro))
+        {
+            strSql = "select DataRisposta,case when isnull(ProtocolloGeneraleIN,'') = '' then isnull(protocol,'') ";
+            strSql = strSql + " else ProtocolloGeneraleIN ";
+            strSql = strSql + " end as protocol ";
+            strSql = strSql + ",domanda,risposta,allegato, ";
+            strSql = strSql + "case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then isnull(Document_Chiarimenti.ProtocolRispostaQuesito,'') ";
+            strSql = strSql + " else Document_Chiarimenti.ProtocolloGenerale  ";
+            strSql = strSql + "	end as ProtocolloGenerale ";
+
+            strSql = strSql + " from Document_Chiarimenti where ChiarimentoPubblico=1 and id_origin=" + GUID_DOC.Replace(" ", "");
+            //'--se sono dall'interno visualizzo anche i miei evasi
+            //if (!(string.Equals(backoffice.ToUpper(), "YES")))
+            if (backoffice.ToUpper() != "YES")
+            {
+                strSql = strSql + " UNION ALL select DataRisposta,case when isnull(ProtocolloGeneraleIN,'') = '' then isnull(protocol,'') ";
+                strSql = strSql + " 						 else ProtocolloGeneraleIN ";
+                strSql = strSql + " 			  		end as protocol";
+
+                strSql = strSql + " 			,domanda,risposta,allegato, case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then isnull(Document_Chiarimenti.ProtocolRispostaQuesito,'')	else Document_Chiarimenti.ProtocolloGenerale end as ProtocolloGenerale  from Document_Chiarimenti where utentedomanda <> -20 and  utentedomanda=" + session["IdPfu"] + " and ChiarimentoEvaso=1 and statofunzionale <> 'InProtocollazione' and id_origin=" + GUID_DOC.Replace(" ", "") + " and isnull(ChiarimentoPubblico,0)<>1 ";
+
+            }
+        }
+        else
+        {
+            strSql = "select DataRisposta, case when isnull(ProtocolloGeneraleIN,'') = '' then isnull(protocol,'') ";
+            strSql = strSql + " else ProtocolloGeneraleIN ";
+            strSql = strSql + " end as protocol ";
+            strSql = strSql + "	,domanda,risposta,allegato, case  when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then Document_Chiarimenti.ProtocolRispostaQuesito	else isnull(Document_Chiarimenti.ProtocolRispostaQuesito,'') end as ProtocolloGenerale  from Document_Chiarimenti where ChiarimentoPubblico=1 and  id_origin=" + GUID_DOC.Replace(" ", "") + " and (protocol like '%" + Filtro + "%' or risposta like '%" + Filtro + "%' or domanda like '%" + Filtro + "%') ";
+
+            if (backoffice.ToUpper() != "YES")
+            {
+                strSql = strSql + " UNION ALL select DataRisposta,case when isnull(ProtocolloGeneraleIN,'') = '' then isnull(protocol,'') ";
+                strSql = strSql + " 						 else ProtocolloGeneraleIN ";
+                strSql = strSql + " 			  		end as protocol";
+                strSql = strSql + "			,domanda,risposta,allegato, case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then Document_Chiarimenti.ProtocolRispostaQuesito	else isnull(Document_Chiarimenti.ProtocolRispostaQuesito,'') end as ProtocolloGenerale  from Document_Chiarimenti where utentedomanda <> -20 and  ChiarimentoEvaso=1 and utenteDomanda=" + session["IdPfu"] + " and id_origin=" + GUID_DOC + " and (protocol like '%" + Filtro + "%' or domanda like '%" + Filtro + "%' or risposta like '%" + Filtro + "%') and isnull(ChiarimentoPubblico,0)<>1 ";
+
+            }
+        }
+        strSql = strSql + " order by DataRisposta desc";
+
+        //'--recupero lista quesiti associati al bando
+        string connectionString = ApplicationCommon.Application["ConnectionString"];
+
+        rs1 = cdb.GetRSReadFromQuery_(strSql, connectionString);
+        if (rs1.RecordCount > 0)
+        {
+            if (string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "FOR_PDF"))))
+            {
+                htmlToReturn.Write("" + rs1.RecordCount + "###");
+                
+            }
+            DisplayGrid(rs1);
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(Filtro))
+            {
+                htmlToReturn.Write("0###" + ApplicationCommon.CNV("Nessun chiarimento presente."));
+            }
+            else
+            {
+                if (string.IsNullOrEmpty((GetParamURL(Request.QueryString.ToString(), "FOR_PDF"))))
+                {
+                    htmlToReturn.Write("1###");
+                }
+                htmlToReturn.Write(ApplicationCommon.CNV("Nessun chiarimento presente."));
+            }
+
+        }
+
+    }
+    else
+    {
+        //--recupero idmsg del bando collegato
+        string connectionString = ApplicationCommon.Application["ConnectionString"];
+        //CommonDbFunctions cdb = new CommonDbFunctions();
+        TSRecordSet rs = cdb.GetRSReadFromQuery_("select mfidmsg from messagefields,tab_utenti_messaggi where mfisubtype=" + SUBTYPE_ORIGIN + " and mffieldvalue='" + GUID_DOC.Replace(" ", "") + "' and umidmsg=mfidmsg and uminput=0", connectionString);
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            string IdMsgBando = GetValueFromRS(rs.Fields["mfidmsg"]);
+            if (string.IsNullOrEmpty(Filtro))
+            {
+                strSql = "select DataRisposta,protocol,domanda,risposta,allegato, case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then Document_Chiarimenti.ProtocolRispostaQuesito	else Document_Chiarimenti.ProtocolloGenerale end as ProtocolloGenerale from Document_Chiarimenti where ChiarimentoPubblico=1 and id_origin=" + IdMsgBando;
+                //'--se sono dall'interno visualizzo anche i miei evasi
+                if (string.Equals(backoffice.ToUpper(), "YES"))
+                {
+                    strSql = strSql + " UNION ALL select DataRisposta,protocol,domanda,risposta,allegato, case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then Document_Chiarimenti.ProtocolRispostaQuesito	else Document_Chiarimenti.ProtocolloGenerale end as ProtocolloGenerale from Document_Chiarimenti where utentedomanda <> -20 and utentedomanda=" + session["IdPfu"] + " and ChiarimentoEvaso=1 and id_origin=" + IdMsgBando + " and isnull(ChiarimentoPubblico,0)<>1 ";
+
+                }
+            }
+            else
+            {
+                strSql = "select DataRisposta,protocol,domanda,risposta,allegato, case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then Document_Chiarimenti.ProtocolRispostaQuesito	else Document_Chiarimenti.ProtocolloGenerale end as ProtocolloGenerale  from Document_Chiarimenti where ChiarimentoPubblico=1 and id_origin=" + IdMsgBando + " and (protocol like '%" + Filtro + "%' or domanda like '%" + Filtro + "%') ";
+                //'--se sono dall'interno visualizzo anche i miei evasi
+                if (string.Equals(backoffice.ToUpper(), "YES"))
+                {
+                    strSql = strSql + " UNION ALL select DataRisposta,protocol,domanda,risposta,allegato,case when isnull(Document_Chiarimenti.ProtocolloGenerale,'') = '' then Document_Chiarimenti.ProtocolRispostaQuesito	else Document_Chiarimenti.ProtocolloGenerale end as ProtocolloGenerale  from Document_Chiarimenti where utentedomanda <> -20 and ChiarimentoEvaso=1 and utenteDomanda=" + session["IdPfu"] + " and id_origin=" + IdMsgBando + " and (protocol like '%" + Filtro + "%' or domanda like '%" + Filtro + "%') and isnull(ChiarimentoPubblico,0)<>1 ";
+
+                }
+            }
+            strSql = strSql + " order by DataRisposta desc";
+            //'--recupero lista quesiti associati al bando
+
+            //CommonDbFunctions cdb = new CommonDbFunctions();
+            rs1 = cdb.GetRSReadFromQuery_(strSql, ApplicationCommon.Application["ConnectionString"]);
+            if (rs1.RecordCount > 0)
+            {
+                htmlToReturn.Write(rs1.RecordCount + "###");
+                DisplayGrid(rs1);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(Filtro))
+                {
+                    htmlToReturn.Write("0###" + ApplicationCommon.CNV("Nessun chiarimento presente."));
+                }
+                else
+                {
+                    htmlToReturn.Write("1###" + ApplicationCommon.CNV("Nessun chiarimento presente."));
+                }
+            }
+        }
+        else
+        {
+            htmlToReturn.Write("0###" + ApplicationCommon.CNV("Nessun chiarimento presente."));
+        }
+    }
+    //'--disegna la griglia dei quesiti
+
+    void DisplayGrid(TSRecordSet rs1)
+    {
+        rs1.MoveFirst();
+        //'--riga intestazione
+        string versioneAflink = UrlEncode(CStr(ApplicationCommon.Application["VERSIONE_AFLINK"]));
+        string pathRoot = "../";
+
+        if (!(string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "FOR_PDF")))))
+        {
+
+            htmlToReturn.Write($@"<link rel=""stylesheet"" href=""" + pathRoot + $@"""CTL_Library/Themes/main_base.css?v=" + versioneAflink + $@" type=""text/css"" media=""screen, projection""/> ");
+            htmlToReturn.Write($@"<link rel=""stylesheet"" href=""" + pathRoot + $@"""CTL_Library/Themes/main.css?v=" + versioneAflink + $@" type=""text/css"" media=""screen,projection""/>");
+            htmlToReturn.Write($@"<link rel=""stylesheet"" href=""" + pathRoot + $@"""CTL_Library/Themes/main_stampa.css?v=" + versioneAflink + $@" type=""text/css"" media=""print""  /-->");
+            htmlToReturn.Write("<style>");
+            htmlToReturn.Write("table td { padding:5px; font-size:12px;  })");
+            htmlToReturn.Write("</style>");
+            htmlToReturn.Write("<html>");
+            htmlToReturn.Write($@"<meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">");
+            htmlToReturn.Write("<body>");
+            htmlToReturn.Write($@"<table width=""92%"" style=""margin:5px auto>");
+        }
+        else
+        {
+            htmlToReturn.Write($@"<table width=""100 % "" >");
+        }
+        htmlToReturn.Write("<thead>");
+        htmlToReturn.Write("<tr>");
+        htmlToReturn.Write($@"<td class=""CellIntestGrid nowrap"" style=""width:50px;"">" + ApplicationCommon.CNV("Protocollo") + " </td>");
+        htmlToReturn.Write($@"<td class=""CellIntestGrid"">" + ApplicationCommon.CNV("Quesito") + "</td>");
+        htmlToReturn.Write($@"<td class=""CellIntestGrid"">" + ApplicationCommon.CNV("Risposta") + "</td>");
+        htmlToReturn.Write($@"<td class=""CellIntestGrid"">" + ApplicationCommon.CNV("Allegato") + "</td>");
+        htmlToReturn.Write("</tr>");
+        htmlToReturn.Write("</thead>");
+        htmlToReturn.Write("<tbody>");
+        //'set objattach=CreateObject("ctlhtml.fld_attach")
+        //'objattach.Path="../../"
+        while (!rs1.EOF)
+        {
+            htmlToReturn.Write($@"<tr><td class=""CellGridPrintProducts"">");
+            htmlToReturn.Write($@"<b>" + ApplicationCommon.CNV("Quesito") + "</b><br/>" + HtmlEncode(GetValueFromRS(rs1.Fields["protocol"])) + "<br/><br/>");
+            htmlToReturn.Write("<b>" + ApplicationCommon.CNV("Risposta") + "</b><br/>" + HtmlEncode(CStr(GetValueFromRS(rs1.Fields["ProtocolloGenerale"]))));
+            htmlToReturn.Write("</td>");
+            htmlToReturn.Write($@"<td class=""CellGridPrintProducts"" style=""text-align:justify"">");
+            //'Spostato in una variabile per fare correttamente la replace ### con la codifica html ASCII, altrimenti andava in conflitto server.HTMLEncode
+            string strout = HtmlEncode(GetValueFromRS(rs1.Fields["domanda"]).Replace("#", "~~~")).Replace(Environment.NewLine, "<br/>");
+            strout = strout.Replace("~~~", "&#x23;");
+            htmlToReturn.Write(strout);
+            htmlToReturn.Write("</td>");
+            htmlToReturn.Write($@"<td class=""CellGridPrintProducts RTE_NotEditable"" style=""text-align:justify"" >");
+            //'Spostato in una variabile per fare correttamente la replace ### con la codifica html ASCII, altrimenti andava in conflitto server.HTMLEncode
+            strout = GetValueFromRS(rs1.Fields["risposta"]).Replace(Environment.NewLine, "<br/>").Replace("#", "~~~");
+            strout = strout.Replace("~~~", "&#x23;");
+            htmlToReturn.Write(strout);
+            htmlToReturn.Write("</td>");
+            htmlToReturn.Write($@"<td class=""CellGridPrintProducts"">");
+            if (!(string.IsNullOrEmpty(GetValueFromRS(rs1.Fields["allegato"]))))
+            {
+                //'objattach.Init "Allegato", rs1("allegato").value , nothing, "N", true
+                //'objattach.Style = "link"
+                //'objattach.Path = "../"
+                //'Response.write objattach.Html (response,false)
+                string Valore = GetValueFromRS(rs1.Fields["allegato"]);
+                string Path = "../";
+                string Name = "Allegato";
+                string strFormat = "N";
+
+                string[] tempvalue = Valore.Split("*");
+                string strOnClick = @" onclick=""javascript:";
+                strOnClick = strOnClick + "ExecFunction( '";
+                strOnClick = strOnClick + Path + "CTL_Library/functions/field/DisplayAttach.ASP?OPERATION=DISPLAY&FIELD=" + UrlEncode(Name) + "&PATH=" + Path + "&TECHVALUE=" + UrlEncode(Valore) + "&FORMAT=" + UrlEncode(strFormat) + "' ";
+                strOnClick = strOnClick + @" , 'DisplayAttach' , ',height=600,width=800' );return false;"" ";
+                htmlToReturn.Write($@"<a href=""#"" class=""link_attach"" " + strOnClick + ">" + tempvalue[0] + "</a>");
+            }
+            htmlToReturn.Write("</td>");
+            htmlToReturn.Write("</tr>");
+            rs1.MoveNext();
+
+
+        }
+        htmlToReturn.Write("</tbody>");
+        htmlToReturn.Write("</table>");
+        if (!(string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "FOR_PDF"))))
+        {
+            htmlToReturn.Write("</body>");
+            htmlToReturn.Write("</html>");
+        }
+    }
+
+}@Html.Raw(htmlToReturn.Out())

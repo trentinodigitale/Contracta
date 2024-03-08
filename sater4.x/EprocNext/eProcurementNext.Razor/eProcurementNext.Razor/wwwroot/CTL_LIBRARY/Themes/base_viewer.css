@@ -1,0 +1,15 @@
+
+html 
+{
+    height: 100%;
+	font-size: 8pt;
+}
+body
+{
+    height: 100%;
+    overflow: hidden;
+}
+#FormViewerGriglia
+{
+   height: 100%;
+}

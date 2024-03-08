@@ -1,0 +1,99 @@
+﻿@page "/CTL_LIBRARY/GetField.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.getFieldModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.getFieldModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+
+	string strRegExp;
+	
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+
+	//'-----PER ADESSO LAVORA SOLO CON GLI ATTRIBUTI DI TIPO ALLEGATO E PER GLI ALTRI OCCORRE ESTENDERLA-------
+
+	validate( "FIELD", CStr(GetParamURL(Request.QueryString.ToString(), "FIELD")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	//'--dobbiamo passare una espressione regolare appropriata al campo format per il tipo di attributo 
+	//'--potremmo recuperare regexpr dal dizionario: condividere con sabato
+	strRegExp = $@"[A-Za-z0-9\-:,]{{1,1000}}";
+	validate( "FORMAT", CStr(GetParamURL(Request.QueryString.ToString(), "FORMAT")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, strRegExp, 0, HttpContext, session);
+	validate( "EDITABLE", CStr(GetParamURL(Request.QueryString.ToString(), "EDITABLE")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);	
+	validate( "PATH", CStr(GetParamURL(Request.QueryString.ToString(), "FILTER")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+
+	bool bEditable;
+	bEditable = false;
+	if (CStr(GetParamURL(Request.QueryString.ToString(),"EDITABLE")).ToUpper() == "YES") {
+		bEditable = true;
+	}
+
+	//'--recupero dominio estensioni
+	LibDBDomains objLib = new LibDBDomains();
+
+	ClsDomain objdom = objLib.GetFilteredDomExt(CStr("FileExtention"), CStr(session[eProcurementNext.Session.SessionProperty.SESSION_SUFFIX]),	CLng( session[eProcurementNext.Session.SessionProperty.IdPfu] ), "", CInt(0), ApplicationCommon.Application.ConnectionString, session);
+
+	Fld_Attach objattach = new Fld_Attach();
+
+	objattach.Init(
+		18,
+		oName: CStr(GetParamURL(Request.QueryString.ToString(), "FIELD")),
+		oValue: CStr(GetParamURL(Request.QueryString.ToString(), "VALUE")),
+		oDom: null , 
+		oFormat: CStr( GetParamURL(Request.QueryString.ToString(), "FORMAT")), 
+		oEditable: true);
+	objattach.Path = CStr(GetParamURL(Request.QueryString.ToString(), "PATH"));
+	objattach.Domain = objdom;
+
+	objattach.ConnectionString = ApplicationCommon.Application.ConnectionString;
+	objattach.setOnChange(GetParamURL(Request.QueryString.ToString(), "ONCHANGE"));
+
+	objattach.Html(htmlToReturn, bEditable);
+
+	//on error resume next
+
+	//'-- gestione errore
+	//if err.number <> 0 then
+
+	//	n = err.number
+	//	s = err.source
+	//	d = err.description
+
+	//	call traceInLogUtente( 0, "GetField.asp", "Descrizione:" & d & " --- QueryString:" & request.QueryString )
+
+	//	'-- Se � attiva la modalit� debug visualizziamo pi� informazioni riguardo l'errore, query sql comprese
+	//	if (lcase(CStr(Application("debug-mode"))) = "yes") or (lcase(CStr(Application("debug-mode"))) = "si") or (CStr(Application("debug-mode")) = "true") then
+
+	//		response.write "object:" & ProgID & " <br> " & "Desc:" & d & " <br> " &  "Number:" & n & " <br> " &  "Source:" & s
+
+	//	else
+
+	//		'-- Se � disattivato il debug-mode ma � attiva ma la SYS di visione degli errori tecnici 
+	//		if ( lcase(CStr(Application("dettaglio-errori"))) = "yes" OR lcase(CStr(Application("dettaglio-errori"))) = "si" ) then
+
+	//			response.write "Desc:" & d & " <br/> " &  "Number:" & n & " <br/> " &  "Source:" & s
+
+	//		else
+
+	//			'-- Scriviamo l'errore nell'event viewer
+	//			TraceErr s, d, n, ProgID
+	//			response.write " Errore in data : " & now()
+
+	//		end if
+				
+	//	end if
+
+	//end if
+	
+}
+@Html.Raw(htmlToReturn.Out())

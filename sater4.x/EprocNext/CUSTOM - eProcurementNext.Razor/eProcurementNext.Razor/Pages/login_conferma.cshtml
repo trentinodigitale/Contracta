@@ -1,0 +1,121 @@
+﻿@page "/login_conferma.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject eProcurementNext.BizDB.ITabManage _TabManage;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.CommonModule
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using eProcurementNext.CommonDB;
+@using static eProcurementNext.Razor.Pages.login_confermaModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.net_utilsModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.captcha_accessModel;
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.Extensions.Primitives
+@using Microsoft.VisualBasic;
+@using System.Web
+@using System.IO;
+@using System.Security.Claims
+@using eProcurementNext.Razor;
+@using static eProcurementNext.Razor.Pages.Functions.costanti;
+@model eProcurementNext.Razor.Pages.login_confermaModel
+@*
+<!-- #INCLUDE FILE="./CTL_LIBRARY/FUNCTIONS/log.inc" -->
+<!-- #INCLUDE FILE="./CTL_LIBRARY/FUNCTIONS/AntiFixation.inc" -->
+<!-- #Include File="./CTL_Library/Document/Common.asp" -->
+<!-- #Include File="./Home/layout.inc" -->
+<!-- #Include File="./CTL_Library/functions/trace_in_log_utente.inc" -->
+
+*@
+@{
+	Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+}
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+}
+@{
+	
+
+	string comando = GetParamURL(Request.QueryString.ToString(),"comando");
+
+	if (!string.IsNullOrEmpty(comando)){
+
+		if (comando == "ok"){
+
+			throw new ResponseRedirectException("login.asp?getownses=yes", Response);
+		}
+
+		if (comando == "ko"){
+
+			dynamic closeParent = session["closeParent"];
+			string urlPortale = ApplicationCommon.Application["WEBSERVERPORTALE"] + "/" + ApplicationCommon.Application["NOMEAPPPORTALE_JOOMLA"];
+			
+			MainGlobalAsa.SessionAbandon(session);
+			//Session.Abandon
+			htmlToReturn.Write("<script>");
+			if (ApplicationCommon.Application["LoadFromFrame"].ToLower() == "no" ){
+
+				if (closeParent == "1" ){
+					htmlToReturn.Write($@"
+
+						try
+						{{
+							parent.location='"+ urlPortale + $@"';
+						}}
+						catch(e)
+						{{
+							main=window.open('"+ urlPortale + $@"');
+						}}
+					");
+				}else{
+					htmlToReturn.Write($@"self.location='"+ urlPortale + $@"';");
+				}
+			}else{
+
+				htmlToReturn.Write($@"main=window.open('"+ urlPortale + $@"');");
+
+			}
+
+			htmlToReturn.Write("</script>");
+		}
+
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "end");
+	}
+
+	ViewData["Title"] = "Conferma possesso sessione";//Passare titolo della pagina al Layout (_masterPage.cshtml)
+	ViewData["pathRoot"] = "./";//Passare la pathRoot al Layout (_masterPage.cshtml)
+	htmlToReturn.Write($@"
+		<br/>
+
+		<form action=""login_conferma.asp"">
+			<div>
+				<div>
+					<div class=""ui-dialog-buttonset"">
+				
+						<p>
+							" + ApplicationCommon.CNV("E' gia' presente una sessione attiva per l'utenza specificata. Prendere il controllo della sessione forzando la disconnessione dell'utenza presso le altre postazioni attive ?") + $@"
+						</p>
+
+						<br/>
+
+						<input type=""hidden"" name=""lo"" value=""lista_attivita""/>
+					
+						<button type=""submit"" name=""comando"" value=""ok"" class=""ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only"">
+							<span class=""ui-button-text"">OK</span>
+						</button>
+						<button type=""submit"" name=""comando"" value=""ko"" class=""ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only"">
+							<span class=""ui-button-text"">Cancel</span>
+						</button>
+
+					</div>
+				</div>
+			</div>
+		</form>
+
+
+	");
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,107 @@
+﻿@page "/NoTIER/lista.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.NoTIER.listaModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.NoTIER.listaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	//'--Versione=1&data=2016-05-06&Attvita=108225&Nominativo=Leone
+	//on error resume next
+	string strErrore = "";
+	if (CStr(ApplicationCommon.Application["ATTIVA_NOTIER_PUSH"]).ToUpper() == "YES")
+	{
+		throw new ResponseRedirectException("../dashboard/viewer.asp?" + GetQueryStringFromContext(Request.QueryString), Response);
+	}
+	else
+	{
+		string daServizio = GetParamURL(Request.QueryString.ToString(), "service");
+		string idazi = GetParamURL(Request.QueryString.ToString(), "idazi");
+		string pfu = GetParamURL(Request.QueryString.ToString(), "pfu");
+		string all = GetParamURL(Request.QueryString.ToString(), "all");
+		if (GetParamURL(Request.QueryString.ToString(), "step") == "2")
+		{
+			eProcurementNext.CtlProcess.ClsElab objProc;
+			string strDescErrore = "";
+			bool bErrore = false;
+
+			//'-- l'idpfu passato al processo ( <ID_USER> ) servirà da civetta per far capire al processo se la provenienza è da servizio, da chiamata web, o da ricarico totale lista
+			int idpfu = 0;
+			if (daServizio == "1")
+			{
+				idpfu = 1;
+			}
+			if(all =="1")
+			{
+				idpfu = 2;
+			}
+			if (string.IsNullOrEmpty(idazi))
+			{
+				idazi = pfu;
+			}
+			objProc = new eProcurementNext.CtlProcess.ClsElab();
+
+			try
+			{
+				objProc.Elaborate("ELAB", "NOTIER_LISTA", CLng(idazi), CLng(idpfu),ref strDescErrore, 1, ApplicationCommon.Application.ConnectionString);
+			}
+			catch(Exception ex)
+			{
+				strErrore = $"{ex.Message}-{strErrore}";
+				bErrore = true;
+			}
+			if(string.IsNullOrEmpty(strDescErrore))
+			{
+				strErrore = strDescErrore;
+				bErrore = true;
+			}
+
+			if(daServizio == "1")
+			{
+				if(bErrore)
+				{
+					htmlToReturn.Write("0#" + strErrore);
+				}
+				else
+				{
+					htmlToReturn.Write("1#OK");
+				}
+			}
+			else
+			{
+				if(bErrore)
+				{
+					throw new ResponseRedirectException("../ctl_library/erroreApplicativo.asp?msg=" + URLEncode(strErrore), Response);
+				}
+				else
+				{
+					throw new ResponseRedirectException("../dashboard/viewer.asp?" + GetParamURL(Request.QueryString.ToString(), "qs"), Response);
+				}
+			}
+		}
+		else
+		{
+			if (daServizio == "1")
+			{
+				throw new ResponseRedirectException("lista.aspx?pfu=" + URLEncode(idazi) + "&service=1&all=" + URLEncode(all), Response);
+			}
+			else
+			{
+				throw new ResponseRedirectException("lista.aspx?pfu=" + CStr(session["IdPfu"]) + "&qs=" + URLEncode(GetQueryStringFromContext(Request.QueryString)), Response);
+			}
+		}
+	}
+}
+@Html.Raw(htmlToReturn.Out())

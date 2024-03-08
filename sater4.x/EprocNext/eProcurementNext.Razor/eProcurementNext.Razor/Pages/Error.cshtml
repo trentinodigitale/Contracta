@@ -1,0 +1,59 @@
+﻿@page
+@using eProcurementNext.Application
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.CommonModule.IEprocResponse objResp;
+@model eProcurementNext.Razor.Pages.ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+
+
+    <p align="center">
+        <img src="@(ApplicationCommon.Application["strVirtualDirectory"])/images/logo.gif"/>
+    </p>
+
+    @{
+        //'-- Se è attiva la modalità debug visualizziamo più informazioni riguardo l'errore, query sql comprese
+        if (ApplicationCommon.Application["debug-mode"].ToLower() == "yes" ||
+        ApplicationCommon.Application["debug-mode"].ToLower() == "si" ||
+        ApplicationCommon.Application["debug-mode"].ToLower() == "true"
+        )
+        {
+            objResp.Write("Desc:" + Model.ExceptionDescription ?? "" + " <br> " + "Source:" + Model.Source ?? "");
+        }
+        else
+        {
+            //'-- Se è disattivato il debug-mode ma è attiva ma la SYS di visione degli errori tecnici
+            if (ApplicationCommon.Application["dettaglio-errori"].ToLower() == "yes" ||
+                ApplicationCommon.Application["dettaglio-errori"].ToLower() == "si")
+            {
+                objResp.Write("Desc:" + Model.ExceptionDescription ?? "" + " <br> " + "Source:" + Model.Source ?? "");
+            }
+            else
+            {
+                //'-- Scriviamo l'errore nell'event viewer
+                if (Model.Error != null)
+                {
+                    eProcurementNext.CommonDB.Basic.TraceErr(Model.Error, ApplicationCommon.Application.ConnectionString);
+                }
+                objResp.Write(ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO") + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            }
+        }
+    }
+
+
+    <div align="center">
+        <center>
+            @(Html.Raw(objResp.Out()))
+        </center>
+    </div>
+
+
+</body>
+</html>

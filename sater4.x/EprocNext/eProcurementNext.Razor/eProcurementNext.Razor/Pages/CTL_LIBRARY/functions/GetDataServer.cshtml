@@ -1,0 +1,111 @@
+﻿@page "/CTL_LIBRARY/functions/GetDataServer.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.GetDataServerModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	//dim sBrowser, sBrowserType
+	//sBrowser = request.serverVariables("HTTP_USER_AGENT")
+	//if instr(1, sBrowser, "mozilla", 1)<>0 then
+	//	if instr(1, sBrowser, "MSIE", 1)<>0 then
+	//		sBrowserType = "ie"
+	//	else
+	//		sBrowserType = "netscape"
+	//	end if
+	//	else
+	//	sBrowserType = "unknown"
+	//end if
+
+
+	//select case sBrowserType
+	//case "netscape"
+	//	Response.AddHeader "Pragma", "no-cache"
+	//	Response.AddHeader "cache-control", "private"
+	//case "ie"
+	//	Response.CacheControl = "no-cache"
+	//	Response.AddHeader "Pragma", "no-cache"
+	//	Response.Expires = -1
+	//	Response.ExpiresAbsolute = #January 1, 1990 00:00:01# 
+	//case else
+	//	Response.Expires=0
+	//end select
+
+	DateTime DataFinale = DateTime.Now;
+
+	//'--MANIPULATE=OPERATION,TYPE,OFFSET
+	//'--OPERATION=ADD,DETRACT
+	//'--TYPEOFFSET=d,m,y
+	//'--OFFSET=intero da lavorare
+
+	string param = GetParamURL(Request.QueryString.ToString(), "param");
+
+	if(!string.IsNullOrEmpty(param))
+	{
+		string []ainfo = param.Split(",");
+		string OPERATION = ainfo[0];
+		int TYPEOFFSET = CInt(ainfo[1]);
+		int  OFFSET = CInt(ainfo[2]);
+
+		switch(OPERATION)
+		{
+			case "ADD":
+
+				DataFinale = DateTime.Now.AddDays(TYPEOFFSET);
+
+				break;
+		}
+	}
+
+	int strYearNow = DataFinale.Year;
+	string strMonthNow = addZero(DataFinale.Month);
+	string strDayNow = addZero(DataFinale.Day);
+	DateTime strTimeNow  = DateAndTime.Now;
+	
+	string strHourNow = addZero(DateAndTime.Hour(DateAndTime.Now));
+	string strMinNow = addZero(DateAndTime.Minute(DateAndTime.Now));
+	string strSecNow  = addZero(DateAndTime.Second(DateAndTime.Now));
+	string strDataNow = $"{strYearNow}-{strMonthNow}-{strDayNow}T{strHourNow}:{strMinNow}:{strSecNow}";
+
+	htmlToReturn.Write(strDataNow);
+	//'la funzione pone crea una stringa con uno 0 avanti se il parametro di input è u valoro < di 9
+	//' es. strI_var = 8 la funzione restituisce 08 se è 10 restituisce 10
+
+	//la funzione pone crea una stringa con uno 0 avanti se il parametro di input è u valoro < di 9
+	//' es. strI_var = 8 la funzione restituisce 08 se è 10 restituisce 10
+	string addZero(int  strI_var)
+	{
+		string addZero= string.Empty;
+		//'controllo che il valore sia diverso da "" , in questo caso la funzione restitisce ""
+		if (strI_var != 0)
+		{
+			
+			if (CInt(strI_var) <= 9)
+			{
+				addZero = "0" + strI_var;
+			}
+			else
+			{
+				addZero = CStr(strI_var);
+			}
+		}
+		else
+		{
+			addZero = CStr(strI_var);
+		}
+		return addZero;
+	}
+}@Html.Raw(htmlToReturn.Out())

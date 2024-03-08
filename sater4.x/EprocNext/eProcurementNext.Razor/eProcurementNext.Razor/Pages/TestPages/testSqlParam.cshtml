@@ -1,0 +1,31 @@
+﻿@page "/testSqlParam.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.TestPages.testSqlParam
+@{
+
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var qs = Request.QueryString.ToString();
+
+    var operation = GetParamURL(qs, "OPERATION");
+    var modId = GetParamURL(qs, "MOD_ID");
+
+    validate("MOD_ID", modId, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("OPERATION", operation, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+
+    if (string.IsNullOrEmpty(operation) || string.IsNullOrEmpty(modId))
+    {
+        response.Write("PARAMETRI OBBLIGATGORI : 'MOD_ID' e 'OPERATION'");
+    }
+    
+}
+
+@Html.Raw(response.Out())
+
+<br/>
+Tempo di esecuzione : @Model.testQuery(modId, operation);

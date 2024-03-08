@@ -1,0 +1,25 @@
+﻿@page "/DASHBOARD/InputBoxWin.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.DashBoard
+@using eProcurementNext.HTML
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.DASHBOARD.InputBoxWinModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	StartPage(htmlToReturn);
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/msgbox.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/model.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/field.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/caption.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/SinteticHelp.css"" type=""text/css"">");
+	InputBoxWin inputBoxWin = new InputBoxWin(HttpContext, session, htmlToReturn);
+	inputBoxWin.run(htmlToReturn);
+}@Html.Raw(htmlToReturn.Out())

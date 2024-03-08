@@ -1,0 +1,498 @@
+﻿@page "/accesso_dossier.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject eProcurementNext.BizDB.ITabManage _TabManage;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.CommonModule
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using eProcurementNext.CommonDB;
+@using static eProcurementNext.Razor.Pages.accesso_dossierModel;
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.Extensions.Primitives
+@using Microsoft.VisualBasic;
+@using System.Web
+@using System.IO;
+@using System.Security.Claims
+@using static eProcurementNext.Razor.Pages.Functions.costanti;
+@model eProcurementNext.Razor.Pages.accesso_dossierModel
+@*
+<!-- #INCLUDE FILE="./CTL_LIBRARY/FUNCTIONS/AntiFixation.inc" -->
+<!-- #Include File="./CTL_Library/Functions/security.inc" -->
+
+*@
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+}
+@{
+	void wrapperPage(string  pageToInvoke){
+		//funzione non utilizzata
+		throw new NotImplementedException();
+	}
+
+	string getTimeStamp() {
+		return CStr(DateAndTime.DateDiff("s", "01/01/1970 00:00:00", DateAndTime.Now));
+	}
+
+	string virtualDirectoryPortale = "";
+	string tsCache = "";
+	string urlPortale = "";
+
+	void drawLayout(string titlePagina){
+
+		
+
+		drawHtmlHead(titlePagina);
+
+		drawBodyHeader(titlePagina);
+
+		drawHtmlFooter();
+
+	}
+
+	void drawHtmlHead(string titlePagina)
+	{
+		Response.Headers.TryAdd("Content-Type", "text/html;charset=UTF-8");
+		//Response.Code.CodePage = 65001
+		//Response.CharSet = "UTF-8"
+
+		virtualDirectoryPortale = CStr(Strings.Split(CStr(Request.HttpContext.GetServerVariable("PATH_INFO")), "/")[1]);
+
+		urlPortale = CStr(ApplicationCommon.Application["WEBSERVERPORTALE"]) + "/" + virtualDirectoryPortale + "/accesso_dossier.asp";
+
+		//'response.write urlPortale
+		//'response.end
+
+		tsCache = getTimeStamp();
+
+		htmlToReturn.Write($@"
+			<!DOCTYPE html>
+			<html lang=""it-it"" dir=""ltr"">
+			<head>
+				<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
+				<meta http-equiv=""X-UA-Compatible"" content=""IE=9""/>
+				<meta charset=""utf-8"" />
+
+				<meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"" />
+
+			<title>" + HtmlEncode(titlePagina) + $@"</title>
+
+			<link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/favicon.ico?nocache=" + tsCache + $@""" rel=""shortcut icon"" type=""image/vnd.microsoft.icon"" />
+			<link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/layout.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+			<link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/template.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+			<link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/general.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+			<link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/personal.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+			<link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/modal.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+
+			<link rel=""stylesheet"" href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/aflink_style.css?nocache=" + tsCache + $@""" type=""text/css"" media=""screen,projection""  />
+			<link rel=""stylesheet"" href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/aflink_style_print.css?nocache=" + tsCache + $@""" type=""text/css"" media=""print""  />
+			<link rel=""stylesheet"" href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/aflink_style_chromefix.css?nocache=" + tsCache + $@""" type=""text/css"" media=""screen,projection""  />
+			<link rel=""stylesheet"" href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/last_style.css?nocache=" + tsCache + $@""" type=""text/css"" />
+
+			<link href=""//fonts.googleapis.com/css?family=Open+Sans"" rel=""stylesheet"" />
+			<link href='https://fonts.googleapis.com/css?family=Titillium Web' rel='stylesheet'>
+
+
+
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/jquery.min.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/jquery-noconflict.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/jquery-migrate.min.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/bootstrap.min.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/caption.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/template.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/core.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/mootools-core.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/mootools-more.js?nocache=" + tsCache + $@"""></script>
+			<script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/modal.js?nocache=" + tsCache + $@"""></script>
+
+			<!--[if lt IE 9]><script src=""/" + virtualDirectoryPortale + $@"/JS/jui/js/html5.js""></script><![endif]-->
+
+			<script type=""text/javascript"" src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/md_stylechanger.js?nocache=" + tsCache + $@"""></script>
+
+			<script>
+
+				jQuery(window).on('load',  function() {{
+						new JCaption('img.caption');
+					}});
+
+				jQuery(function($) {{
+					SqueezeBox.initialize({{}});
+					SqueezeBox.assign($('a.modal').get(), {{
+						parse: 'rel'
+					}});
+				}});
+
+				window.jModalClose = function () {{
+					SqueezeBox.close();
+				}};
+
+				// Add extra modal close functionality for tinyMCE-based editors
+				document.onreadystatechange = function () {{
+					if (document.readyState == 'interactive' && typeof tinyMCE != 'undefined' && tinyMCE)
+					{{
+						if (typeof window.jModalClose_no_tinyMCE === 'undefined')
+						{{	
+							window.jModalClose_no_tinyMCE = typeof(jModalClose) == 'function'  ?  jModalClose  :  false;
+
+							jModalClose = function () {{
+								if (window.jModalClose_no_tinyMCE) window.jModalClose_no_tinyMCE.apply(this, arguments);
+								tinyMCE.activeEditor.windowManager.close();
+							}};
+						}}
+
+						if (typeof window.SqueezeBoxClose_no_tinyMCE === 'undefined')
+						{{
+							if (typeof(SqueezeBox) == 'undefined')  SqueezeBox = {{}};
+							window.SqueezeBoxClose_no_tinyMCE = typeof(SqueezeBox.close) == 'function'  ?  SqueezeBox.close  :  false;
+
+							SqueezeBox.close = function () {{
+								if (window.SqueezeBoxClose_no_tinyMCE)  window.SqueezeBoxClose_no_tinyMCE.apply(this, arguments);
+								tinyMCE.activeEditor.windowManager.close();
+							}};
+						}}
+					}}
+				}};
+
+				jQuery(function($){{ $("".hasTooltip"").tooltip({{""html"": true,""container"": ""body""}}); }});
+
+			</script>
+
+		</head>
+
+
+
+
+		");
+
+	}
+
+
+	void drawBodyHeader(string pagina){
+		htmlToReturn.Write($@"
+			<body class=""site com_content view-featured no-layout no-task itemid-101"">
+
+			<!-- link accessibilit� -->
+			<ul class=""skiplinks"">
+					<li><a href=""#main"" class=""u2"">Vai ai contenuti</a></li>
+					<li><a href=""#nav"" class=""u2"">Vai al menu</a></li>
+			</ul>
+
+			<!-- Body -->
+			<div class=""body"">
+				<div class=""container"">
+					<!-- Header -->
+				  <div id=""header"">
+            			<header class=""header"" role=""banner"">
+                			<div class=""header-banner""><a href=""https://www.afsoluzioni.it/"">AFSoluzioni</a></div>
+							<div class=""header-inner clearfix"">
+								<a class=""brand pull-left stemma"" href=""https://www.afsoluzioni.it/"">
+									<img src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/images/i_logo_new.png"" alt=""Logo ER"">
+								</a>
+								<a class=""brand pull-left"" href=""https://www.afsoluzioni.it/"">
+									AFSoluzioni
+								</a>
+							</div>
+						</header>
+					</div>
+				   <div class=""HeaderTools"">
+						<div class=""HeaderMenu"">
+							<nav class=""navigation"" role=""navigation"">
+								<div class=""navbar pull-left"">
+										<a class=""btn btn-navbar collapsed"" data-toggle=""collapse"" data-target="".nav-collapse"">
+											<span class=""icon-bar""></span>
+											<span class=""icon-bar""></span>
+											<span class=""icon-bar""></span>
+										</a>
+									</div>
+								<div class=""nav-collapse"">
+
+								</div>
+							</nav>
+						</div>
+						<div class=""header-search pull-right"" id=""links_top_access"">
+
+						</div>
+				   </div>
+			");
+
+		drawBreadCrumb(pagina);
+		drawMenu();
+
+		htmlToReturn.Write($@"
+			<div id=""main"">
+			<main id=""content"" role=""main"" class=""span9"">
+			<!-- Begin Content -->
+
+				<div id=""system-message-container""></div>
+
+					<div class=""blog-featured"" itemscope itemtype=""https://schema.org/Blog"">
+
+						<div class=""items-leading clearfix"">
+							<div class=""leading-0 clearfix"" itemprop=""blogPost"" itemscope itemtype=""https://schema.org/BlogPosting"">
+		");
+
+		drawContent();
+
+		htmlToReturn.Write($@"
+									</div>
+								</div>
+
+
+
+							</div>
+
+					<!-- End Content -->
+					</main>
+
+				</div>
+
+			</div>
+
+			</div>
+		");
+	}
+
+	void drawBodyFooter() { }
+
+	void drawMenu()
+	{
+		htmlToReturn.Write($@"
+			<div class=""row-fluid"" id =""nav"">
+			<!-- Begin Sidebar -->
+			<div id=""sidebar"" class=""span3"">
+				<div class=""sidebar-nav"">
+					<div class=""moduletable"">
+						<h3>Area Privata</h3>
+
+
+			<script type=""text/javascript"">
+				function vacio(q) {{   
+				for ( i = 0; i < q.length; i++ ) {{   
+						if ( q.charAt(i) != "" "" ) {{   
+								return true   
+						}}   
+				}}   
+				return false   
+				}}   
+
+				function evidenziaCampo(obj)
+				{{
+					obj.setAttribute(""class"",""txt required fieldError"");
+				}}
+
+
+				function resetCampo(obj)
+				{{
+					obj.style.background="""";
+					obj.setAttribute(""class"",""txt required"");
+				}}
+
+				// Tutto il campi completi.   
+
+			   function valida(form) 
+			   {{   
+					var totCampiOk = 0;
+
+					try
+					{{
+						document.getElementById('msg-errore-login').style.display = 'none';
+					}}
+					catch(e)
+					{{
+					}}
+
+					if( vacio(document.getElementById('login_idazienda').value) == false) 
+					{{  
+						evidenziaCampo(document.getElementById('login_idazienda'));
+					}}
+					else
+					{{
+						totCampiOk++;
+						resetCampo(document.getElementById('login_idazienda'));
+					}}
+
+					if( vacio(document.getElementById('login_username').value) == false) 
+					{{   
+						evidenziaCampo(document.getElementById('login_username'));
+					}}
+					else
+					{{  
+						resetCampo(document.getElementById('login_username'));
+						totCampiOk++;
+					}} 	
+
+
+
+					if (totCampiOk == 2)
+					{{
+						return true;
+					}}
+					else
+					{{
+						document.getElementById('messaggio_errore').innerHTML = ""<b>Attenzione</b>: I campi evidenziati non sono stati compilati correttamente!"";
+						return false;  
+					}}  	
+				}}
+
+				function TomaCampo(obj)
+				{{
+					document.write (totCampiOK);
+				}}
+
+
+			</script>  
+		");
+		if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"])))
+		{
+			htmlToReturn.Write($@"
+				<form name=""form"" action=""/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + $@"/login.asp?redirectback=yes&amp;chiamante=" + urlPortale +$@""" method=""post"" id=""login"" autocomplete=""off"" onSubmit=""return valida(this);"" >
+			");
+		}else{
+			htmlToReturn.Write($@"
+				<form name=""form"" action=""/Application/login.asp?redirectback=yes&amp;chiamante=" + urlPortale +$@""" method=""post"" id=""login"" autocomplete=""off"" onSubmit=""return valida(this);"" >
+			");
+		}
+		htmlToReturn.Write($@"
+				<div>
+
+					<span id=""messaggio_errore"">
+		");
+
+		if (!string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "Errore"))) {
+			htmlToReturn.Write("<strong id='msg-errore-login'>" + GetParamURL(Request.QueryString.ToString(), "Errore") + "</strong>");
+		}
+
+		htmlToReturn.Write($@"
+			</span>	
+
+					</div>
+
+
+
+					<div>
+
+						<label for=""login_idazienda"">Codice di accesso</label>
+						<input type=""text"" name=""IDAZIENDA"" class=""txt required"" id=""login_idazienda"" style=""""/>
+						<label for=""login_username"">Nome Utente</label>
+						<input type=""text"" name=""USERNAME"" class=""txt required"" id=""login_username"" style=""""/>
+
+
+						<input type=""submit"" value=""Accedi"" class=""button"" id=""submit1"" name=""submit1""/>
+
+						<input type=""hidden"" name=""strMnemonicoMP"" value=""PA""/>
+						<input type=""hidden"" value=""1"" name=""strCheckIscrizione""/>
+						<!-- <input type=""hidden"" id=""URL_APP"" name=""URL_APP"" value=""https://piattaformaintercenter.regione.emilia-romagna.it/Application/""/> -->
+						<!-- <input type=""hidden"" name=""SYS_INSERISCIQUESITIDALPORTALE"" id=""SYS_INSERISCIQUESITIDALPORTALE"" value="""" /> -->
+
+					</div>
+
+				</form>	
+
+				<div class=""moduletable_menu"">
+					<ul class=""nav menu"">
+
+
+
+					</ul>
+
+				</div>
+
+			</div>
+
+				</div>
+			</div>
+
+		");
+	}
+
+	void drawBreadCrumb(string pagina){
+		int addItem = 0;
+		string extraHtml = $@"class=""active""";
+
+		if (pagina.ToLower() != "home") {
+			addItem = 1;
+			extraHtml = "";
+		}
+
+		htmlToReturn.Write($@"");
+	}
+
+	void drawHtmlFooter(){
+		htmlToReturn.Write($@"
+			<!-- Footer -->
+			<footer class=""footer"" role=""contentinfo"">
+					<div class=""container"">
+							<div class=""div_site_name""></div>
+					</div>
+
+					<div id=""main_bottom_div"" class=""bottom"">
+						<div class=""Footer_01"">
+
+							<table class=""FooterBottom"">
+							<tr>
+								<th colspan=""1"" class=""NOpx""></th>
+									<td class=""FooterColLoghi"">
+
+
+									<div class=""footerContent"">
+										<div class=""colonna-1-di-3"">
+											<h3>AF Soluzioni srl</h3>
+											<hr>
+											<p>(Cod. Fiscale 04178170652)</p>
+											<p>Via S.Leonardo, 120 - 84131 Salerno</p>
+											<!--
+											<hr>
+											<p>
+											  <span class=""footernote"">Per ricevere assistenza e supporto tecnico sull'utilizzo della piattaforma di e-procurement</span>
+										  </p>
+											<p>Num. verde: 800 810 799<br>Tel.: +39 089 9712796 Mobile/Estero<br>Scrivici: <a href=""mailto:supportoclienti@afsoluzioni.it"">e-mail</a></p>
+											-->
+										</div>
+
+
+
+
+
+									</div>
+
+
+							</td>
+								</tr>   
+								<tr>
+									<th colspan=""1"" class=""NOpx""></th>
+									<td class=""FooterCol1"">
+
+									</td>
+								</tr>   
+							</table>
+						</div>
+					</div>
+
+				</footer>
+
+			</body>
+			</html>
+		");
+	}
+
+	drawLayout("Home");
+
+	void drawContent(){
+		htmlToReturn.Write($@"
+			<center>
+				<h1>Area di Accesso</h1>
+			</center>
+
+			<p style=""text-align: center;""><span style=""color: green;""> Numero Verde <strong style=""font-size: 1.3em;"">800 810 799</strong></span><br> da telefonia fissa nazionale per assistenza e supporto tecnico sull'utilizzo della piattaforma di e-procurement</p>
+			<p><img style=""display: block; margin-left: auto; margin-right: auto;"" title=""immagine home page"" src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/images/homeImg.jpg"" alt=""immagine home page"" width=""550"" height=""317"" border=""0""></p>
+
+	
+	
+		");
+	}
+
+}
+@Html.Raw(htmlToReturn.Out())

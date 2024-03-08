@@ -1,0 +1,415 @@
+﻿@page "/Report/prn_ANNULLA_ODA.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_ANNULLA_ODAModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.Report.prn_ANNULLA_ODAModel
+@{
+
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+
+    objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+    string idDoc = objDoc.mp_IDDoc;
+}
+@{
+    htmlToReturn.Write($@"
+		<html>
+			<head>
+	");
+    addMetaTag(htmlToReturn);
+    htmlToReturn.Write($@"
+		</head>
+
+		<body style=""margin-left:50px; margin-right:50px; margin-top:10px; margin-bottom:10px"">
+
+
+		<table height=""100%"" width=""100%"" border=""0"" style=""height: 1390px;"">
+
+			<tr>
+				<td align=""center"">
+
+					<table  width=""100%"" style=""margin-top:0px"" align=""center"">
+						<tr>
+							<td style=""border:0px;"" align=""center"">
+								<table style=""font-weight:bold; align:center"">
+									<tr>
+										<td align=""center"" style=""border:0px; align:center; vertical-align=middle;"">
+	");
+
+    string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+    if (Strings.InStr(1, imgHeader, "???") > 0)
+    {
+        htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@""" />");
+    }
+    else
+    {
+        htmlToReturn.Write(imgHeader);
+    }
+
+    htmlToReturn.Write($@"
+		</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+								</tr>
+								<tr>
+									<td style=""font-size:18px"">
+	");
+
+    htmlToReturn.Write(ApplicationCommon.CNV("HEADER_ANNULLA_ORDINATIVO"));
+
+    htmlToReturn.Write($@"
+		</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>
+
+		<tr>
+
+			<td height=""100%"" align=""top"" valign=""top"">
+
+				<br/><br/>
+	");
+    string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+    validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    //string strSql = "Select A.aziragionesociale as ente,RDA_Object as Descrizione_Convenzione,D2.Protocollo as Registro_convenzione,DM.vatValore_FT as CFENte,A.aziPartitaIVA as PIVAENTE, A.aziIndirizzoLeg as indizzo_ente,A.aziTelefono1, A.aziFAX,A2.aziragionesociale as Denominazione_Forn,DM2.vatValore_FT as CFFORN,A2.aziPartitaIVA as PIVA_FORN, A2.aziIndirizzoLeg as indizzo_forn,A2.aziTelefono1 as Tel_Forn, A2.aziFAX as Fax_forn " + Environment.NewLine;
+    string strSql = "Select oda.numeroDocumento, convert(varchar(10), oda.datadocumento, 103) as dataDocumento, A.aziE_Mail as PECazi, A.aziragionesociale as ente,d.Body as Descrizione,oda.Protocollo as Registro,DM.vatValore_FT as CFENte,A.aziPartitaIVA as PIVAENTE, A.aziIndirizzoLeg as indizzo_ente,A.aziTelefono1, A.aziFAX,A2.aziragionesociale as Denominazione_Forn,DM2.vatValore_FT as CFFORN,A2.aziPartitaIVA as PIVA_FORN, A2.aziIndirizzoLeg as indizzo_forn,A2.aziTelefono1 as Tel_Forn, A2.aziFAX as Fax_forn,  A2.aziE_Mail as ForPec " + Environment.NewLine;
+    strSql = strSql + "from ctl_doc D " + Environment.NewLine;
+    //strSql = strSql + "inner join document_odc O on D.linkeddoc=rda_id  " + Environment.NewLine;
+    //strSql = strSql + "inner join aziende A on A.idazi=O.RDA_AZI and A.azideleted=0 " + Environment.NewLine;
+
+    strSql = strSql + "inner join ctl_doc oda on oda.id = d.linkeddoc " + Environment.NewLine;
+    strSql = strSql + "inner join document_oda O on D.linkeddoc=o.idHeader " + Environment.NewLine;
+    strSql = strSql + "inner join aziende A on A.idazi=d.Azienda " + Environment.NewLine;
+
+
+    strSql = strSql + "inner join DM_ATTRIBUTI DM on DM.lnk=A.IdAzi and Dm.dztnome='codicefiscale' " + Environment.NewLine;
+    //strSql = strSql + "inner join CTL_DOC D2 on d2.id=O.Id_Convenzione and D2.Deleted=0 " + Environment.NewLine;
+    //strSql = strSql + "inner join aziende A2 on A2.idazi=O.IdAziDest " + Environment.NewLine;
+
+    strSql = strSql + "inner join aziende A2 on A2.idazi=d.Destinatario_Azi  " + Environment.NewLine;
+
+
+
+    strSql = strSql + "inner join DM_ATTRIBUTI DM2 on DM2.lnk=A2.IdAzi and Dm2.dztnome='codicefiscale' " + Environment.NewLine;
+    strSql = strSql + "where D.id=" + CStr(CLng(id));
+
+    TSRecordSet rs = GetRS(strSql);
+
+    if (rs.RecordCount > 0)
+    {
+
+        rs.MoveFirst();
+
+    }
+    else
+    {
+
+        Response.StatusCode = 500;// .Status = "500 Errore record non trovato"
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "500 Errore record non trovato");
+
+    }
+
+    //dynamic Descrizione_Convenzione =  HtmlEncode(CStr(rs.Fields["Descrizione_Convenzione"]));
+    //dynamic Registro_convenzione  =  rs.Fields["Registro_convenzione"];
+
+    dynamic Descrizione = HtmlEncode(CStr(rs.Fields["Descrizione"]));
+    dynamic Registro_convenzione = rs.Fields["Registro"];
+
+
+    dynamic ente = rs.Fields["ente"];
+    dynamic CFENte = rs.Fields["CFENte"];
+    dynamic PIVAENTE = rs.Fields["PIVAENTE"];
+    dynamic indizzo_ente = HtmlEncode(CStr(rs.Fields["indizzo_ente"]));
+    dynamic aziTelefono1 = rs.Fields["aziTelefono1"];
+    dynamic aziFAX = rs.Fields["aziFAX"];
+    dynamic Denominazione_Forn = HtmlEncode(CStr(rs.Fields["Denominazione_Forn"]));
+    dynamic CFFORN = rs.Fields["CFFORN"];
+    dynamic PIVA_FORN = rs.Fields["PIVA_FORN"];
+    dynamic indizzo_forn = HtmlEncode(CStr(rs.Fields["indizzo_forn"]));
+    dynamic Tel_Forn = rs.Fields["Tel_Forn"];
+    //dynamic Fax_forn = rs.Fields["Fax_forn"];
+
+
+    dynamic Fax_forn = rs.Fields["Fax_forn"];
+	dynamic numeroDocumento = rs.Fields["numeroDocumento "];
+	dynamic dataDocumento = rs.Fields["dataDocumento "];
+	dynamic AziPec = rs.Fields["PECazi"];
+	dynamic ForPec = rs.Fields["ForPec "];
+    
+
+
+    htmlToReturn.Write($@"
+		<p>
+			<strong>Il/La sottoscritto/a " + DOC_Field("DOCUMENT", "IdPfu") + $@", in qualità di Punto Ordinante dell'Ente " + ente + $@", per le motivazioni in calce alla presente,
+					richiede l’annullamento dell’Ordine di Acquisto " + DOC_Field("TESTATA", "ProtocolloRiferimento") + $@" con Descrizione  " + Descrizione + $@",
+					con effetto a decorrere dalla data di creazione del presente documento.
+			</strong>
+		</p>
+
+		<br/>
+		<hr style=""border:1px solid black;"">
+		<p><strong>ORDINE DI ACQUISTO DA ANNULLARE</strong></p>
+		<br/>
+		<table width=""100%"">
+	");
+
+    htmlToReturn.Write($@"
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Numero Ordine:
+				</td>
+				<td>
+					" + numeroDocumento + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Data Ordine:
+				</td>
+				<td>
+					" + dataDocumento + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Descrizione:
+				</td>
+				<td>
+					" + Descrizione + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Registro :
+				</td>
+				<td>
+					" + Registro_convenzione + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Data Invio :
+				</td>
+				<td>
+					" + DOC_Field("TESTATA", "RDA_DataCreazione") + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					CIG:
+				</td>
+				<td>
+					" + DOC_Field("TESTATA", "CIG") + $@"
+				</td>
+			</tr>
+			
+	");
+
+    htmlToReturn.Write($@"
+		</table>
+
+		<hr style=""border:1px solid black;"">
+
+		<p><strong>SOGGETTO ORDINANTE</strong></p>
+
+		<table width=""100%"">
+	");
+
+    htmlToReturn.Write($@"
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Compilatore:
+				</td>
+				<td>
+					" + DOC_Field("DOCUMENT", "IdPfu") + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Ente:
+				</td>
+				<td>
+					" + ente + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					CF Ente:
+				</td>
+				<td>
+					" + CFENte + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					P.IVA Ente:
+				</td>
+				<td>
+					" + PIVAENTE + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Indirizzo ente:
+				</td>
+				<td>
+					" + indizzo_ente + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Telefono:
+				</td>
+				<td>
+					" + aziTelefono1 + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Fax:
+				</td>
+				<td>
+					" + aziFAX + $@"
+				</td>
+			</tr>
+	");
+
+    htmlToReturn.Write($@"
+		</table>
+		<hr style=""border:1px solid black;"">
+
+		<p><strong>FORNITORE</strong></p>
+		<table width=""100%"">
+	");
+
+    htmlToReturn.Write($@"
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Denominazione:
+				</td>
+				<td>
+					" + Denominazione_Forn + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					CF Ente:
+				</td>
+				<td>
+					" + CFFORN + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					P.IVA Ente:
+				</td>
+				<td>
+					" + PIVA_FORN + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Indirizzo:
+				</td>
+				<td>
+					" + indizzo_forn + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Telefono:
+				</td>
+				<td>
+					" + Tel_Forn + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+					Fax:
+				</td>
+				<td>
+					" + Fax_forn + $@"
+				</td>
+			</tr>
+			<tr>
+				<td colspan=""2"" align=""left"" width=""25%"">
+							PEC:
+						</td>
+						<td>
+							" + ForPec + @"
+						</td>
+					</tr>
+
+	");
+
+    htmlToReturn.Write($@"
+		</table>
+		<hr style=""border:1px solid black;"">
+		<p><strong>MOTIVAZIONI</strong></p>
+		" + DOC_Field("MOTIVAZIONI", "Note") + $@"
+		<br/><br/><br/>
+	");
+
+    if (!string.IsNullOrEmpty(DOC_Field("MOTIVAZIONI", "Allegato")))
+    {
+        htmlToReturn.Write($@"<Strong>Allegato: </Strong>" + DOC_Field("MOTIVAZIONI", "Allegato") + $@"");
+    }
+
+    htmlToReturn.Write($@"
+		<br/><br/><br/>
+
+				<table width=""100%"">
+
+					<tr>
+
+						<td align=""right"">
+							" + DOC_Field("DOCUMENT", "IdPfu") + $@" <br/>
+							Firmato digitalmente
+						</td>
+
+					</tr>
+
+				</table>
+
+			</td>
+		</tr>
+
+	</table>
+
+	</body>
+	</html>
+	");
+
+    try
+    {
+        FreeMemDocument(session);
+    }
+    catch
+    {
+
+    }
+
+}
+@Html.Raw(htmlToReturn.Out())

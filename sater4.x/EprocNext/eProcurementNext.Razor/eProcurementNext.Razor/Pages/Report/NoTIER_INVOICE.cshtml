@@ -1,0 +1,1279 @@
+﻿@page "/Report/NoTIER_INVOICE.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.NoTIERINVOICEModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.Report.NoTIERINVOICEModel
+@{
+    CommonDbFunctions cdf = new CommonDbFunctions();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new EprocResponse();
+    htmlToReturn.Write($@"<?xml version=""1.0"" encoding=""UTF-8""?>");
+    objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+                                                                                  //'http://afsvm043/application/report/NoTIER_INVOICE.asp?typedoc=NOTIER_INVOICE_STAMP&iddoc=82255
+    string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+    Response.ContentType = "TEXT/XML";
+
+    TSRecordSet rsMitt = cdf.GetRSReadFromQuery_("select isnull(vatValore_FT,'') as vatValore_FT from ctl_doc with(nolock), DM_Attributi with(nolock) where id = " + CStr(CLng(IDDOC)) + " and lnk = Azienda and dztNome = 'PARTICIPANTID'", ApplicationCommon.Application.ConnectionString);
+    rsMitt.MoveFirst();
+    string participantID_mitt = "";
+    try{
+        participantID_mitt = CStr(rsMitt["vatValore_FT"]);
+    }catch{
+        participantID_mitt = "";
+    }
+
+    TSRecordSet tsBollo = cdf.GetRSReadFromQuery_("select isnull(Value,'') as bollo from ctl_doc_value with(nolock) where IdHeader = " + CStr(CLng(IDDOC)) + " and DSE_ID = 'INVOICEAMOUNT' and DZT_Name = 'AllowanceChargeAmount_Bollo'", ApplicationCommon.Application.ConnectionString);
+    tsBollo.MoveFirst();
+    string bollofattureGestione = "";
+    bollofattureGestione = CStr(tsBollo["bollo"]);
+
+    if (bollofattureGestione == "")
+    {
+        bollofattureGestione = "999";
+    }
+
+    //'response.write participantID_mitt
+    //'response.end
+    htmlToReturn.Write($@"
+	<Invoice xsi:schemaLocation=""urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 UBL-Invoice-2.1.xsd""
+		xmlns=""urn:oasis:names:specification:ubl:schema:xsd:Invoice-2""
+		xmlns:cac=""urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2""
+		xmlns:cbc=""urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2""
+		xmlns:ccts=""urn:un:unece:uncefact:documentation:2""
+		xmlns:ext=""urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2""
+		xmlns:qdt=""urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2""
+		xmlns:udt=""urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2""
+		xmlns:xsd=""http://www.w3.org/2001/XMLSchema""
+		xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+		xmlns:cr=""http://www.ubl-italia.org/ns/CrossReference"">");
+
+
+    TSRecordSet rsUBLExtensions = null;
+    string strSQL = "exec Invoice_UBLExtensions " + CStr(CLng(IDDOC));
+    rsUBLExtensions = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+    if (rsUBLExtensions.RecordCount > 0)
+    {
+        htmlToReturn.Write($@"<ext:UBLExtensions>");
+
+        rsUBLExtensions.MoveFirst();
+        int indice = 0;
+        string ExtensionURI = "";
+
+        while (rsUBLExtensions.EOF == false)
+        {
+            if (indice != 0)
+            {
+                ExtensionURI = CStr(rsUBLExtensions["ExtensionURI"]) + indice;
+            }
+            else
+            {
+                ExtensionURI = CStr(rsUBLExtensions["ExtensionURI"]);
+            }
+
+            htmlToReturn.Write($@"
+				<ext:UBLExtension>
+					<ext:ExtensionURI>" + ExtensionURI + $@"</ext:ExtensionURI>
+					<ext:ExtensionContent>
+						<cbc:TypeCode>" + CStr(rsUBLExtensions["TypeCode"]) + $@"</cbc:TypeCode>
+					</ext:ExtensionContent>
+				</ext:UBLExtension>");
+
+            indice = indice + 1;
+            rsUBLExtensions.MoveNext();
+
+        }
+
+        htmlToReturn.Write("</ext:UBLExtensions>");
+    }
+
+    htmlToReturn.Write($@"
+	<cbc:CustomizationID>" + DOC_XML_FIELD("INVOICE", "CustomizationID") + $@"</cbc:CustomizationID>
+	<cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>");
+    htmlToReturn.Write($@"
+	<cbc:ID>" + DOC_XML_FIELD("INVOICE", "Order_ID") + $@"</cbc:ID>
+	<cbc:IssueDate>" + Strings.Left(DOC_XML_FIELD("INVOICE", "Order_IssueDate"), 10) + $@"</cbc:IssueDate>");
+
+    dynamic dataDiScadenzaPagamento = CStr(DOC_XML_FIELD("INVOICE", "DueDate"));
+
+    if (!string.IsNullOrEmpty(dataDiScadenzaPagamento))
+    {
+        dataDiScadenzaPagamento = Strings.Left(dataDiScadenzaPagamento, 10);
+        htmlToReturn.Write("<cbc:DueDate>" + dataDiScadenzaPagamento + "</cbc:DueDate>");
+    }
+
+    string tipoFattura = DOC_XML_FIELD("INVOICE", "InvoiceTypeCode");
+
+    //'-- rimosso dal tag InvoiceTypeCode l'attributo listID="UNCL1001" per risolvere il warning [UBL-CR-656]-A UBL invoice should not include the InvoiceTypeCode listID
+    htmlToReturn.Write($@"<cbc:InvoiceTypeCode>" + tipoFattura + $@"</cbc:InvoiceTypeCode>");
+
+    addOptionalTag(DOC_XML_FIELD("INVOICE", "DespatchAdvice_Note"), "cbc:Note");
+
+    dynamic valuta = DOC_XML_FIELD("INVOICE", "DocumentCurrencyCode");
+    //'-- rimosso dal tag DocumentCurrencyCode l'attributo listID="ISO4217" per risolvere il warning [UBL-CR-657]-A UBL invoice should not include the DocumentCurrencyCode listID
+    htmlToReturn.Write($@"<cbc:DocumentCurrencyCode>" + valuta + $@"</cbc:DocumentCurrencyCode>");
+
+    string CodiceCommessaConvenzione = DOC_XML_FIELD("INVOICE", "CodiceCommessaConvenzione");
+
+    if (!string.IsNullOrEmpty(CStr(CodiceCommessaConvenzione)))
+    {
+        htmlToReturn.Write($@"<cbc:BuyerReference>" + CodiceCommessaConvenzione + $@"</cbc:BuyerReference>");
+    }
+    else
+    {
+        htmlToReturn.Write("<cbc:BuyerReference>#NO#</cbc:BuyerReference>");
+    }
+
+    string InvoicePeriodEsigibilitaIVA = DOC_XML_FIELD("INVOICE", "EsigibilitaIVA");
+
+    if (!string.IsNullOrEmpty(CStr(InvoicePeriodEsigibilitaIVA)))
+    {
+        if (InvoicePeriodEsigibilitaIVA == "EI")
+        {
+            htmlToReturn.Write($@"
+		        <cac:InvoicePeriod>
+  		            <cbc:DescriptionCode>3</cbc:DescriptionCode>
+	            </cac:InvoicePeriod>");
+        }
+
+        if (InvoicePeriodEsigibilitaIVA == "ED")
+        {
+            htmlToReturn.Write($@"
+		        <cac:InvoicePeriod>
+  		            <cbc:DescriptionCode>432</cbc:DescriptionCode>
+	            </cac:InvoicePeriod>");
+        }
+    }
+
+    htmlToReturn.Write(Environment.NewLine);
+    htmlToReturn.Write("\t");
+
+    //addOptionalTag(DOC_XML_FIELD("INVOICE", "AccountingCost"), "cbc:AccountingCost");
+
+    dynamic InvoicePeriodSTART = DOC_XML_FIELD("INVOICE", "InvoicePeriod_StartDate");
+    dynamic InvoicePeriodEND = DOC_XML_FIELD("INVOICE", "InvoicePeriod_EndDate");
+    if (1 == 0 && (!string.IsNullOrEmpty(InvoicePeriodSTART) || !string.IsNullOrEmpty(InvoicePeriodEND)))
+    {
+        htmlToReturn.Write($@"
+		<cac:InvoicePeriod>");
+        addOptionalTag(Strings.Left(InvoicePeriodSTART, 10), "cbc:StartDate");
+        addOptionalTag(Strings.Left(InvoicePeriodEND, 10), "cbc:EndDate");
+        htmlToReturn.Write("</cac:InvoicePeriod>");
+    }
+
+    string OrderReference_ID = DOC_XML_FIELD("INVOICE", "OrderReference_ID");
+    dynamic OrderReference_Date = CStr(DOC_XML_FIELD("INVOICE", "OrderReference_IssueDate"));
+
+    if (!string.IsNullOrEmpty(CStr(OrderReference_ID)) || !string.IsNullOrEmpty(OrderReference_Date))
+    {
+        htmlToReturn.Write($@"<cac:OrderReference>");
+        if (!string.IsNullOrEmpty(CStr(OrderReference_ID)))
+        {
+            htmlToReturn.Write($@"<cbc:ID>" + OrderReference_ID + $@"</cbc:ID>");
+        }
+        if (!string.IsNullOrEmpty(CStr(OrderReference_Date)))
+        {
+            htmlToReturn.Write($@"<cbc:IssueDate>" + Strings.Left(OrderReference_Date, 10) + $@"</cbc:IssueDate>");
+        }
+        htmlToReturn.Write($@"</cac:OrderReference>");
+    }
+    else
+    {
+        htmlToReturn.Write($@"
+		        <cac:OrderReference>
+  		            <cbc:ID>#NO#</cbc:ID>
+	            </cac:OrderReference>");
+    }
+
+    string DespatchDocumentReference_ID = DOC_XML_FIELD("INVOICE", "DespatchDocumentReference_ID");
+    dynamic DespatchDocumentReference_Date = CStr(DOC_XML_FIELD("INVOICE", "DespatchDocumentReference_IssueDateDDT"));
+
+    if (!string.IsNullOrEmpty(DespatchDocumentReference_ID) || !string.IsNullOrEmpty(DespatchDocumentReference_Date))
+    {
+        htmlToReturn.Write($@"<cac:DespatchDocumentReference>");
+        if (!string.IsNullOrEmpty(CStr(DespatchDocumentReference_ID)))
+        {
+            htmlToReturn.Write($@"<cbc:ID>" + DespatchDocumentReference_ID + $@"</cbc:ID>");
+        }
+        if (!string.IsNullOrEmpty(CStr(DespatchDocumentReference_Date)))
+        {
+            htmlToReturn.Write($@"<cbc:IssueDate>" + Strings.Left(DespatchDocumentReference_Date, 10) + $@"</cbc:IssueDate>");
+        }
+        htmlToReturn.Write($@"</cac:DespatchDocumentReference>");
+    }
+
+    string AdditionalDocumentReference_CIG = DOC_XML_FIELD("INVOICE", "AdditionalDocumentReference_CIG");
+    if (!string.IsNullOrEmpty(AdditionalDocumentReference_CIG))
+    {
+        htmlToReturn.Write($@"
+		<cac:OriginatorDocumentReference>
+		    <cbc:ID>" + AdditionalDocumentReference_CIG + $@"</cbc:ID>
+		</cac:OriginatorDocumentReference>");
+    }
+
+    string AdditionalDocumentReference_IdentificativoConvenzione = DOC_XML_FIELD("INVOICE", "IdentificativoConvenzione");
+    if (!string.IsNullOrEmpty(AdditionalDocumentReference_IdentificativoConvenzione))
+    {
+        htmlToReturn.Write($@"
+		<cac:AdditionalDocumentReference>
+		    <cbc:ID schemeID=""AVV"">" + AdditionalDocumentReference_IdentificativoConvenzione + $@"</cbc:ID>
+            <cbc:DocumentTypeCode>130</cbc:DocumentTypeCode>
+		</cac:AdditionalDocumentReference>");
+    }
+
+    string ProjectReference_ID = DOC_XML_FIELD("INVOICE", "ProjectReference_ID");
+    if (!string.IsNullOrEmpty(ProjectReference_ID))
+    {
+        htmlToReturn.Write($@"
+		<cac:ProjectReference>
+		    <cbc:ID>" + ProjectReference_ID + $@"</cbc:ID>
+		</cac:ProjectReference>");
+    }
+
+    //'--------------------------------------
+    //'--- COMPONIAMO IL BLOCCO MITTENTE ----
+    //'--------------------------------------
+    string ragioneSocialeMitt = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PartyName");
+    //'cfMitt = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY","PartyIdentification_ID")
+    //'schemeID = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY","schemeID")
+    string PartyTaxScheme_CompanyID = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PartyTaxScheme_CompanyID");
+
+    string schemaID_mitt = getSchemaFromPID(participantID_mitt);
+    string endPointMitt = participantID_mitt.Replace(schemaID_mitt + ":", "");
+
+    htmlToReturn.Write($@"
+	<cac:AccountingSupplierParty>
+		<cac:Party>");
+
+
+    if (!string.IsNullOrEmpty(endPointMitt))
+    {
+        htmlToReturn.Write($@"<cbc:EndpointID schemeID=""" + schemaID_mitt + $@""">" + endPointMitt + $@"</cbc:EndpointID>");
+    }
+    else
+    {
+        htmlToReturn.Write($@"<cbc:EndpointID schemeID=""0211"">" + PartyTaxScheme_CompanyID + $@"</cbc:EndpointID>");
+    }
+
+    htmlToReturn.Write($@"<cac:PartyName>
+				<cbc:Name>" + ragioneSocialeMitt + $@"</cbc:Name>
+			</cac:PartyName>");
+
+    string PostalAddress_StreetName = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PostalAddress_StreetName");
+    string PostalAddress_CityName = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PostalAddress_CityName");
+    dynamic PostalAddress_PostalZone = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PostalAddress_PostalZone");
+    string PostalAddress_CountrySubentity = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PostalAddress_CountrySubentity");
+    string PostalAddress_Country = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PostalAddress_Country");
+    string CompanyID_valore = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "PartyIdentification_ID");
+    string capitaleSociale = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "CapitaleSociale");
+    string socioUnico = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "SocioUnico");
+    string statoLiquidazione = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "StatoLiquidazione");
+    string companylegalForm = CStr(capitaleSociale).Replace(",", ".") + "#" + CStr(socioUnico) + "#" + CStr(statoLiquidazione);
+
+
+    if (!string.IsNullOrEmpty(PostalAddress_Country) || !string.IsNullOrEmpty(PostalAddress_StreetName) || !string.IsNullOrEmpty(PostalAddress_CityName) || !string.IsNullOrEmpty(PostalAddress_PostalZone) || !string.IsNullOrEmpty(PostalAddress_CountrySubentity))
+    {
+        htmlToReturn.Write("<cac:PostalAddress>");
+        addOptionalTag(PostalAddress_StreetName, "cbc:StreetName");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(PostalAddress_CityName, "cbc:CityName");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(PostalAddress_PostalZone, "cbc:PostalZone");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag((PostalAddress_CountrySubentity).ToUpper(), "cbc:CountrySubentity");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+
+
+        if (!string.IsNullOrEmpty(PostalAddress_Country))
+        {
+            //'-- rimosso dal tag IdentificationCode l'attributo listID="ISO3166-1:Alpha2" per risolvere il warning [UBL-CR-660]-A UBL invoice should not include the Country Identification code listID
+
+            htmlToReturn.Write($@"
+			<cac:Country>
+					<cbc:IdentificationCode>" + PostalAddress_Country + $@"</cbc:IdentificationCode>
+				</cac:Country>");
+        }
+        htmlToReturn.Write("</cac:PostalAddress>");
+    }
+    htmlToReturn.Write($@"
+	<cac:PartyTaxScheme>
+				<cbc:CompanyID>" + (PartyTaxScheme_CompanyID).ToUpper() + $@"</cbc:CompanyID>
+				<cac:TaxScheme>
+					<cbc:ID>VAT</cbc:ID>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>");
+    htmlToReturn.Write($@"
+		<cac:PartyLegalEntity>
+				<cbc:RegistrationName>" + ragioneSocialeMitt + $@"</cbc:RegistrationName>
+                <cbc:CompanyID schemeID=""0210"">" + Replace(CompanyID_valore, "IT", "") + $@"</cbc:CompanyID>");
+    if (!string.IsNullOrEmpty(capitaleSociale))
+    {
+        htmlToReturn.Write($@"<cbc:CompanyLegalForm>" + companylegalForm + $@"</cbc:CompanyLegalForm>");
+    }
+    htmlToReturn.Write($@"</cac:PartyLegalEntity>");
+
+    string Contact_Name = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "Contact_Name");
+    string Contact_ElectronicMail = DOC_XML_FIELD("ACCOUNTINGSUPPLIERPARTY", "Contact_ElectronicMail");
+
+    if (!string.IsNullOrEmpty(CStr(Contact_Name)) || !string.IsNullOrEmpty(CStr(Contact_ElectronicMail)))
+    {
+        htmlToReturn.Write("<cac:Contact>");
+        addOptionalTag(Contact_Name, "cbc:Name");
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(Contact_ElectronicMail, "cbc:ElectronicMail");
+        htmlToReturn.Write("</cac:Contact>");
+    }
+    htmlToReturn.Write($@"
+	</cac:Party>
+
+	</cac:AccountingSupplierParty>");
+
+    //'-------------------------
+    //'-- BLOCCO DESTINATARIO --
+    //'-------------------------
+
+    //'--	VECCHIA GESTIONE CON DESTINATARIO DA DOMINIO CHIUSO
+    //'endPointDestinatario = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY","EndpointID_Destinatario")
+    //'schemaID_dest = getSchemaFromPID(endPointDestinatario)
+    //'endPointDest = replace(endPointDestinatario, schemaID_dest & ":", "")
+    //'pivaDest = ""
+    //'ragioneSocialeDest = ""
+    //'set rsdest = getrs("select denominazione,PIVA_CF FROM Document_NoTIER_Destinatari with(nolock) where id_peppol = '" & replace(endPointDestinatario,"'","''") & "'")
+    //'if rsdest.recordcount > 0 then
+    //'	rsdest.movefirst
+    //'	ragioneSocialeDest = rsdest("denominazione")
+    //'	pivaDest = rsdest("PIVA_CF")
+    //'end if
+    //'set rsdest = nothing
+    string endPointDestinatario = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "AccountingCustomerParty_EndpointID");
+    string schemaID_dest = getSchemaFromPID(endPointDestinatario);
+    string endPointDest = endPointDestinatario.Replace(schemaID_dest + ":", "");
+    string ragioneSocialeDest = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PartyName");
+    string pivaDest = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PartyIdentification_ID");
+    string codiceUFEIPA = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "CodiceUFEIPA");
+
+    string ACCOUNTINGSUPPLIERPARTY_schemeID = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "schemeID");
+    string companyID_valoreDEST = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PartyIdentification_ID");
+
+    PartyTaxScheme_CompanyID = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PartyTaxScheme_CompanyID");
+
+    PostalAddress_StreetName = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PostalAddress_StreetName");
+    PostalAddress_CityName = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PostalAddress_CityName");
+    PostalAddress_PostalZone = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PostalAddress_PostalZone");
+    PostalAddress_CountrySubentity = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PostalAddress_CountrySubentity");
+    PostalAddress_Country = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "PostalAddress_Country");
+
+    htmlToReturn.Write($@"
+	<cac:AccountingCustomerParty>
+		<cac:Party>");
+    if (!string.IsNullOrEmpty(schemaID_dest))
+    {
+        htmlToReturn.Write($@"<cbc:EndpointID  schemeID=""" + schemaID_dest + $@""">" + endPointDest + $@"</cbc:EndpointID>");
+    }
+    else
+    {
+        htmlToReturn.Write($@"<cbc:EndpointID schemeID=""0201"">" + codiceUFEIPA + $@"</cbc:EndpointID>");
+    }
+
+    //  if (!string.IsNullOrEmpty(ragioneSocialeDest))
+    //  {
+    //      htmlToReturn.Write($@"
+    //<cac:PartyName>
+    //		<cbc:Name>" + ragioneSocialeDest + $@"</cbc:Name>
+    //	</cac:PartyName>");
+    //  }
+
+    if (!string.IsNullOrEmpty(PostalAddress_StreetName) || !string.IsNullOrEmpty(PostalAddress_CityName) || !string.IsNullOrEmpty(PostalAddress_PostalZone) || !string.IsNullOrEmpty(PostalAddress_CountrySubentity))
+    {
+        htmlToReturn.Write($@"
+			<cac:PostalAddress>");
+        addOptionalTag(PostalAddress_StreetName, "cbc:StreetName");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(PostalAddress_CityName, "cbc:CityName");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(PostalAddress_PostalZone, "cbc:PostalZone");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag((PostalAddress_CountrySubentity).ToUpper(), "cbc:CountrySubentity");
+
+        //'--rimosso l'attributo listID="ISO3166-1:Alpha2"
+        if (!string.IsNullOrEmpty(PostalAddress_Country))
+        {
+            htmlToReturn.Write($@"
+				<cac:Country>
+					<cbc:IdentificationCode>" + PostalAddress_Country + $@"</cbc:IdentificationCode>
+				</cac:Country>");
+        }
+        htmlToReturn.Write("</cac:PostalAddress>");
+
+    }
+    if (!string.IsNullOrEmpty(pivaDest) && ACCOUNTINGSUPPLIERPARTY_schemeID == "IT:VAT")
+    {
+        htmlToReturn.Write($@"
+		<cac:PartyTaxScheme>
+				<cbc:CompanyID>" + (pivaDest).ToUpper() + $@"</cbc:CompanyID>
+				<cac:TaxScheme>
+					<cbc:ID>VAT</cbc:ID>
+				</cac:TaxScheme>
+			</cac:PartyTaxScheme>");
+    }
+    if (!string.IsNullOrEmpty(ragioneSocialeDest))
+    {
+        htmlToReturn.Write($@"
+		<cac:PartyLegalEntity>
+				<cbc:RegistrationName>" + ragioneSocialeDest + $@"</cbc:RegistrationName>");
+
+        if (ACCOUNTINGSUPPLIERPARTY_schemeID == "IT:CF")
+        {
+            htmlToReturn.Write($@"<cbc:CompanyID schemeID=""0210"">" + companyID_valoreDEST + $@"</cbc:CompanyID>");
+        }
+
+        htmlToReturn.Write($@"</cac:PartyLegalEntity>");
+    }
+
+    string Contact_ID = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "Contact_ID");
+    Contact_Name = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "Contact_Name");
+    dynamic Contact_Telephone = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "Contact_Telephone");
+    Contact_ElectronicMail = DOC_XML_FIELD("ACCOUNTINGCUSTOMERPARTY", "Contact_ElectronicMail");
+
+    if (!string.IsNullOrEmpty(CStr(Contact_ID)) || !string.IsNullOrEmpty(CStr(Contact_Name)) || !string.IsNullOrEmpty(CStr(Contact_Telephone)) || !string.IsNullOrEmpty(CStr(Contact_ElectronicMail)))
+    {
+        htmlToReturn.Write($@"
+			<cac:Contact>");
+        addOptionalTag(Contact_ID, "cbc:ID");
+        htmlToReturn.Write(Environment.NewLine);
+        addOptionalTag(Contact_Name, "cbc:Name");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(Contact_Telephone, "cbc:Telephone");
+        htmlToReturn.Write(Environment.NewLine);
+        htmlToReturn.Write("\t\t\t\t");
+        addOptionalTag(Contact_ElectronicMail, "cbc:ElectronicMail");
+        htmlToReturn.Write("</cac:Contact>");
+    }
+    htmlToReturn.Write($@"
+	</cac:Party>
+	</cac:AccountingCustomerParty>");
+
+    dynamic DespatchAddress_ID = DOC_XML_FIELD("DELIVERY", "DespatchAddress_ID");
+    dynamic DespatchAddress_Country = DOC_XML_FIELD("DELIVERY", "DespatchAddress_Country");
+    dynamic DespatchAddress_CountrySubentity = DOC_XML_FIELD("DELIVERY", "DespatchAddress_CountrySubentity");
+    dynamic DespatchAddress_CityName = DOC_XML_FIELD("DELIVERY", "DespatchAddress_CityName");
+    dynamic DespatchAddress_PostalZone = DOC_XML_FIELD("DELIVERY", "DespatchAddress_PostalZone");
+    dynamic DespatchAddress_StreetName = DOC_XML_FIELD("DELIVERY", "DespatchAddress_StreetName");
+    dynamic DespatchAddress_AdditionalStreetName = DOC_XML_FIELD("DELIVERY", "DespatchAddress_AdditionalStreetName");
+
+    string concatenazione1 = DespatchAddress_ID + DespatchAddress_CountrySubentity + DespatchAddress_CityName + DespatchAddress_PostalZone + DespatchAddress_StreetName; //'& DespatchAddress_AdditionalStreetName
+
+    Contact_Name = DOC_XML_FIELD("DELIVERY", "Contact_Name");
+    Contact_Telephone = DOC_XML_FIELD("DELIVERY", "Contact_Telephone");
+    string Contact_Telefax = DOC_XML_FIELD("DELIVERY", "Contact_Telefax");
+    Contact_ElectronicMail = DOC_XML_FIELD("DELIVERY", "Contact_ElectronicMail");
+
+    //'concatenazione2 = Contact_Name & Contact_Telephone & Contact_Telefax & Contact_ElectronicMail
+
+    string concatenazione2 = "";// '-- togliamo questa parte per evitare il warning, [UBL-CR-398]-A UBL invoice should not include the DeliveryParty Contact
+
+    string partyName = DOC_XML_FIELD("DELIVERY", "PartyName");
+    string schemeID = DOC_XML_FIELD("DELIVERY", "schemeID");
+    string PartyIdentification_ID = DOC_XML_FIELD("DELIVERY", "PartyIdentification_ID"),
+
+    concatenazione3 = partyName + PartyIdentification_ID;
+
+    if (string.IsNullOrEmpty(schemeID))
+    {
+        schemeID = "IT:CF";
+    }
+    //376
+    if (!string.IsNullOrEmpty(concatenazione1) || !string.IsNullOrEmpty(concatenazione2) || !string.IsNullOrEmpty(concatenazione3))
+    {
+        htmlToReturn.Write("<cac:Delivery>");
+
+        if (!string.IsNullOrEmpty(concatenazione1))
+        {
+            htmlToReturn.Write($@"
+			<cac:DeliveryLocation>
+			<cac:Address>");
+            addOptionalTag(DespatchAddress_ID, "cbc:ID");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(DespatchAddress_StreetName, "cbc:StreetName");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(DespatchAddress_AdditionalStreetName, "cbc:AdditionalStreetName");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(DespatchAddress_CityName, "cbc:CityName");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(DespatchAddress_PostalZone, "cbc:PostalZone");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag((DespatchAddress_CountrySubentity).ToUpper(), "cbc:CountrySubentity");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+
+            //'-- rimosso l'attributo listID="ISO3166-1:Alpha2"
+            if (!string.IsNullOrEmpty(DespatchAddress_Country))
+            {
+                htmlToReturn.Write($@"
+				<cac:Country>
+					<cbc:IdentificationCode>" + DespatchAddress_Country + $@"</cbc:IdentificationCode>
+				</cac:Country>");
+            }
+            htmlToReturn.Write($@"</cac:Address>
+		</cac:DeliveryLocation>");
+        }
+        htmlToReturn.Write("<cac:DeliveryParty>");
+
+        if (!string.IsNullOrEmpty(CStr(partyName).Trim()))
+        {
+            if (!string.IsNullOrEmpty(CStr(PartyIdentification_ID).Trim()))
+            {
+                htmlToReturn.Write($@"
+				<cac:PartyIdentification>
+				<cbc:ID schemeID=""" + schemeID + $@""">" + PartyIdentification_ID + $@"</cbc:ID>
+				</cac:PartyIdentification>");
+            }
+            htmlToReturn.Write($@"
+			<cac:PartyName>
+				<cbc:Name>" + partyName + $@"</cbc:Name>
+			</cac:PartyName>");
+        }
+        if (!string.IsNullOrEmpty(concatenazione2))
+        {
+            htmlToReturn.Write($@"
+			<cac:Contact>");
+            addOptionalTag(Contact_Name, "cbc:Name");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(Contact_Telephone, "cbc:Telephone");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(Contact_Telefax, "cbc:Telefax");
+            htmlToReturn.Write(Environment.NewLine);
+            htmlToReturn.Write("\t\t\t\t");
+            addOptionalTag(Contact_ElectronicMail, "cbc:ElectronicMail");
+            htmlToReturn.Write("</cac:Contact>");
+        }
+        htmlToReturn.Write($@"</cac:DeliveryParty>
+	</cac:Delivery>");
+    }
+
+    string iban = DOC_XML_FIELD("PAYMENTMEANS", "PayeeFinancialAccount_ID");
+    string bic = DOC_XML_FIELD("PAYMENTMEANS", "FinancialInstitution_ID");
+    string modalitaPagamento = DOC_XML_FIELD("PAYMENTMEANS", "PaymentMeansCode");
+    string identificativoPagamento = DOC_XML_FIELD("PAYMENTMEANS", "PaymentMeansID");
+    string codizioniPagamento = DOC_XML_FIELD("PAYMENTMEANS", "PaymentTerms_CodizioniPagamento");
+
+    if (string.IsNullOrEmpty(bic))
+    {
+        bic = "XXXXITX0";
+    }
+
+
+    htmlToReturn.Write($@"
+		<cac:PaymentMeans>
+		<cbc:PaymentMeansCode>" + modalitaPagamento + $@"</cbc:PaymentMeansCode>");
+
+    if (!string.IsNullOrEmpty(identificativoPagamento))
+    {
+        htmlToReturn.Write($@"<cbc:PaymentID>" + identificativoPagamento + $@"</cbc:PaymentID>");
+    }
+
+    if (!string.IsNullOrEmpty(iban) && modalitaPagamento == "30")
+    {
+        htmlToReturn.Write($@"
+        <cac:PayeeFinancialAccount>
+            <cbc:ID>" + iban + $@"</cbc:ID>
+            <cac:FinancialInstitutionBranch>
+				<cbc:ID>" + bic + $@"</cbc:ID>
+			</cac:FinancialInstitutionBranch>
+        </cac:PayeeFinancialAccount>");
+    }
+
+    htmlToReturn.Write($@"</cac:PaymentMeans>");
+
+    string PaymentTermsNote = DOC_XML_FIELD("PAYMENTMEANS", "PaymentTerms_CodizioniPagamento");
+
+    htmlToReturn.Write($@"
+	<cac:PaymentTerms>
+		<cbc:Note>" + PaymentTermsNote + $@"</cbc:Note>
+	</cac:PaymentTerms>");
+
+    TSRecordSet rsAllowanceCharge = null;
+    string srtSQLAllowanceCharge = "exec Invoice_AllowanceCharge " + CStr(CLng(IDDOC));
+    rsAllowanceCharge = cdf.GetRSReadFromQuery_(srtSQLAllowanceCharge, ApplicationCommon.Application.ConnectionString);
+    if (rsAllowanceCharge.RecordCount > 0)
+    {
+        rsAllowanceCharge.MoveFirst();
+        while (rsAllowanceCharge.EOF == false)
+        {
+            htmlToReturn.Write($@"
+				<cac:AllowanceCharge>
+					<cbc:ChargeIndicator>" + CStr(rsAllowanceCharge["ChargeIndicator"]) + $@"</cbc:ChargeIndicator>
+                    <cbc:AllowanceChargeReasonCode>" + CStr(rsAllowanceCharge["AllowanceChargeReasonCode"]) + $@"</cbc:AllowanceChargeReasonCode>
+                    <cbc:AllowanceChargeReason>" + CStr(rsAllowanceCharge["AllowanceChargeReason"]) + $@"</cbc:AllowanceChargeReason>");
+
+            if (CStr(rsAllowanceCharge["MultiplierFactorNumeric"]) != "0,00")
+            {
+                htmlToReturn.Write($@"<cbc:MultiplierFactorNumeric>" + CStr(rsAllowanceCharge["MultiplierFactorNumeric"]).Replace(",",".") + $@"</cbc:MultiplierFactorNumeric>");
+            }
+
+            htmlToReturn.Write($@"<cbc:Amount currencyID=""EUR"">" + Replace(CStr(rsAllowanceCharge["Amount"]), ",", ".") + $@"</cbc:Amount>");
+
+            if (CStr(rsAllowanceCharge["BaseAmount"]) != "0,00")
+            {
+                htmlToReturn.Write($@"<cbc:BaseAmount currencyID=""EUR"">" + Replace(CStr(rsAllowanceCharge["BaseAmount"]), ", ", ".").Replace(",", ".") + $@"</cbc:BaseAmount>");
+            }
+
+            htmlToReturn.Write($@"
+			        <cac:TaxCategory>
+						    <cbc:ID>" + CStr(rsAllowanceCharge["TaxCategoryID"]) + $@"</cbc:ID>
+						    <cbc:Percent>" + formatTecnicalNumber(CStr(rsAllowanceCharge["TaxCategoryPercent"]), 2)+ $@"</cbc:Percent>
+						    <cac:TaxScheme>
+						    	<cbc:ID>" + CStr(rsAllowanceCharge["TaxSchemeID"]) + $@"</cbc:ID>
+						    </cac:TaxScheme>
+					</cac:TaxCategory>
+				</cac:AllowanceCharge>");
+
+            rsAllowanceCharge.MoveNext();
+        }
+    }
+
+
+    dynamic TaxTotal = DOC_XML_FIELD("INVOICE", "TaxTotal");
+
+    //503
+    TSRecordSet rsSubTotal = null;
+    if (!string.IsNullOrEmpty(TaxTotal))
+    {
+        htmlToReturn.Write($@"
+		<cac:TaxTotal>
+		<cbc:TaxAmount currencyID=""" + valuta + $@""">" + Replace(CStr(TaxTotal), ",", ".") + $@"</cbc:TaxAmount>");
+
+        string strSQLTaxTotal = "exec Invoice_TaxSubtotal " + CStr(CLng(IDDOC));
+        rsSubTotal = cdf.GetRSReadFromQuery_(strSQLTaxTotal, ApplicationCommon.Application.ConnectionString);
+        if (rsSubTotal.RecordCount > 0)
+        {
+            rsSubTotal.MoveFirst();
+
+            while (rsSubTotal.EOF == false)
+            {
+                htmlToReturn.Write($@"
+				<cac:TaxSubtotal>
+					<cbc:TaxableAmount currencyID=""EUR"">" + Replace(CStr(rsSubTotal["TotaleImporto"]), ",", ".") + $@"</cbc:TaxableAmount>
+					<cbc:TaxAmount currencyID=""EUR"">" + Replace(CStr(rsSubTotal["TotaleTasse"]), ",", ".") + $@"</cbc:TaxAmount>
+					<cac:TaxCategory>
+						<cbc:ID>" + CStr(rsSubTotal["CodiceIVAExt"]) + $@"</cbc:ID>
+						<cbc:Percent>" + Replace(formatTecnicalNumber(CStr(rsSubTotal["Aliquota"]), 2), ",", ".") + $@"</cbc:Percent>");
+
+                if (!string.IsNullOrEmpty(CStr(rsSubTotal["TaxExemptionReasonCode"])))
+                {
+                    htmlToReturn.Write($@"<cbc:TaxExemptionReasonCode>" + CStr(rsSubTotal["TaxExemptionReasonCode"]) + $@"</cbc:TaxExemptionReasonCode>");
+                }
+
+                if (!string.IsNullOrEmpty(CStr(rsSubTotal["TaxExemptionReason"])))
+                {
+                    htmlToReturn.Write($@"<cbc:TaxExemptionReason>" + CStr(rsSubTotal["TaxExemptionReason"]) + $@"</cbc:TaxExemptionReason>");
+                }
+
+                htmlToReturn.Write($@"
+                        <cac:TaxScheme>
+							<cbc:ID>VAT</cbc:ID>
+						</cac:TaxScheme>
+					</cac:TaxCategory>
+				</cac:TaxSubtotal>");
+
+
+                rsSubTotal.MoveNext();
+
+            }//'-- fine ciclo per i subTotal
+        }
+        htmlToReturn.Write("</cac:TaxTotal>");
+    }
+
+    double importoRitenutaWithholding = CDbl(DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TotaleRitenuta"));
+    double importoContributoWithholding = CDbl(DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TotaleContributi"));
+    double totRitenutaContibuto = importoRitenutaWithholding + importoContributoWithholding;
+
+    TSRecordSet rsWithholding = null;
+    string strSQLWithholding = "exec Invoice_WithholdingTaxTotal " + CStr(CLng(IDDOC));
+    rsWithholding = cdf.GetRSReadFromQuery_(strSQLWithholding, ApplicationCommon.Application.ConnectionString);
+    if (rsWithholding.RecordCount > 0)
+    {
+        rsWithholding.MoveFirst();
+
+        htmlToReturn.Write($@"
+            <cac:WithholdingTaxTotal>
+		        <cbc:TaxAmount currencyID=""" + valuta + $@""">" + formatTecnicalNumber(CStr(totRitenutaContibuto), 2) + $@"</cbc:TaxAmount>");
+
+        while (rsWithholding.EOF == false)
+        {
+            htmlToReturn.Write($@"
+                    <cac:TaxSubtotal>
+					<cbc:TaxableAmount currencyID=""" + valuta + $@""">" + Replace(formatTecnicalNumber(CStr(rsWithholding["TaxSubtotal_TaxableAmount"]), 2), ",", ".") + $@"</cbc:TaxableAmount>
+					<cbc:TaxAmount currencyID=""" + valuta + $@""">" + Replace(CStr(rsWithholding["TaxSubtotal_TaxAmount"]), ",", ".") + $@"</cbc:TaxAmount>
+					<cac:TaxCategory>
+						<cbc:ID>" + CStr(rsWithholding["TaxCategoryID"]) + $@"</cbc:ID>
+						<cbc:Percent>" + Replace(formatTecnicalNumber(CStr(rsWithholding["TaxCategoryPercentuale"]),2), ",", ".") + $@"</cbc:Percent>
+						<cac:TaxScheme>
+							<cbc:ID>" + CStr(rsWithholding["TaxScheme"]) + $@"</cbc:ID>
+							<cbc:TaxTypeCode>" + CStr(rsWithholding["TaxTypeCode"]) + $@"</cbc:TaxTypeCode>
+						</cac:TaxScheme>
+					</cac:TaxCategory>
+				</cac:TaxSubtotal>");
+
+            rsWithholding.MoveNext();
+        }
+
+        htmlToReturn.Write($@"</cac:WithholdingTaxTotal>");
+    }
+
+    dynamic LineExtensionAmount = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_LineExtensionAmount");
+    dynamic TaxExclusiveAmount = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TaxExclusiveAmount");
+    dynamic TaxInclusiveAmount = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TaxInclusiveAmount");
+    dynamic PayableAmount = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_PayableAmount");
+    dynamic importoRitenuta = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TotaleRitenuta");
+    dynamic importoContributo = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TotaleContributi");
+    dynamic importoCPA = DOC_XML_FIELD("LEGALMONETARYTOTAL", "AnticipatedMonetaryTotal_TotaleCPA");
+    dynamic totRitenutaSplitpay;
+
+    if (InvoicePeriodEsigibilitaIVA == "EP")
+    {
+        totRitenutaSplitpay = CDbl(importoRitenuta) + CDbl(TaxTotal) + CDbl(importoContributo);
+    }
+    else
+    {
+        totRitenutaSplitpay = CDbl(importoRitenuta) + CDbl(importoContributo);
+    }
+
+    htmlToReturn.Write($@"
+	<cac:LegalMonetaryTotal>
+		<cbc:LineExtensionAmount currencyID=""" + valuta + $@""">" + LineExtensionAmount.Replace(",", ".") + $@"</cbc:LineExtensionAmount>
+		<cbc:TaxExclusiveAmount currencyID=""" + valuta + $@""">" + TaxExclusiveAmount.Replace(",", ".") + $@"</cbc:TaxExclusiveAmount>
+		<cbc:TaxInclusiveAmount currencyID=""" + valuta + $@""">" + TaxInclusiveAmount.Replace(",", ".") + $@"</cbc:TaxInclusiveAmount>");
+
+    if (bollofattureGestione == "2.00")
+    {
+        importoCPA = CDbl(importoCPA) + 2;
+    }
+
+    if (CDbl(importoCPA) > 0 || bollofattureGestione == "0.00" || bollofattureGestione == "999" )
+    {
+        htmlToReturn.Write($@"<cbc:ChargeTotalAmount currencyID=""" + valuta + $@""">" + formatTecnicalNumber(CStr(importoCPA).Replace(",", "."), 2) + $@"</cbc:ChargeTotalAmount>");
+    }
+
+    if (InvoicePeriodEsigibilitaIVA == "EP" || CDbl(importoRitenuta) > 0 || CDbl(importoContributo) > 0)
+    {
+        htmlToReturn.Write($@"<cbc:PrepaidAmount currencyID=""" + valuta + $@""">" + formatTecnicalNumber(CStr(totRitenutaSplitpay).Replace(",", ".") , 2) + $@"</cbc:PrepaidAmount>");
+    }
+
+
+    htmlToReturn.Write($@"<cbc:PayableAmount currencyID=""" + valuta + $@""">" + PayableAmount.Replace(",", ".") + $@"</cbc:PayableAmount>
+	</cac:LegalMonetaryTotal>");
+    //'--------------------------------------
+    //'-- ITERO SULLA GRIGLIA DEI PRODOTTI --
+    //'--------------------------------------
+    int i = 0;
+    int nr = DOC_NumRow("INVOICELINE", "");
+    for (i = 0; i <= (nr - 1); i++)
+    {
+        string ORDERLINE_ID = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_id", i);//	    'ok
+        string INVOICELINE_ID = DOC_XML_FIELD_ROW("INVOICELINE", "InvoiceLine_id", i);
+        string DESPATCHLINE_ID = DOC_XML_FIELD_ROW("INVOICELINE", "DespatchLine_ID", i);
+        //'OrderLineReference_LineID = DOC_XML_FIELD_ROW( "INVOICELINE", "OrderLineReference_LineID", i )
+
+        dynamic OrderLine_Note = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_Note", i);//	'ok
+
+        dynamic OrderLine_Quantity = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_Quantity", i);//				 'ok
+        dynamic OrderLine_Quantity_unitCode = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_Quantity_unitCode", i);// 'ok
+
+        string Item_Name = DOC_XML_FIELD_ROW("INVOICELINE", "Item_Name", i);//							 	'ok
+
+        dynamic OrderLine_LineExtensionAmount = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_LineExtensionAmount", i);//		'ok
+
+        dynamic OrderLine_Price = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_Price", i);//				'ok
+
+        dynamic SellersItemIdentification_ID = DOC_XML_FIELD_ROW("INVOICELINE", "SellersItemIdentification_ID", i);//	'ok
+        dynamic OrderLine_Price_AllowanceCharge_Amount = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_Price_AllowanceCharge_Amount", i);// 'ok
+
+        //'OrderLine_Price_AllowanceChargeReason  = DOC_XML_FIELD_ROW( "INVOICELINE", "OrderLine_Price_AllowanceChargeReason", i )  'ok
+        //'StandardItemIdentification_ID  = DOC_XML_FIELD_ROW( "INVOICELINE", "StandardItemIdentification_ID", i ) 		'ok
+
+        //'OrderLine_AllowanceCharge_Amount  = DOC_XML_FIELD_ROW( "INVOICELINE", "OrderLine_AllowanceCharge_Amount", i ) 'ok
+        //'OrderLine_AllowanceChargeReason  = DOC_XML_FIELD_ROW( "INVOICELINE", "OrderLine_AllowanceChargeReason", i )   'ok
+        //'OrderLine_TotalTaxAmount  = DOC_XML_FIELD_ROW( "INVOICELINE", "OrderLine_TotalTaxAmount", i )					'ok
+        dynamic OrderLine_AccountingCost = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_AccountingCost", i);//					'ok;
+
+        dynamic OrderLine_ClassifiedTaxCategory_Percent = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_ClassifiedTaxCategory_Percent", i);  //    'ok
+
+        //'DocumentReference_ID = DOC_XML_FIELD_ROW( "INVOICELINE", "DocumentReference_ID", i )							'ok
+        //'DocumentReference_IssueDate = DOC_XML_FIELD_ROW( "INVOICELINE", "DocumentReference_IssueDate", i )			'ok
+        //'DocumentReference_DocumentType = DOC_XML_FIELD_ROW( "INVOICELINE", "DocumentReference_DocumentType", i )		'ok
+        string OrderLine_ClassifiedTaxCategory_ID = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_ClassifiedTaxCategory_ID", i);// 'ok
+                                                                                                                              //612
+
+        string codiceivaEstero = "";
+        if (!string.IsNullOrEmpty(OrderLine_ClassifiedTaxCategory_ID))
+        {
+            codiceivaEstero = getCodiceEsternoIva(OrderLine_ClassifiedTaxCategory_ID);
+            if (string.IsNullOrEmpty(codiceivaEstero))
+            {
+                string strSQLIva = "SELECT DMV_CodExt FROM LIB_DomainValues with(nolock) where DMV_DM_ID = 'UNCL5305' AND DMV_Cod = '" + OrderLine_ClassifiedTaxCategory_ID + "'";
+                TSRecordSet rsCOD_IVA = cdf.GetRSReadFromQuery_(strSQLIva, ApplicationCommon.Application.ConnectionString);
+                rsCOD_IVA.MoveFirst();
+                codiceivaEstero = CStr(rsCOD_IVA["DMV_CodExt"]);
+            }
+
+
+            //'if InStr(1, OrderLine_ClassifiedTaxCategory_ID, "_", 1) > 0 then
+            //'	OrderLine_ClassifiedTaxCategory_ID = split(OrderLine_ClassifiedTaxCategory_ID,"_")(0)
+            //'end if
+
+        }
+
+        
+
+        //'OrderLine_CommodityClassification_listID = DOC_XML_FIELD_ROW( "INVOICELINE", "OrderLine_CommodityClassification_listID", i ) 'ok         
+        
+        //'RequestedDeliveryPeriod_EndDate = DOC_XML_FIELD_ROW( "INVOICELINE", "RequestedDeliveryPeriod_EndDate", i )
+
+        dynamic CodiceAIC = DOC_XML_FIELD_ROW("INVOICELINE", "CodiceAIC", i);
+        string TIPO_REPERTORIO = DOC_XML_FIELD_ROW("INVOICELINE", "TIPO_REPERTORIO", i);
+        dynamic NumeroRepertorio = DOC_XML_FIELD_ROW("INVOICELINE", "NumeroRepertorio", i);
+
+        string tipoRitenuta = DOC_XML_FIELD_ROW("INVOICELINE", "TipoRitenuta", i);
+        dynamic importoRitenutaInvoice = DOC_XML_FIELD_ROW("INVOICELINE", "RitenutaImporto", i);
+        dynamic imponibileRitenuta = DOC_XML_FIELD_ROW("INVOICELINE", "BaseImponibileRitenuta", i);
+
+        string tipoContributo = DOC_XML_FIELD_ROW("INVOICELINE", "TipoContributo", i);
+        dynamic importoContributoInvoice = DOC_XML_FIELD_ROW("INVOICELINE", "ImportoContributo", i);
+        dynamic imponibileContributo = DOC_XML_FIELD_ROW("INVOICELINE", "ImponibileContributo", i);
+
+        string tipoCPA = DOC_XML_FIELD_ROW("INVOICELINE", "CPA", i);
+        dynamic importoCPAInvoice = DOC_XML_FIELD_ROW("INVOICELINE", "CPAImporto", i);
+        dynamic imponibileCPA = DOC_XML_FIELD_ROW("INVOICELINE", "CPAImponibile", i);
+
+        string soggettaRitenuta = DOC_XML_FIELD_ROW("INVOICELINE", "SoggettaRitenutaDacconto", i);
+
+        dynamic riferimentoNormativaNatura = DOC_XML_FIELD_ROW("INVOICELINE", "TaxExemptionReason", i);
+
+        string natura = "";
+        string TaxExemptionReason = "";
+        string ivanatura = DOC_XML_FIELD_ROW("INVOICELINE", "OrderLine_ClassifiedTaxCategory_ID", i);
+        if (!string.IsNullOrEmpty(ivanatura))
+        {
+            if (ivanatura == "O_1")
+            {
+                natura = "N1";
+                TaxExemptionReason = "O_2";
+            }
+            if (ivanatura == "O_2")
+            {
+                natura = "N2.2";
+                TaxExemptionReason = natura + "#" + riferimentoNormativaNatura;
+            }
+            if (ivanatura == "E")
+            {
+                natura = "N4";
+                TaxExemptionReason = natura + "#" + riferimentoNormativaNatura;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(CodiceAIC))
+        {
+            SellersItemIdentification_ID = "AICFARMACO:" + CodiceAIC;
+        }
+
+        //646
+        htmlToReturn.Write($@"<cac:InvoiceLine>
+
+		<cbc:ID>" + INVOICELINE_ID + $@"</cbc:ID>");
+        addOptionalTag(OrderLine_Note, "cbc:Note");
+        //''-- rimosso dal tag 'InvoicedQuantity' l'attributo unitCodeListID="UNECERec20" per risolvere il warning [UBL-CR-663]-A UBL invoice should not include the unitCodeListID
+
+        htmlToReturn.Write($@"
+		<cbc:InvoicedQuantity unitCode=""" + OrderLine_Quantity_unitCode + $@""">" + formatTecnicalNumber(OrderLine_Quantity.Replace(",", "."), 8) + $@"</cbc:InvoicedQuantity>
+		<cbc:LineExtensionAmount currencyID=""" + valuta + $@""">" + formatTecnicalNumber(OrderLine_LineExtensionAmount.Replace(",", "."), 2) + $@"</cbc:LineExtensionAmount>");
+
+        addOptionalTag(OrderLine_AccountingCost, "cbc:AccountingCost");
+
+        if (!string.IsNullOrEmpty(ORDERLINE_ID) && ORDERLINE_ID != "0" && ORDERLINE_ID != "NA")
+        {
+            htmlToReturn.Write($@"
+			<cac:OrderLineReference>
+				<cbc:LineID>" + ORDERLINE_ID + $@"</cbc:LineID>
+				<cac:OrderReference>
+					<cbc:ID>" + OrderReference_ID + $@"</cbc:ID>");
+
+            if (!string.IsNullOrEmpty(OrderReference_Date))
+            {
+                htmlToReturn.Write($@"<cbc:IssueDate>" + Left(OrderReference_Date, 10) + $@"</cbc:IssueDate>");
+            }
+
+            htmlToReturn.Write($@"</cac:OrderReference>
+			</cac:OrderLineReference>");
+        }
+        //'-- da documentazione europea https://docs.peppol.eu/poacc/billing/3.0/bis
+        //	'--	sembra che la presenza di questo blocco 'DespatchLineReference' porti a un warning. ma nell'esempio mandatoci da IC c'è.
+        if (!string.IsNullOrEmpty(DESPATCHLINE_ID) && DESPATCHLINE_ID != "0" && DESPATCHLINE_ID != "NA")
+        {
+            dynamic DespatchDocumentReference_IssueDate = Strings.Left(DOC_XML_FIELD("INVOICE", "DespatchDocumentReference_IssueDate"), 10);
+            htmlToReturn.Write($@"
+		<cac:DocumentReference>
+				<cbc:LineID>" + DESPATCHLINE_ID + $@"</cbc:LineID> <!-- obbl. -->
+				<cac:DocumentReference>
+					<cbc:ID>" + DespatchDocumentReference_ID + $@"</cbc:ID>");
+            addOptionalTag(DespatchDocumentReference_IssueDate, "cbc:IssueDate");
+            htmlToReturn.Write($@"
+					<cbc:DocumentType>DDT</cbc:DocumentType>
+				</cac:DocumentReference>
+			</cac:DocumentReference>");
+
+        }
+        //'<cac:ItemSpecificationDocumentReference>
+        //'    <cbc:Id>CIG:1Z1A3EE456</cbc:Id>
+        //'</cac:ItemSpecificationDocumentReference>
+
+        htmlToReturn.Write($@"
+		<cac:Item>
+
+				<cbc:Name>" + Item_Name + $@"</cbc:Name>");
+
+        if (!string.IsNullOrEmpty(CStr(SellersItemIdentification_ID)))
+        {
+            htmlToReturn.Write($@"
+					<cac:SellersItemIdentification>
+							<cbc:ID>" + SellersItemIdentification_ID + $@"</cbc:ID>
+						</cac:SellersItemIdentification>");
+        }
+
+        string strVal = "";
+        if (!string.IsNullOrEmpty(TIPO_REPERTORIO) && !string.IsNullOrEmpty(NumeroRepertorio) && TIPO_REPERTORIO != "0")
+        {
+            //'-- NON VENIVA ACCETTATO IL CARATTERE ":"
+            //'strVal = ucase(TIPO_REPERTORIO) & NumeroRepertorio
+
+            strVal = "DM" + TIPO_REPERTORIO + ":" + NumeroRepertorio;
+        }
+
+        if (TIPO_REPERTORIO == "0")
+        {
+            strVal = "DM" + TIPO_REPERTORIO;
+        }
+
+        if (!string.IsNullOrEmpty(strVal))
+        {
+            htmlToReturn.Write($@"
+			<cac:CommodityClassification>
+					<cbc:ItemClassificationCode listID=""ZZZ"">" + strVal + $@"</cbc:ItemClassificationCode>
+				</cac:CommodityClassification>");
+        }
+
+
+        htmlToReturn.Write($@"
+		        <cac:ClassifiedTaxCategory>");
+
+        if (InvoicePeriodEsigibilitaIVA == "EP" && (codiceivaEstero != "E" && codiceivaEstero != "Z"))
+        {
+            htmlToReturn.Write($@"<cbc:ID>B</cbc:ID>");
+        }
+        else
+        {
+            htmlToReturn.Write($@"<cbc:ID>" + codiceivaEstero + "</cbc:ID>");
+        }
+        htmlToReturn.Write($@"
+					<cbc:Percent>" + formatTecnicalNumber(OrderLine_ClassifiedTaxCategory_Percent, 2) + $@"</cbc:Percent>
+					<cac:TaxScheme>
+						<cbc:ID>VAT</cbc:ID>
+					</cac:TaxScheme>
+				</cac:ClassifiedTaxCategory>");
+
+        if (!string.IsNullOrEmpty(natura))
+        {
+            htmlToReturn.Write($@"
+                    <cac:AdditionalItemProperty>
+						<cbc:Name>NATURA</cbc:Name>
+						<cbc:Value>" + natura + $@"</cbc:Value>
+					</cac:AdditionalItemProperty>");
+        }
+
+        if (tipoRitenuta != "NA")
+        {
+            htmlToReturn.Write($@"
+                    <cac:AdditionalItemProperty>
+						<cbc:Name>RITENUTA</cbc:Name>
+						<cbc:Value>SI</cbc:Value>
+					</cac:AdditionalItemProperty>");
+        }
+
+        htmlToReturn.Write($@"
+                </cac:Item> 
+			<cac:Price>
+				<cbc:PriceAmount currencyID=""EUR"">" + Replace(formatTecnicalNumber(OrderLine_Price, 8), ",", ".") + $@"</cbc:PriceAmount>
+                <cbc:BaseQuantity unitCode=""" + OrderLine_Quantity_unitCode + $@""">1</cbc:BaseQuantity>");
+
+        string ChargeIndicator = "";
+        if (!string.IsNullOrEmpty(OrderLine_Price_AllowanceCharge_Amount))
+        {
+            dynamic AllowanceChargeAmount = CDbl(OrderLine_Price_AllowanceCharge_Amount);
+
+            if (AllowanceChargeAmount < 0)
+            {
+                ChargeIndicator = "false";
+                AllowanceChargeAmount = AllowanceChargeAmount * -1;
+            }
+            else
+            {
+                ChargeIndicator = "true";
+            }
+
+            if (!string.IsNullOrEmpty(OrderLine_Quantity))
+            {
+                htmlToReturn.Write($@"<cbc:BaseQuantity unitCode=""" + OrderLine_Quantity_unitCode + $@""">" + OrderLine_Quantity + $@"</cbc:BaseQuantity>");
+            }
+
+            htmlToReturn.Write($@"
+			<cac:AllowanceCharge>
+					<cbc:ChargeIndicator>" + ChargeIndicator + $@"</cbc:ChargeIndicator>
+					<cbc:Amount currencyID=""" + valuta + $@""">" + AllowanceChargeAmount + $@"</cbc:Amount>
+				</cac:AllowanceCharge>");
+        }
+        else
+        {
+            htmlToReturn.Write($@"
+                <cac:AllowanceCharge>
+					<cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+					<cbc:Amount currencyID=""" + valuta + $@""">00.00</cbc:Amount>
+					<cbc:BaseAmount currencyID=""EUR"">" + Replace(formatTecnicalNumber(OrderLine_Price, 8), ",", ".") + $@"</cbc:BaseAmount>
+				</cac:AllowanceCharge>");
+        }
+
+        htmlToReturn.Write($@"
+			</cac:Price>
+
+	</cac:InvoiceLine>");
+    }
+    htmlToReturn.Write("</Invoice>");
+
+    //'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+    try
+    {
+        FreeMemDocument(session);
+    }
+    catch
+    {
+
+    }
+    dynamic DOC_XML_FIELD(string dse_id, string dztNome)
+    {
+        dynamic tmpVal = DOC_FieldTecnical(dse_id, dztNome);
+
+        if (IsNull(tmpVal))
+        {
+            tmpVal = "";
+        }
+        else
+        {
+            tmpVal = CStr(tmpVal);
+        }
+
+        if (tmpVal.ToUpper() == "NULL" || tmpVal.ToUpper() == " NULL ")
+        {
+            tmpVal = "";
+        }
+        tmpVal = xmlEncode(tmpVal);
+        return tmpVal;
+    }
+    dynamic DOC_XML_FIELD_ROW(string dse_id, string dztNome, int riga)
+    {
+        dynamic tmpVal = DOC_FieldRowTecnical(dse_id, dztNome, riga);
+
+        if (IsNull(tmpVal) == false)
+        {
+            if (IsDate(tmpVal))
+            {
+                tmpVal = formatDate(tmpVal);
+            }
+            else
+            {
+                tmpVal = CStr(tmpVal);
+            }
+        }
+        else
+        {
+            tmpVal = "";
+        }
+        if (tmpVal.ToLower() == "null" || tmpVal == "1900-01-01")
+        {
+            tmpVal = "";
+        }
+        tmpVal = xmlEncode(tmpVal);
+        return tmpVal;
+    }
+    void addOptionalTag(string encodedValue, string tag)
+    {
+        if (!string.IsNullOrEmpty(CStr(encodedValue)))
+        {
+            htmlToReturn.Write("<" + tag + ">" + encodedValue + "</" + tag + ">");
+        }
+    }
+    string formatDate(DateTime myDate)
+    {
+        string _out = "";
+        if (IsNull(myDate) == false)
+        {
+            _out = DateAndTime.Year(myDate) + "-" + Strings.Right("0" + DateAndTime.Month(myDate), 2) + "-" + Strings.Right("0" + DateAndTime.Day(myDate), 2);
+        }
+        return _out;
+    }
+    string getMimeType(string ext)
+    {
+        string _getMimeType = "";
+        switch (ext.ToLower())
+        {
+            case "bmp":
+                _getMimeType = "image/x-xbitmap";
+                break;
+            case "jpg":
+                _getMimeType = "image/jpeg";
+                break;
+
+            case "png":
+                _getMimeType = "image/png";
+                break;
+
+            case "pdf":
+                _getMimeType = "application/pdf";
+                break;
+
+            case "doc":
+                _getMimeType = "application/msword";
+                break;
+
+            case "docx":
+                _getMimeType = "application/msword";
+                break;
+
+            case "zip":
+                _getMimeType = "application/zip";
+                break;
+
+            case "xml":
+                _getMimeType = "text/xml";
+                break;
+
+            case "txt":
+                _getMimeType = "text/rtf";
+                break;
+            default:
+                _getMimeType = "application/x-AFLink";
+                break;
+
+        }
+        return _getMimeType;
+    }
+    //'-- il participantID composto come 9907:IT01234567890	deve essere utilizzato nell'UBL nella forma 	priva del prefisso 9907:
+    //'--	se si fa riferimento ad un IPA ripulisco ulteriormente l'endpoint andando a togliere non solo il prefisso prima dei due punti ma sostituendo tutto '9921:it' con stringa vuota
+    string getParticipantIdUBL(string endPoint)
+    {
+        string strOut = endPoint;
+
+        if (endPoint.Contains(":", StringComparison.Ordinal))
+        {
+            string[] vet = endPoint.Split(":");
+
+            //'-- se IPA contenente l'ulteriore prefisso 'IT' ( scorretto )
+            if ((Strings.Left(endPoint, 7)).ToUpper() == "9921:IT" || (Strings.Left(endPoint, 7)).ToUpper() == "0201:IT")
+            {
+                strOut = ((endPoint).ToUpper()).Replace("9921:IT", "");
+                strOut = ((endPoint).ToUpper()).Replace("0201:IT", "");
+            }
+            else
+            {
+                strOut = vet[1];
+            }
+        }
+        return strOut;
+    }
+    string getSchemaFromPID(string pid)
+    {
+        string schemaID = "";
+
+        if (pid.Contains(":", StringComparison.Ordinal))
+        {
+            string[] vet = pid.Split(":");
+            schemaID = vet[0];
+        }
+        return schemaID;
+
+    }
+
+    string getCodiceEsternoIva(string codiceIva)
+    {
+        string CodiceIVAEstero = "";
+        if (codiceIva == "O_1")
+            CodiceIVAEstero = "Z";
+
+        if (codiceIva == "E" | codiceIva == "O_2")
+            CodiceIVAEstero = "E";
+
+        if (codiceIva == "K")
+            CodiceIVAEstero = "K";
+
+        if (codiceIva == "G")
+            CodiceIVAEstero = "G";
+
+        return CodiceIVAEstero;
+    }
+
+    string formatTecnicalNumber(string valore, int d)
+    {
+        string esito = "";
+        valore = CStr(valore);
+
+        esito = Replace(valore, ",", ".");
+
+        if (InStr(1, esito, ".") > 0)
+        {
+            dynamic v;
+            v = esito.Split(".");
+            esito = v[0] + "." + Left(v[1] + "000000000000", d);
+        }
+        else
+            esito = esito + "." + Left("0000000000", d);
+
+        return esito;
+    }
+
+    //double MyCdbl(string v)
+    //{
+    //    double esito;
+    //    string s = "0.5";
+
+    //    if (InStr(1, s, ",") > 0 & Information.VarType(v) == 8)
+    //        esito = CDbl(Replace(v, ".", ","));
+    //    else
+    //        esito = CDbl(v);
+
+            //    return esito;
+            //}
+
+}@Html.Raw(htmlToReturn.Out())

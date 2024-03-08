@@ -1,0 +1,38 @@
+﻿@page "/CTL_LIBRARY/functions/GetFormula.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.GetFormulaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+
+	string CODICE = GetParamURL(Request.QueryString.ToString(), "CODICE");
+	//--recupero la formula
+	CommonDbFunctions cdb = new();
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@codice",  CODICE);
+	sqlParams.Add("@raccordo", "Raccordo");
+	sqlParams.Add("@nome",  "criteriodivalutazione");
+	sqlParams.Add("@id", "idtid");
+	TSRecordSet rs = cdb.GetRSReadFromQuery_("select formula from tipidati,TipiDatiRange,FORMULE_PREDEFINITE where tdrIdTid=@id and tdrcodiceraccordo=@raccordo and tidnome=@nome and tdrCodice=@codice", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+	if (rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+		htmlToReturn.Write(CStr(rs["formula"]));
+	}
+	else
+	{
+		htmlToReturn.Write("pippo");
+	}
+	//Response.end
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+}@Html.Raw(htmlToReturn.Out())

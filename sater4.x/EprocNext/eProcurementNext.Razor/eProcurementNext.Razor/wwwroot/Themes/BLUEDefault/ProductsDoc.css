@@ -1,0 +1,483 @@
+BODY {
+FONT-SIZE: 3px;
+ BACKGROUND-REPEAT: repeat;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: none
+}
+DIV {
+FONT-SIZE: 5px
+}
+.GridProductsDoc {
+BORDER-RIGHT: thin;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: thin;
+ PADDING-LEFT: 0px;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: thin;
+ WIDTH: 100%;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: thin;
+ cellspacing: 0;
+ cellpadding: 0
+}
+.CellIntestGridProductsDoc {
+BORDER-RIGHT: 1px solid;
+ PADDING-RIGHT: 1px;
+ BORDER-TOP: 1px solid;
+ PADDING-LEFT: 1px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 1px;
+ MARGIN: 1px;
+ BORDER-LEFT: 1px solid;
+ COLOR: white;
+ PADDING-TOP: 1px;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: Arial;
+ HEIGHT: 20px;
+ BACKGROUND-COLOR: #6495ed;
+ TEXT-DECORATION: none
+}
+.Cell1GridProducts3 {
+BORDER-RIGHT: 1px solid;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: 1px solid;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bold;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: 1px solid;
+ LINE-HEIGHT: 8pt;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: Arial;
+ HEIGHT: 20px;
+ BACKGROUND-COLOR: lightyellow;
+ TEXT-DECORATION: none
+}
+.Cell1GridProducts1 {
+BORDER-RIGHT: 1px solid;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: 1px solid;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: 1px solid;
+ LINE-HEIGHT: 8pt;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: Arial;
+ HEIGHT: 20px;
+ BACKGROUND-COLOR: lightyellow;
+ TEXT-DECORATION: none
+}
+.Cell1GridProducts2 {
+BORDER-RIGHT: 1px solid;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: 1px solid;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: 1px solid;
+ LINE-HEIGHT: 8pt;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: Arial;
+ HEIGHT: 20px;
+ BACKGROUND-COLOR: ivory;
+ TEXT-DECORATION: none
+}
+.Foglie {
+FONT-SIZE: 8pt;
+ LINE-HEIGHT: 8pt;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: none
+}
+.TextFieldGridProductsDoc {
+FONT-SIZE: 8pt;
+ COLOR: black;
+ LINE-HEIGHT: 8pt;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: none
+}
+.SelectFieldGridProductsDoc {
+FONT-SIZE: 8pt;
+ WIDTH: 200px;
+ COLOR: black;
+ LINE-HEIGHT: 8pt;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: none
+}
+.ButtonGridProductsDoc {
+BORDER-RIGHT: navy 1px solid;
+ BORDER-TOP: navy 1px solid;
+ FONT-SIZE: 8pt;
+ BORDER-LEFT: navy 1px solid;
+ COLOR: white;
+ LINE-HEIGHT: 8pt;
+ BORDER-BOTTOM: navy 1px solid;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #6495ed;
+ TEXT-DECORATION: none
+}
+.DataGridSeparatorStyle {
+BORDER-RIGHT: #ffffff;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: #000000;
+ PADDING-LEFT: 0px;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: #000000;
+ LINE-HEIGHT: 1pt;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: #ffffff;
+ BACKGROUND-COLOR: #838383
+}
+BODY.BodyProducts {
+BORDER-RIGHT: 1px;
+ BORDER-TOP: 1px;
+ BORDER-LEFT: 1px;
+ BORDER-BOTTOM: 1px;
+ BACKGROUND-COLOR: white
+}
+TD.CellIntestGrid1ProductsDoc {
+BORDER-RIGHT: 1px solid;
+ BORDER-TOP: 1px solid;
+ FONT-WEIGHT: bold;
+ FONT-SIZE: 8pt;
+ BORDER-LEFT: 1px solid;
+ COLOR: white;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: arial;
+ BACKGROUND-COLOR: #6495ed
+}
+.TextLinkProducts {
+FONT-SIZE: 8pt;
+ CURSOR: hand;
+ COLOR: navy;
+ LINE-HEIGHT: 8pt;
+ FONT-FAMILY: Arial;
+ TEXT-DECORATION: underline
+}
+TD.CellIntestNotAttributesObblig {
+BORDER-RIGHT: 1px solid;
+ BORDER-TOP: 1px solid;
+ FONT-SIZE: 8pt;
+ BORDER-LEFT: 1px solid;
+ COLOR: white;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #6495ed
+}
+TD.CellNumeric1
+{
+    BORDER-RIGHT: 1pt solid;
+    BORDER-TOP: 1pt solid;
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: 1pt solid;
+    COLOR: black;
+    BORDER-BOTTOM: 1pt solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightyellow;
+    TEXT-ALIGN: right
+}
+TD.CellNumericBold
+{
+    BORDER-TOP: 0pt solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+
+TD.CellGridTypeRow0 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: white
+}
+TD.CellGridTypeRow1 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #3366ff
+}
+TD.CellGridTypeRow2 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #88a6ff
+}
+TD.CellGridTypeRow3 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #b0c5ff
+}
+TD.CellGridTypeRow4 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #d7e1ff
+}
+TD.CellGridTypeRow5 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: mediumblue
+}
+TD.CellGridTypeRow6 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #cc99ff
+}
+TD.CellGridTypeRow10 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #dadada
+}
+TD.CellGridTypeRow0_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: white
+}
+TD.CellGridTypeRow1_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #3366ff
+}
+TD.CellGridTypeRow2_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #88a6ff
+}
+TD.CellGridTypeRow3_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #b0c5ff
+}
+TD.CellGridTypeRow4_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #d7e1ff;
+ TEXT-DECORATION: none
+}
+TD.CellGridTypeRow5_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: mediumblue
+}
+TD.CellGridTypeRow6_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #cc99ff
+}
+TD.CellGridTypeRow10_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #dadada
+}
+.FontCellIntestGridEnhanced {
+COLOR: #ff0000
+}
+TD.CellGridTypeRow50_Bold {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: red
+}
+TD.CellGridTypeRow50 {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: red
+}
+.Cell2GridProducts2 {
+BORDER-RIGHT: 1pt solid;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: 1pt solid;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: 1pt solid;
+ LINE-HEIGHT: 8pt;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: 1pt solid;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: lightgrey;
+ TEXT-DECORATION: none
+}
+.GridProductsDoc1 {
+BORDER-RIGHT: thin;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: thin;
+ PADDING-LEFT: 0px;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: thin;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: thin;
+ cellspacing: 0;
+ cellpadding: 0
+}
+.textfieldInvisible {
+BORDER-RIGHT: medium none;
+ BORDER-TOP: medium none;
+ FONT-SIZE: 8pt;
+ BORDER-LEFT: medium none;
+ COLOR: black;
+ BORDER-BOTTOM: medium none;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: lightyellow
+}
+.FoglieBluSott {
+FONT-SIZE: 8pt;
+ COLOR: darkred;
+ FONT-FAMILY: Arial
+}
+.ButtonHyerarchiesVerticalModel {
+BORDER-RIGHT: darkred 1px solid;
+ BORDER-TOP: darkred 1px solid;
+ FONT-SIZE: 8pt;
+ BORDER-LEFT: darkred 1px solid;
+ BORDER-BOTTOM: darkred 1px solid;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: goldenrod
+}
+TD.CellGridTypeRow4_Bold_Numeric {
+PADDING-RIGHT: 0px;
+ PADDING-LEFT: 0px;
+ FONT-WEIGHT: bolder;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ PADDING-TOP: 0px;
+ FONT-STYLE: oblique;
+ FONT-FAMILY: Arial;
+ BACKGROUND-COLOR: #d7e1ff;
+ TEXT-DECORATION: none;
+ TEXT-ALIGN: right
+}
+.CellNumeric1 {
+BORDER-RIGHT: 1px solid;
+ PADDING-RIGHT: 0px;
+ BORDER-TOP: 1px solid;
+ PADDING-LEFT: 0px;
+ FONT-SIZE: 8pt;
+ PADDING-BOTTOM: 0px;
+ MARGIN: 0px;
+ BORDER-LEFT: 1px solid;
+ LINE-HEIGHT: 8pt;
+ PADDING-TOP: 0px;
+ BORDER-BOTTOM: 1px solid;
+ FONT-FAMILY: Arial;
+ HEIGHT: 20px;
+ BACKGROUND-COLOR: lightyellow;
+ TEXT-DECORATION: none
+}

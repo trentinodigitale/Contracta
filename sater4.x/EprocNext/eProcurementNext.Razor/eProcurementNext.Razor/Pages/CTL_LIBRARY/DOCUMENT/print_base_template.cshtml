@@ -1,0 +1,89 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/print_base_template.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject IWebHostEnvironment _webHostEnvironment;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.Core.Storage;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using System.Data.SqlClient
+@using static  eProcurementNext.CommonDB.CommonDbFunctions;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@using Microsoft.AspNetCore.Routing
+@inject EndpointDataSource EndpointsDataSource;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_base_templateModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+
+    //'--in caso di nuovi documenti se non esiste la pagina sotto report faccio la redirect 
+    //'--a ToPrintDocument.asp
+
+    if (!string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "TYPEDOC")).Trim())) {
+
+
+        string strDoc;
+        string IDDOC;
+        strDoc = CStr(GetParamURL(Request.QueryString.ToString(), "TYPEDOC"));
+        IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+        validate("TYPEDOC", GetParamURL(Request.QueryString.ToString(),"TYPEDOC").Replace(".", "_"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+        string strFile;
+        string strPrintUrl;
+        //string ObjFso;
+        //ObjFso = Server.CreateObject("Scripting.FileSystemObject");
+
+        //Old Code
+        //strFile = ApplicationCommon.Application["strVirtualDirectory"] + "/Report/" + GetParamURL(Request.QueryString.ToString(), "TYPEDOC") + ".asp";
+        //strFile = _webHostEnvironment.WebRootPath + @"/" + strFile;
+
+		//if (! CommonStorage.FileExists(strFile)) {
+		//	strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/ctl_library/document/ToPrintDocument.asp?lo=print&IDDOC=" + IDDOC + "&DOCUMENT=" + strDoc + "&MODE=SHOW&COMMAND=OPEN&OPERATION=PRINT";
+		//} else {
+		//	strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/report/" & strDoc + ".asp?lo=print&" + "IDDOC=" + IDDOC + "&TYPEDOC=" + strDoc;
+		//}
+
+		////ObjFso = null;
+
+		//throw new ResponseRedirectException(strPrintUrl, Response);
+		//throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+        //New Code
+		strFile = "/Pages/Report/" + GetParamURL(Request.QueryString.ToString(), "TYPEDOC") + ".cshtml";
+		
+		List<string> ListOfRoutes = new List<string>();
+		foreach (var endpoint in EndpointsDataSource.Endpoints)
+		{
+			foreach (var metadata in endpoint.Metadata)
+			{
+				if (metadata is PageActionDescriptor)
+				{
+					ListOfRoutes.Add(((PageActionDescriptor)metadata).RelativePath.ToLower());
+				}
+			}
+		}
+		if (!ListOfRoutes.Contains(strFile.ToLower()))
+		{
+			strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/ctl_library/document/ToPrintDocument.asp?lo=print&IDDOC=" + IDDOC + "&DOCUMENT=" + strDoc + "&MODE=SHOW&COMMAND=OPEN&OPERATION=PRINT";
+		} else {
+			strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/report/" & strDoc + ".asp?lo=print&" + "IDDOC=" + IDDOC + "&TYPEDOC=" + strDoc;
+		}
+
+		//ObjFso = null;
+
+		throw new ResponseRedirectException(strPrintUrl, Response);
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+	}
+
+}@Html.Raw(htmlToReturn.Out())

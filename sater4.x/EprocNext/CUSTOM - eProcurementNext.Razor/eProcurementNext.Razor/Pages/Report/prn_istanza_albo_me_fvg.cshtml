@@ -1,0 +1,905 @@
+﻿@page "/Report/prn_istanza_albo_me_fvg.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_istanza_albo_me_fvgModel;
+@model eProcurementNext.Razor.Pages.Report.prn_istanza_albo_me_fvgModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+	string IDDOC = objDoc.mp_IDDoc;
+}
+@{
+	htmlToReturn.Write($@"<html>");
+	htmlToReturn.Write($@"<head>");
+	addMetaTag(htmlToReturn);
+
+	//dim rsclassiiscrizione
+	TSRecordSet? rsclassiiscrizione = null;
+
+	string getClasseIscrizione( string cod ){
+		//on error resume next
+		if ( rsclassiiscrizione == null ) {
+			rsclassiiscrizione = GetRS( "SELECT  DMV_DescML , DMV_Cod  FROM  ClasseIscriz_MLNG where ML_LNG='" + Replace(GetParamURL(Request.QueryString.ToString(), "LanguageSuffix"), "'","''" ) + "'");
+		}
+		rsclassiiscrizione.Filter("DMV_Cod = '" + cod + "'");
+		if (!(rsclassiiscrizione.EOF && rsclassiiscrizione.BOF) ) {
+			return CStr(rsclassiiscrizione[ "DMV_DescML" ]);
+		}else{
+			return "";
+		}		
+
+	}
+
+	string getSettoriCCNL ( string cod ){
+
+		//on error resume next
+		TSRecordSet rs3;
+		rs3 = GetRS( "SELECT v.DMV_DescML FROM (SELECT 337 AS DMV_DM_ID , dgCodiceInterno  AS DMV_Cod  , '000.' + dgPath   AS DMV_Father , dgLivello  AS DMV_Level , dscTesto         AS DMV_DescML , CASE dgFoglia WHEN 1 ) { 'node.gif' ELSE    'folder.gif' END AS DMV_Image , 0   AS DMV_Sort  , CASE CHARINDEX('-', dscTesto) WHEN 0 ) { '0'  ELSE LEFT(dscTesto, CHARINDEX('-', dscTesto) -  1) END  AS DMV_CodExt  FROM DominiGerarchici   , DizionarioAttributi      , DescsI  wHERE dztNome = 'SettoriCCNL'  AND dztIdTid = dgTipoGerarchia AND dztDeleted = 0 AND IdDsc = dgIdDsc AND dgDeleted = 0) v where DMV_COD='" + cod + "'" );
+		try{
+			rs3.MoveFirst();
+			return CStr(rs3["DMV_DescML"]);
+		}catch{
+			return "";
+		}
+	}
+
+	string getcertifazione( string cod ){
+		//on error resume next	
+		string[] arrcert;
+		int i;
+		TSRecordSet rs;
+		string stringa;
+		stringa = "";
+		arrcert = Strings.Split(cod, "###");
+		for (i = 1; i<= arrcert.Length -1; i++){ // to Ubound(arrcert)
+
+			rs = GetRS( "SELECT  v.DMV_DescML  FROM LIB_DomainValues v where DMV_DM_ID='Certificazioni' and DMV_COD='" + arrcert[i] + "'" );
+			rs.MoveFirst();
+			stringa = stringa + "<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + CStr(rs["DMV_DescML"]) + "</b><br/>";
+			//'response.write  "<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" & rs.fields( "DMV_DescML" ).value & "</b><br/>"
+
+		}
+		//set rs = nothing
+		return stringa;
+	}
+
+	//   ' <summary>
+	//   ' Il metodo valida se esiste un modello nella CTL_DOC_SECTION_MODEL.
+	//   ' </summary>
+	//   ' <param name="idDoc">Identificativo del documento.</param>
+	//   ' <returns>Valore booleano.</returns>
+	//' ritorna ultimi 7 caratteri del nome del modello che è il suffisso da andare ad utilizzare 
+	//' per la key ml da usare
+	string EsisteModelloSection(dynamic idDoc, dynamic MOD_Name){
+		//Set objDB = CreateObject("ctldb.clstabmanage")
+		TSRecordSet rs;
+		rs = cdf.GetRSReadFromQuery_( CStr("select right(MOD_Name,7) as Periodo from CTL_DOC_SECTION_MODEL where IdHeader = " + idDoc + " and dse_id='DISPLAY_ABILITAZIONI' and mod_name='" + MOD_Name + "'")  , ApplicationCommon.Application.ConnectionString );
+		string ritorno;
+		ritorno = "";
+		if (rs.RecordCount > 0 ) { 
+			ritorno = CStr(rs["Periodo"]);
+		}
+
+		//Set objDB = nothing
+		//Set rs=nothing
+
+		return ritorno;
+		//'response.write EsisteModelloSection
+		//'response.end
+	}
+
+	//function getNumeroDetermina( cod )
+	//	on error resume next
+	//	dim rs1
+	//	set rs1 = GetRS( "select dgrN from  Document_Bando where idheader='" & cod & "'" )
+	//	rs1.moveFirst
+	//	getNumeroDetermina = rs1.fields( "dgrN" ).value
+
+	//	set rs1 = nothing 
+
+	//}
+
+	//function getDeterminaDel( cod )
+	//	on error resume next
+	//	dim rs2
+	//	set rs2 = GetRS( "select dgrDel from  Document_Bando where idheader='" & cod & "'" )
+	//	rs2.moveFirst
+	//	getDeterminaDel = rs2.fields( "dgrDel" ).value
+
+	//	set rs2 = nothing
+
+	//}
+
+
+
+	int NumPag ;
+	NumPag = 0;
+
+
+
+	htmlToReturn.Write($@"
+	</head>
+	<body 
+	");
+	if (DOC_FieldTecnical("DOCUMENT", "RichiestaFirma") == "si") {
+		if ((DOC_FieldTecnical("DOCUMENT", "StatoDoc") == "Saved" || !string.IsNullOrEmpty(DOC_FieldTecnical("DOCUMENT", "StatoDoc"))) && (GetParamURL(Request.QueryString.ToString(), "TO_SIGN") == "no" || string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "TO_SIGN")))) {
+			htmlToReturn.Write($@" style=""background-image:url(../images/bozza.jpg)"" ");
+		}
+	}else{
+		if (DOC_FieldTecnical( "DOCUMENT", "StatoDoc") == "Saved" ||  string.IsNullOrEmpty(DOC_FieldTecnical( "DOCUMENT", "StatoDoc")  ) ) { 
+			htmlToReturn.Write($@" style=""background-image:url(../images/bozza.jpg)"" ");
+		}
+	}
+
+	htmlToReturn.Write($@">
+
+		<style type=""text/css"">
+
+
+
+	BODY,DIV ,TABLE, TD {{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:9.9pt;
+	 font-style:normal;
+	 font-weight:normal
+
+
+	}}
+	.Input
+	{{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:10pt;
+	 font-style:normal;
+	 font-weight:bold
+
+	}}
+
+	.TITLE{{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:12pt;
+	 font-style: bold;
+	 font-weight:bold
+
+
+
+	}}
+
+
+
+	@media print
+	  {{
+	  #Ricevuta {{}}
+	  }}
+
+	  @media screen
+	  {{
+	  #Ricevuta {{}}
+	  }}
+
+	  ul li, table ul li {{ list-style-type:none; text-align:justify;}}
+	  p	{{  text-align:justify;}} 
+	 .disc li {{ list-style-type:disc;}}
+	 .disc li table td{{ vertical-align:bottom;}}
+	  h1{{font-size:1.3em; font-weight:bold; text-align:center;}}
+	 .PaddingLeft{{ padding-left:3em;}}
+	 .nomargin{{margin-top: -13px;}}
+	  ul.ListStyleTypeNone li{{padding-top:0em; }}
+	 .ListStyleTypeNone{{ list-style-type:none; }}
+	 table.list{{ vertical-align:middle; margin-top:1em;}}
+	 table td ul.disc{{padding-top:0em;padding-bottom:0em;margin-top: 0em;margin-bottom: 0em;}}
+
+
+
+	</style>
+		 <div style=""text-align: center; "" >
+			<center>
+				<table style=""width: 800px; height: 1400px;""
+	"); 
+	Header(htmlToReturn);
+	htmlToReturn.Write($@"
+	<tr>
+
+
+
+	<td height=""100%"" valign=""top"" >
+	<div style=""text-align: center; width: 800px; align: center;"">
+		<div>
+
+	<div>
+		<table align=""center"">
+	");
+	if (!string.IsNullOrEmpty(DOC_Field( "DOCUMENT", "Protocollo") ) ) { 
+		htmlToReturn.Write($@"
+									 <tr>
+                                        <td nowrap>
+                                            Protocollo Istanza:
+                                        </td>
+                                        <td>
+                                            <font class=""Input"">
+                                                " + DOC_Field( "DOCUMENT", "Protocollo") + $@"
+                                            </font>
+                                        </td>
+                                        <td width=""50"">
+                                            &nbsp;</td>
+                                        <td>
+                                            del:
+                                        </td>
+                                        <td>
+                                            <font class=""Input"">
+                                                " + DOC_Field( "DOCUMENT", "DataInvio") + $@"
+                                            </font>
+                                        </td>
+                                        <td>
+                                        </td>
+                                    </tr>
+									");
+	}  
+	htmlToReturn.Write($@"
+                                </table>
+                            </div>
+							<br>
+
+
+									<table style=""text-align: center; width: 100%"">
+
+
+									   <tr style=""background-color: Silver; height: 55px ; text-align: center; "">
+											<td >
+											<b>");
+	htmlToReturn.Write(Strings.Replace(ApplicationCommon.CNV("INTESTAZIONE_ISTANZA_Albo_ME_FVG"),"(((NumDetermina)))","<b>" + DOC_Field( "TESTATA", "NumDetermina") + "</b>") + $@"</b>
+
+
+
+
+											<br>
+
+
+										</td>
+										</tr>                                                                    
+
+									</table>
+								 </div>
+							</div>
+							<div style=""width: 800px; margin-top: 15px; text-align: left"">
+
+							 <table>
+                                    <tr>
+                                        <td nowrap=""nowrap"">
+                                            Il sottoscritto
+                                        </td>
+                                        <td>
+                                            <font class=""Input"">
+                                               	" + DOC_Field( "TESTATA", "NomeRapLeg") + $@" &nbsp; " + DOC_Field( "TESTATA", "CognomeRapLeg") + $@"
+                                            </font>
+                                        </td>
+                                        <td nowrap=""nowrap"">
+                                            nato a 
+                                        </td>
+                                        <td>
+                                            <font class=""Input"">
+                                               " + DOC_Field("TESTATA", "LocalitaRapLeg") + $@"
+                                            </font>
+                                        </td>
+										<td nowrap=""nowrap"">
+											   Provincia
+										</td>
+										<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "ProvinciaRapLeg") + $@"
+												</font>
+										</td>
+										<td nowrap=""nowrap"">
+											   Stato
+										</td>
+										<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "StatoRapLeg") + $@"
+												</font>
+										</td>
+										<td nowrap=""nowrap"">
+											   il
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "DataRapLeg") + $@"
+												</font>
+										</td>
+                                    </tr>
+                                </table>
+
+								<table>
+										<tr>								
+
+											<td nowrap=""nowrap"">
+											Codice Fiscale 
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "CFRapLeg") + $@"
+												</font>
+											</td>
+										    <td nowrap=""nowrap"">
+											  Telefono
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "TelefonoRapLeg") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											   Telefono 2
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "CellulareRapLeg") + $@"
+												</font>
+											</td>
+
+
+											<td nowrap=""nowrap"">
+											Residente a
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "ResidenzaRapLeg") + $@"
+												</font>
+											</td>
+
+										</tr>
+								 </table>
+
+								 <table>
+									<tr>		
+
+											<td nowrap=""nowrap"">
+											   Provincia
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "ProvResidenzaRapLeg") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											   Stato
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "StatoResidenzaRapLeg") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											Indirizzo
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "IndResidenzaRapLeg") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											   Cap
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "CapResidenzaRapLeg") + $@"
+												</font>
+											</td>
+
+
+											<td nowrap=""nowrap"">
+										   In qualit&agrave; di
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "RuoloRapLeg") + $@"
+												</font>
+											</td>									
+
+									  </tr>
+									</table>
+
+								    <table>
+										<tr>
+											<td nowrap=""nowrap"">
+										   Giusta procura per notaio
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "Procura") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											   del
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "DelProcura") + $@"
+												</font>
+											</td>
+
+
+											<td nowrap=""nowrap"">
+										   Numero Rep.
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "NumProcura") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											 Raccolta Numero
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "NumRaccolta") + $@"
+												</font>
+											</td>
+										</tr>
+									 </table>
+
+								     <table>										
+										<tr>
+
+											<td nowrap=""nowrap"">
+											Della Ditta 
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "RagSoc") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											Forma Giuridica
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "NaGi") + $@"
+												</font>
+											</td>
+										</tr>
+									</table>		
+									<table>										
+										<tr>
+											<td nowrap=""nowrap"">
+										   Con sede legale in via
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "INDIRIZZOLEG") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+										   Comune
+											</td>
+
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "LOCALITALEG") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+										   Provincia
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "PROVINCIALEG") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+										   Stato
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "STATOLOCALITALEG") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+											C.a.p.
+											</td>
+
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "CAPLEG") + $@"
+												</font>
+											</td>
+
+										</tr>
+									</table>
+
+								     <table>	
+											<tr>
+											<td nowrap=""nowrap"">
+												Telefono <em>(1)</em>
+											</td>											
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "NUMTEL") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+										  Telefono <em>(2)</em>
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "NUMTEL2") + $@"
+												</font>
+											</td>
+
+											<td nowrap=""nowrap"">
+										   Fax
+											</td>
+
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "NUMFAX") + $@"
+												</font>
+											</td>
+
+											</tr>
+									   </table>
+
+
+								        <table>
+										<tr>
+
+											   <td nowrap=""nowrap"">
+										   Codice Fiscale Ditta
+											</td>
+
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "codicefiscale") + $@"
+												</font>
+											</td>
+											<td nowrap=""nowrap"">
+										  P. Iva
+											</td>
+											<td>
+												<font class=""Input"">
+													" + DOC_Field( "TESTATA", "PIVA") + $@"
+												</font>
+											</td>
+										</tr>
+										</table>
+
+									");
+	string ISTANZA_Albo_ME_FVG_KEY_001=Strings.Replace(Strings.Replace(Strings.Replace(ApplicationCommon.CNV("ISTANZA_Albo_ME_FVG_KEY_001"),"(((NumDetermina)))","<b>" + DOC_Field( "TESTATA", "NumDetermina") + "</b>"),"(((DataDetermina)))","<b>" + DOC_Field( "TESTATA", "DataDetermina") + "</b>"),"(((Certificazioni)))","@@@@@" +  DOC_FieldTecnical( "TESTATA", "Certificazioni")  + "~~~~~" );
+	string cartificazioni=Strings.Mid(ISTANZA_Albo_ME_FVG_KEY_001,Strings.InStr(ISTANZA_Albo_ME_FVG_KEY_001,"@@@@@")+5,( Strings.InStr(ISTANZA_Albo_ME_FVG_KEY_001,"~~~~~"))- (Strings.InStr(ISTANZA_Albo_ME_FVG_KEY_001,"@@@@@")+5 ));
+	ISTANZA_Albo_ME_FVG_KEY_001=Strings.Replace(ISTANZA_Albo_ME_FVG_KEY_001,"@@@@@" + cartificazioni + "~~~~~" ,getcertifazione( cartificazioni ));								
+	htmlToReturn.Write( ISTANZA_Albo_ME_FVG_KEY_001 + "<br/><br/>");
+	htmlToReturn.Write($@"
+								    <p class=""nomargin""><b>" + DOC_Field( "TESTATA", "Email") + $@"</b>&nbsp;  " + ApplicationCommon.CNV("ISTANZA_Albo_ME_2_KEY_002") + $@"</p>  
+
+
+
+					</div>
+					 <br/>
+					  <strong>f)</strong> che la sede di iscrizione <strong>INPS</strong> e il numero di matricola sono i seguenti <em>(in caso di iscrizione presso più sedi occorre indicarle tutte)</em>:</li>
+
+					");
+	int  row3;
+	row3 = DOC_NumRow("POSIZIONI_INPS", "");
+	htmlToReturn.Write($@"
+					   <table style=""border: 0px solid black; border-collapse: collapse; width: 80%"" align=""center"" cellpadding=""5"">
+							<tr style=""height: 18px"">
+
+							<td style=""border: 0px solid black;"" width=""33%"">Sede Di Iscrizione INPS</td>
+							<td style=""border: 0px solid black;"" width=""33%"">Matricola n.</td>
+							<td style=""border: 0px solid black;"" width=""33%"">Codice Sede INPS</td>						
+
+						   </tr>
+
+					");
+
+	for (int i = 0; i<= row3 -1; i++){ //to row3-1
+
+
+		htmlToReturn.Write($@"
+														<tr style=""height: 20px"">
+															<td style=""border: 0px solid black;"" width=""33%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_INPS", "SedeINPS", i ) + $@"</font></td>
+															<td style=""border: 0px solid black;"" width=""33%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_INPS", "NumINPS", i ) + $@"</font></td>
+															<td style=""border: 0px solid black;"" width=""33%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_INPS", "IndirizzoINPS", i ) + $@"</font></td>								
+
+														 </tr>
+
+									");
+	}
+
+	htmlToReturn.Write($@"
+
+						</table>
+						<br/>
+						<strong>g)</strong> che il codice di iscrizione  <strong>INAIL</strong> e <strong>PAT</strong> sono i seguenti <em>(in caso di iscrizione presso più sedi occorre indicarle tutte)</em>:</li>
+
+
+
+						");
+	int row4;
+	row4= DOC_NumRow( "POSIZIONI_INAIL", "" );
+	htmlToReturn.Write($@"
+					   <table style=""border: 0px solid black; border-collapse: collapse; width: 80%"" align=""center"" cellpadding=""5"">
+						<tr style=""height: 18px"">
+						<td style=""border: 0px solid black;"" width=""50%"">Matricola n.</td>
+						<td style=""border: 0px solid black;"" width=""50%"">PAT Sede Legale Impresa</td>
+
+
+					   </tr>
+
+							");
+
+	for (int i = 0; i<= row4 -1; i++){ //to row4-1
+
+
+		htmlToReturn.Write($@"
+									<tr style=""height: 20px"">
+										<td style=""border: 0px solid black;"" width=""50%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_INAIL", "NumINAIL", i ) + $@"</font></td>
+										<td style=""border: 0px solid black;"" width=""50%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_INAIL", "SedeINAIL", i ) + $@"</font></td>								
+									 </tr>
+
+								");
+	}
+
+	htmlToReturn.Write($@"
+
+								</table>
+								<br/>
+								<strong>h)</strong> che la sede di iscrizione alla <strong>CASSA EDILE</strong> e il numero di matricola sono i seguenti <em>(in caso di iscrizione presso più sedi occorre indicarle tutte)</em>:</li>
+
+
+
+							");
+	int row5;
+	row5= DOC_NumRow( "POSIZIONI_CASSAEDILE", "" );
+	htmlToReturn.Write($@"
+								  <table style=""border: 0px solid black; border-collapse: collapse; width: 80%"" align=""center"" cellpadding=""5"">
+										<tr style=""height: 18px"">
+										<td style=""border: 0px solid black;"" width=""20%"">Matricola n.</td>
+										<td style=""border: 0px solid black;"" width=""20%"">Sede di</td>
+										<td style=""border: 0px solid black;"" width=""20%"">Via</td>
+										<td style=""border: 0px solid black;"" width=""20%"">Telefono</td>
+										<td style=""border: 0px solid black;"" width=""20%"">Fax</td>
+
+									   </tr>
+
+							");
+	for (int i = 0; i<= row5 -1; i++){ //to row5-1								
+
+		htmlToReturn.Write($@"
+									<tr style=""height: 20px"">
+										<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_CASSAEDILE", "NumEdile", i ) + $@"</font></td>
+										<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_CASSAEDILE", "SedeEdile", i ) + $@"</font></td>
+										<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_CASSAEDILE", "IndirizzoEdile", i ) + $@"</font></td>
+										<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_CASSAEDILE", "TelefonoEdile", i ) + $@"</font></td>
+										<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "POSIZIONI_CASSAEDILE", "FaxEdile", i ) + $@"</font></td>
+
+									 </tr>
+
+								");
+	}
+
+	htmlToReturn.Write($@"
+						</table>
+				</div>
+
+			</td>
+		</tr>
+			"); 
+	footer(htmlToReturn);  
+	htmlToReturn.Write($@"
+	</table>
+
+				<!-- fine pagina 1-->
+			  ");
+	PrintPagina(htmlToReturn); 
+	htmlToReturn.Write($@"
+				<table style=""width: 800px; height: 1400px;""
+					"); Header(htmlToReturn); 
+	htmlToReturn.Write($@"
+					<tr>
+						<td height=""100%"" valign=""top"">				 
+							<div style=""text-align: left; width: 100%"">															
+								<div>
+									<br/>
+									<strong>i)</strong> che l'Ufficio dell'Agenzia delle Entrate presso il quale si &egrave; iscritti &egrave; il seguente:
+									<ul>
+										<li>Sede di  <b>" + DOC_Field( "DISPLAY_ABILITAZIONI", "CittaEntrate") + $@"</b> in via <b>" + DOC_Field( "DISPLAY_ABILITAZIONI", "IndirizzoEntrate") + $@"</b> tel.: <b>" + DOC_Field( "DISPLAY_ABILITAZIONI", "TelEntrate") + $@"</b></li>
+									</ul>
+									<br/>
+
+									<strong>l)</strong> 
+										");
+	string stringaCCNL;
+	string[] arr5;
+	int y;
+
+	stringaCCNL = DOC_FieldTecnical( "DISPLAY_ABILITAZIONI", "SettoriCCNL");
+
+	arr5= Strings.Split(stringaCCNL, "###");
+
+	if (arr5.Length -1 > 2 ) {
+		htmlToReturn.Write("che i settori CCNL sono  i seguenti:");
+	}else{
+		htmlToReturn.Write("che il settore CCNL &egrave; il seguente:");
+	}
+	for (y = 1; y<= (arr5.Length -1) ; y++){
+		htmlToReturn.Write("<br><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + getSettoriCCNL( arr5[y] ) + "</b>");
+	}
+	htmlToReturn.Write($@"	
+									<br/>
+
+									" + ApplicationCommon.CNV("ISTANZA_Albo_ME_2_KEY_003") + $@"
+									<br/>									
+									<p><strong>o)</strong>" + ApplicationCommon.CNV("DICHIARAZIONE_PATTO_INTEGRITA_ISTANZA") + $@"</p>		
+									<br/>									
+									 ");								                           
+	string ISTANZA_Albo_ME_FVG_KEY_004=ApplicationCommon.CNV("ISTANZA_Albo_ME_FVG_KEY_004");
+	htmlToReturn.Write(ISTANZA_Albo_ME_FVG_KEY_004);
+	htmlToReturn.Write($@"								
+									<br/>
+
+
+
+								</div>
+							</div>
+						</td>
+					</tr>
+							");
+	footer(htmlToReturn);  
+	htmlToReturn.Write($@"
+				</table>
+				<!-- fine pagina 2-->
+				 ");
+	PrintPagina(htmlToReturn); 
+	htmlToReturn.Write($@"
+				<table style=""width: 800px; height: 1400px;""
+					"); Header(htmlToReturn); htmlToReturn.Write($@"
+					<tr>
+						<td height=""100%"" valign=""top"">				 
+							<div style=""text-align: left; width: 100%"">															
+								<div>
+
+
+									<strong> " + ApplicationCommon.CNV("ISTANZA_AlboOperaEco_KEY_020") + $@"</strong></br>
+									  ");
+	string stringa;
+	string[] arr;
+
+
+	stringa = DOC_FieldTecnical( "DISPLAY_ABILITAZIONI", "ClasseIscriz");
+
+	arr = Strings.Split(stringa, "###");
+
+	for (int i = 1; i<= arr.Length -1; i++){ //to Ubound(arr)
+		htmlToReturn.Write($@"<br><b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + getClasseIscrizione( arr[i] ) + "</b>");
+	}
+	htmlToReturn.Write($@"
+									 <br/>
+
+									<h3 style=""text-align:center""> ULTERIORE DOCUMENTAZIONE </h3>	
+									" + ApplicationCommon.CNV("ISTANZA_Albo_ME_2_KEY_005") + $@"
+									");
+	int row6;
+	row6= DOC_NumRow( "DOCUMENTAZIONE", "" );
+	htmlToReturn.Write($@"
+								   <table style=""border: 0px solid black; border-collapse: collapse; width: 80%"" align=""center"" cellpadding=""5"">
+											<tr style=""height: 18px"">
+											<td style=""border: 0px solid black;"" width=""40%"">Descrizione</td>
+											<td style=""border: 0px solid black;"" width=""40%"">Allegato</td>
+										   </tr>
+										");
+	if (DOC_Field("DISPLAY_DGUE","PresenzaDGUE") == "si" ) { 
+		htmlToReturn.Write($@"
+											<tr style=""height: 20px"">
+												<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">Documento di Gara Unico Europeo (DGUE)</font></td>
+												<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_Field( "DISPLAY_DGUE", "Allegato" ) + $@"</font></td>
+											 </tr>
+										 ");
+	} 
+	htmlToReturn.Write($@"
+
+										");
+	for (int i = 0; i<= row6 -1; i++){ //to row6-1					
+
+		htmlToReturn.Write($@"
+												  <tr style=""height: 20px"">
+													<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "DOCUMENTAZIONE", "Descrizione", i ) + $@"</font></td>
+													<td style=""border: 0px solid black;"" width=""20%""><font class=""Input"">" + DOC_FieldRow( "DOCUMENTAZIONE", "Allegato", i ) + $@"</font></td>
+												 </tr>
+
+												");
+	}
+
+	htmlToReturn.Write($@"
+
+									</table>
+
+								</div>
+							</div>
+						</td>
+					</tr>
+							"); footer(htmlToReturn);  htmlToReturn.Write($@"
+				</table>
+				<!-- fine pagina 3-->
+
+
+		   </center>
+		</div>
+	</body>
+	</html>
+	"); 
+
+	void PrintPagina(EprocResponse response){
+
+		response.Write(@"<div style=""page-break-after: always""></div>");
+
+	}
+
+	void Header(EprocResponse response){
+
+		if (DOC_FieldTecnical("DOCUMENT", "StatoDoc") == "Annullato") {
+			//'response.Write  "<td width=""100%"" align=""left"" ><img  height=""70px"" src=""../images/annullato.gif"" ></td>"
+			response.Write($@" style=""background-image:url(../images/annullato.gif) ; background-repeat:no-repeat;"" >");
+		} else {
+			response.Write($@">");
+		}
+
+		response.Write(@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+		if (Strings.InStr(1, imgHeader, "???") > 0) {
+			response.Write(@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + @"""/>");
+		} else {
+			response.Write(imgHeader);
+		}
+
+		response.Write("</td></tr>");
+
+	}
+
+	//'------------------------------------------------------------------------------
+	//'-- funzione per disegnare il pie pagina
+	//'------------------------------------------------------------------------------
+	void footer(EprocResponse response){
+
+		NumPag = NumPag + 1;
+
+		response.Write($@"<tr><td valign=""bottom"" height=""10px"" >");
+		response.Write($@"<table width=""720px"" height=""10px"" style=""vertical-align: bottom; bottom: 0px""> ");
+		response.Write($@"        <tr><td align=""left"" style=""border-bottom: 1px solid black;"" ><b>Richiesta di abilitazione al Bando di Mercato Elettronico di Beni e Servizi</b></td></tr><tr>");
+		response.Write($@"            <td valign=""bottom"" align=""right"" >");
+		response.Write($@"                ");
+		response.Write($@"                  <br>");
+		response.Write($@"                " + NumPag );
+		response.Write($@"            </td>");
+		response.Write($@"        </tr>");
+		response.Write($@"    </table>");
+		response.Write($@"    </td></tr>");
+
+	}
+
+	rsclassiiscrizione = null;
+
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+			
+	}
+}@Html.Raw(htmlToReturn.Out())

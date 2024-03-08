@@ -1,0 +1,53 @@
+BODY
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 5px
+}
+BODY.bodytop
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 5px 0px 0px
+}
+BODY.bodybottom
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 0px 0px 5px
+}
+BODY.bodyleft
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 0px 0px 0px 5px
+}
+BODY.bodyright
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 0px 5px 0px 0px
+}
+BODY.bodyleft_right
+{
+    BACKGROUND-COLOR: #d8f3fc;
+    MARGIN: 0px 5px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+BODY.bodyleft_bottom
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 0px 0px 5px 5px
+}
+BODY.bodytop_left_right
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 5px 5px 0px
+}
+BODY.bodyleft_bottom_right
+{
+    BACKGROUND-COLOR: white;
+    MARGIN: 0px 5px 5px
+}
+BODY.bodybottom_right
+{
+    MARGIN: 0px 5px 5px 0px
+}

@@ -1,0 +1,28 @@
+﻿@page "/CustomDoc/Open_Dossier_Fascicolo.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@model eProcurementNext.Razor.Pages.CustomDoc.Open_Dossier_FascicoloModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	string Fascicolo = GetParamURL(Request.QueryString.ToString(), "Fascicolo").Trim();
+
+	validate("Fascicolo", Fascicolo.Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 1, HttpContext, session);
+
+	string Gruppo = "GROUP_Dossier";
+	string Cartella = "Documenti";
+	string Filter = $"ProtocolBG#~#'{Fascicolo}'#~# = ";
+
+	throw new ResponseRedirectException($"../ctl_library/functions/Open_Lib_function.asp?Gruppo={URLEncode(Gruppo)}&Cartella={URLEncode(Cartella)}&Filter={URLEncode(Filter)}", Response);
+}
+@Html.Raw(htmlToReturn.Out())

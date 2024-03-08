@@ -1,0 +1,36 @@
+﻿
+@inject eProcurementNext.Session.ISession session;
+@*@using ADODB*@
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@*
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;*@
+
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@* <!-- #Include File="../../Application/CTL_Library/Functions/security.inc" --> *@
+
+@model eProcurementNext.Razor.Pages.Portale.INC.aflink_wrapperModel
+@*
+
+
+*@
+
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(Context, session);
+	EprocResponse htmlToReturn = new(GetParamURL(Context.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+
+@{
+			
+					
+}@Html.Raw(htmlToReturn.Out())
+	
+	
+
+

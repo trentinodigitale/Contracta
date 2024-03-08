@@ -1,0 +1,24 @@
+﻿@page "/PCP/PCP_ServiziComuni.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.PCP.PCP_ServiziComuni
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var ID = GetParamURL(Request.QueryString.ToString(), "ID");
+    var operation = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+
+    validate("ID", ID, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    var idRow = CInt(ID);
+
+    var res = Model.esito_Operazione(idRow, operation);
+
+    var esito = res;
+
+    @Html.Raw(esito)
+}

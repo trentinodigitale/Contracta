@@ -1,0 +1,21 @@
+﻿@page "/PCP/PCP_RettificaAvviso.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.PCP.PCP_RettificaAvviso
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var id = GetParamURL(Request.QueryString.ToString(), "ID");
+    validate("ID", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    var idRow = CInt(id);
+    var res = Model.rettifica_avviso(idRow);
+
+    var esito = res;
+
+    @Html.Raw(esito)
+}

@@ -1,0 +1,607 @@
+﻿@page "/Report/prn_CONTRATTO_GARA.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_CONTRATTO_GARAModel;
+@model eProcurementNext.Razor.Pages.Report.prn_CONTRATTO_GARAModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+	string IDDOC = objDoc.mp_IDDoc;
+	var sqlParams = new Dictionary<string, object?>();
+	htmlToReturn.Write($@"
+	<html>
+	<head>");
+	addMetaTag(htmlToReturn);
+	string GetEmailAzi(string cod)
+	{
+		TSRecordSet rs = null;
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@cod",CInt( cod));
+			rs = cdf.GetRSReadFromQuery_("SELECT aziE_Mail from Aziende with(nolock) where IdAzi=@cod", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		return (rs.Fields is not null ? CStr(rs["aziE_Mail"]) : "");
+	}
+	int IdPfuPO;
+	IdPfuPO = 0;
+	dynamic GetPuntoOrdinante(string cod)
+	{
+		TSRecordSet rs = null;
+		//'set rs = GetRS( "SELECT top 1 p.pfunomeutente + ' ' + p.pfucognome as Punto,p.idpfu from ctl_doc c inner join ctl_doc c1 on c1.id=c.linkedDoc inner join ctl_doc c2 on c1.linkedDoc=c2.id inner join ctl_doc c3 on c2.linkedDoc=c3.id inner join profiliUtente p on c3.idpfu=p.idpfu  where c.linkedDoc='" & cod & "'" )
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@id", CInt(cod));
+			rs = cdf.GetRSReadFromQuery_("SELECT  p.pfunomeutente + ' ' + p.pfucognome as Punto,p.idpfu from CTL_DOC c inner join CTL_DOC c1 on c1.id=c.linkedDoc inner join CTL_DOC c2 on c1.linkedDoc=c2.id  inner join ctl_doc_value c3 on c2.id=c3.idheader and dzt_name='UserRUP' inner join profiliUtente p on c3.value=p.idpfu where c.id=@id", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		return CStr(rs["Punto"]);
+		IdPfuPO = CInt(rs["idpfu"]!);
+	}
+	dynamic GetLEGALRAP()
+	{
+		TSRecordSet rs = null;
+		string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@id", CInt(id));
+			sqlParams.Add("@dse_ID","DOCUMENT");
+			sqlParams.Add("@name", "UtenteOfferta");
+			rs = cdf.GetRSReadFromQuery_("select pfunomeutente + ' ' + pfucognome as RAPLEG from CTL_DOC_Value inner join profiliUtente p on p.IdPfu=value where IdHeader=@id and DSE_ID=@dse_ID and DZT_Name=@name ", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		return CStr(rs["RAPLEG"]);
+	}
+	string GetMailRapLeg(string cod)
+	{
+		TSRecordSet rs = null;
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@nome", "EmailRapLeg");
+			sqlParams.Add("@cod", CInt(cod));
+			rs = cdf.GetRSReadFromQuery_("select vatValore_FT from DM_Attributi with(nolock) where dztnome = @nome and lnk=@cod", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		return CStr(rs["vatValore_FT"]);
+
+	}
+	string GetDatiRegistroImprese(string idAzi)
+	{
+		string sede = "";
+		TSRecordSet rs = null;
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@nome", "SedeCCIAA");
+			sqlParams.Add("@lnk", CInt(idAzi));
+			rs = cdf.GetRSReadFromQuery_("select isnull(vatValore_FT,'') as val from dm_attributi with(nolock) where  dztnome = @nome and lnk=@lnk", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+			sede = CStr(rs["val"]);
+			sqlParams.Clear();
+			sqlParams.Add("@nome", "IscrCCIAA");
+			sqlParams.Add("@lnk", CInt(idAzi));
+			rs = cdf.GetRSReadFromQuery_("select isnull(vatValore_FT,'') as val from dm_attributi with(nolock) where  dztnome = @nome and lnk=@lnk", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+			sede = $"{sede} - {CStr(rs["val"])}";
+		}
+		catch
+		{
+
+		}
+		return sede;
+	}
+	string GetTelefoniRapLeg(string idAzi)
+	{
+		//'response.write idAzi
+		string _GetTelefoniRapLeg = "";
+		string id;
+		id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+		TSRecordSet rs = null;
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@id", CInt(id));
+			sqlParams.Add("@dse_id","DOCUMENT");
+			sqlParams.Add("@name", "UtenteOfferta");
+			rs = cdf.GetRSReadFromQuery_("select  isnull(pfuTel,'') as tel1 , isnull(pfuCell,'') as tel2 from CTL_DOC_Value inner join profiliUtente p on p.IdPfu=value where IdHeader=@id and DSE_ID=@dse_id and DZT_Name=@name ", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		if (!string.IsNullOrEmpty(CStr(rs["tel1"])))
+		{
+			_GetTelefoniRapLeg = "Tel 1 : " + CStr(rs["tel1"]);
+		}
+		if (!string.IsNullOrEmpty(_GetTelefoniRapLeg))
+		{
+			_GetTelefoniRapLeg = _GetTelefoniRapLeg + " - ";
+		}
+		if (!string.IsNullOrEmpty(CStr(rs["tel2"])))
+		{
+			_GetTelefoniRapLeg = _GetTelefoniRapLeg + "Tel 2 : " + CStr(rs["tel2"]);
+		}
+		return _GetTelefoniRapLeg;
+	}
+	//'--recupero AOO e AreaDiAppartenenza dal documento CAMBIO_RUOLO_UTENTE inviato
+	string Aoo = string.Empty;
+	sqlParams.Clear();
+	sqlParams.Add("@nome","aoo");
+	sqlParams.Add("@idpfu", IdPfuPO);
+	TSRecordSet rsAooUtente = cdf.GetRSReadFromQuery_("select dbo.GetCodDom2DescML('aoo',attvalue,'I') as Aoo from ProfiliUtenteAttrib with(nolock) where dztnome=@nome and idpfu=@idpfu", ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rsAooUtente.RecordCount > 0)
+	{
+		rsAooUtente.MoveFirst();
+		Aoo = CStr(rsAooUtente["Aoo"]);
+	}
+	string AreaDiAppartenenza = string.Empty;
+	sqlParams.Clear();
+	sqlParams.Add("@nome","AreaDiAppartenenza");
+	sqlParams.Add("@idpfu", IdPfuPO);
+	TSRecordSet rsAreaUtente = cdf.GetRSReadFromQuery_("select isnull(attvalue,'') as AreaDiAppartenenza from ProfiliUtenteAttrib with(nolock) where dztnome=@nome and idpfu=@idpfu", ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rsAreaUtente.RecordCount > 0)
+	{
+		rsAreaUtente.MoveFirst();
+		AreaDiAppartenenza = CStr(rsAreaUtente["AreaDiAppartenenza"]).Trim();
+	}
+
+	int NumPagCorrente;
+	NumPagCorrente = 0;
+	//'--determino le info per le pagine da stampare
+	int nNumProduct ;
+	int NumCol ;
+	double nLineeForPage ;
+	int nLineeSpazioProdotti;
+	int nNumLineeFirstPage;
+	int nLineeTotali;
+	int NumLineeStampate =0 ;
+	int NumLineeStampatePagina  = 0;
+	int LastRowDiplayed;
+	int LastColDisplayed ;
+	int NumColOrigin ;
+	int NumLineeParteFissa;
+
+	NumLineeParteFissa = 20;
+
+	LastRowDiplayed = 0;
+	LastColDisplayed = 0;
+
+	NumLineeStampate = 0;
+
+	NumCol = objDoc.Sections["BENI"].mp_Columns.Count;
+	NumColOrigin = objDoc.Sections["BENI"].mp_Columns.Count;
+	//'response.write "NUMCOL_P:" & NumCol & "<BR>"
+	//'--numero di linee per pagina
+	nLineeForPage = 55;
+
+	//'--numero di linee della prima pagina	
+	//'nNumLineeFirstPage = 70
+
+	//'--numero di linee vuote tra un prodotto ed il successivo
+	nLineeSpazioProdotti = 2;
+
+	//'--numero di linee per i totali
+	int nLineeForTotali = 0;
+
+	//'Response.Write NumCol
+
+	//'--determino le colonne da nascondere per i dettagli prodotti
+	//'--recupero codice dalla convenzione
+	string CodiceModelloConvenzione = "";
+	string CodiceModelloStampaListino = "";
+
+	sqlParams.Clear();
+	sqlParams.Add("@id", CInt(GetParamURL(Request.QueryString.ToString(), "IDDOC")));
+	sqlParams.Add("@dse_id", "TESTATA_PRODOTTI");
+	sqlParams.Add("@name", "ModelloBando");
+	string strSQL = "select Value from CTL_DOC_Value with(nolock) where IdHeader=@id and DSE_ID=@dse_id and DZT_Name=@name";
+	TSRecordSet rsModelloStampa = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rsModelloStampa.RecordCount > 0)
+	{
+		rsModelloStampa.MoveFirst();
+		CodiceModelloConvenzione = CStr(rsModelloStampa["Value"]);
+	}
+	CodiceModelloStampaListino = "MODELLI_LOTTI_" + CodiceModelloConvenzione + "_MOD_PERFEZIONAMENTO_CONTRATTO";
+
+	//'--recupero colonne del modello di stampa
+	sqlParams.Clear();
+	sqlParams.Add("@name", CodiceModelloStampaListino);
+	strSQL = "select MA_DZT_Name from CTL_models, CTL_ModelAttributes where MOD_Name = @name and MOD_ID = MA_MOD_ID order by MA_Order";
+	TSRecordSet rsColModelloStampa = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	string strListColumn = ",";
+	if (rsColModelloStampa.RecordCount > 0)
+	{
+		rsColModelloStampa.MoveFirst();
+		for (int i = 0; i < rsColModelloStampa.RecordCount - 1; i++)
+		{
+			strListColumn = strListColumn + (CStr(rsColModelloStampa["MA_DZT_Name"])).ToUpper() + ",";
+			rsColModelloStampa.MoveNext();
+		}
+	}
+	//'--recupero colonne del modello dei prodotti
+	Dictionary<string, Field> ColumnProdotti = objDoc.Sections["BENI"].mp_Columns;
+	//'Response.Write "ColumnProdotti.count:" & ColumnProdotti.count & "KKKK<BR>"
+	//'Response.end
+	string strHideCol = "EsitoRiga,TipoDoc,";
+
+	NumCol = NumCol - 2;
+
+	for (int i = 1; i < ColumnProdotti.Count; i++)
+	{
+		if (Strings.InStr(1, strListColumn, "," + (CStr(ColumnProdotti.ElementAt(i).Value.Name) + ",").ToUpper()) == 0)
+		{
+			strHideCol = strHideCol + CStr(ColumnProdotti.ElementAt(i).Value.Name) + ",";
+			NumCol = NumCol - 1;
+		}
+	}
+	//'response.write strHideCol& "<br/>"
+	//'response.write "NumCol:" & NumCol & "<br/>"
+
+	nNumProduct = DOC_NumRow("BENI", "");
+	//'response.write nNumProduct
+	//'response.end
+	double nNumLineeTotali = ((NumCol + nLineeSpazioProdotti) * nNumProduct) + NumLineeParteFissa;//'+ (nLineeForPage-nNumLineeFirstPage)
+	//'response.write nNumLineeTotali
+	//'response.end
+	//'nResiduoLinee =  nLineeForPage - (nNumLineeTotali mod nLineeForPage)
+	//'response.write NumCol & "-" & nLineeSpazioProdotti & "-" & nNumProduct 
+	//'response.end
+	double nResiduoLinee = nNumLineeTotali % nLineeForPage;
+	//'nNumPag = int (nNumLineeTotali / nLineeForPage)
+	//
+	//'nNumPag = fix (nNumLineeTotali / nLineeForPage)
+	//				
+	//'if  nNumLineeTotali mod nLineeForPage <> 0 then
+	//'	nNumPag = nNumPag +1
+	//'end if 
+	double nNumPag = 0;
+	if (nNumLineeTotali < nLineeForPage)
+	{
+		nResiduoLinee = 0;
+		nNumPag = 1;
+	}
+	else
+	{
+		nResiduoLinee = nNumLineeTotali % nLineeForPage;
+
+		nNumPag = Fix(nNumLineeTotali / nLineeForPage);
+	}
+	//'response.write nNumLineeTotali & "-" & nLineeForPage 
+
+	//'nNumPag = int (nNumLineeTotali / nLineeForPage)
+
+	//'if nResiduoLinee < nLineeForTotali and nResiduoLinee <> 0 then
+
+	if (nResiduoLinee != 0)
+	{
+		nNumPag = nNumPag + 1;
+	}
+	//'Response.Write "nNumPag=" & nNumPag & "<br>"
+	//'response.end
+	void firmato_digitalmente()
+	{
+		htmlToReturn.Write($@"<tr><td style=""height:100%"">&nbsp;</td></tr><tr><td><div style=""text-align:right"">");
+		htmlToReturn.Write(DOC_Field("DOCUMENT", "firmatario_OE") + "<br/>");
+		htmlToReturn.Write("(Firmato digitalmente)");
+		htmlToReturn.Write("</div></td></tr><tr><td>&nbsp;</td></tr>");
+	}
+	
+	htmlToReturn.Write($@"
+	</head>
+	<body >
+	<style type=""text/css"">");
+	htmlToReturn.Write($@"
+	BODY,DIV ,TABLE, TD {{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:9pt;
+	 font-style:normal;
+	 font-weight:normal
+
+
+	}}
+	.Input
+	{{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:10pt;
+	 font-style:normal;
+	 font-weight:bold
+
+	}}
+
+	.TITLE{{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:12pt;
+	 font-style: bold;
+	 font-weight:bold
+
+
+
+	}}
+
+	.CellIntestGrid {{
+	background:#ffffff;
+	--text-transform:uppercase;
+	font-weight:bold;
+	font-size:9pt;
+	width:500px;
+	}}
+
+	.CellGridPrintProducts {{
+	background:#ffffff;
+	font-size:9pt;
+	}}
+
+	.CellRow{{
+		padding-top:5px;
+	}}
+
+	@media print
+	  {{
+	  #Ricevuta {{}}
+	  }}
+
+	  @media screen
+	  {{
+	  #Ricevuta {{}}
+	  }}
+
+	 ul li, table ul li {{ list-style-type:none; }} 
+
+	</style>");
+	htmlToReturn.Write($@"
+	<div style=""text-align: center; "">
+				<center>
+					<table style=""width: 800px; height: 1400px;"">");
+	Header();
+	htmlToReturn.Write($@"
+					<tr>
+							<td  height=""50px"" valign=""top"" >
+								<div style=""text-align: left; width: 800px; align: left;"">");
+
+
+	htmlToReturn.Write($@"<strong>Elenco prodotti relativi al Contratto: </strong>" + CStr(DOC_Field("DOCUMENT", "Body")));
+	htmlToReturn.Write($@"	
+									<br/>
+									<br/>
+									 <table>
+
+										<tr><td><b>AMMINISTRAZIONE AGGIUDICATRICE</b></td></tr>
+										<br/>
+										<tr>	
+										<td>
+											<font class=""Input"">
+												");
+	PubLegaleAZI(DOC_Field("DOCUMENT", "Azienda"), "1111", htmlToReturn);
+	htmlToReturn.Write($@"
+											</font>
+										</td>                                 
+									</tr>");
+	if (!string.IsNullOrEmpty(Aoo))
+	{
+		htmlToReturn.Write($@"<tr><td nowrap=""nowrap"" colspan=""2"">AOO: " + Aoo + $@"</td></tr>");
+	}
+	if (!string.IsNullOrEmpty(AreaDiAppartenenza))
+	{
+		htmlToReturn.Write($@"<tr><td nowrap=""nowrap"" colspan=""2"">" + ApplicationCommon.CNV("Ufficio di Appartenenza") + $@":" + AreaDiAppartenenza + $@"</td></tr>");
+	}
+	htmlToReturn.Write($@"<tr><td nowrap=""nowrap"" colspan=""2""><b>Codice Ufficio Fatturazione Elettronica IPA:&nbsp; </b>" + DOC_Field("DOCUMENT", "CodiceIPA") + $@"</td></tr>");
+
+	htmlToReturn.Write($@"<tr><td nowrap=""nowrap"" colspan=""2""><b>E-Mail:</b> " + GetEmailAzi(DOC_Field("DOCUMENT", "Azienda")) + $@"</td></tr>");
+	htmlToReturn.Write($@"
+	</table>											
+
+				 <table>
+							<tr><td><b>FORNITORE</b></td></tr>
+							<br/>
+							<tr>
+								<td>
+									<font class=""Input"">
+	");
+	PubLegaleAZI(DOC_Field("DOCUMENT", "Destinatario_Azi"), "1111", htmlToReturn); 
+	htmlToReturn.Write($@"
+									</font>
+								</td>                                 
+							</tr>
+
+
+							<tr><td nowrap=""nowrap"" colspan=""2""><b>Legale Rappresentante: </b>" + DOC_Field("DOCUMENT", "firmatario_OE") + $@"</td></tr>
+							<tr><td nowrap=""nowrap"" colspan=""2""><b>Codice Fiscale: </b>" + DOC_Field("DOCUMENT", "CF_FORNITORE") + $@"</td></tr>
+
+
+
+				</table>
+		<br />
+	</td>
+	</tr>	");
+	nLineeForPage = 40;
+	htmlToReturn.Write($@"
+	<tr>
+		<td valign=""top"" >
+
+			<div style=""margin-top: 15px; text-align: left; width:100%; vertical-align:top;"">
+
+				" + GetHtmlData_Dettagli_TABLE_PERPAGINA(1, "BENI", "", "", "", strHideCol, "", CInt(nLineeForPage), "", "", "VERTICALE", ref NumLineeStampate,ref NumLineeStampatePagina,  NumCol, ref LastRowDiplayed,ref LastColDisplayed) + $@"
+
+			</div>
+
+		</td>
+	</tr>");
+	//'--PIE DI PAGINA
+	//'--se sono arrivato alla fine inserisco firmato digitalmente
+	if (1 == nNumPag)
+	{
+		firmato_digitalmente();
+	}
+	//'--PIE DI PAGINA
+	footer();
+	nLineeForPage = 55;
+	htmlToReturn.Write("</table>");
+	//'response.write LastRowDiplayed & "<br>"
+	//'--STAMPO DALLA PAGINA 2 alla fine
+	for (int k = 2; k < nNumPag; k++)
+	{
+		PrintPagina();
+		htmlToReturn.Write($@"<table border=0 style=""height:1400px;"">");
+		Header_pag();
+
+		htmlToReturn.Write($@"
+		<tr>
+			<td valign=""top"" >
+
+				<div style=""margin-top: 15px; text-align: left; width:100%; vertical-align:top;"">
+
+					" + GetHtmlData_Dettagli_TABLE_PERPAGINA(k, "BENI", "", "", "", strHideCol, "", CInt(nLineeForPage), "", "", "VERTICALE", ref NumLineeStampate, ref NumLineeStampatePagina, NumCol, ref LastRowDiplayed, ref LastColDisplayed) + $@"
+
+				</div>
+			</td>
+		</tr>");
+		//	'--se sono arrivato alla fine inserisco firmato digitalmente
+		if (k == nNumPag || (NumColOrigin == LastColDisplayed - 1 && LastRowDiplayed >= nNumProduct - 1 ) )
+		{
+			firmato_digitalmente();
+		}
+		//'--PIE DI PAGINA
+		footer();
+		htmlToReturn.Write($@"
+	</table>");
+		//'--SALTO PAGINA
+		//'--SE HO RAGGIUNTO ULTIMA RIGA DI PRODOTTO E ULTIMA COLONNA ESCO ANCHE SE NUMERO PAGINA SUPERIORE
+		if (NumColOrigin == LastColDisplayed - 1 && LastRowDiplayed >= nNumProduct - 1)
+		{
+			break;
+		}
+		//'--SALTO PAGINA
+
+		if (k != nNumPag)
+		{
+			PrintPagina();
+
+		}
+
+	}
+
+	htmlToReturn.Write($@"
+	 </center>
+
+		</div>
+
+	</body>
+	</html>");
+	void PrintPagina()
+	{
+		htmlToReturn.Write($@"<div style=""page-break-after: always""></div>");
+	}
+	void footerold()
+	{
+		int NumPag = 0;
+		NumPag = NumPag + 1;
+	}
+	void Header()
+	{
+		htmlToReturn.Write ($@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+		if(imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write ($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);
+		}
+		htmlToReturn.Write("</td></tr>");
+		htmlToReturn.Write($@"<tr><td align=""center"" valign=""top"">" + ApplicationCommon.CNV("HEADER_STAMPA_BUSTA_OFFERTA") + "</td></tr>");
+		//'response.Write "<tr><td height=""50px"" align=""center"" valign=""top"" ><h4>AGENZIA REGIONALE PER LO SVILUPPO DEI MERCATI TELEMATICI</h4></td></tr>"
+	}
+	void Header_pag()
+	{
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+		if(imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);
+		}
+		htmlToReturn.Write("</td></tr>");
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"" ><h4>AGENZIA REGIONALE PER LO SVILUPPO DEI MERCATI TELEMATICI</h4></td></tr>");
+		htmlToReturn.Write($@"
+		<tr><td align=left>
+
+
+		<strong>Elenco prodotti relativi al Contratto: </strong>" + DOC_Field("DOCUMENT", "Body") + $@"			
+
+
+		</td>
+		</tr>");
+	}
+	//'------------------------------------------------------------------------------
+	//'-- funzione per disegnare il pie pagina
+	//'------------------------------------------------------------------------------
+	void footer()
+	{
+		NumPagCorrente = NumPagCorrente + 1;
+
+		//'call firmato_digitalmente
+
+		htmlToReturn.Write($@"<tr><td valign=""bottom"" height=""5px"" >");
+		htmlToReturn.Write($@"<table width=""800px"" height=""5px"" style=""vertical-align: bottom; bottom: 0px""> ");
+		htmlToReturn.Write($@"        <tr><td align=""left"" ><b></b></td></tr><tr>");
+		htmlToReturn.Write($@"            <td style=""border-bottom: 1px solid black;border-top: 1px solid black;""  valign=""bottom"" align=""right"" >");
+		htmlToReturn.Write($@"                ");
+		htmlToReturn.Write($@"                Pagina: " + NumPagCorrente);
+		htmlToReturn.Write($@"            </td>");
+		htmlToReturn.Write($@"        </tr>");
+		htmlToReturn.Write($@"    </table>");
+		htmlToReturn.Write($@"    </td></tr>");
+
+	}
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+}@Html.Raw(htmlToReturn.Out())

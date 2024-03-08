@@ -1,0 +1,66 @@
+BODY
+{
+}
+TD.ImageCellMiddleButton
+{
+}
+INPUT.fontCommand
+{
+    PADDING: 0px;
+    MARGIN: 1px;
+    COLOR: #fff;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR:#515151;
+    TEXT-DECORATION: none;
+	border:none;
+	text-transform:uppercase;
+	cursor:pointer;
+	/*padding:3px;*/
+}
+INPUT.fontCommand:hover{ background:#cb1d15;}
+.FontLinkLabelCover label:hover, .FontLinkLabelCover:hover{ color:#cb1d15;}
+INPUT.congelati
+{}
+
+TABLE.GridButtonAttachment INPUT#FILE1{ background:#FFF; border:1px solid #96B0D4; color:#CB1D15;} 
+
+
+.fontLinkActive
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline;
+}
+.fontCommandbold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: #333;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.fontcommand
+{
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.TextLink
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	text-decoration:underline;
+}
+.FoglieBluSott
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #161a74;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}

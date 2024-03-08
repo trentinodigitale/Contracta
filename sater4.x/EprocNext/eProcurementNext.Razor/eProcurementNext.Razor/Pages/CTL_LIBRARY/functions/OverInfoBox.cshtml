@@ -1,0 +1,59 @@
+﻿@page "/CTL_LIBRARY/functions/OverInfoBox.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.OverInfoBoxModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+
+    //'--id=identificativo div
+     void HTML_OverInfoBox(string Id)
+    {
+        string strStyle = "";
+        strStyle = strStyle + "position: absolute;overflow: hidden; top: 0 ; left:0; height: 100% ;width = 100%;display: none";
+
+
+        string OnResize = "";
+        OnResize = "OnResize_" + Id;
+
+        htmlToReturn.Write($@"<div class=""INFO_BOX"" id=""" + Id + $@""" name=""" + Id + $@""" ");
+        htmlToReturn.Write($@" style=""z-index = 1000;" + strStyle + $@""" >" + Environment.NewLine);
+
+        htmlToReturn.Write("</div>");
+
+
+        htmlToReturn.Write($@"<div class=""INFO_BOX2"" id=""" + Id + $@"2"" name=""" + Id + $@"2"" ");
+        htmlToReturn.Write($@" style=""z-index = 1001;" + strStyle + $@""" >" + Environment.NewLine);
+
+        htmlToReturn.Write($@"<table class=""INFO_BOX_TB"" width=""100% height=""100%"">");
+        htmlToReturn.Write($@"<tr ><td colspan=""3"" height=""20%"" >&nbsp;</td></tr>");
+        htmlToReturn.Write($@"<tr  ><td width=""35%"" height=""200"" >&nbsp;</td><td width=""30%"" height=""200"" class=""INFO_BOX_TD"" valign=""middle"" >");
+
+        htmlToReturn.Write($@"<table class=""INFO_BOX_WIN_TB"" width=""100% height=""100%""><tr><td class=""INFO_BOX_WIN_CAPTION"">" + ApplicationCommon.CNV("Attenzione") + $@"</td></tr><tr><td class=""INFO_BOX_WIN_CELL"" width=""100% height=""100%"" >");
+        htmlToReturn.Write($@"<img src=""../images/grid/clessidra.gif"" border=""0"" >&nbsp;");
+        htmlToReturn.Write(ApplicationCommon.CNV("Elaborazione in corso..."));
+        htmlToReturn.Write("</td<tr ></table>");
+
+        htmlToReturn.Write($@"</td><td width=""35%"" height=""200"" >&nbsp;</td></tr>");
+        htmlToReturn.Write($@"<tr ><td colspan=""3"" height=""40%"" >&nbsp;</td></tr></table>");
+
+
+        htmlToReturn.Write("</div>");
+
+
+        // '-- imposto nel resize della pagina lo spostamento della finestra
+        htmlToReturn.Write("</script>" + Environment.NewLine);
+    }
+    
+    
+
+
+
+}@Html.Raw(htmlToReturn.Out())

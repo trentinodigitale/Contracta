@@ -1,0 +1,286 @@
+﻿@page "/Report/prn_OFFERTA_ASTA.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_OFFERTA_ASTAModel;
+@using static eProcurementNext.Session.SessionMiddleware;
+@model eProcurementNext.Razor.Pages.Report.prn_OFFERTA_ASTAModel
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	var sqlParams = new Dictionary<string, object?>();
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+	string idDoc = objDoc.mp_IDDoc;
+}
+@{
+	htmlToReturn.Write($@"
+	<html>
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/GridPrint.css""  />
+
+	<title>" + ApplicationCommon.CNV("OFFERTA") +
+				$@"</title>
+	</head>
+	<body>
+	<table  cellpadding=0 cellspacing=0 >
+		 <thead >
+		  <tr >
+		    <td style=""border:0px;"" >
+		     <table style=""font-weight:bold; vertical-align:middle"" cellpadding=0 cellspacing=0>
+		      <tr>
+		        <td style=""border:0px; align:right; vertical-align=middle;""  >
+					<img  src=" + ApplicationCommon.Application["WEBSERVERPORTALE"] + $@" / " + ApplicationCommon.Application["NOMEAPPPORTALE"] + $@"/images/light_logo.png"" border = 0 alt = " + ApplicationCommon.CNV("ALT LOGO") + $@" />
+  			    </td>
+		        <td style=""font-size:30px; vertical-align:middle; border:0px; align:left"">"
+							+ ApplicationCommon.CNV("Portale Gare Telematiche") +
+								$@"</td>
+		      </tr>
+		     </table>                 
+		    </td>
+		  </tr>
+
+
+    	<tr><td>&nbsp;</td></tr>	
+
+		<tr>
+    	  <td nowrap style=""font-size:18px; font-weight:bold; align=left"">Offerta - Protocollo Bando:" + DOC_Field("COPERTINA", "ProtocolloRiferimento") + $@"</td>
+    	</tr>
+
+		<tr><td>&nbsp;</td></tr>	
+
+		<tr >
+
+		   <td >
+
+		 		 <table cellpadding=0 cellspacing=0 width=""100%"">
+
+		 			<tr>
+		 			  <td align=left nowrap style=""background-color:#ccc; font-size:20px; width:100%; "">");
+
+
+	DOC_PubLegale("COPERTINA", "Azienda", htmlToReturn); 
+	htmlToReturn.Write($@"
+
+		 		    </td>
+		 		   </tr>
+
+				</table>
+
+  		    </td>
+		</tr>
+
+		<tr><td>&nbsp;</td></tr>
+
+	    <tr>
+           <td  style=""border:0px;""><label style=""font-size:18px; font-weight:bold; align:left"">" + ApplicationCommon.CNV("Descrizione breve") + $@": </ label >"
+
+	+ DOC_Field("COPERTINA", "Body") + $@"
+           </td>
+         </tr>	
+
+        <tr><td>&nbsp;</td></tr>
+        <tr><td><label style=""font-size:18px; font-weight:bold; align:left"">" + ApplicationCommon.CNV("Rilancio") + $@"</ label ></ td ></ tr >
+
+        <tr><td align=left>
+
+        <table width=300px>
+			<tr><td width=100px align=center>" + DOC_Field_Label("TESTATA_PRODOTTI", "ValoreOfferta") + $@"</td><td></td><td></td></tr>
+			<tr><td width=100px align=right>" + DOC_Field("TESTATA_PRODOTTI", "ValoreOfferta") + $@"</td><td></td><td></td></tr>
+		</table>
+		<table width=300px>	
+			<tr><td width=150px align=center>" + DOC_Field_Label("TOTALI", "ValoreEconomico") + $@"</td><td width=100px align=center>" + DOC_Field_Label("TOTALI", "ValoreRibasso") + $@"</td><td width=100px align=center>" + DOC_Field_Label("TOTALI", "ValoreSconto") + $@"</td></tr>
+			<tr><td align=right>" + DOC_Field("TOTALI", "ValoreEconomico") + $@"</td>
+
+	<td align=right>" + DOC_Field("TOTALI", "ValoreRibasso") + $@"</td>
+	<td align=right>" + DOC_Field("TOTALI", "ValoreSconto") + $@"</td>
+
+	</tr>
+        </table>
+        </td></tr>
+
+        <tr><td>&nbsp;</td></tr>
+
+        <tr ><td style=""border:0px;"" ><label style=""font-size:18px; font-weight:bold; align:left"">" + ApplicationCommon.CNV("Lista Articoli") +
+	$@"</label></td></tr>
+
+        </thead>
+
+        <tr>
+			<td style=""border:0px;"" >");
+
+	//dim ObjSession
+	//ObjSession = session("Session")
+	//set ObjSession(0) = Request.QueryString
+	//set ObjSession(1) = Request.form
+
+	////'-- Passiamo di nuovo anche la request all'indice 3 per permettere alla classe ctldb.blacklist di recuperare l'ip
+	//set ObjSession(3) = request
+	//set ObjSession(5) = session
+	//set ObjSession(6) = application
+	//ObjSession(9) = application("Server_RDS")
+	//ObjSession(10) = session("Funzionalita")' permessi utenti
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+	//session("Session") = ObjSession
+
+	//'--stampo la griglia dell'offerta del microlotto
+	//Set objDB = CreateObject("ctldb.clstabmanage")
+
+	//'--recupero modello offerta microlotto
+	TSRecordSet rsM = null;
+
+	//'if Request.QueryString("BUSTA") <> "" then 
+	//'    set rsM = objDB.GetRSReadFromQuery( cstr("select MOD_Name from CTL_DOC_SECTION_MODEL where idheader = " & replace( idDoc , "'" , "''" ) & " and DSE_ID = '" & replace( Request.QueryString("BUSTA") , "'" , "''" )  & "'" ) , application("connectionstring") )
+	//'else
+	sqlParams.Clear();
+	sqlParams.Add("@id", idDoc.Replace("'", "''"));
+	sqlParams.Add("@dse_id", "PRODOTTI");
+	rsM = cdf.GetRSReadFromQuery_("select MOD_Name from CTL_DOC_SECTION_MODEL where idheader = @id and DSE_ID = @dse_id", ApplicationCommon.Application.ConnectionString, sqlParams);
+	//'end if
+
+	if (rsM.RecordCount > 0)
+	{
+		string strModelloOfferta = CStr(rsM["MOD_Name"]);
+		//'Response.Write 	strModelloOfferta	
+		//'--recupero modello griglia
+		LibDbModelExt mp_objDB = new LibDbModelExt();
+		Dictionary<string, Field> mp_Columns = new Dictionary<string, Field>();
+		Dictionary<string, Grid_ColumnsProperty> mp_ColumnsProperty = new Dictionary<string, Grid_ColumnsProperty>();
+		mp_objDB.GetFilteredFieldsWeb(strModelloOfferta, ref mp_Columns, ref mp_ColumnsProperty, CStr(session["strSuffLing"]), 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+		//'--rimuovo colonna Esito
+		//'mp_Columns.Remove "FNZ_DEL"
+		Grid_ColumnsProperty prop;
+
+		try
+		{
+			prop = mp_ColumnsProperty["EsitoRiga"];
+			prop.Hide = true;
+		}
+		catch
+		{
+			//err.Clear
+			//'-- creo la property per nascondere la colonna
+			prop = new Grid_ColumnsProperty();
+			prop.Hide = true;
+			mp_ColumnsProperty.Add("EsitoRiga", prop);
+		}
+
+		try
+		{
+			mp_Columns.Remove("FNZ_UPD");
+		}
+		catch
+		{
+
+		}
+		try
+		{
+			mp_Columns.Remove("FNZ_DEL");
+
+		}
+		catch
+		{
+
+		}
+		try
+		{
+			mp_Columns.Remove("FNZ_COPY");
+
+		}
+		catch
+		{
+
+		}
+
+
+		//  Set mp_objDB = nothing
+		// '--recupero recordset dei dati per la griglia
+
+		// 'dim rs
+		//'    set rs = objDB.GetRSReadFromQuery( cstr("select * from Document_MicroLotti_Dettagli where TipoDoc = 'OFFERTA' and idheader  =" & idDoc  & " order by id asc") , application("connectionstring") )
+
+		Grid mp_objGrid = new Grid();
+		mp_objGrid.Columns = mp_Columns;
+		mp_objGrid.ColumnsProperty = mp_ColumnsProperty;
+		string strColId;
+		bool bAutocol;
+		strColId = "Id";
+		bAutocol = false;
+		//'mp_objGrid.RecordSetWeb rs, strColId, bAutocol
+		mp_objGrid.SetMatrixDisposition(false);
+		//'if Request.QueryString("BUSTA") <> "" then 
+		//'    mp_objGrid.SetMatrix  objDoc.Sections(replace( Request.QueryString("BUSTA") , "'" , "''" )).mp_Matrix
+		//'else
+		mp_objGrid.SetMatrix(objDoc.Sections["PRODOTTI"].mp_Matrix);
+		//'end if
+		mp_objGrid.id = "GridViewer";
+		mp_objGrid.width = "100%";
+		mp_objGrid.Editable = false;
+		// 'mp_objGrid.ShowTotal CNV("totale") , "2"
+		mp_objGrid.Html(htmlToReturn);
+		// set mp_objGrid = nothing
+	}
+
+	htmlToReturn.Write($@"
+		</td>
+			 </tr>
+
+        <tr><td>&nbsp;</td></tr>
+        <tr><td><label style=""font-size:18px; font-weight:bold; align:left"">" + ApplicationCommon.CNV("Elenco miei Rilanci") +
+		$@"</label>
+
+	</td>
+
+	</tr>");
+
+	//'--recupero elenco dei rilanci del fornitore
+	sqlParams.Clear();
+	sqlParams.Add("@id", idDoc);
+	string strSQL = "select convert( varchar(10) , DataRilancio , 103 ) + ' ' + convert( varchar(8) , DataRilancio , 108 ) as DataRilancio , ValoreRilancio , case when azienda = idAziFornitore then 'BLUE' else '' end as aziRagioneSociale , 0 as RilancioSec from CTL_DOC o inner join Document_Asta_Rilanci r on r.idheader = o.linkeddoc where azienda = idAziFornitore and o.id =@id  order by r.idrow desc ";
+	TSRecordSet rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	rs.MoveFirst();
+
+	htmlToReturn.Write($@"<table class=""Grid""  id=""RilanciGrid""  width=""300""  cellspacing=""0"" cellpadding=""0"" >
+	    <tr><th class="" nowrap  access_width_10 Grid_RowCaption"" >Data Ricezione</th><th class="" nowrap  access_width_10 Grid_RowCaption"" >Valore Offerta</th></tr>");
+
+	while (!rs.EOF){
+
+		htmlToReturn.Write($@"<tr id=""PRODOTTIGridR0"" class=""GR""  >
+			<td id=""PRODOTTIGrid_r0_c0""  class=""GR0_Text nowrap""  align=center>" + GetValueFromRS(rs.Fields["DataRilancio"]) + $@"
+		</td>
+			<td id=""PRODOTTIGrid_r0_c0""  class=""GR0_Text nowrap""  align=right>" + GetValueFromRS(rs.Fields["ValoreRilancio"]) + $@"</td>
+			</tr>");
+
+
+		rs.MoveNext();
+	}
+
+	htmlToReturn.Write($@"</table>
+
+    </table>
+    
+	</body>
+	</html>");
+
+	
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+}@Html.Raw(htmlToReturn.Out())

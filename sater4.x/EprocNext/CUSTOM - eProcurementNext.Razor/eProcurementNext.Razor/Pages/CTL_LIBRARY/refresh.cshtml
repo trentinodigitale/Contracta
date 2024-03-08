@@ -1,0 +1,826 @@
+@page "/CTL_LIBRARY/refresh.asp"
+@using System.Net.Http.Headers;
+@using eProcurementNext.Application;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.Cache;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using eProcurementNext.Session;
+@using eProcurementNext.Razor;
+@inject eProcurementNext.CommonModule.IEprocResponse objResponse;
+@inject IConfiguration configuration;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.refreshModel;
+@using static eProcurementNext.Session.SessionMiddleware;
+@using static eProcurementNext.CommonModule.Basic;
+@{
+    CommonDbFunctions cdf = new();
+    IEprocNextApplication application = ApplicationCommon.Application;
+    IEprocNextCache objCache = ApplicationCommon.Cache;
+
+    eProcurementNext.CommonModule.EprocResponse htmlToReturn = new();
+    LoadSession(HttpContext, session);
+
+    //'-- Se � stato richiesto un refresh della memoria da processo
+    if (GetParamURL(Request.QueryString.ToString(), "PROCESS").ToUpper() == "YES")
+    {
+        if (GetParamURL(Request.QueryString.ToString(), "OBJ") == "DOMAIN")
+        {
+            RefreshDomain();
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "OBJ") == "MODULI_CLIENTE")
+        {
+            RefreshPermessiCliente();
+            RefreshPermessiCliente();
+            //'Invoca una stored per inizializzare parametri legati ai moduli evitando customizzazioni
+            StartUpDbApplication();
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "OBJ") == "MODEL")
+        {
+            if (String.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "CHI")))
+            {
+                RefreshModel();
+            }
+            else
+            {
+                string modello = GetParamURL(Request.QueryString.ToString(), "CHI");
+                foreach (var x in ApplicationCommon.Cache.Keys)
+                {
+                    if (x.Contains(modello, StringComparison.Ordinal))
+                    {
+                        objCache.Remove(x);
+                    }
+                }
+            }
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "OBJ") == "MSG_SYS")
+        {
+            //refreshSysMsg();
+            refreshMsgSys();
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "OBJ") == "ALL")
+        {
+            //'-- nella richiesta di fresh all da processo non ricarichiamo il multilinguismo perch� in ambienti come IC produzione richiede molto tempo 
+            //'--		e la chiamata da processo va in timeout. inoltre sembra che tale refresh blocchi l'application
+            RefreshAllNoMLG();
+        }
+
+        //'-----------------------------------------------------
+        //'--- INVOCO LA RERESH SUGLI N NODI IN BILANCIAMENTO --
+        //'-----------------------------------------------------
+        if (!String.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "OBJ"))))
+        {
+            //'-- Se sono sulla macchina chiamata tramite app-to-refresh non devo a mia volta chiamare le altre macchine altrimenti andrei in loop
+            if (String.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "slave"))))
+            {
+                //'-- se presente e diversa da stringa vuota la sys app-to-refresh, passo ad aggiornare anche gli N nodi in bilanciamento
+                string ipRefresh = CStr(ApplicationCommon.Application["app-to-refresh"]);
+
+                if (!String.IsNullOrEmpty(ipRefresh))
+                {
+                    string[] vetListIp = ipRefresh.Split("@");
+                    string page = "";
+                    foreach (string ip in vetListIp)
+                    {
+                        page = page = ip + "/ctl_library/refresh.asp?slave=yes&" + GetQueryStringFromContext(Request.QueryString);
+
+                        invokeUrl(page);
+                    }
+                }
+            }
+        }
+
+        htmlToReturn.Write("1#OK");
+
+        //'--faccio abandon se sessione utente vuota o -20
+        if (String.IsNullOrEmpty(CStr(session["IdPfu"])) || CStr(session["IdPfu"]) == "-20" || CStr(session["IdPfu"]) == "-10")
+        {
+            MainGlobalAsa.SessionAbandon(session);
+        }
+
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "OK");
+    }
+    
+}@{
+htmlToReturn.Write($@"
+    <html>
+
+	    <head>
+		    <meta http-equiv=""Content-Language"" content=""it""/>
+		    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8""/>
+		    <meta http-equiv=""pragma"" content=""no-cache""/>
+		    <meta http-equiv=""cache-control"" content=""no-cache""/>
+		    <title>Refresh Memory</title>
+	    </head>
+");
+}
+@{
+
+    void RefreshBlackList()
+    {
+        //'dim objDB
+        //'-- Caricamento della black list in application
+        //'set objDB = createobject( "ctldb.BlackList" )
+        //'objblacklist.removeall
+        //'objDB.loadBlackListInMem CStr(Application("ConnectionString")), objblacklist
+        //'set Application("blacklist") = objblacklist
+    }
+
+    void RefreshOwners()
+    {
+        string strSql = "EXEC AF_REFRESH_OWNERS_LIST";
+
+        ExecSQL(strSql);
+
+        //'-- Caricamento degli oggetti sql soggetti a owner
+        var objDB = new BlackList();    // verificare instanziamento BlackList
+
+        ApplicationCommon.OwnersList.Clear();
+        objDB.loadOwnersInMem(ApplicationCommon.Application.ConnectionString, ApplicationCommon.OwnersList);
+        ApplicationCommon.Application["ownerslist"] = ApplicationCommon.OwnersList;
+    }
+
+    void RefreshWidgets()
+    {
+        if (IsMasterPageNew())
+        {
+            
+            string? CookieValue;
+            HttpContext.Request.Cookies.TryGetValue(eProcurementNext.Session.SessionMiddleware.Cookie_Auth_Name, out CookieValue);
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CookieValue);
+
+            try
+            {
+                var result = client.GetAsync(ConfigurationServices.GetKey("WebApiServer", "") + "/api/v1/Widget/Refresh").Result.Content.ReadAsStringAsync();
+                DebugTrace dt = new DebugTrace();
+                dt.Write($@"stackUpdateCurrentPosition: " + result.Result + " |||||| ");
+            }
+            catch
+            {
+
+            }
+        }
+    }
+
+    void refreshSysMsg()
+    {
+        string msgErr = "";
+        int contatore = 0;
+
+        IEprocNextApplication application = ApplicationCommon.Application;
+
+        //'-- Se non era mai stato inserito un messaggio dall'ultimo avvio dell'applicazione
+        if (IsEmpty(application["CONTATORE_MESSAGGI"]))
+        {
+            contatore = 1;
+        }
+        else
+        {
+            contatore = CLng(application["CONTATORE_MESSAGGI"]);
+        }
+
+        string msgSysAttivo = getSysMessageAttivo();
+
+        if (String.IsNullOrWhiteSpace(msgSysAttivo))
+        {
+            application[contatore + "_SYS_MSG"] = "";
+            msgErr = "Messaggio cancellato correttamente";
+        }
+        else
+        {
+            contatore = contatore + 1;
+            application["CONTATORE_MESSAGGI"] = contatore;
+            application[contatore + "_SYS_MSG"] = msgSysAttivo;
+        }
+    }
+
+    void refreshMsgSys() 
+    {
+        IEprocNextApplication application = ApplicationCommon.Application;
+
+        long contatore = 0;
+
+        //'-- Se non era mai stato inserito un messaggio dall'ultimo avvio dell'applicazione
+        if (IsEmpty(application["CONTATORE_MESSAGGI"])) 
+        {
+            contatore = 0;
+        }
+        else 
+        {
+            contatore = CLng(application["CONTATORE_MESSAGGI"]);
+        }
+
+        //'-- Toglie tutti i messaggi
+        if (contatore > 0)
+        {
+            for (int i = 1; i <= contatore; i++)
+            {
+                application[contatore + "_SYS_MSG"] = "";
+            }
+
+            application["CONTATORE_MESSAGGI"] = 0;
+            contatore = 0;
+        }
+
+        //'--msgSysAttivo = getSysMessageAttivo()
+        //'-- legge tutti i messaggi di sistema attualmente attivi
+        string strSQL = "select * from Messaggi_di_sistema_attivi order by DF asc";
+
+        CommonDbFunctions cdf = new();
+        TSRecordSet rsMsg = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+
+        //'-- se sono presenti messaggi
+        if (rsMsg.RecordCount > 0) 
+        {
+            //'-- li carico in application
+            rsMsg.MoveFirst();
+            while (!rsMsg.EOF)
+            {
+                string msgSysAttivo = CStr(rsMsg["body"]);
+                //bool bFound = false;
+                //'-- se il messaggio non � gi� nella coda lo inserisco
+                //for (int i = 0; i < contatore; i++)
+                //{
+                //    if (application[ i + "_SYS_MSG"] == msgSysAttivo)
+                //    {
+                //        bFound = true;
+                //        break;
+                //    }
+                //}
+
+                //if (bFound == false) {
+                contatore = contatore + 1;
+
+                application["CONTATORE_MESSAGGI"] = contatore;
+                application[contatore + "_SYS_MSG"] = msgSysAttivo;
+                application[contatore + "_SYS_DI"] = GetValueFromRS(rsMsg.Fields["DI"]);
+                application[contatore + "_SYS_DF"] = GetValueFromRS(rsMsg.Fields["DF"]);
+                //}
+
+                rsMsg.MoveNext();
+            }
+        }
+    }
+
+    void RefreshML()
+    {
+        MainGlobalAsa.RefreshMultiLanguage();
+    }
+
+    static void RefreshDomain()
+    {
+        var libDomains = new eProcurementNext.BizDB.LibDBDomains();
+        libDomains.Refresh();
+        ApplicationCommon.Cache.RemoveAll();
+    }
+
+    void RefreshModel()
+    {
+        RefreshDomain();
+        var obj = new LibDbModelExt();
+        ApplicationCommon.Cache.RemoveAll();
+    }
+
+    void RefreshAll()
+    {
+        RefreshML();
+        RefreshModel();
+        RefreshApplication();
+        RefreshBlackList();
+        RefreshOwners();
+    }
+
+    void RefreshAllNoMLG()
+    {
+        RefreshML();
+        RefreshModel();
+        RefreshApplication();
+        RefreshBlackList();
+        RefreshOwners();
+    }
+
+    void Cache(dynamic c)
+    {
+
+    }
+
+    void RefreshBandiPortale()
+    {
+        string strQuery = "EXEC PUBBLICA_GARE_SUL_PORTALE";
+        ExecSQL(strQuery);
+    }
+
+    void RefreshPermessiCliente()
+    {
+        MainGlobalAsa.RefreshPermessiCliente(true);
+    }
+
+    void StartUpDbApplication()
+    {
+        MainGlobalAsa.StartUpDbApplication();
+    }
+
+    void RefreshPermessiUtenti()
+    {
+        string strQuery = "exec REFRESH_PERMESSI_UTENTI";
+        ExecSQL(strQuery);
+    }
+
+    void RefreshApplication()
+    {
+        ConfigurationServices.Reload();
+        MainGlobalAsa.GlobalAsa.RefreshApplicationBase();
+    }
+
+    void Insert_LOG_REFRESH(string cod_operation, string pParams)
+    {
+        int IdPfu = 0;
+
+        if (IsEmpty(session[SessionProperty.IdPfu]) || session[SessionProperty.IdPfu] < -1)
+        {
+            IdPfu = 0;
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(CStr(session[SessionProperty.IdPfu])))
+            {
+                IdPfu = 0;
+            }
+            else
+            {
+                IdPfu = session[SessionProperty.IdPfu];
+            }
+        }
+
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@cod_operation", cod_operation);
+        sqlParams.Add("@IdPfu", IdPfu);
+        sqlParams.Add("@strParams", pParams);
+
+        string strSql = "INSERT INTO CTL_LOG_PROC " +
+                        "(DOC_NAME,PROC_NAME,id_Doc,idPfu,Parametri) VALUES " +
+                        "('DOCUMENT','REFRESH.ASP',@cod_operation,@IdPfu,@strParams)";
+        cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+    }
+
+    void ExecSQL(string strSql, Dictionary<string, object?>? parCollection = null)
+    {
+        cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: parCollection);
+
+    }
+
+    string getSysMessageAttivo()
+    {
+        string getSysMessageAttivoRet = "";
+        string strSQL = "select body from ctl_doc with(nolock) inner join Document_FermoSistema with(nolock) on idHeader = id where tipodoc = 'FERMOSISTEMA' and deleted = 0 and StatoFunzionale = 'Confermato' and getdate() >= DataSysMsgDA and getdate() < DataInizio";
+        string connectionString = ApplicationCommon.Application.ConnectionString;
+        TSRecordSet rsMsg = cdf.GetRSReadFromQuery_(strSQL, connectionString);
+
+        if (rsMsg.RecordCount > 0)
+        {
+            rsMsg.MoveFirst();
+            getSysMessageAttivoRet = CStr(rsMsg["body"]);
+        }
+
+        return getSysMessageAttivoRet;
+    }
+
+    string codOperation = string.Empty;
+
+    //'-- Traccio l'operazione di refresh 
+    string cosa = GetParamURL(Request.QueryString, "COSA");
+    if (!String.IsNullOrEmpty(cosa))
+    {
+        codOperation = CStr(ApplicationCommon.Application["cod_op_refresh"]);
+
+        if (String.IsNullOrEmpty(codOperation))
+        {
+            codOperation = "1";
+        }
+
+        if (cosa == "ML")
+        {
+            int totElem = 0;
+            long ColKeyLanguage = ApplicationCommon.CountMultiLanguageKeys();
+
+            Insert_LOG_REFRESH(codOperation, "Inizio operazione : (" + Request.QueryString + ") -- Numero Elementi ML presenti : " + CStr(totElem));
+        }
+        else 
+        {
+            Insert_LOG_REFRESH(codOperation, "Inizio operazione : (" + Request.QueryString + ") ");
+        }
+    }
+
+    if (cosa == "ML")
+    {
+        RefreshML();
+    }
+
+    if (cosa == "DOMAIN")
+    {
+        RefreshDomain();
+    }
+
+    if (cosa == "MODEL")
+    {
+        if (String.IsNullOrEmpty(GetValueFromForm(Request, "CHI")) || GetValueFromForm(Request, "CHI") == "")
+        {
+            RefreshModel();
+        }
+        else
+        {
+            string chi = "";
+            chi = GetValueFromForm(Request, "CHI");
+            if (objCache.Exists(chi))
+            {
+                objCache.Remove(chi);   
+            }
+        }
+    }
+
+    if (cosa == "MODULI_CLIENTE")
+    {
+        //'-- 2 volte
+        RefreshPermessiCliente();
+        RefreshPermessiCliente();
+        //'Invoca una stored per inizializzare parametri legati ai moduli evitando customizzazioni
+        StartUpDbApplication();
+    }
+
+    if (cosa == "PERMESSI_UTENTI")
+    {
+        RefreshPermessiUtenti();
+    }
+
+    if (cosa == "BLACKLIST")
+    { 
+        RefreshBlackList();
+    }
+
+    if (cosa == "OWNERS")
+    {
+        RefreshOwners();
+    }
+
+    if( cosa == "WIDGETS")
+    {
+        RefreshWidgets();
+    }
+
+    if (cosa == "ALL")
+    {
+        RefreshAll();
+    }
+
+    if (cosa == "APPLICATION")
+    {
+        RefreshApplication();
+    }
+
+    if (cosa == "ATTIVACACHE")
+    {
+        Cache(1);
+    }
+
+    if (cosa == "DISATTIVA")
+    {
+        Cache(0);
+    }
+
+    if (cosa == "ATTIVACHANGEML")
+    {
+        session[SessionProperty.ChangeMultilinguismo] = "1";
+        session["PATHAPPLICATION"] = CStr(application["NOMEAPPLICAZIONE"]);
+        application["ApplicationName"] = CStr(application["NOMEAPPLICAZIONE"]);
+
+        RefreshModel();
+    }
+
+    if (cosa == "DISATTIVACHANGEML")
+    {
+        session["ChangeMultilinguismo"] = "0";
+    }
+
+    //'-- Traccio la fine dell'operazione di refresh 
+    if (!String.IsNullOrEmpty(cosa))
+    {
+        if (cosa == "ML")
+        {
+            long totElem = ApplicationCommon.CountMultiLanguageKeys();
+            Insert_LOG_REFRESH(codOperation, "Fine operazione : (" + Request.QueryString + ") -- Numero Elementi ML presenti : " + CStr(totElem));
+        }
+        else
+        {
+            Insert_LOG_REFRESH(codOperation, "Fine operazione : (" + Request.QueryString + ") ");
+        }
+
+        application["cod_op_refresh"] = CStr(CLng(codOperation) + 1);
+
+        //'-- se sono sulla macchina chiamata tramite app-to-refresh non devo a mia volta chiamare le altre macchine altrimenti andrei in loop
+        if (String.IsNullOrEmpty(GetParamURL(Request.QueryString, "slave")))
+        {
+            //'-- se presente e diversa da stringa vuota la sys app-to-refresh, passo ad aggiornare anche gli N nodi in bilanciamento
+            string ipRefresh = CStr(application["app-to-refresh"]);
+
+            if (!string.IsNullOrEmpty(ipRefresh))
+            {
+                string[] vetListIp = ipRefresh.Split("@");
+                string page = "";
+
+                foreach (var ip in vetListIp)
+                {
+                    page = ip + "/ctl_library/refresh.asp?slave=yes&" + GetQueryStringFromContext(Request.QueryString);
+
+                    invokeUrl(page);
+                }
+            }
+        }
+    }
+
+    if (cosa == "BANDI_PORTALE")
+    {
+        RefreshBandiPortale();
+    }
+
+    //'--faccio abandon se sessione utente vuota o -20
+    if (CStr(session["IdPfu"]) == "" || CStr(session["IdPfu"]) == "-20" || CStr(session["IdPfu"]) == "-10") {
+        MainGlobalAsa.SessionAbandon(session);
+    }
+}
+@{
+    htmlToReturn.Write($@"
+        <body>
+
+        <p><font size=""6"" face=""Arial Black"">Aggiornamento aree di memoria</font> (LOCAL_ADDR " + CStr(HttpContext.GetServerVariable("LOCAL_ADDR")) + $@")(LocalIpAddress:" + CStr(HttpContext.Connection.LocalIpAddress) + $@")(IP: "+ eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.net_utilsModel.getIpClient(Request) +$@")</p>
+        <hr/>
+
+        <strong>Metabase</strong>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=ML"" id=""form2"" name=""form2"">
+          <p><input type=""submit"" value=""Multilinguismo"" name=""B1"">&nbsp;&nbsp;&nbsp; </p>
+        </form>
+        <form method=""POST"" action=""REFRESH.ASP?COSA=DOMAIN"" id=""form3"" name=""form3"">
+          <p><input type=""submit"" value=""Domini"" name=""B2""></p>
+        </form>
+
+        <div id=""elencoModelli"" style=""display:block;"">
+
+	        <form method=""POST"" action=""REFRESH.ASP?COSA=MODEL"" id=""form1"" name=""form1"">
+		        <select name=""CHI"">
+			        <option value="""">Tutti i modelli</option>
+    ");
+
+    foreach (var x in objCache.Keys){
+        if (x.ToUpper().Contains("CTL_MODEL_", StringComparison.Ordinal)) {	
+
+            htmlToReturn.Write($@"
+
+			<option value=""" + x + $@""">" + x + $@"</option>
+
+            ");
+        }
+    }
+
+    htmlToReturn.Write($@"
+                </select>
+
+		        <input type=""submit"" value=""Ricarica"" id=""submit1"" name=""submit1""/>
+
+	        </form>
+
+        </div>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=ALL"" id=""form5"" name=""form5"">
+	        <p><input type=""submit"" value=""Aggiorna tutta la memoria"" name=""B4""></p>
+        </form>
+
+        <!--
+        <form method=""POST"" action=""REFRESH.ASP?COSA=MODEL"" id=form4 name=form4>
+          <p><input type=""submit"" value=""Modelli"" name=""B3""></p>
+        </form>
+        -->
+        <hr>
+
+        <strong>Sistema</strong>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=APPLICATION"" id=""form11"" name=""form11"">
+          <p><input type=""submit"" value=""Ricarica sys e application config"" name=""B4""></p>
+        </form>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=MODULI_CLIENTE"" id=""form66"" name=""form66"">
+          <p><input type=""submit"" value=""Rigenera permessi cliente"" name=""B4""></p>
+        </form>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=PERMESSI_UTENTI"" id=""form67"" name=""form67"">
+          <p><input type=""submit"" value=""Ricarica permessi utenti"" name=""B66""></p>
+        </form>
+
+
+
+        <hr/>
+
+        <strong>Portale / Feed rss</strong>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=BANDI_PORTALE"" id=""form22"" name=""form22"">
+          <p><input type=""submit"" value=""Ricarica tabella dpcm"" name=""BANDI"">&nbsp;&nbsp;&nbsp; </p>
+        </form>
+
+        <hr/>
+
+        <strong>Sicurezza</strong>
+
+        <form method=""POST"" action=""REFRESH.ASP?COSA=OWNERS"" id=""form10"" name=""form10"">
+          <p><input type=""submit"" value=""Aggiorna e ricarica owners list"" name=""B4""></p>
+        </form>
+    ");
+
+    if (IsMasterPageNew())
+    {
+        htmlToReturn.Write($@"
+            <hr/>
+        
+            <strong>Widgets</strong>
+
+            <form method=""POST"" action=""REFRESH.ASP?COSA=WIDGETS"" id=""form11"" name=""form11"">
+              <p><input type=""submit"" value=""Aggiorna e ricarica i widget dashboard""></p>
+            </form>
+        ");
+    }
+
+    if (ApplicationCommon.Application["DISATTIVA_BLACKLIST"] != "1")
+    {
+        htmlToReturn.Write($@"
+            <form method=""POST"" action=""REFRESH.ASP?COSA=BLACKLIST"" id=""form4"" name=""form4"">
+              <p><input type=""submit"" value=""Ricarica blacklist"" name=""B4""></p>
+            </form>
+        ");
+    }
+
+    htmlToReturn.Write($@"
+        <!--
+            <hr/>
+
+
+
+            <form method=""POST"" action=""REFRESH.ASP?COSA=ATTIVACACHE"" id=form6 name=form6>
+              <p><input type=""submit"" value=""Attiva il caching"" name=""B4""></p>
+            </form>
+            <form method=""POST"" action=""REFRESH.ASP?COSA=DISATTIVA"" id=form7 name=form7>
+              <p><input type=""submit"" value=""Disattiva il caching"" name=""B4""></p>
+            </form>
+
+            <form method=""POST"" action=""REFRESH.ASP?COSA=ATTIVACHANGEML"" id=form8 name=form8>
+              <p><input type=""submit"" value=""ATTIVA Change Multilinguismo"" name=""B4""></p>
+            </form>
+            <form method=""POST"" action=""REFRESH.ASP?COSA=DISATTIVACHANGEML"" id=form9 name=form9>
+              <p><input type=""submit"" value=""DISATTIVA Change Multilinguismo"" name=""B4""></p>
+            </form>
+            <br>
+
+
+            Il cache � : 
+    ");
+
+
+    htmlToReturn.Write($@"
+        -->
+
+        <hr>
+
+        <!--cancellato form per nuova gestione
+
+        <table border=1 width=""100%"">
+
+        <tr>
+
+        <td colspan=""2"" align=""center"">
+
+        <h2> GESTIONE MESSAGGI DI SISTEMA  </h2>
+
+        </td>
+
+        </tr>
+
+        <tr>
+
+
+        <td align=""center"">
+
+
+
+        <form action=""refresh.asp?COSA=MSG_SYS"" method=""post"">
+
+	        Inserire il messaggio che si vuole che gli utenti loggati ricevano (max 1000 caratteri) : <br/>
+
+        <textarea rows=""8"" cols=""50"" name=""messaggio"" >
+    ");
+
+    if (string.IsNullOrEmpty(GetValueFromForm(Request, "messaggio"))) 
+    {
+        htmlToReturn.Write("E' stato pianificato un fermo macchina " + Environment.NewLine);
+        htmlToReturn.Write("per il giorno 01/01/2020 dalle 13:00 alle 14:00");
+    }
+    else
+    {
+        htmlToReturn.Write( GetValueFromForm(Request, "messaggio"));
+    }
+
+    htmlToReturn.Write($@"
+        </textarea>
+
+        <p style=""color:red""> " + "msgErr" + $@" </p>
+
+        <input type=""submit"" name=""canc""/>
+        <input type=""submit"" value=""cancella messaggio attivo"" name=""canc""/>
+
+        </form>
+
+        </td>
+
+        <td valign=""top"">
+    ");
+
+    string prefix;
+    prefix = "";
+
+    long n;
+
+    if (!IsEmpty(ApplicationCommon.Application["CONTATORE_MESSAGGI"]))
+    {
+        n = CLng(ApplicationCommon.Application["CONTATORE_MESSAGGI"]);
+
+        if (string.IsNullOrEmpty(ApplicationCommon.Application[n + "_SYS_MSG"]))
+        {
+            prefix = "Nessun ";
+        }
+    }
+    else
+    {
+        prefix = "Nessun ";
+    }
+
+    htmlToReturn.Write($@"<h2 align=""center"" style=""margin: 0 0 0 0"">" + prefix + $@"messaggio attualmente attivo</h2>");
+
+    if (!IsEmpty(ApplicationCommon.Application["CONTATORE_MESSAGGI"])) 
+    {
+        n = CLng(ApplicationCommon.Application["CONTATORE_MESSAGGI"]);
+
+        htmlToReturn.Write($@"<h2 style=""color:red"">" + IIF(string.IsNullOrEmpty(CStr(ApplicationCommon.Application[n + "_SYS_MSG"])), "", ApplicationCommon.Application[n + "_SYS_MSG"]) + "</h2>");
+    }
+
+    htmlToReturn.Write($@"
+        </td>
+
+        </tr>
+
+        <tr>
+
+        <td colspan=""2"">
+
+        <h2 align=""center""> Storico delle operazioni </h2>
+
+        <div style=""width:100%px;height:250px;overflow:scroll;"">
+    ");
+
+    if (!IsEmpty(ApplicationCommon.Application["CONTATORE_MESSAGGI"])) 
+    {
+        n = CLng(ApplicationCommon.Application["CONTATORE_MESSAGGI"]);
+
+        int k;
+        k = 1;
+
+        for (k = CInt(n); k >= 1; k--)
+        {  //to 1 step -1
+            if (k != n)
+            {
+                htmlToReturn.Write($@"<p> " + k + "  )  " + IIF(string.IsNullOrEmpty(CStr(ApplicationCommon.Application[k + "_SYS_MSG"])), "-- messaggio cancellato --", ApplicationCommon.Application[k + "_SYS_MSG"]) + " </p> ");
+            }
+            else
+            {
+                htmlToReturn.Write($@"<p style=""color:red""> " + k + ") " + IIF(string.IsNullOrEmpty(CStr(ApplicationCommon.Application[k + "_SYS_MSG"])), "-- messaggio cancellato --", ApplicationCommon.Application[k + "_SYS_MSG"]) + " </p> ");
+            }
+        }
+    }
+
+    htmlToReturn.Write($@"
+        </div>
+
+        </td>
+
+        </tr>
+
+        </table>
+
+
+        -->
+
+        </body>
+
+        </html>
+    ");
+}@Html.Raw(htmlToReturn.Out())

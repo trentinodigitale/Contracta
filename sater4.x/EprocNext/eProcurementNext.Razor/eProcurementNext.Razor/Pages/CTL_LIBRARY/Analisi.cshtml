@@ -1,0 +1,77 @@
+﻿@page "/CTL_LIBRARY/Analisi.asp"
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession _session;
+@using eProcurementNext.Application
+@using eProcurementNext.BizDB
+@inject IConfiguration configuration;
+@inject eProcurementNext.Application.IEprocNextApplication application;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.AnalisiModel
+@{
+	//'(V)Numero di utenti collegati
+	//'(V)Numero di domini in memoria
+	//'(V)Numero di modelli in memoria
+	//'(X)Se riusciamo la memoria utilizzata da questi oggetti
+	//'(X)Se riusciamo la momoria disponibile e la memoria allocata sul server
+
+	//EprocNext.Application.IEprocNextApplication application = ApplicationCommon.Application;
+
+
+	if (CStr(application["AttivaPerformanceMonitor"]) == "YES") {
+
+		string ipServer = ipServer = CStr(HttpContext.GetServerVariable("LOCAL_ADDR"));
+		//'totUtentiCollegati = cstr(Application("ActiveUsers"))
+
+		long totUtentiCollegati = _session.NumeroUtentiCollegati();		
+
+		//' totUtentiCollegati = cstr(ObjUsersLogged.Count)   
+
+		var objCache = ApplicationCommon.Cache;
+
+		int totModelli = 0;
+		int totDomini  = 0;
+
+		foreach (var x in objCache.Keys) {
+			if (x.StartsWith("CTL_MODEL_", StringComparison.Ordinal))
+			{
+				totModelli = totModelli + 1;
+			}
+			if (x.StartsWith("CTL_DOMAIN_", StringComparison.Ordinal))
+			{
+				totDomini = totDomini + 1;
+			}
+		}
+
+		totModelli = (int)(totModelli/6);
+
+		//'-- se presente e diversa da stringa vuota la sys app-to-refresh, passo ad aggiornare anche gli N nodi in bilanciamento
+		string ipRefresh = CStr(application["app-to-refresh"]);
+
+		//'-- se sono in bilanciamento non voglio tracciare come ip del server l'ip locale. non capirai quale server è stato invocato
+		if (string.IsNullOrEmpty(ipRefresh) ||  (ipServer != "::1" && ipServer != "127.0.0.1")) {
+			string strSql = "INSERT INTO CTL_Performance_Monitor (server,totSessioniAttive,totModelliInMemoria,totDominiInMemoria) VALUES ('" + ipServer.Replace("'","''") + "'," + CStr(totUtentiCollegati) + "," + CStr(totModelli) + "," + CStr(totDomini) + ")";
+			var objDB = new TabManage(configuration);
+			objDB.ExecSql(strSql, ApplicationCommon.Application.ConnectionString);
+		}
+
+
+		//'-- se sono sulla macchina chiamata tramite app-to-refresh non devo a mia volta chiamare le altre macchine altrimenti andrei in loop
+		if (string.IsNullOrEmpty(GetParamURL(Request.QueryString, "slave"))) {
+
+			if (!string.IsNullOrEmpty(ipRefresh)) {
+				string[] vetListIp = ipRefresh.Split("@");
+				string page = "";
+
+				foreach (var ip in vetListIp)
+				{
+					page = ip + "/ctl_library/Analisi.asp?slave=yes&" + GetQueryStringFromContext(Request.QueryString);
+
+					string dummy = invokeUrl(page);
+
+                }
+			}      
+		
+		}
+
+	}
+}
+@("1#OK")

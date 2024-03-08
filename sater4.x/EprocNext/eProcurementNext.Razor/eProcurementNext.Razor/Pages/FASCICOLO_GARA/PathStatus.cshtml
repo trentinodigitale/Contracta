@@ -1,0 +1,153 @@
+﻿@page "/FASCICOLO_GARA/PathStatus.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using System.Globalization
+@using System.Text
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.net_utilsModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel
+@model eProcurementNext.Razor.Pages.FASCICOLO_GARA.GeneraZipModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+
+	string VERIFY = GetParamURL(Request.QueryString.ToString(), "VERIFY");
+
+	string directoryMap = string.Empty;
+	string fileTmp = string.Empty;
+	string path = string.Empty;
+
+	validate("VERIFY", VERIFY, TIPO_PARAMETRO_STRING, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+	if (VERIFY == "EXISTS")
+	{
+		DebugTrace dt = new DebugTrace();
+
+
+		path = CStr(ApplicationCommon.Application["PathFolderAllegati"]);
+		fileTmp = CommonStorage.GetTempName();
+		var testFileSource = CommonStorage.PathCombine(path, fileTmp);
+
+		try
+		{
+			var directoryDest = GetValueFromForm(HttpContext.Request, "PercorsoDiRete");
+
+			dt.Write($"DirectoryDest: {directoryDest}", "PathStatus");
+
+			if (string.IsNullOrEmpty(directoryDest))
+			{
+				dt.Write($"{directoryDest} non esiste", "PathStatus");
+				throw new ResponseRedirectException($"../ctl_library/MessageBoxWin.asp?MSG={ApplicationCommon.CNV("Parametro PercorsoDiRete obbligatorio")}&CAPTION=ESITO", Response);
+			}
+
+			//'-- Creo il file temporaneo
+			try
+			{
+				//System.IO.File.CreateText($@"{testFileSource}").Close();
+				dt.Write($"Scrivo nel file {testFileSource}", "PathStatus");
+				System.IO.File.AppendAllText($@"{testFileSource}", "TEST");
+				dt.Write($"Ho scritto nel file {testFileSource}", "PathStatus");
+			}
+			catch (Exception ex)
+			{
+				dt.Write($"Scrittura sul file {testFileSource} fallita", "PathStatus");
+				throw new ResponseRedirectException($"../ctl_library/MessageBoxWin.asp?MSG={ApplicationCommon.CNV("Errore nella creazione del file temporaneo")}.{URLEncode(ex.Message)}&CAPTION=ERRORE", Response);
+			}
+
+			//'--IN CASO DI SHARED DI RETE E PRESENZA DELLE SYS EFFETTUO MAP DELLA SHARED CON DRIVE LOGICO
+			directoryMap = MAP_SHARE_WITH_DRIVE(directoryDest);
+
+			//'-- provo a copiarlo nella directory di destinazione
+			try
+			{
+				
+				System.IO.File.Copy(testFileSource, $"{directoryMap}{fileTmp}");
+			}
+			catch (Exception ex)
+			{
+				throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?MSG=" + ApplicationCommon.CNV("Percorso di rete non corretto") + "." + URLEncode(TruncateMessage(ex.ToString())) + "&CAPTION=ERRORE", Response);
+			}
+
+			throw new ResponseRedirectException($"../ctl_library/MessageBoxWin.asp?MSG=Percorso di rete corretto&CAPTION=ESITO POSITIVO", Response);
+		}
+		finally
+		{
+			if (CommonStorage.ExistsFile($"{directoryMap}{fileTmp}"))
+			{
+				CommonStorage.DeleteFile($"{directoryMap}{fileTmp}");
+			}
+
+			if (CommonStorage.ExistsFile($@"{testFileSource}"))
+			{
+				CommonStorage.DeleteFile($@"{testFileSource}");
+			}			
+		}
+
+	}
+	
+
+	if (VERIFY == "SIZE" )
+	{
+		//'--recupero percorso dei rete dalla configurazione
+
+		//'--recupero path di rete dove si trova il file txt
+		string strSQL = @"select PercorsoDiRete from ctl_doc with (nolock)
+									inner join Document_Config_FascicoloGara with (nolock) on idheader = id
+									where tipodoc='parametri_fascicolo_gara' and statofunzionale='confermato'";
+		string PercorsoDiRete;
+		try{
+			TSRecordSet rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+			if (rs.RecordCount > 0)
+			{
+				rs.MoveFirst();
+
+				PercorsoDiRete = CStr(rs["PercorsoDiRete"]);
+			}
+			else
+			{
+				htmlToReturn.Write("1#KO - errore PercorsoDiRete non trovato");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "1#KO - errore PercorsoDiRete non trovato");
+			}
+		}
+		catch
+		{
+			//err.clear
+			htmlToReturn.Write($"1#KO - errore statement: {strSQL}");
+			throw new ResponseEndException(htmlToReturn.Out(), Response, $"1#KO - errore statement: {strSQL}");
+		}
+
+		//'--IN CASO DI SHARED DI RETE E PRESENZA DELLE SYS EFFETTUO MAP DELLA SHARED CON DRIVE LOGICO
+		directoryMap = MAP_SHARE_WITH_DRIVE(PercorsoDiRete);
+
+		string Contents = string.Empty;
+	
+		string strFileName = $"{directoryMap}Get_free_space_folder.txt";
+
+		//'--legge dal file Get_free_space_folder.txt nel percorso di rete configurato la size
+		if (CommonStorage.FileExists(strFileName))
+		{
+			Contents = System.IO.File.ReadAllText(strFileName);
+		
+
+			//'--la memorizzo nella relazione FASCICOLO_GARA - SOGLIA_DISPONIBILE  vuota all'inizio
+			var sqlParams = new Dictionary<string, object?>();
+			sqlParams.Add("@Contents", Contents);
+			string strSql = "update  CTL_Relations set REL_ValueOutput = @Contents where REL_Type = 'FASCICOLO_GARA' and REL_ValueInput = 'SOGLIA_DISPONIBILE'";
+			cdf.Execute(strSql , ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+		}
+
+		htmlToReturn.Write("1#OK");
+
+	}
+}
+@Html.Raw(htmlToReturn.Out())

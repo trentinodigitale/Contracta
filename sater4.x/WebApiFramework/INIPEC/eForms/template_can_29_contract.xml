@@ -1,0 +1,14 @@
+<efac:SettledContract>
+	<!-- OPT-316 - Contract Technical Identifier - Del tipo CON-XXXX-->
+	<cbc:ID>@@@NOTICE_RESULT_SETTLED_CONTRACT_ID@@@</cbc:ID>
+	<!-- BT-1451 - Winner Decision Date - Data Aggiudicazione -->
+	<cbc:AwardDate>@@@NOTICE_RESULT_SETTLED_CONTRACT_AWARD_DATE@@@</cbc:AwardDate>
+	<!-- BT-145 - Contract Conclusion Date -->
+	<cbc:IssueDate>@@@NOTICE_RESULT_SETTLED_CONTRACT_ISSUE_DATE@@@</cbc:IssueDate>
+	<efac:ContractReference>
+		<!-- BT-150 - Contract Identifier - Titolo Del Contratto - Testo libero. capire come comporlo e che maxlen ha -->
+		<cbc:ID>@@@NOTICE_RESULT_CONTRACT_REFERENCE_ID@@@</cbc:ID>
+	</efac:ContractReference>
+	@@@NOTICE_RESULT_NO_ENCODE_LOT_TENDER@@@
+	@@@NOTICE_RESULT_NO_ENCODE_CONTRACT_FINANCINGIDENTIFIER@@@
+</efac:SettledContract>

@@ -1,0 +1,26 @@
+﻿@page "/DASHBOARD/ViewerExcel_x.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonModule
+@using eProcurementNext.DashBoard
+@using eProcurementNext.HTML
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.DASHBOARD.ViewerExcel_xModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'VERSIONE XLSX. APPENA FINITO LO SVILUPPO CON L'INTRODUZIONE DELLE DECODIFICHE DEI DOMINI
+	//'TOGLIERE TUTTA LA PARTE SOPRA E LASCIARE SOLO QUESTA DECOMMENTANDOLA :
+	string accessGuid = insertAccessBarrier(session,HttpContext);
+
+	//string test = ApplicationCommon.Application["APPLEGACY"] + "/ctl_library/xlsx.aspx?vexcel=1&hiddenViewerCurFilter=" + URLEncode(CStr(GetValueFromForm(Request, "hiddenViewerCurFilter")));
+
+	throw new ResponseRedirectException("../ctl_library/xlsx.aspx?vexcel=1&hiddenViewerCurFilter=" + URLEncode(CStr(GetValueFromForm(Request, "hiddenViewerCurFilter"))) + "&acckey=" + URLEncode(CStr(accessGuid)) + "&" + GetQueryStringFromContext(Request.QueryString), Response);
+
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,142 @@
+BODY
+{
+}
+TABLE.GridProductTable
+{
+}
+.fontEsito
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.fontIntest
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.fontEsitoLink
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: darkred;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+TD.CellIntestGridProductTable
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    BORDER-LEFT: 1px solid;
+    BORDER-BOTTOM: 1px solid;
+    BACKGROUND-COLOR: khaki
+}
+TD.Cell1GridProductTable
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    BORDER-LEFT: 1px solid;
+    BORDER-BOTTOM: 1px solid;
+    BACKGROUND-COLOR: white
+}
+TD.Cell2GridProductTable
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    BORDER-LEFT: 1px solid;
+    BORDER-BOTTOM: 1px solid;
+    BACKGROUND-COLOR: lightgrey
+}
+TD.Cell3GridProductTable
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    BORDER-LEFT: 1px solid;
+    BORDER-BOTTOM: 1px solid
+}
+TD.CellGridCOLORRIGATABELLAPERCENTUALE
+{
+    BORDER-RIGHT: thin solid;
+    BORDER-TOP: thin solid;
+    BORDER-LEFT: thin solid;
+    BORDER-BOTTOM: thin solid;
+    BACKGROUND-COLOR: #f7efff
+}
+TD.CellGridCOLORRIGAINSERITATABELLAPERCENTUALE
+{
+    BORDER-RIGHT: thin solid;
+    BORDER-TOP: thin solid;
+    BORDER-LEFT: thin solid;
+    BORDER-BOTTOM: thin solid;
+    BACKGROUND-COLOR: #b7ffff
+}
+TD.CellGridCOLORRIGAERRATATABELLAPERCENTUALE
+{
+    BORDER-RIGHT: thin solid;
+    BORDER-TOP: thin solid;
+    BORDER-LEFT: thin solid;
+    BORDER-BOTTOM: thin solid;
+    BACKGROUND-COLOR: #ff3300
+}
+TD.CellGridCOLORRIGAERRATADATAINIDATAFINE
+{
+    BACKGROUND-COLOR: #ff9966
+}
+TD.CellGridCOLORRIGAERRATAARCOTEMPORALE
+{
+    BORDER-RIGHT: thin solid;
+    BORDER-TOP: thin solid;
+    BORDER-LEFT: thin solid;
+    BORDER-BOTTOM: thin solid;
+    BACKGROUND-COLOR: #ae3300
+}
+TABLE.GridTenderForArticle
+{
+}
+TD.CellGridHeadTenderForArticle
+{
+    BORDER-RIGHT: thin solid;
+    BORDER-TOP: thin solid;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: thin solid;
+    BORDER-BOTTOM: thin solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.CellGridTenderForArticleEven
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: 1px solid;
+    LINE-HEIGHT: 8pt;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightyellow;
+    TEXT-DECORATION: none
+}
+TD.CellGridTenderForArticleOdd
+{
+}
+TD.CellGridMyAnswerTender
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: 1px solid;
+    LINE-HEIGHT: 8pt;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: navajowhite;
+    TEXT-DECORATION: none
+}
+TD.CellGridCOLORRIGATABELLACRITERI
+{
+    BACKGROUND-COLOR: silver
+}
+A:link
+{
+    COLOR: darkred
+}

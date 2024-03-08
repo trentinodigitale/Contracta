@@ -1,0 +1,233 @@
+﻿@page "/testVoucher.asp"
+@using System.Web
+@using System.Data
+@using System.Data.SqlClient
+@using static eProcurementNext.CtlProcess.Basic
+@using System.Collections.Specialized
+@using static eProcurementNext.HTML.BasicFunction;
+@using System.Security.Cryptography;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.CommonDB:
+@using eProcurementNext.Application
+@using eProcurementNext.PDND;
+@using static eProcurementNext.CommonModule.Basic
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
+@using System.Text;
+@using eProcurementNext.CommonModule;
+@model eProcurementNext.Razor.Pages.TestPages.testVoucherModel;
+@inject IConfiguration Configuration;
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware;
+@{
+    CommonDbFunctions cdf = new CommonDbFunctions();
+    LoadSession(HttpContext, session);
+    Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+
+    string privatekey = Configuration.GetSection("PDND_info").GetValue<string>("keyPos");
+
+    string confNomeCliente = "Intercenter";
+    string SACodiceFiscale = "91252510374";
+    string SAcodiceAUSA = "9000000006";
+    string regCodicePiattaforma = "0000001";
+    string regCodiceComponente = "058f6af5-eee0-4121-ac28-7a3723ceddcf"; //Centro di costo
+    string userCodiceFiscale = "USRRUP20A01A110A";
+
+    try
+    {
+        confNomeCliente = Configuration.GetSection("PDND_info").GetValue<string>("nomeCliente");
+        SACodiceFiscale = Configuration.GetSection("PDND_info").GetValue<string>("SACodiceFiscale");
+        SAcodiceAUSA = Configuration.GetSection("PDND_info").GetValue<string>("SAcodiceAUSA");
+        regCodicePiattaforma = Configuration.GetSection("PDND_info").GetValue<string>("regCodicePiattaforma");
+        regCodiceComponente = Configuration.GetSection("PDND_info").GetValue<string>("regCodiceComponente");
+        userCodiceFiscale = Configuration.GetSection("PDND_info").GetValue<string>("userCodiceFiscale");
+    }
+    catch (Exception e)
+    {
+
+    }
+
+    TSRecordSet rsUtils = new TSRecordSet();
+    rsUtils = cdf.GetRSReadFromQuery_("select * from PDND_Contesti", ApplicationCommon.Application.ConnectionString);
+    string strEservice = ConfigurationServices.GetObjectsInSection("PDND_info:E-Services");
+    //string strEserviceSingle = ConfigurationServices.GetObjectsInSection("PDND_info:E-Services", "a73bb5ef-51a5-4794-b7e3-4a3e96194507");
+}
+
+<div class="container-flow pl-5 pr-5">
+    <div class="row">
+        <form method="post" asp-page-handler="Voucher">
+
+            <table>
+                <tr>
+                    <td colspan="7" style="text-align: center">
+                            
+                        <h2>@confNomeCliente</h2>
+                        <br/>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>Contesti e servizi</td>
+                    <td>
+                        @{
+
+                            <select id="purposeId" name="purposeId">
+                                <option value="0">-- Scegliere un contesto --</option>
+                                @{
+                                    if (rsUtils.RecordCount > 0)
+                                    {
+                                        rsUtils.MoveFirst();
+                                        while (!rsUtils.EOF)
+                                        {
+                                            if (@rsUtils["NomeContesto"].ToString().Equals("Comunica appalto"))
+                                            {
+                                                <option value="@rsUtils["PurposeId"].ToString()" selected="selected">@rsUtils["NomeContesto"].ToString()</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@rsUtils["PurposeId"].ToString()">@rsUtils["NomeContesto"].ToString()</option>
+                                            }
+
+
+                                            rsUtils.MoveNext();
+
+                                        }
+                                    }
+                                }
+                            </select>
+                        }
+                    </td>
+                    <td>Scelta servizio</td>
+                    <td>
+                        <input type="text" class="form-control" id="lstServizi" name="lstServizi" value="/crea-appalto"/>
+                    </td>
+                    <td>Parametri</td>
+                    <td colspan="3"><input type="text" class="form-control" id="querystring" name="querystring"/></td>
+                </tr>
+                <tr>
+                    <td>Cod. Fiscale utente</td>
+                    <td><input class="form-control" type="text" id="userCodiceFiscale" name="userCodiceFiscale" value="@userCodiceFiscale" /></td>
+                    <td>Ruolo Utente</td>
+                    <td>
+                        <select id="userRole" name="userRole">
+                            <option value="RP" selected="selected">RP</option>
+                            <option value="DRP">DRP</option>
+                        </select>
+                    </td>
+                    <td>LoA</td>
+                    <td>
+                        <select id="userLoa" name="userLoa">
+                            <option value="3" selected="selected">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </td>
+                    <td>Id Tipo Utente</td>
+                    <td>
+                        <select id="userIdpType" name="userIdpType">
+                            <option value="SPID" selected="selected">SPID</option>
+                            <option value="CIE">CIE</option>
+                            <option value="CNS">CNS</option>
+                            <option value="EIDAS">EIDAS</option>
+                            <option value="CUSTOM">CUSTOM</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Cod. Fiscale SA</td>
+                    <td><span class="text"></span><input type="text" class="form-control" id="SACodiceFiscale" name="SACodiceFiscale" value="@SACodiceFiscale" /></td>
+                    <td>Cod. AUSA SA</td>
+                    <td><input type="text" id="SAcodiceAUSA" class="form-control" name="SAcodiceAUSA" value="@SAcodiceAUSA" /></td>
+                    <td>Cod. Piattaforma ANAC</td>
+                    <td><input type="text" id="regCodicePiattaforma" class="form-control" name="regCodicePiattaforma" value="@regCodicePiattaforma" /></td>
+                    <td>Cod. Componente / Centro di costo </td>
+                    <td><input type="text" id="regCodiceComponente" class="form-control" name="regCodiceComponente" value="@regCodiceComponente" /></td>
+                </tr>
+                <tr>
+                    <td>Richiesta</td>
+                    <td colspan="7"><textarea id="richiesta" name="richiesta" rows="10" cols="150"></textarea></td>
+                </tr>
+                <tr class="m-3">
+                    <td class="m-3 text-center" colspan="7"><button type="submit">Conferma</button></td>
+                </tr>
+                <tr class="m-3">
+                    <td colspan="8" class="p-5">Attenzione: gli eventuali UID necessari ad effettuare operazioni successive, per esempio, alla crezione di un appalto, al monento non vovengono salvate pertanto è necessario li annotiate durante i vostri test<br/>
+                        Per quanto riguarda il servizio da chiamare dovreste gentilmente fare attenzione ad anteporre sempre il carattere "/" al nome del servizio stesso. Nel campo va inserito quindi "/crea-appalto" e NON "crea-appalto".
+                        <p>L'attuale versione di questa interfaccia di test è frutto dell'esperienza su un numero molto limitato di operazioni pertanto possono verificarsi errori non previsti. Vogliate dettagliarne l'eventuale segnalazione</p></td>
+                </tr>
+                <tr>
+                    <td colspan="8" class="m-3"></td>
+                </tr>
+                <tr>
+                    <td>Esito della chiamata al servizio</td>
+                    <td colspan="7" class="m-3">
+                        <textarea id="esito" name="esito" rows="10" cols="150">@{
+
+                                                                                   if (ViewData["esito"] != null)
+                                                                                   {
+                                                                                       string data = ViewData["esito"].ToString();
+                                                                                       @data
+                                                                                   }
+                                                                               }</textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+@* @{
+    if (ViewData["Risposta"] != null)
+    {
+        Risposta data = (Risposta)ViewData["Risposta"];
+        //Risposta risposta = JsonSerializer.Deserialize<Risposta>(data);
+        <div class="container-flow">
+            <div class="row">
+                @{
+                    if (data != null)
+                    {
+                        <p>@data.title</p>
+                        <table>
+                            @{
+                                if (data.result != null)
+                                {
+                                    foreach (var r in data.result)
+                                    {
+
+                                        <tr>
+                                            <td>
+                                                @r.idTipologica
+                                            </td>
+                                            <td>@r.descrizione</td>
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </table>
+                    }
+                }
+            </div>
+        </div>
+        <div class="container-flow">
+            <div class="row">
+                <ul>
+                </ul>
+            </div>
+        </div>
+    }
+} *@
+
+@* <div class="container-flow pl-5 pr-5">
+    <p>Pippo</p>
+    <div class="row">
+
+
+        @{
+            if (ViewData["esito"] != null)
+            {
+                string data = ViewData["esito"].ToString();
+
+                <p>Voucher di risposta</p>
+                <p>@data</p>
+            }
+        }
+    </div>
+</div> *@

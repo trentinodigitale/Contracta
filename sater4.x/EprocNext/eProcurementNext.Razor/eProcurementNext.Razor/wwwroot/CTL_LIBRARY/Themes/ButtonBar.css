@@ -1,0 +1,30 @@
+TABLE.ButtonBar_Table
+{
+    BORDER-TOP: thin;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: transparent
+}
+.ButtonBar_Button
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #fff;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #696969;
+    TEXT-ALIGN: center;
+	border:none;
+	text-transform:uppercase;
+}
+.Button
+{
+    BORDER-RIGHT: #161a74 1px outset;
+    BORDER-TOP: #161a74 1px outset;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: #161a74 1px outset;
+    CURSOR: pointer;
+    COLOR: #161a74;
+    BORDER-BOTTOM: #161a74 1px outset;
+    FONT-FAMILY: verdana;
+    BACKGROUND-COLOR: #e9edf3;
+    TEXT-ALIGN: center
+}

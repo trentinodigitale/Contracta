@@ -1,0 +1,40 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/USERDocument.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject ITabManage _tabManage;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.DocumentPermissionModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+    //'response.write Request.QueryString
+    //'response.end
+
+    string RQS = GetQueryStringFromContext(Request.QueryString).Replace("<ID_USER>", CStr(session[eProcurementNext.Session.SessionProperty.IdPfu]));
+    RQS = GetQueryStringFromContext(Request.QueryString).Replace("%3CID_USER%3E" , CStr(session[eProcurementNext.Session.SessionProperty.IdPfu]));
+
+    string valIdDoc = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+    if (valIdDoc.ToUpper() == "<ID_AZI>")
+    {
+        TSRecordSet rs = cdf.GetRSReadFromQuery_("select pfuIdazi from profiliutente with(nolock) where  idPfu = " + session[eProcurementNext.Session.SessionProperty.IdPfu], ApplicationCommon.Application["ConnectionString"]);
+        if (rs.RecordCount == 0)
+        {
+            htmlToReturn.Write("Utente non presente nel DB");
+            throw new ResponseEndException(htmlToReturn.Out(), Response, "Utente non presente nel DB");
+        }
+
+        RQS = Replace( RQS , "<ID_AZI>"		 , CStr(rs["pfuIdazi"]));
+        RQS = Replace( RQS , "%3CID_AZI%3E"  , CStr(rs["pfuIdazi"]));
+    }
+    Response.Redirect("document.asp?" + RQS);
+}

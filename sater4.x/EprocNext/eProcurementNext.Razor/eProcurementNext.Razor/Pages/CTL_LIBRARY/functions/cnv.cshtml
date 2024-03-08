@@ -1,0 +1,10 @@
+@page "/CTL_LIBRARY/functions/CNV.asp"
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel
+@using static eProcurementNext.CommonModule.Basic
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+}
+@Html.Raw(CNV(GetParamURL(GetQueryStringFromContext(Request.QueryString), "TXT"), session))

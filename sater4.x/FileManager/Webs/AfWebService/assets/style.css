@@ -1,0 +1,305 @@
+﻿body {
+    text-align: left;
+    font-family: Verdana;
+    font-size: 12px;
+    max-width: 1260px;
+}
+
+a {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
+
+fieldset {
+    padding: 10px;
+    border: none;
+}
+
+legend {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+
+table th, table td {
+    padding: 5px;
+}
+
+.text-right {
+    text-align: right;
+}
+
+table.reporting-table {
+    width: 100%;
+    text-align: left;
+}
+
+
+    table.reporting-table th, table.reporting-table td {
+        padding: 3px 5px;
+        border: solid 1px #efefef;
+        text-align: left;
+    }
+
+    table.reporting-table th {
+        font-weight: bold;
+        background-color: #efefef;
+        width: 150px;
+        text-align: left;
+    }
+
+
+.progress-div {
+    display: inline-block;
+    width: 100%;
+    border: solid 1px #000;
+    height: 100%;
+    min-height: 15px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+    .progress-div .progress-bar {
+        width: 0%;
+        display: block;
+        background-color: green;
+        height: 100%;
+        color: #fff;
+    }
+
+#uploader_button {
+    padding: 8px 20px;
+    border: solid 1px #ccc;
+    margin-top: 10px;
+    display: inline-block;
+    background-color: #048f4c;
+    color: #fff;
+    font-size: 12px;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 4px;
+    border: none;
+    opacity: 0.8;
+}
+
+    #uploader_button:hover {
+        opacity: 1;
+    }
+
+#clear_button {
+    padding: 8px 20px;
+    border: solid 1px #ccc;
+    margin-top: 10px;
+    display: inline-block;
+    background-color: #CB1D15;
+    color: #fff;
+    font-size: 12px;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 4px;
+    border: none;
+    float: right;
+    opacity: 0.8;
+}
+
+    #clear_button:HOVER {
+        opacity: 1;
+    }
+
+
+#output {
+    font-size: 10px;
+    color: violet;
+}
+
+.SelectFile {
+    margin-bottom: 1em;
+}
+
+.Warning {
+    margin-bottom: 2em;
+}
+
+.EstensioniAmmesse {
+    color: #333
+}
+
+    .EstensioniAmmesse span {
+        color: #CB1D15;
+        font-weight: bold;
+        font-style: italic;
+    }
+
+.UploaderIpaddress, .TransmissionId, .StageElapsed, .Output, .SentBytes, .RemainingBytes, .TotalBytes {
+    display: none;
+}
+
+.MsgTable {
+    background: #efefef;
+    border-radius: 5px;
+    margin-bottom: 2em;
+}
+
+#error_container {
+    display: none;
+}
+
+.tdErrorMessage {
+    background: #CB1D15 !important;
+    color: #fff;
+    font-size: 1em;
+    font-weight: bold;
+    padding: 1em;
+}
+
+table.reporting-table tr.Error td {
+    padding: 1em;
+}
+
+table.reporting-table tr.Error th {
+    background: #990000;
+    color: #fff;
+}
+
+div.lock-div {
+    text-align: center;
+    border: none;
+    padding: 10px;
+    font-size: 20px;
+    /* font-weight: bold; */
+    background-color: orange;
+    color: #fff;
+    display: none;
+    margin-top: 10px;
+}
+
+    div.lock-div p {
+        margin: 5px;
+    }
+
+    div.lock-div.error {
+        background-color: red;
+    }
+
+    div.lock-div .lock-title {
+        display: block;
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    div.lock-div p {
+        font-size: 14px;
+        font-weight: normal;
+    }
+
+.uploaderoverlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    bottom: 0px;
+    right: 0px;
+    z-index: 10;
+    background: #fff;
+    opacity: 0.95;
+    border: 2px dashed #333;
+    display: none;
+}
+
+    .uploaderoverlay.active {
+        display: block;
+    }
+
+    .uploaderoverlay > p {
+        display: block;
+        text-align: center;
+        width: 100%;
+        color: #000;
+        margin: auto;
+        font-size: 18px;
+        margin-top: 140px;
+        font-weight: bold;
+        /* margin-top: 50%; */
+        /* height: calc(100vh); */
+        background: url("../img/DragDrop.png")+5px no-repeat;
+        padding: 20px 0px;
+    }
+
+span.DragDrop {
+    display: inline-block;
+    width: 150px;
+    height: 53px;
+    background: url("../img/DragDrop.png")bottom left no-repeat;
+    position: relative;
+    vertical-align: bottom;
+    line-height: 70px;
+    padding-left: 70px;
+    font-weight: bold;
+    color: #2f5c90;
+    font-size: 12px;
+}
+
+
+/*classi di stile per gli attach*/
+.GRID_ELENCO_FILE {
+    cursor: pointer;
+    margin: 0em;
+    padding: 0em;
+    width: 100%;
+}
+
+    .GRID_ELENCO_FILE td {
+        border-top: solid 1px #efefef;
+    }
+
+.ROW_ELENCO_FILE {
+    margin: 0em;
+    padding: 0em;
+}
+
+.CELL_DESCRIZIONE_ELENCO_FILE {
+    width: 100%
+}
+
+.Sep_Elenco_File {
+    display: none;
+    height: 1px;
+}
+
+.legend_ElencoFile {
+    display: none;
+    padding-left: 10px;
+}
+
+.ELENCO_FILE {
+    padding-left: 10px;
+    style ="display:none;"
+}
+
+.CELL_CERTIFICATO {
+    cursor: default !important;
+}
+
+.clear_button {
+    display: none;
+}
+/*fine classi di stile per gli attach*/
+
+
+table.MsgBox_Caption, table.MsgBox, table.MsgBox td, table.MsgBox table {
+    border: none;
+    text-align: center;
+	font-size: 1.1em;
+}
+
+table.MsgBox_Caption td {
+    font-weight: bold;
+    color: #CB1D15;
+    border: none;
+    font-size: 1em;
+}
+
+

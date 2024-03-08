@@ -1,0 +1,380 @@
+﻿@page "/Report/OFFERTA_BUSTA_AMM.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.TemplateReportModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.OFFERTA_BUSTA_AMMModel;
+@model eProcurementNext.Razor.Pages.Report.OFFERTA_BUSTA_AMMModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	string IDDOC = objDoc.mp_IDDoc;
+	var sqlParams = new Dictionary<string, object?>();
+}
+@{
+	htmlToReturn.Write($@"
+	<html>
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/main_base_print.css""  />
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/GridPrint.css""  />
+
+	<style>
+	.display_none
+	{{
+		display: none;
+
+	}}
+	</style>
+	<title>" + ApplicationCommon.CNV("OFFERTA") + $@"</title>
+	</head>");
+	void Header()
+	{
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+		if (imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" +ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);	
+		}
+		htmlToReturn.Write("</td></tr>");
+		htmlToReturn.Write($@"<tr><td align=""center"" valign=""top"">" + ApplicationCommon.CNV("HEADER_STAMPA_BUSTA_OFFERTA") + "</td></tr>");
+	}
+	dynamic stazioneappaltante(dynamic cod)
+	{
+		//'--recupero info ente
+		TSRecordSet rsEnte = null;
+		sqlParams.Clear();
+		sqlParams.Add("@codice",CStr(cod));
+		string strSQL = "select aziRagioneSociale from aziende with(nolock) where idazi = @codice";
+		//'response.write strSQL
+
+		rsEnte = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		rsEnte.MoveFirst();
+		return GetValueFromRS(rsEnte.Fields["aziRagioneSociale"]);
+	}
+	string recuperoTipoProcedura(string cod)
+	{
+		string _recuperoTipoProcedura = null;
+		sqlParams.Clear();
+		sqlParams.Add("@tipo","OFFERTA");
+		sqlParams.Add("@id", CStr(cod));
+		TSRecordSet rstipoproc = null;
+		string strSQL = "select c2.tipodoc,ISNULL(DB.TipoProceduraCaratteristica,'') as TipoProceduraCaratteristica,dbo.GetCodDom2DescML('Caratteristica',ISNULL(DB.TipoProceduraCaratteristica,''),'I') as desc_carat,db.ProceduraGara, dbo.GetDescDominioFromDztNome('ProceduraGara','I',ISNULL(db.ProceduraGara,'')) as Desc_ProceduraGara ";
+		strSQL = strSQL + " from ctl_doc c with(nolock) ";
+		strSQL = strSQL + " 		inner join ctl_doc C2 with(nolock) on C2.id=C.LinkedDoc ";
+		strSQL = strSQL + "			inner join document_bando DB with(nolock) on DB.idHeader=c2.id ";
+		strSQL = strSQL + "	where C.TipoDoc=@tipo and c.id = @id" ;
+
+		rstipoproc = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		rstipoproc.MoveFirst();
+
+		if(GetValueFromRS(rstipoproc.Fields["tipodoc"]) == "BANDO_SEMPLIFICATO" )
+		{
+			_recuperoTipoProcedura = "Bando Semplificato";
+		}
+		if (GetValueFromRS(rstipoproc.Fields["tipodoc"]) == "BANDO_GARA" && !string.IsNullOrEmpty(CStr(GetValueFromRS(rstipoproc.Fields["TipoProceduraCaratteristica"]))))
+		{
+			_recuperoTipoProcedura = GetValueFromRS(rstipoproc.Fields["desc_carat"]);
+		}
+		if(GetValueFromRS(rstipoproc.Fields["tipodoc"]) == "BANDO_GARA" && string.IsNullOrEmpty(CStr(GetValueFromRS(rstipoproc.Fields["TipoProceduraCaratteristica"]))))
+		{
+			_recuperoTipoProcedura = GetValueFromRS(rstipoproc.Fields["Desc_ProceduraGara"]);
+		}
+		return _recuperoTipoProcedura;
+
+
+	}
+	string infoOfferta (string cod,string param)
+	{
+		TSRecordSet rsofferta = null;
+
+		string _infoOfferta = "";
+		sqlParams.Clear();
+		sqlParams.Add("@tipo","OFFERTA");
+		sqlParams.Add("@id", CStr(cod));
+		string strSQL = "select C.idpfu,p.pfuNomeUtente + ' ' + p.pfuCognome as Responsabile ,C.Body,C.ProtocolloRiferimento ";
+		strSQL = strSQL + " from ctl_doc C with(nolock) ";
+		strSQL = strSQL + "		inner join profiliUtente P with(nolock) on P.idpfu=C.idpfu ";
+		strSQL = strSQL + " where C.tipodoc=@tipo and c.id = @id";
+
+		rsofferta = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		rsofferta.MoveFirst();
+		if(param == "Oggetto")
+		{
+			_infoOfferta = GetValueFromRS(rsofferta.Fields["Body"]);
+		}
+		if(param == "Registro_Bando")
+		{
+			_infoOfferta = GetValueFromRS(rsofferta.Fields["ProtocolloRiferimento"]);
+		}
+		if(param == "Responsabile" )
+		{
+			_infoOfferta = GetValueFromRS(rsofferta.Fields["Responsabile"]);
+		}
+		return _infoOfferta;
+	}
+	string DenominazioneATI(string cod)
+	{
+		string _DenominazioneATI = "";
+		TSRecordSet rsDenominazioneATI = null;
+		sqlParams.Clear();
+		sqlParams.Add("@tipo", "OFFERTA");
+		sqlParams.Add("@cod", CStr(cod));
+		string strSQL = "select CV.value ";
+		strSQL = strSQL + " from ctl_doc c with(nolock) ";
+		strSQL = strSQL + "		inner join ctl_doc_value CV with(nolock) on CV.IdHeader=c.Id and DSE_ID='TESTATA_RTI' and CV.DZT_Name='DenominazioneATI' ";
+		strSQL = strSQL + " where c.id = @cod and C.TipoDoc=@tipo";
+
+		rsDenominazioneATI = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if(rsDenominazioneATI.RecordCount >0)
+		{
+			rsDenominazioneATI.MoveFirst();
+			_DenominazioneATI = GetValueFromRS(rsDenominazioneATI.Fields["value"]);
+
+		}
+		else
+		{
+			_DenominazioneATI = "";
+		}
+		//'-- se il campo è vuoto recuperiamo la ragione sociale del fornitore
+		if(string.IsNullOrEmpty(_DenominazioneATI.Trim()))
+		{	sqlParams.Clear();
+			sqlParams.Add("@tipo", "OFFERTA");
+			sqlParams.Add("@id", CStr(cod));
+			strSQL = "select aziRagioneSociale ";
+			strSQL = strSQL + "	from ctl_doc c with(nolock) ";
+			strSQL = strSQL + "			inner join Aziende A with(nolock) on A.IdAzi = C.Azienda ";
+			strSQL = strSQL + "	where c.id = @id and C.TipoDoc=@tipo";
+
+			rsDenominazioneATI = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+			if(rsDenominazioneATI.RecordCount >0)
+			{
+				rsDenominazioneATI.MoveFirst();
+				_DenominazioneATI = GetValueFromRS(rsDenominazioneATI.Fields["aziRagioneSociale"]);
+			}
+		}
+		return _DenominazioneATI;
+	}
+	void info_concorrente(string cod)
+	{
+		TSRecordSet rsinfo_concorrente = null;
+		sqlParams.Clear();
+		sqlParams.Add("@tipo", "OFFERTA");
+		sqlParams.Add("@id", CStr(cod));
+		string strSQL = "select C.azienda,aziIndirizzoLeg + ' - ' + aziCAPLeg + ' ' + aziLocalitaLeg + ' (' + aziProvinciaLeg +') ' as aziIndirizzoLeg,'C.F. '+ vatValore_FT as cF, 'P.IVA ' + aziPartitaIVA as PIVA  ";
+		strSQL = strSQL + "	from ctl_doc c with(nolock) ";
+		strSQL = strSQL + "			inner join Aziende A with(nolock) on A.IdAzi = C.Azienda ";
+		strSQL = strSQL + "			inner join DM_Attributi with(nolock) on A.IdAzi = lnk and dztNome='codicefiscale' ";
+		strSQL = strSQL + "	where c.id = @id and C.TipoDoc=@tipo";
+
+		rsinfo_concorrente = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		rsinfo_concorrente.MoveFirst();
+		htmlToReturn.Write("<tr><td>" + GetValueFromRS(rsinfo_concorrente.Fields["aziIndirizzoLeg"]) + "</td></tr>");
+		htmlToReturn.Write("<tr><td>" + GetValueFromRS(rsinfo_concorrente.Fields["cF"]) + "&nbsp;" + GetValueFromRS(rsinfo_concorrente.Fields["PIVA"]) + "</td></tr>");
+	}
+	htmlToReturn.Write($@"
+	<body style=""min-width:1500px; padding-left:20px; padding-right:20px; padding-top:20px; padding-bottom:20px;"">
+
+	<table  border=0 width=""100%"">
+		<tr><td>
+		<table style=""font-weight:bold; align=center; vertical-align:center;"" width=""100%"" >");
+	Header();
+	htmlToReturn.Write($@"
+	</table>
+		</td></tr>
+
+		<tr><td>   
+		<table cellpadding=0 cellspacing=0>
+			 <thead>
+
+				<tr><td>&nbsp;</td></tr>	
+
+				<tr>
+				 <td nowrap style=""font-size:18px; align=left""><b>Stazione appaltante:</b> " + stazioneappaltante(DOC_FieldTecnical("COPERTINA", "Destinatario_Azi")) + $@"</td>
+				</tr>
+				<tr>
+				  <td nowrap style=""font-size:18px; align=left""><b>Tipo Procedura:</b> " + recuperoTipoProcedura(IDDOC) + $@"</td>
+				</tr>
+				<tr>
+				  <td style=""font-size:18px; align=left""><b>Titolo:</b> " + infoOfferta(IDDOC, "Oggetto") + $@"<b>e numero registro di sistema:</b> " + infoOfferta(IDDOC, "Registro_Bando") + $@" </td>
+				</tr>
+
+				<tr><td>&nbsp;</td></tr>	
+
+				</td></tr> ");
+	TSRecordSet rs1 = null;
+	TSRecordSet rs2 = null;
+	string concessione = "";
+	string datainvio = "";
+	string keymlng = "";
+	datainvio = DOC_FieldTecnical("TESTATA", "DataInvio");
+
+	if(!IsDate(datainvio))
+	{
+		datainvio = DateAndTime.DatePart("yyyy", DateAndTime.Now) + "-" + Strings.Right("00" + DateAndTime.DatePart("M", DateAndTime.Now), 2) + "-" + Strings.Right(CStr(DateAndTime.DatePart("d", DateAndTime.Now)), 2);
+
+		//datainvio = DateTime.Now.ToString("yyyy-MM-dd");
+
+	}
+	htmlToReturn.Write("</table>");
+	htmlToReturn.Write($@"<table border=""0"" width=""100%"">");
+
+	htmlToReturn.Write($@"
+	<tr><td>&nbsp;</td></tr>
+	<tr ><td style=""border:0px;"" ><label style=""font-size:18px; font-weight:bold; align:left"">");
+
+	htmlToReturn.Write(ApplicationCommon.CNV("Busta Amministrativa"));
+	htmlToReturn.Write($@"
+	<tr><td>&nbsp;</td></tr> 
+				</thead>
+
+				<tr>
+					<td style=""border:0px;"" >");
+	//dim ObjSession
+	//ObjSession = session("Session")
+	//set ObjSession(0) = Request.QueryString
+	//set ObjSession(1) = Request.form
+	//
+	//'-- Passiamo di nuovo anche la request all'indice 3 per permettere alla classe ctldb.blacklist di recuperare l'ip
+	//set ObjSession(3) = request
+	//set ObjSession(5) = session
+	//set ObjSession(6) = application
+	//ObjSession(9) = application("Server_RDS")
+	//ObjSession(10) = session("Funzionalita")' permessi utenti
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+	//session("Session") = ObjSession
+
+	//'--stampo la griglia dell'offerta del microlotto
+	//Set objDB = CreateObject("ctldb.clstabmanage")
+	Dictionary<string, Field> mp_Columns = new Dictionary<string, Field>();
+    Dictionary<string, Grid_ColumnsProperty> mp_ColumnsProperty = new Dictionary<string, Grid_ColumnsProperty>();
+
+	string strModelloOfferta = "OFFERTA_ALLEGATI";
+	//'--recupero modello griglia
+	LibDbModelExt mp_objDB = new LibDbModelExt();
+	
+	mp_objDB.GetFilteredFieldsWeb(strModelloOfferta,ref  mp_Columns, ref mp_ColumnsProperty, CStr(session["strSuffLing"]), 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+	//Set mp_objDB = nothing
+
+
+	//'mp_Columns.Remove "FNZ_DEL"
+	//'mp_Columns.Remove "EsitoRiga"
+	//'mp_Columns.Remove "TipoFile"
+	//'mp_Columns.Remove "Obbligatorio"
+	//'mp_Columns.Remove "RichiediFirma"
+
+	//'--colonna Esito
+
+	try
+	{
+		Grid_ColumnsProperty prop;
+		//'-- creo la property per nascondere la colonna 
+		prop = new Grid_ColumnsProperty();
+		prop.Hide = true;
+		
+		mp_ColumnsProperty.Remove("EsitoRiga");
+		mp_ColumnsProperty.Add("EsitoRiga",prop);
+		//'-- creo la property per nascondere la colonna 
+		prop = new Grid_ColumnsProperty();
+		prop.Hide = true;
+		
+		mp_ColumnsProperty.Remove("FNZ_DEL");
+		mp_ColumnsProperty.Add( "FNZ_DEL",prop);
+
+		//'-- creo la property per nascondere la colonna 
+		prop = new Grid_ColumnsProperty();
+		prop.Hide = true;
+		
+		mp_ColumnsProperty.Remove("TipoFile");
+		mp_ColumnsProperty.Add("TipoFile",prop);
+
+		//'-- creo la property per nascondere la colonna 
+		prop = new Grid_ColumnsProperty();
+		prop.Hide = true;
+		
+		mp_ColumnsProperty.Remove("Obbligatorio");
+		mp_ColumnsProperty.Add("Obbligatorio",prop);
+
+		//'-- creo la property per nascondere la colonna 
+		prop = new Grid_ColumnsProperty();
+		prop.Hide = true;
+		
+		mp_ColumnsProperty.Remove("RichiediFirma");
+		mp_ColumnsProperty.Add("RichiediFirma",prop);
+
+	}
+	catch
+	{
+
+	}
+	//'--recupero recordset dei dati per la griglia
+	Grid mp_objGrid = new Grid();
+	
+	mp_objGrid.Columns = mp_Columns;
+	mp_objGrid.ColumnsProperty = mp_ColumnsProperty;
+	string strColId = "";
+	bool bAutocol;
+	strColId = "Id";
+	bAutocol = false;
+
+	mp_objGrid.SetMatrixDisposition(false);
+	mp_objGrid.SetMatrix(objDoc.Sections["DOCUMENTAZIONE"].mp_Matrix);
+
+	mp_objGrid.id = "GridViewer";
+	mp_objGrid.width = "100%";
+	mp_objGrid.Editable = false;
+	mp_objGrid.Html(htmlToReturn);
+
+	//set mp_objGrid = nothing
+	htmlToReturn.Write($@"
+	</td>
+	</tr>
+	<tr><td>&nbsp;</td></tr>
+
+	<tr>
+	  <td nowrap style=""font-size:18px; align=left""><b>Ragione sociale del Concorrente: </b> " + DenominazioneATI(IDDOC) + $@" </td>
+	</tr>");
+	info_concorrente(IDDOC);
+
+	htmlToReturn.Write($@"
+	<br/><br/><br/>
+
+
+			</table>
+
+    </table>
+
+	</body>
+	</html>");
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+
+	}
+	catch
+	{
+
+	}
+}@Html.Raw(htmlToReturn.Out())

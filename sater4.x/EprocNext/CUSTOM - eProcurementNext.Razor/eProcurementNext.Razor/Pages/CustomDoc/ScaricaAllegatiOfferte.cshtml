@@ -1,0 +1,706 @@
+﻿@page "/CustomDoc/ScaricaAllegatiOfferte.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.Core.Storage;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.ScaricaAllegatiOfferteModel;
+@using Microsoft.VisualBasic;
+@using System.Diagnostics
+@using eProcurementNext.Razor;
+@using static eProcurementNext.CommonDB.Basic;
+@model eProcurementNext.Razor.Pages.CustomDoc.ScaricaAllegatiOfferteModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	//'--operazione non consentita fuori sessione
+	//on error resume next
+	string strCause = string.Empty;
+	string outputJSON = string.Empty;
+	string randomPerc = string.Empty;
+	//'--indica il tempo massimo per aggiungere file alla cartella fegli allegati
+	int nMaxSeconds = 2;
+	string captionCurrentOperation = "Scarica Allegati...";
+	int TotElements = 0;
+	int CurrentElement = 0;
+	int NextElement = 0;
+	int percentage = 0;
+	string finalResponseType = "file";
+	string output = "null";
+
+	//'--INPUT
+	//'--IDPDA	=id della procedura di aggiudicazione
+	//'--CONTESTO	= 
+	//'--			BUSTA_AMMINISTRATIVA 		= TUTTI GLI ALLEGATI DELLA BUSTA AMMINISTRATIVA DI TUTTE LE OFFERTE --OK
+	//'-- 		TECNICA_MONOLOTTO			= TUTTI GLI ALLEGATI BUSTA TECNICA DI TUTTE LE OFFERTE				--OK
+	//'-- 		ECONOMICA_MONOLOTTO			= TUTTI GLI ALLEGATI BUSTA ECONOMICA DI TUTTE LE OFFERTE			--OK
+	//'-- 		TECNICA_LISTA_LOTTI 		= TUTTI GLI ALLEGATI TECNICI DI TUTTI I LOTTI DI TUTTE LE OFFERTE	--OK
+	//'-- 		ECONOMICA_LISTA_LOTTI		= TUTTI GLI ALLEGATI ECONOMICI DI TUTTI I LOTTI DI TUTTE LE OFFERTE	--OK
+	//'-- 		TECNICA_DETTAGLIO_LOTTO 	= TUTTI GLI ALLEGATI TECNICI DEL LOTTO DI TUTTE LE OFFERTE			
+	//'-- 		ECONOMICA_DETTAGLIO_LOTTO 	= TUTTI GLI ALLEGATI ECONOMICI DEL LOTTO DI TUTTE LE OFFERTE
+
+	string IDPDA = GetParamURL(Request.QueryString.ToString(), "IDPDA");
+	string CONTESTO = GetParamURL(Request.QueryString.ToString(), "CONTESTO");
+	int IdPfu = session["IdPfu"];
+	string progress_mode = CStr(GetParamURL(Request.QueryString.ToString(), "progress_mode"));
+
+	//'progress_mode = "START"
+
+	//'--VALIDAZIONE INPUT
+	validate("IDPDA", GetParamURL(Request.QueryString.ToString(), "IDPDA").Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("CONTESTO", GetParamURL(Request.QueryString.ToString(), "CONTESTO"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("progress_mode", GetParamURL(Request.QueryString.ToString(), "progress_mode"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	Exception? eccezione = null;
+	int errNumber = 0;
+	try
+	{
+		switch (progress_mode.ToUpper())
+		{
+			case "START":
+				initProgress();
+				break;
+			case "STEPS":
+				doStep();
+				break;
+			case "END":
+				endProgress();
+				break;
+			case "CLOSE":
+				Clean_Area_Attach();
+				break;
+			default:
+				if (errNumber == 0)
+				{
+					errNumber = -1000;
+					eccezione = new Exception("progress_mode non supportato");
+					eccezione.Source = "ScaricaAllegatiOfferte.asp";
+				}
+				break;
+		}
+	}
+	catch(Exception ex)
+	{
+		eccezione = ex;
+	}
+	if (progress_mode.ToUpper() != "END")
+	{
+		Response.ContentType = "application/json";
+		htmlToReturn.Write(getOutput(eccezione));
+	}
+
+	void  initProgress()
+	{
+		captionCurrentOperation = "Inizializzazione in corso...";
+
+		strCause = "initProgress-Clean_Area_Attach";
+		//'-- 1. ripulisco area disco e area db
+		Clean_Area_Attach();
+
+		strCause = "initProgress-Get_Hash_Attach";
+		//'-- 2. recupero allegati da scaricare, a secondo del contesto. (li appoggio nella CTL_IMPORT per idpfu corrente tutti da elaborare) 
+		Get_Hash_Attach();
+
+		strCause = "initProgress-initElems";
+		//'-- 3. Recupero il numero totale di allegati da scaricare, ripristino i record come tutti "da fare" ed aggiorno i dati json di output
+		initElems();
+	}
+	//'--PER PULIRE LE AREE DB E DISCO PER L'UTENTE CHE EFFETTUA L'OPERAZIONE
+	void Clean_Area_Attach()
+	{
+		//--ELIMINO CARTELLE CON IDPFU SOTTO LA CARTELLA DEGLI ALLEGATI e file con IDPFU
+
+		//System.IO.File fso;
+		var folder = new DirectoryInfo(ApplicationCommon.Application["PathFolderAllegati"]);//GetDirectories(ApplicationCommon.Application["PathFolderAllegati"]);
+		var FilesFolder = folder.GetFiles(); 
+		//var FilesFolder = Directory.GetFiles(ApplicationCommon.Application["PathFolderAllegati"]);
+
+		strCause = "Clean_Area_Attach-Cancello tutti i file nella direcory allegati contenenti l'idpfu";
+		//'-- Cancello tutti i file nella direcory allegati contenenti l'idpfu oppure quelli più vecchi di un giorno con nome diverso "ctl_log_proc_errors.txt" 
+		foreach (var objFile in FilesFolder)
+		{
+			int  posDiesisTilde = Strings.InStrRev(objFile.Name, ("ALLEGATI_CONTESTO_" + CONTESTO + "_" + IDPDA + "_" + IdPfu).Replace(" ", ""));
+			long datafile_OLD = DateDiff("h", objFile.CreationTime, DateTime.Now.AddDays(- 1));
+			if((posDiesisTilde > 0 || datafile_OLD > 0 ) && objFile.Name != "ctl_log_proc_errors.txt")
+			{
+				//'fso.DeleteFile(Application("PathFolderAllegati") & "\" & objFile.name)
+				try
+				{
+					CommonStorage.DeleteFile(ApplicationCommon.Application["PathFolderAllegati"] + objFile.Name);
+				}
+				catch
+				{
+
+				}
+			}
+
+		}
+		//'-- Cancello tutte le sotto-directory nella direcory allegati contenenti l'IdPfu (ed i files in esse contenuti) oppure quelli più vecchi di un giorno 
+		strCause = "Clean_Area_Attach-Cancello tutte le sotto-directory nella direcory allegati contenenti l'IdPfu";
+
+		var dirs = folder.GetDirectories();
+		foreach(var dir in dirs)
+		{
+			int posDiesisTilde = Strings.InStrRev(dir.Name,("ALLEGATI_CONTESTO_" + CONTESTO + "_" + IDPDA + "_" + IdPfu).Replace(" ", ""));
+			long datafile_OLD = DateDiff("h", dir.CreationTime, DateTime.Now.AddDays(- 1));
+			if (posDiesisTilde > 0 || datafile_OLD > 0)
+			{
+				strCause = "Clean_Area_Attach-GetFolder[" + ApplicationCommon.Application["PathFolderAllegati"] + dir.Name + "]";
+				//'Set objFolder=fso.GetFolder(Application("PathFolderAllegati") & "\" & dir.name)	
+				//dynamic objFolder =
+				var objFolder = new DirectoryInfo(ApplicationCommon.Application["PathFolderAllegati"] + dir.Name);
+
+				strCause = "Clean_Area_Attach-objFolder.Delete [" + ApplicationCommon.Application["PathFolderAllegati"] + dir.Name + "]";
+
+				try
+				{
+					CommonStorage.DeleteDirectory(ApplicationCommon.Application["PathFolderAllegati"] + dir.Name);  
+				}
+				catch
+				{
+
+				}
+
+				//err.Clear
+				//on error goto 0
+			}
+		}
+		//'--ELIMINO DALLA TABELLA CTL_IMPORT COSE PREGRESSE
+		strCause = "Clean_Area_Attach-ELIMINO DALLA TABELLA CTL_IMPORT COSE PREGRESSE";
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@IdPfu", IdPfu);
+		string strSQLDelete = "delete ctl_import where idpfu = @IdPfu";
+		cdf.Execute(strSQLDelete, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+		//'response.write "Pulizia area utente" & idpfu 
+		//'response.write "<br><br>"
+	}
+	//'--RECUPERA A SECONDA DEL CONTESTO GLI ALLEGATI INTERESSATI
+	void Get_Hash_Attach()
+	{
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@CONTESTO", CONTESTO);
+		sqlParams.Add("@IDPDA", CInt(IDPDA));
+		sqlParams.Add("@IdPfu", IdPfu);
+		string strSQLHash = " exec GET_HASH_FOR_DOWNLOAD_ATTACH_CONTEXT @CONTESTO, @IDPDA, @IdPfu";
+		strCause = $"Get_Hash_Attach-chiamata alla stored per recupero allegati - {strSQLHash}";
+
+		//'response.write strSQLHash
+		//'response.end
+
+		cdf.Execute(strSQLHash, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+		//'response.write "Recupero Allegati Effettuato per il Contesto = " & CONTESTO 
+		//'response.write "<br><br>"
+	}
+	void initElems()
+	{
+		//'--controllo se ci sono allegati cifrati
+		strCause = "initElems-controllo se ci sono allegati cifrati";
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@IdPfu", IdPfu);
+		TSRecordSet RsAttach = cdf.GetRSReadFromQuery_("select idpfu from ctl_import with (nolock) where F=1 and idpfu = @IdPfu", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+		if(RsAttach.RecordCount >0)
+		{
+			errNumber = -1002;
+			eccezione = new Exception("Non tutti gli allegati richiesti sono disponibili decifratura in corso");
+			eccezione.Source = "ScaricaAllegatiOfferte.asp";
+			//err.number=-1002
+			//err.description = "Non tutti gli allegati richiesti sono disponibili decifratura in corso"
+			//err.source="ScaricaAllegatiOfferte.asp"
+		}
+		else
+		{
+			//'-- controllo che la dimensione totale sia sotto la soglia stabilita
+			int bF_TagliaSuperata;
+			bF_TagliaSuperata = 0;
+
+			strCause = "initElems-controllo se la dimensione dei file supera una soglia fissata";
+			RsAttach = cdf.GetRSReadFromQuery_("select cast ( isnull( sum( cast( C  as float ) ) / (1024 * 1024 )  , 0.0 ) as float  ) as Taglia,  cast ( dbo.parametri( 'ScaricaAllegatiOfferte.asp'  , 'MAX_SOGLIA_ALLEGATI' , 'DefaultValue' , '200' , -1 ) as float ) as MAX_SOGLIA_ALLEGATI from ctl_import with (nolock) where  isnull( C , '' ) <> '' and idpfu = @IdPfu", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+			if (RsAttach.RecordCount >0)
+			{
+				RsAttach.MoveFirst();
+				if( CDbl(RsAttach["Taglia"]) > CDbl(RsAttach["MAX_SOGLIA_ALLEGATI"]))
+				{
+					bF_TagliaSuperata = 1;
+				}
+			}
+			if (bF_TagliaSuperata == 1)
+			{
+				errNumber = -1002;
+				eccezione = new Exception("La dimensione totale dei file da scaricare super la dimensione massima fissata");
+				eccezione.Source = "ScaricaAllegatiOfferte.asp";
+				//err.number=-1002
+				//err.description = "La dimensione totale dei file da scaricare super la dimensione massima fissata"
+				//err.source="ScaricaAllegatiOfferte.asp"
+			}
+			else
+			{
+				//'-- controllo la presenza di file da scaricare
+				strCause = "initElems-recupero numero allegati";
+				RsAttach = cdf.GetRSReadFromQuery_("select count(*) as NumeroAllegati  from ctl_import with (nolock) where idpfu = @IdPfu", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+				if (RsAttach.RecordCount >0)
+				{
+					RsAttach.MoveFirst();
+					TotElements = CInt(RsAttach["NumeroAllegati"]!);
+				}
+				if (TotElements == 0)
+				{
+
+					//'finalResponseType="text"
+					//'output="Nessun allegato da scaricare"
+					//
+					//'captionCurrentOperation ="Nessun allegato da scaricare"
+					//'percentage = 100
+					//
+					//'Throw New Exception("Nessun lotto da elaborare")
+
+					errNumber = -1001;
+					eccezione = new Exception("Non ci sono allegati da scaricare");
+					eccezione.Source = "ScaricaAllegatiOfferte.asp";
+					//err.number=-1001
+					//err.description = "Non ci sono allegati da scaricare"
+					//err.source="ScaricaAllegatiOfferte.asp"
+				}
+			}
+		}
+	}
+	//'--COSTRUISCE LO ZIP CON GLI ALLEGATI INTERESSATI
+	void Build_Folder_Attach(int IdAttach )
+	{
+		captionCurrentOperation = "Generazione File Zip...";
+		//'response.write "Costruzione Zip Allegati Contesto =" & CONTESTO 
+		//'response.write "<br><br>"
+
+		//System.IO.File fso1;
+		//System.IO.File fs;
+
+		//'--leggere da configurazione path base
+		string tmpBase = ApplicationCommon.Application["PathFolderAllegati"];
+
+		//'tmpCurr = tmpBase & fs.GetTempName & "\"
+		string tmpCurr = tmpBase + "ALLEGATI_CONTESTO_" + CONTESTO + "_" + IDPDA + "_" + IdPfu + @"\";
+		tmpCurr = tmpCurr.Replace(" ", "");
+
+		string strcause = "Build_Folder_Attach-se non esiste creo la cartella = " + tmpCurr;
+		dynamic? folderCurr = null;
+		try
+		{
+			if (!Directory.Exists(tmpCurr))
+			{
+				folderCurr = Directory.CreateDirectory(tmpCurr);
+				//'Response.Write(folderCurr.Attributes)
+			}
+		}
+		catch
+		{
+			Directory.Delete(tmpCurr);
+			//'ShowError("errore scarica allegati:contattare l'amministratore")
+		}
+		string NomeCartella = "";
+		LibDbAttach objattach = new LibDbAttach();
+		strcause = "Build_Folder_Attach-recupero info allegato da elaborare";
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@IdAttach", IdAttach);
+		TSRecordSet RsAttach = cdf.GetRSReadFromQuery_("select A as Cartella, B as Att_Hash, C  from ctl_import with (nolock) where id = @IdAttach", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+		if(RsAttach.RecordCount >0)
+		{
+			RsAttach.MoveFirst();
+			while(!RsAttach.EOF)
+			{
+				//'response.write "cartella = " & RsAttach("Cartella") & " - Hash=" & RsAttach("Att_Hash") & "<br>"
+
+				//'--creo la cartella sul disco se non esiste dove salvare il file
+				strcause = $"Build_Folder_Attach-creo la cartella sul disco se non esiste dove salvare il file {CStr(RsAttach["Cartella"])}";
+				NomeCartella = CStr(RsAttach["Cartella"]).Replace(@"""", @"");
+				//'captionCurrentOperation = "Generazione File Zip..."
+				string tmpCurr1 = $@"{tmpCurr}{NomeCartella}\";
+				if (!Directory.Exists(tmpCurr1))
+				{
+					folderCurr = Directory.CreateDirectory(tmpCurr1);
+				}
+				//'--recupero blob file
+				strcause = "Build_Folder_Attach-recupero blob file";
+				sqlParams.Clear();
+				sqlParams.Add("@att_hash", CStr(RsAttach["att_hash"]));
+				string strSQLObj = "select Att_Name as Nomefile,Att_Cifrato from ctl_attach with(nolock) where att_hash=@att_hash";
+
+				//'response.write strSQLObj
+				TSRecordSet? RsAttachBlob = null;
+				string nomefile = "";
+				try
+				{
+					RsAttachBlob = cdf.GetRSReadFromQuery_(strSQLObj, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+					if (RsAttachBlob.RecordCount > 0)
+					{
+						RsAttachBlob.MoveFirst();
+						//'--salvo il file sul disco in una cartella temporanea
+
+						strcause = "Build_Folder_Attach-salvo il file sul disco in una cartella temporanea";
+						nomefile = CStr(RsAttachBlob["Nomefile"]);
+
+						//	'--se esiste un file con lo stesso nome aggiungo un contatore prima dell'estensione 
+						strcause = "Build_Folder_Attach-se esiste un file con lo stesso nome aggiungo un contatore prima dell'estensione ";
+						nomefile = CheckEsitenza_RenameFileAllegato(nomefile, tmpCurr1);
+
+						//'--if RsAttachBlob("Att_Cif2rato")=0 then
+						strcause = "Build_Folder_Attach-salvo il file sul file system";
+					
+						//RsAttachBlob.Fields["BlobFile"].ActualSize
+						eProcurementNext.CommonDB.Basic.saveFileFromRecordSet("Att_Obj", "ctl_attach", "att_hash", CStr(RsAttach["att_hash"]),$"{tmpCurr1}{nomefile}", ApplicationCommon.Application.ConnectionString);
+						//'else
+						//
+						//'--file ancora cifrato
+						//'--creo un file txt con nome (cifrato).txt
+						//'	CreateAfile( cstr(tmpCurr1 & nomefile) )
+
+						//'end if
+
+					}
+					//'--in caso di errore (fine spazio ad esempio) provo cancellare la cartella temporanea e mi fermo 	
+				}
+				catch 
+				{
+					Directory.Delete(nomefile);
+					//'ShowError("errore scarica allegati")
+				}
+				RsAttach.MoveNext();
+
+			}
+			//' Creo l'oggetto Zip
+			//'strcause="Build_Folder_Attach-Creo l'oggetto AFUtils.Zip"
+			//'Dim objZip
+			//'Set objZip = Server.CreateObject("AFUtils.Zip")
+			//'-----tempNameZip = fs.GetTempName
+			//
+			//'objZip.Pack tmpCurr , tmpBase & tempNameZip & "_ALLEGATICONTESTO_" & CONTESTO & "_" & IDPDA & "_" & session("idPfu")&".zip"
+			//'strcause="Build_Folder_Attach-aggiungo il file allo zip"
+			//'objZip.Pack tmpCurr , tmpBase & "ALLEGATI_CONTESTO_" & CONTESTO & "_" & IDPDA & "_" & idpfu & ".zip"
+		}
+
+	}
+	//'-- partendo dalla cartella degli allegati generata produce lo ZIP da dare in output
+	void Build_Zip_Attach(  )
+	{
+		//'--leggere da configurazione path base
+		string tmpBase = ApplicationCommon.Application["PathFolderAllegati"];
+		//'tmpCurr = tmpBase & fs.GetTempName & "\"
+		string tmpCurr = tmpBase + "ALLEGATI_CONTESTO_" + CONTESTO + "_" + IDPDA + "_" + IdPfu + @"\";
+		tmpCurr = tmpCurr.Replace(" ", "");
+
+		//' Creo l'oggetto Zip
+		string strcause = "Build_Zip_Attach-Creo l'oggetto AFUtils.Zip";
+		Zip objZip;
+		objZip = new Zip();
+		strcause = "Build_Zip_Attach-aggiungo il file allo zip";
+		objZip.Pack(tmpCurr, (tmpBase + "ALLEGATI_CONTESTO_" + CONTESTO + "_" + IDPDA + "_" + IdPfu + ".zip").Replace(" ", ""));
+	}
+	//'-- ritorna un rs passata la query
+	//Public function GetRS( strSql )
+	//	
+	//	'on error resume next
+	//	
+	//	dim obj
+	//	dim rs
+	//	set rs = nothing
+	//	
+	//	set obj = server.CreateObject("ctldb.clsTabManage")
+	//	set rs = obj.GetRSReadFromQuery( cstr(strSql ) , cstr(session("Session")(8)) )
+	//
+	//	set obj = nothing
+	//	
+	//	set GetRS = rs
+	//	
+	//	'err.clear
+	//	
+	//End function
+
+	string  CheckEsitenza_RenameFileAllegato(string strNomeFile ,string NomeCartella  )
+	{
+		int CurrentVersion = 0;
+		
+		string strHeadFile = "";
+		//System.IO.File fso;
+
+		string[] aInfoFile = strNomeFile.Split(".");
+		string ExtFile = aInfoFile[aInfoFile.Length - 1];
+		//'--se stiamo nel caso di allegato firmato e c'è la doppia estensione metto il versioning prima del penultimo punto
+		//'--es. test.pdf.p7m -> test[1].pdf.p7m
+		if((aInfoFile.Length-1)>=2)
+		{
+			ExtFile = aInfoFile[(aInfoFile.Length-1) - 1] + "." + aInfoFile[aInfoFile.Length-1];
+		}
+		strHeadFile = Strings.Left(strNomeFile,strNomeFile.Length -(ExtFile.Length)+1);
+		//System.IO.File fso = null;
+		while(CommonStorage.ExistsFile(NomeCartella + strNomeFile))
+		{
+			strNomeFile = strHeadFile + "[" + CurrentVersion + "]" + "." + ExtFile;
+			CurrentVersion = CurrentVersion + 1;
+		}
+		//'set FilesFolder=nothing
+		return strNomeFile;
+	}
+	string getOutput(Exception? ex)
+	{
+		string status = string.Empty;
+		status = "OK";
+		string err_source;
+		err_source = "null";
+		string err_desc;
+		err_desc = "null";
+		if(ex != null)
+		{
+			err_desc = ex.Message;
+			//	'--se non si tratta di errori/messaggi applicativi traccio nell'event viewer e restituisco messaggio informativo generico per l'utente
+			//'--traccio errore nell'event viewer
+			if (errNumber != -1000 && errNumber != -1001 && errNumber != -1002)
+			{
+				TracciaErrore(strCause, ex.Message, 0, "ScaricaAllegatiOfferte.asp - MODE=" + progress_mode);
+				//'-in caso di eccezioni setto il messaggio generico per l'utente
+				err_desc = $"NO_ML###{ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO")}{DateAndTime.Now}";
+			}
+			err_source = ex.Source;
+			status = "ERROR";
+		}
+		
+		//'If Not IsNothing(errore) Then
+		//if err.number <> 0 then
+		//	
+		//	err_desc = err.description
+		//	
+		//	'--se non si tratta di errori/messaggi applicativi traccio nell'event viewer e restituisco messaggio informativo generico per l'utente
+		//	if err.number <> -1000 and err.number <> -1001 and err.number <> -1002 then
+		//	
+		//		'--traccio errore nell'event viewer
+		//		TracciaErrore( strCause,  err.description, err.number, "ScaricaAllegatiOfferte.asp - MODE=" & progress_mode )
+		//		'-in caso di eccezioni setto il messaggio generico per l'utente
+		//		err_desc =  "NO_ML###" & cnv("INFO_UTENTE_ERRORE_PROCESSO") & now() 
+		//		
+		//	end if
+		//	
+		//	err_source = err.Source
+		//	
+		//	status = "ERROR"
+		//	
+		//	
+		//	
+		//End If
+		string outJson = "";
+		//'--	"""finalResponseType"":""file""," & _
+		
+		outJson = $@"{{" +
+		@"""TotElements"":" + TotElements + "," +
+		@"""CurrentElement"":" + CurrentElement + "," +
+		@"""NextElement"":" + NextElement + "," +
+		@"""percentage"":" + percentage + "," +
+		@"""captionCurrentOperation"":""" + captionCurrentOperation + @"""," +
+
+		@"""finalResponseType"":""" + finalResponseType + @"""," +
+		@"""currentStatus"":""" + status + @"""," +
+		@"""output"":""" + output + @"""," +
+		@"""error"":{" +
+		@"""source"":""" + err_source + @"""," +
+		@"""description"":""" + escapeJson(err_desc) + @"""" +
+		"}}";
+		
+
+		return outJson;
+	}
+	void doStep()
+	{
+		//'-- 0. Recupero il numero totale di allegati da scaricare
+		strCause = "doStep-Recupero il numero totale di allegati da scaricare";
+		initElems();
+
+		//'--lo faccio tante volte per nMaxSeconds secondi
+
+		DateTime dStartTime = DateAndTime.Now;
+		while(DateDiff("s",dStartTime,DateAndTime.Now) <  nMaxSeconds)
+		{
+			//'-- 1. Recupero il prossimo id allegato da aggiungere allo zip
+			strCause = "doStep-Recupero il prossimo id allegato da aggiungere allo zip";
+			int idElem = 0;
+			idElem = getNextElemen();
+			if(idElem >0)
+			{
+				//'-- 2. genero il pdf
+				//'Dim nomePDF As String = generaPdfSingolo(IIf(isMultiLotto, idElem, mp_offerta_fittizia))
+
+				//'--aggiungo il file indicato nello ZIP
+				strCause = "doStep-aggiungo il file indicato nello ZIP";
+				Build_Folder_Attach(idElem);
+
+				//'-- 4. metto l'elemento come 'fatto'
+				strCause = "doStep-metto l'elemento come 'fatto'";
+				elemDone(idElem);
+
+			}
+		}
+		//'-- 5. Aggiorno i contatori per l'output json 
+		strCause = "doStep-Aggiorno i contatori per l'output json";
+		doPercentage();
+
+	}
+	int getNextElemen()
+	{
+        var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@IdPfu", IdPfu);
+		string strSQL = "select top 1 id,E as CurrentElement from ctl_import with(nolock) where idpfu  = @IdPfu and D = '' order by 1 asc";
+		int nextElem= 0;
+		nextElem = -1;
+
+		TSRecordSet rsDati = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+		if(rsDati.RecordCount >0)
+		{
+			nextElem = CInt(rsDati["id"]!);
+			CurrentElement = CInt(rsDati["CurrentElement"]!);
+		}
+		else
+		{
+			//'-- consideriamo tutto fatto
+			NextElement = TotElements;
+		}
+		return nextElem;
+
+	}
+	void elemDone(int idElem )
+	{
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@idElem", idElem);
+		string strSQLDone = " update ctl_import set D='fatto' where id = @idElem";
+		//'response.write strSQLHash
+		//'response.end
+
+		cdf.Execute(strSQLDone, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+	}
+	void doPercentage()
+	{
+		int rimanenti = TotElements - CurrentElement;
+		percentage = CInt((100 - ((rimanenti / TotElements) * 100)));
+	}
+	string escapeJson(string str )
+	{
+		//'--ripulisco i caratteri non ammessi
+		string _escapeJson = NormString(str);
+		string acapo = "";
+		acapo = CStr(Strings.Chr(13) + Strings.Chr(10));
+
+		_escapeJson = _escapeJson.Replace(@"\", @"\\");
+		_escapeJson = _escapeJson.Replace(@"""", @"\""");
+		_escapeJson = _escapeJson.Replace(acapo, " ");
+		return _escapeJson;
+	}
+	string NormString(string str)
+	{
+		string strOk = "";
+		strOk = @" ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.:,;''|!""£$%&/()=?^+*§°çèéòàùì#";
+		string Tmp = "";
+		Tmp = str;
+		string ValueOut ="";
+		ValueOut = "";
+		while(!string.IsNullOrEmpty(Tmp))
+		{
+			string NCH = "";
+			NCH = Strings.Left(Tmp, 1);
+			if( strOk.Contains(NCH.ToUpper(), StringComparison.Ordinal))
+			{
+				ValueOut = ValueOut + NCH;
+			}
+			Tmp = Strings.Right(Tmp, Tmp.Length - 1);
+		}
+		return ValueOut;
+	}
+	void endProgress()
+	{
+		//'-- generiamo lo zip dalla cartella con gli allegati 
+		Build_Zip_Attach();
+		//'-- 1. Diamo il file ZIP  in output
+		string strcause = "endProgress-Diamo il file ZIP  in output";
+		string strFilePath = string.Empty;
+
+		string tmpBase = ApplicationCommon.Application["PathFolderAllegati"];
+
+		strFilePath = tmpBase + "ALLEGATI_CONTESTO_" + CONTESTO + "_" + IDPDA + "_" + IdPfu + ".zip";
+		strFilePath = strFilePath.Replace(" ", "");
+
+		//'file = "ALLEGATIDOCUMENTO" & IDDOC & "" & session("idPfu") & ".zip"
+		//'file = session("idPfu") & ".zip"
+		strcause = "endProgress-istanzio ADODB.Stream";
+		//StreamReader objStream = new StreamReader(strFilePath);
+		//System.IO.File.Open(strFilePath, FileMode.Open );
+		//objStream.Type = adTypeBinary;
+
+		Response.Headers.TryAdd("Content-Disposition", "attachment; filename=ALLEGATI " + CONTESTO + ".zip");
+		LoadFromFile(strFilePath,htmlToReturn,HttpContext);
+
+		//'response.write "dopo la lettura ADODB.Stream : " & now()
+
+		//'Response.ContentType = "application/zip"
+		//'Response.BinaryWrite objStream.Read
+		//'--modificata per evitare buffer limit di IIS
+		//'--adesso faccio il download a pezzi di 10000 byte del file
+		strcause = "endProgress-faccio il download a pezzi di 10000 byte del file";
+		int block  = 0;
+		block = 10000;
+		//Do While Not objStream.EOS And Response.IsClientConnected
+		//Response.BinaryWrite objStream.Read(block)
+		//Response.Flush()
+		//Loop
+		//FileStream fs = new FileStream(strFilePath, FileMode.Open, FileAccess.Read);
+		//byte[] b = new byte[1024];
+		//int len;
+		//int counter = 0;
+		//while (true)
+		//{
+		//	len = fs.Read(b, 0, b.Length);
+		//	byte[] c = new byte[len];
+		//	b.Take(len).ToArray().CopyTo(c,0);
+		//	htmlToReturn.BinaryWrite(HttpContext, c);
+		//	if(len == 0 || len < 1024){
+		//		break;
+		//	}
+		//	counter++;
+		//}
+
+
+			//objStream.Close
+			//Set objStream = Nothing
+
+			//'-- 2. cancelliamo i file temporanei																																																																																																																														//objStream.Close
+		//'-- 2. cancelliamo i file temporanei
+		strcause = "endProgress-cancelliamo i file temporanei";
+		Clean_Area_Attach();
+		finalResponseType = "text";
+		output = "Scarica Allegati Completato";
+	}
+	void  CreateAfile (string NomeFile )
+	{
+		//System.IO.File fs;
+		StreamWriter a  = System.IO.File.CreateText(NomeFile + "(cifrato).txt");
+		a.WriteLine("Il file non è disponibile perché ancora cifrato");
+		//a.Close();
+	}
+	void TracciaErrore(string source, string text, int tipo, string oggetto)
+	{
+		Exception e = new Exception(text);
+        e.Source = source;
+        StackTrace st = new StackTrace(true);
+		e = eProcurementNext.CommonDB.Basic.SetStackTrace(e, st);
+ 
+
+        // oltre allo StackTrace nel contesto aggiungere eventuali altre 
+        // informazioni che possano essere d'aiuto a chi dovrà valutare l'errore
+        string contesto = st.ToString();
+        TraceErr(e, ApplicationCommon.Application.ConnectionString, contesto);
+	}
+}
+@Html.Raw(htmlToReturn.Out())

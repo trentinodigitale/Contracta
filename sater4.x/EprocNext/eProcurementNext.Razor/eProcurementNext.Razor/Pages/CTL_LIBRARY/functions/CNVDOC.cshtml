@@ -1,0 +1,16 @@
+﻿@page "/CTL_LIBRARY/functions/CNVDOC.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonModule
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel
+@using static eProcurementNext.CommonModule.Basic
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    htmlToReturn.Write(ApplicationCommon.CNV(HtmlEncode(GetParamURL(Request.QueryString.ToString(), "TXT"))));
+}
+@Html.Raw(htmlToReturn.Out())

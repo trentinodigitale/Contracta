@@ -1,0 +1,225 @@
+<style type="text/css">
+BODY
+{
+    FONT-SIZE: 3px;
+    BACKGROUND-REPEAT: repeat;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: underline
+}
+DIV
+{
+    FONT-SIZE: 5px
+}
+.BodyPositionalModel
+{
+    BACKGROUND-COLOR: white
+}
+.TextFieldCover
+{
+    BORDER:1px solid #96B0D4;
+	PADDING-left:3px;
+    FONT-SIZE: 10pt;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none
+}
+.SelectFieldCover
+{
+    BORDER:1px solid #96B0D4;
+	PADDING-left:3px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+}
+.FontLabelCover
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.FontTitleCover
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.LegendTableStyle
+{
+    BORDER:1px solid #96B0D4;
+    PADDING-LEFT: 3px;
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    COLOR: #333;
+    BACKGROUND-COLOR: white;
+}
+.LegendCellStyle
+{
+    FONT-SIZE: 12px;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.PlugInControlStyle
+{
+    BACKGROUND-COLOR: aqua
+}
+TABLE.GridLegalPub
+{
+    BORDER-RIGHT: 1px inset;
+    BORDER-TOP: 1px inset;
+    BORDER-LEFT: 1px inset;
+    BORDER-BOTTOM: 1px inset
+}
+TD.CellGridLegalPub
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+INPUT.ButtonHierarchiesField
+{
+    BORDER:1px solid #96B0D4;
+	PADDING-LEFT: 3px;
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: silver;
+    TEXT-DECORATION: none
+}
+.FontLabelObblig
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+TD.CellGridCompanyLogo
+{
+    BORDER-RIGHT: lightgrey 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px;
+    BACKGROUND-COLOR: white
+}
+INPUT.TextFieldCoverLocked
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-DECORATION: none
+}
+.FontLegalPub
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.FontLegalPubBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+TABLE.GridContainer
+{
+    WIDTH: 100%
+}
+TD.CellGridContainer
+{
+}
+.FontLinkLabelCover
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: underline
+}
+TEXTAREA.FontTextAreaNotEditable
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: whitesmoke
+}
+TEXTAREA.FontTextAreaEditable
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: arial
+}
+.sottotitoloBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: #708090;
+    FONT-FAMILY: arial
+}
+.CellIntestGridProductsDoc
+{
+    BORDER-RIGHT: 1px;
+    PADDING-RIGHT: 1px;
+    BORDER-TOP: 1px;
+    PADDING-LEFT: 1px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 11pt;
+    PADDING-BOTTOM: 1px;
+    MARGIN: 1px;
+    BORDER-LEFT: 1px;
+    PADDING-TOP: 1px;
+    BORDER-BOTTOM: 1px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none
+}
+.Foglie
+{
+    FONT-SIZE: 9pt;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.FontLabelCoverLight
+{
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.FontLabelCoverHight
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 13pt;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+</style>

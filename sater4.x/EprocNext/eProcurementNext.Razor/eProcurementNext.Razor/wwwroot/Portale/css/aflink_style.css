@@ -1,0 +1,500 @@
+﻿/* STILI per la lista dei bandi */
+
+#div_rss_lista .moduletable
+{
+  overflow-x: none;
+  /*overflow-y: auto;*/
+  overflow-y: none;
+}
+
+
+
+
+#main #paginazione  ul {
+  margin-left: 0;
+  padding-left: 0;
+  display: inline;
+  } 
+
+#main #paginazione  ul li {
+  margin-left: 0;
+  margin-bottom: 0;
+  padding: 2px 15px 5px;
+  /*border: 1px solid #000;*/
+  list-style: none;
+  display: inline;
+  color:#bbb;
+  font-size:1.1em;
+  }
+ #paginazione a{ color:#ddd;}
+ .table-lista-bandi{ margin-bottom:inherit;}
+ #main .item-page table.table-lista-bandi{width:99.9%;}
+ 
+.div-paginazione {
+  text-align: right;
+  background:#666;
+  /* margin-bottom: 10px;
+ background:url("../images/nature/sf.gif") top left repeat-x;*/
+}
+  
+    
+#main #paginazione  ul li.here {
+  list-style: none;
+  display: inline;
+  font-weight:bold;
+  color:#fff;
+  }
+
+html {
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  vertical-align: baseline;
+}
+
+#suggerimento {
+  background-color: #FFFFCC;
+  background-position: 100% 0;
+  color: #333333;
+  font-size: 13px;
+  margin: 10px auto;
+  overflow: auto;
+  padding: 20px;
+  position: absolute;
+  cursor: help;
+}
+
+a {
+  text-decoration: none;
+ color:#CB1D15;
+}
+
+table {
+  border: 1;
+  
+  width: 99%;
+  /*position: relative;*/
+  top: 1px;
+}
+
+th {
+  background-color: #ececec;
+  border: 1px solid #666;
+  color: white;
+  /*cursor: pointer;*/
+  font-family: Arial;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin: 0;
+  padding: 8px 3px;
+  vertical-align: top;
+  height: 40px;
+}
+
+.Heading1 {
+  width: 300px;
+  vertical-align: top;
+}
+
+.Headingtd {
+  width: 105px;
+  height: 50px;
+}
+
+td {
+  
+}
+
+td.RG {
+  text-align: center;
+}
+
+
+/*BUTTON*/
+.bottone,.bottone:visited { /* botones genéricos */
+  /*background:
+    url(http://sites.google.com/site/zavaletaster/Home/overlay.png)
+    repeat-x;*/
+  display: inline;
+  padding: 5px 10px 6px;
+  color: #FFF;
+  text-decoration: none;
+  /*border-radius:4px;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;*/
+  border-top: 0px;
+  border-left: 0px;
+  border-right: 0px;
+  border-bottom: 0px; /*1px solid rgba(0, 0, 0, 0.25);*/
+  /*position: relative;*/
+  cursor: pointer;
+  height: 20px;
+
+}
+
+bottone::-moz-focus-inner,input[type="reset"]::-moz-focus-inner,input[type="button"]::-moz-focus-inner,input[type="submit"]::-moz-focus-inner,input[type="file"]>input[type="button"]::-moz-focus-inner
+  {
+  border: none;
+}
+
+.bottone:hover {
+  background-color: #111;
+}
+
+.bottone:active {
+  top: 1px;
+}
+
+.large.bottone,.large.bottone:visited {
+  font-size: 14px;
+  padding: 8px 14px 9px;
+}
+
+.pink.bottone {
+  background-color: #ccc;
+  color:#333;/*
+  border-radius:10px 10px 0px 0px;
+    -webkit-border-radius: 10px 10px 0px 0px;
+    -moz-border-radius: 10px 10px 0px 0px;*/
+}
+
+
+.pink.bottone:hover {
+  text-decoration: underline;/*
+  border-radius:10px 10px 0px 0px;
+    -webkit-border-radius: 10px 10px 0px 0px;
+    -moz-border-radius: 10px 10px 0px 0px;*/
+}
+
+.active.bottone {
+  background-color:#666;
+ /* border-radius:10px 10px 0px 0px;
+    -webkit-border-radius: 10px 10px 0px 0px;
+    -moz-border-radius: 10px 10px 0px 0px;*/
+}
+
+
+table thead tr th{
+  background-color:#666;
+  color:#ececec;
+  font-size:12px;
+  font-weight:normal;
+  padding:5px 10px;
+  vertical-align:middle;
+  height:10px;
+  border:1px solid #CCC;
+}
+
+table#template_doc {
+  border:1px solid #CCCCCC;
+  border-collapse:collapse;
+  margin:0 auto;
+  width:99.8%;
+  border-spacing:0;
+}
+
+.GridPrintProducts {
+  width:100%;
+}
+
+  /* STILI Dettaglio del bando */
+
+table#template_doc{border-collapse:collapse; border:1px solid #666; width:99.8%; }
+table#template_doc thead th{ font-weight:normal;background-color:#666; color:#fff; font-size:16px; vertical-align:middle; padding:15px 10px;}
+
+table#template_doc thead th h1
+{
+	color:white;
+}
+
+table#template_doc table{margin:0px;}
+table#template_doc tbody tr th{ text-align:left; vertical-align:middle; font-weight:bold; /* padding:7px 5px;*/ vertical-align:middle; color:#333; background:#ccc; font-size:12px; width:20%;}
+table#template_doc tbody th, td{/*border:1px solid #CCC;*/  line-height:1.1; }
+#mb_content input, #mb_content textarea { background:#EFEFEF; border:1px solid #ccc; padding:3px; }
+#mb_content input:hover, #mb_content textarea:hover{ border-color:#666;}
+#mb_content input:focus, #mb_content textarea:focus {border-color:#666; background:#fff;}
+
+/*table#template_doc tbody td{padding:5px;width:64%;}*/
+table#template_doc tbody td{padding:5px;}
+table#template_doc tbody td.tblcontainer{padding:0px; border-left:1px solid #CCC; padding:1px;}
+table#template_doc table{border:1px solid #ccc; width:95%; margin:2%; border-collapse:collapse;}
+table#template_doc table td, table#template_doc table th, table#template_doc td{ border:1px solid #888;}
+#main .item-page table#template_doc table{ width:95%;}
+table#template_doc td.CellIntestGrid{background-color:#ccc; color:#333; font-size:1em; vertical-align:middle; padding:5px 10px; font-weight:bold; }
+table#template_doc td.CellIntestGridProductsDoc{background-color:#CCC; color:#000; font-size:1em; vertical-align:middle; padding:5px 10px; font-weight:bold; }
+table#template_doc td.CellIntestGrid1{background-color:#CCC; color:#000; font-size:1em; vertical-align:middle; padding:5px 10px; font-weight:bold; }
+table#template_doc td.CellGridPrintProducts{ font-size:1.0em;}
+table#template_doc td.Cell1GridProducts1{ font-size:1.0em;}
+table#template_doc td.CellGridTypeRow4_Bold{ font-size:1.0em;background-color:#d7e1ff; FONT-STYLE: oblique;FONT-WEIGHT: bolder;}
+table#template_doc td.CellGridNumericPrintProducts{ font-size:1.0em;}
+table#template_doc td.CellNumeric1{ font-size:1.0em;}
+table#template_doc td.CellGridTypeRow4_Bold_Numeric{ font-size:1.0em;background-color:#d7e1ff; FONT-STYLE: oblique;FONT-WEIGHT: bolder;}
+table#template_doc td.PrintColsOfid{ border:0px; font-size:0.8em;}
+table#template_doc td.PrintValuesOfid{ border:0px; font-size:0.8em; text-align:left;}
+
+
+/* css validazione form */
+#FormInsQuesito fieldset {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #c0c0c0;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+}
+
+#FormInsQuesito ul {
+  list-style: none;
+}
+
+#FormInsQuesito li {
+  position: relative;
+}
+
+#FormInsQuesito [type=text],
+/*#FormInsQuesito [type=submit],*/
+#FormInsQuesito textarea {
+  margin-top: 3px;
+  padding: 3px;
+  border: 1px solid #ccc;
+  background:#efefef;
+  margin-bottom: 10px;
+}
+div#campi_invio_quesito input#OperatoreEconomico{ width:500px;}
+
+/*#FormInsQuesito [type=check],
+#FormInsQuesito [type=radio],
+#FormInsQuesito [type=submit] {
+  cursor: pointer;
+}*/
+
+#FormInsQuesito label {
+  display: block;
+}
+
+#FormInsQuesito [type=check] + label,
+#FormInsQuesito [type=radio] + label {
+  display: inline-block;
+  cursor: pointer;
+}
+
+#FormInsQuesito input:hover, #FormInsQuesito textarea:hover{border-color:#666;}
+#FormInsQuesito input:focus, #FormInsQuesito textarea:focus{background:#fff; border-color:#666;}
+#FormInsQuesito input#captchacode{ font-weight:bold; color:#666;}
+
+#FormInsQuesito .validation-failed {
+  border-color: #F5A91C;
+  background-color: #efefef;
+}
+
+#FormInsQuesito .validation-advice {
+  padding-bottom: 5px;
+  font-weight: bold;
+  color: #ff0000;
+}
+
+#FormInsQuesito #myResult {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #0000ff;
+  background-color: #ddddff;
+}
+
+#FormInsQuesito #myResult:empty {
+  border-width: 0;
+  padding: 0;
+}
+
+#FormInsQuesito .spinner {
+  border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  background-color: #f0f0f0;
+}
+
+#FormInsQuesito .overTxtLabel {
+  color: #888888;
+}
+
+
+/* STILI per la modale di ricerca */
+    #body_modal_search {
+    /*background-color:#256662;*/
+    color:#333;
+    font-family:Arial, Helvetica, sans-serif;
+	z-index:1;
+    
+    }
+      
+    .search_Flags {
+      font: 12px;
+      font-weight:bold;
+      color:#333;
+    }
+    
+    #mb_content {
+    background-color:#fff;
+    }
+    
+    #mb_box h4 {
+    /* background-image:url(http://afsvm026/registrazione/images/icona_div.gif); */
+    background-posit  ion:0 50%;
+    background-repeat:no-repeat;
+    color:#666;
+    font-size:1em;
+    font-weight:bold;
+    text-transform:uppercase;
+    text-align: left;
+    margin-bottom:10px;
+	z-index:2;
+  }
+  #mb_content table { border-top:1px solid #ccc; border-bottom:1px solid #ccc; margin-bottom:15px;}
+  #mb_content table td{ padding:10px;}
+  #mb_box {
+    /*background-color:#f9efcc;*/
+    margin-top:15px;
+    padding:10px 1px;
+    position: absolute;
+    top: 50%; 
+    height: 150px; 
+    margin-top: -105px;
+    margin-right: 20px;
+	z-index:-2;
+   }
+   
+	/*#mb_box.ricerca_mb_box{ margin-top: -190px;}*/
+    #mb_box.ricerca_mb_box{ margin-top: -180px;}
+  
+  #mb_button {
+  /*border-top: 1px solid #6E6E6E;*/
+  margin-right:20px;
+  margin-top:10px;
+  }
+  .articolo_aflink{
+    width:70%;
+    float:left;
+  }
+  
+  .VerticalModel_Help {
+   
+   color:#666;
+  }
+  
+
+  .ButtonBar_Button {
+  
+  border: 1px solid #ccc;
+  background: url("../images/nature/arrow1.gif")top left no-repeat;
+  height:25px;
+  padding-left:15px;
+  border-radius:5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  cursor:pointer;
+  
+  }
+
+  table tbody tr th {
+    background-color:#CCCCCC;
+    color:#333;
+    font-size:1em;
+    font-weight:bold;
+    padding:5px;
+    vertical-align:middle;
+  }
+  table tbody tr th.NOpx{ margin:0px; padding:0px; border:none; background:none;}
+  
+  /* classe per gli allegati nel dettaglio bando */
+  .linkAttachment { text-decoration:underline;color:#0085ce; CURSOR: pointer; text-align:center;}
+  .linkAttachment:hover{ color:#0072bc;}
+  
+  
+  /* Classi per l'effetto slide dei suggerimenti sulla lista bandi */
+  h3.section {
+    margin-top: 1em;
+  }
+
+  #vertical_slide, #horizontal_slide {
+    background: #f4f4f4; /*url(../images/bghelp.gif) top right no-repeat;*/
+    color: #555;
+    padding: 10px;
+    margin-bottom:15px;
+    padding-top:25px;
+    line-height:15px;
+	border:1px solid #CCC;
+	border-radius: 10px 10px 10px 10px;
+	-moz-border-radius: 10px 10px 10px 10px;
+	-webkit-border-radius: 10px 10px 10px 10px;
+  }
+  
+  h3.aflink_link_suggerimenti{ text-align:right; background: url(../../../images/interrogativo.png) center right no-repeat; display:block; height:25px; padding-right:35px; line-height:2;}
+  h3#h3insertquesito{ color:#CC0000; text-decoration:underline;}
+  h3#h3insertquesito:hover{ color:#ae0606;}
+
+  div.marginbottom {
+    /* Since the Fx.Slide element resets margins, we set a margin on the above element */
+    margin-bottom: 10px;
+  }
+div#table_dpcm th{ background:#ccc; color:#333; font-weight:bold; border:1px solid #444; }
+
+/*div#table_dpcm tr{ border-top:2px solid #fff;}*/
+div#table_dpcm td{ border:1px solid #444; background:#fff;}
+div#table_dpcm {margin-bottom:20px; /*border:1px solid #ccc;*/ padding:10px; overflow:auto;}
+
+
+/* classi per l'accordion */
+#accordion  {
+  margin: 0px 10px 10px 10px;
+ /* max-width: 400px; */
+}
+  #accordion H2 {
+    background: #6B7B95;
+    color: white;
+    cursor: pointer;
+    font: 12px Helvetica, Arial, sans-serif;
+    line-height: 16px;
+    margin: 0 0 4px 0;
+    padding: 3px 5px 1px;
+  }
+  #accordion .content {
+    background-color: #fff;
+  }
+  #accordion .content p {
+    margin: 0.5em 0;
+    padding: 0 6px 8px 6px;
+  }
+/* fine classi per accordion */  
+
+/* css griglia quesiti */
+table#template_doc td.CellRisposta div, table#template_doc td.CellQuesito div{
+	width:233px;
+	overflow:auto;
+	overflow-y:hidden;
+	height:100%;
+	}
+table#template_doc td.CellRisposta, table#template_doc td.CellQuesito, table#template_doc td.CellAllegato{
+	height:100%;
+	position:relative;
+		}
+	
+table#template_doc td.CellAllegato div{
+	width:100px; 
+	overflow:auto;
+	overflow-y:hidden;
+	height:100%;
+	}
+table#template_doc tr{ height:100%;}
+/* fine css griglia quesiti */
+
+
+
+body {
+	font-family: Helvetica,Arial,sans-serif;
+	font-size: 18px;
+	line-height: 1.5;
+	color: #1c2024;
+}
+

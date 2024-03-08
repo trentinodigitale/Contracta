@@ -1,0 +1,99 @@
+﻿@page "/CTL_LIBRARY/getFiltroEnteJoomla.asp"
+@inject eProcurementNext.Session.ISession session;
+@*@using ADODB*@
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.getFiltroEnteJoomlaModel
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'-- PARAMETRI DI INPUT IN GET
+	//'--		TIPO_FILTRO
+	//'--			NESSUNO nessun ente
+	//'--			MASTER_ALTRO Ricerca per Ente principale ed altri enti
+	//'--			TESTO_LIBERO Ricerca come testo della ragione sociale
+	//'--			DOMINIO_ENTI selezione dell'ente da un dominio
+	string TIPO_FILTRO = CStr(GetParamURL(Request.QueryString.ToString(), "TIPO_FILTRO")).ToUpper();
+
+	validate("TIPO_FILTRO", TIPO_FILTRO, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	//'on error resume next
+	string strHtmlOutput;
+	string strSQL = string.Empty;
+	TSRecordSet?  rs = null;
+	if(TIPO_FILTRO == "MASTER_ALTRO")
+	{
+		strHtmlOutput = string.Empty;
+
+		strSQL = "select a.IdAzi, a.aziRagioneSociale From MarketPlace m with(nolock) inner join Aziende a with(nolock) on a.IdAzi = m.mpIdAziMaster";
+
+		try
+		{
+			rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+			rs.MoveFirst();
+			int idAziMaster = CInt(rs["IdAzi"]!);
+			string aziRagioneSociale = CStr(rs["aziRagioneSociale"]);
+
+			strHtmlOutput = $@"<select id=""MASTER_ALTRO"" name=""MASTER_ALTRO"" class=""FldDomainValue"">";
+			strHtmlOutput = strHtmlOutput + $@"<option value="""">Seleziona</option>";
+			strHtmlOutput = strHtmlOutput + $@"<option value=""1"">" + HtmlEncode(aziRagioneSociale) + "</option>";
+			strHtmlOutput = strHtmlOutput + $@"<option value=""0"">Altro</option>";
+			strHtmlOutput = strHtmlOutput + "</select>";
+			htmlToReturn.Write("1#" + strHtmlOutput);
+		}
+		catch(Exception ex)
+		{
+			htmlToReturn.Write("0#" + ex.Message);
+		}
+	}
+	else if (TIPO_FILTRO == "TESTO_LIBERO")
+	{
+		htmlToReturn.Write($@"1#<input type=""text"" name=""DenominazioneEnte"" id=""DenominazioneEnte""/>");
+	}
+	else if(TIPO_FILTRO == "DOMINIO_ENTI")
+	{
+		strHtmlOutput = string.Empty;
+
+		strSQL = "select idazi , aziRagioneSociale from aziende with(nolock) where azivenditore = 0 and azideleted=0 order by aziRagioneSociale";
+		try
+		{
+			rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+			if (rs.RecordCount > 0)
+			{
+				strHtmlOutput = $@"<select id=""DOMINIO_ENTI"" name=""DOMINIO_ENTI"" class=""FldDomainValue"">";
+				strHtmlOutput = strHtmlOutput + $@"<option value="""">Seleziona</option>";
+
+				rs.MoveFirst();
+
+				while (!rs.EOF)
+				{
+					strHtmlOutput = strHtmlOutput + $@"<option value=""" + CInt(rs["idazi"]!) + $@""" id=""DOMINIO_ENTI_" + CInt(rs["idazi"]!) + $@""">" + HtmlEncode(CStr(rs["aziRagioneSociale"])) + "</option>";
+					rs.MoveNext();
+				}
+				strHtmlOutput = strHtmlOutput + "</select>";
+			}
+			htmlToReturn.Write($@"1#" + strHtmlOutput);
+		}
+		catch(Exception ex)
+		{
+			htmlToReturn.Write("0#" + ex.Message);
+		}
+	}
+	else //'-- NESSUNO o altro
+	{
+		htmlToReturn.Write("1#");
+	}
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,26 @@
+﻿@page "/PCP/PCP_CreaScheda.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.PCP.PCP_CreaScheda
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var id = GetParamURL(Request.QueryString.ToString(), "ID"); //idRow della Services_Integration_Request
+    var idRic = GetParamURL(Request.QueryString.ToString(), "IDRIC"); //idRichiesta della Services_Integration_Request
+    var operation = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+
+
+    validate("ID", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("IDRIC", idRic, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    var idRow = CInt(id);
+    var idRicInt = CInt(idRic);
+
+    var esito = Model.CreaScheda(idRow, idRicInt, operation);
+    
+    @Html.Raw(esito)
+}

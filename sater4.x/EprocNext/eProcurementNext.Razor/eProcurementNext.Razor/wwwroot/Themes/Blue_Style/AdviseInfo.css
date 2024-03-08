@@ -1,0 +1,14 @@
+BODY
+{
+}
+BODY.bodyAdviseInfo
+{
+    BACKGROUND-COLOR: white
+}
+.loading
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: 'Times New Roman'
+}

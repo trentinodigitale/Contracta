@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <AssemblyTitle>eProcurement.Razor.Custom.Standard</AssemblyTitle>
+	<!--<AssemblyVersion>1.0.0.1</AssemblyVersion>-->
+	<!--<Product>Nome Prodotto</Product>-->
+	<!--<Version>Versione</Version>-->
+	<!--<Copyright>Copyright</Copyright>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication\eProcurementNext.Authentication.csproj" />
+    <ProjectReference Include="..\EprocNext.CommonModule\eProcurementNext.CommonModule.csproj" />
+    <ProjectReference Include="..\EprocNext.Services\eProcurementNext.Services.csproj" />
+    <ProjectReference Include="..\eProcurementNext.Core\eProcurementNext.Core.csproj" />
+  </ItemGroup>
+
+
+
+</Project>

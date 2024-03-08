@@ -1,0 +1,169 @@
+﻿@page "/test.asp"
+@using System.Web
+@using System.Data
+@using System.Data.SqlClient
+@using static eProcurementNext.CtlProcess.Basic
+@using System.Collections.Specialized
+@model eProcurementNext.Razor.TestPages.testModel
+@using static eProcurementNext.HTML.BasicFunction;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.CommonDB:
+@using eProcurementNext.Application
+@using static eProcurementNext.CommonModule.Basic
+
+@{
+
+    string Hash_Attach = "A0E59C12-68A0-46F3-BA1A-1C7F9ECFBF87";
+    string tmpCurr = @"c:\temp\portaleallegati\VALUTAZIONE_BUSTA_AMMINISTRATIVA.pdf";
+
+    try
+    {
+        LibDbAttach objattach = new();
+        eProcurementNext.CommonDB.Basic.saveFileFromRecordSet("Att_Obj", "ctl_attach", "att_hash", "'" + Hash_Attach + "'", tmpCurr, ApplicationCommon.Application.ConnectionString);
+    }
+    catch(Exception ex)
+    {
+        string err = ex.Message;
+    }
+
+
+    //eProcurementNext.Xls.Aflink_xslx? objExcel = new eProcurementNext.Xls.Aflink_xslx();
+
+    ////string test = ValueToString("95300");
+
+    //bool errore = false;
+
+    //string strTable = "CTL_Import";
+    //string strParam = "posizionale";//' "0#posizionale"
+    //string strSheet = "0";//' "0#posizionale"
+    //string strField = "";
+    ////string ATTIVA_IDPFU_PROCESS = GetParamURL(Request.QueryString.ToString(), "ATTIVA_IDPFU_PROCESS");
+
+    //dynamic strFieldValue = 45406; //' Request.QueryString("FIELD_VALUE")
+
+    //long elapsedMs = default;
+
+    //string filePath = @"C:\Users\claud\OneDrive\Desktop\Elenco_Valori_Dominio.xlsx";
+
+    //try
+    //{
+    //    objExcel = new eProcurementNext.Xls.Aflink_xslx();
+    //}
+    //catch
+    //{
+    //    errore = true;
+    //}
+
+    //if (!errore && objExcel != null)
+    //{
+
+    //string strDescrErr = "Importazione file XLSX nella tabella " + CStr(strTable);
+    //string strDescrErr = $"Importazione file XLSX nella tabella {strTable}";
+
+    //string ss = string.Empty;
+    //try
+    //{
+    //    var watch = System.Diagnostics.Stopwatch.StartNew();
+    //    ss = objExcel.import_xlsx_intable_posizionale(filePath, strTable, "idpfu", strFieldValue.ToString(), strParam.ToString(), ApplicationCommon.Application.ConnectionString);
+    //    watch.Stop();
+    //    elapsedMs = watch.ElapsedMilliseconds;
+    //}
+    //catch(Exception ex)
+    //{
+    //    string err = ex.Message;
+    //    errore = true;
+    //}
+
+
+
+    //var cdf = new eProcurementNext.CommonDB.CommonDbFunctions();
+    //string strSql = "SELECT [ID_FROM], [Pos] ,[Descrizione] ,[PAth],[Check] FROM PROFILO_PERMESSI_FROM_NEW where ID_FROM in(-1) order by Path";
+    //SqlCommand cmd = new SqlCommand();
+    //SqlConnection conn = new SqlConnection(Application.ApplicationCommon.Application.ConnectionString);
+    //cmd.Connection = conn;
+    //cmd.CommandType = CommandType.Text;
+    //cmd.CommandText = strSql;
+    //cmd.CommandTimeout = 180;
+
+    //var watch = System.Diagnostics.Stopwatch.StartNew();
+    //conn.Open();
+    //cmd.ExecuteNonQuery();
+    //conn.Close();
+    //watch.Stop();
+    //long elapsedMs = watch.ElapsedMilliseconds;
+
+
+    //TSRecordSet rs = new TSRecordSet();
+    //var watch = System.Diagnostics.Stopwatch.StartNew();
+
+    //rs = cdf.GetRSReadFromQuery_(strSql, Application.ApplicationCommon.Application.ConnectionString, lTime: 180);
+
+    ////rs.Filter("Descrizione = 'Procedure di gara - Avvisi-Bandi-Inviti - DOC - Bando/Inviti - SEC - Note - TOOLBAR - Anagrafiche'");
+    
+    //long elapsedMs = watch.ElapsedMilliseconds;
+
+    //rs = cdf.GetRSReadFromQuery_(strSql, Application.ApplicationCommon.Application.ConnectionString);
+
+    //var watch2 = System.Diagnostics.Stopwatch.StartNew();
+    //rs.FilterNew("Descrizione = 'Procedure di gara - Avvisi-Bandi-Inviti - DOC - Bando/Inviti - SEC - Note - TOOLBAR - Anagrafiche'");
+    //watch2.Stop();
+
+    //var elapsedMs2 = watch2.ElapsedMilliseconds;
+
+
+
+
+
+    //return;
+
+    //var col = GetCollection(HttpContext.Request.QueryString.ToString());
+
+    //NameValueCollection coll = HttpUtility.ParseQueryString(HttpContext.Request.QueryString.ToString());
+
+    ////var dic = new Dictionary<string, string>();
+    //foreach (var key in coll.Keys)
+    //{
+    //    var val = coll.Get((string)key);
+
+    //    //dic.Add(key, coll.Get(key));
+    //}
+
+    //string page = "https://"+HttpContext.Request.Host+"/blocked.asp";
+
+    ////var obj = new ServerXMLHTTP();
+
+    //HttpClient client = new HttpClient();
+    //client.Timeout = new TimeSpan(0, 0, 0, 0, 100000);
+    //HttpResponseMessage response = await client.GetAsync(page);
+    ////response.EnsureSuccessStatusCode();
+    
+
+}
+
+<h1>Test page</h1>
+
+@*@elapsedMs*@
+
+@*@{
+    string[] strs = new string[] { "a", "b" };
+}
+
+@foreach (var s in strs)
+{
+    <h3>@(s)</h3>
+    <input type="text" value="@(s)">
+}
+
+@{
+    return;
+}
+
+@if (true)
+{
+    <h2>True</h2>
+}
+else
+{
+    <h2>False</h2>
+}
+*@

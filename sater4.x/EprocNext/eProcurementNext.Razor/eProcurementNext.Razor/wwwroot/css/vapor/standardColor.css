@@ -1,0 +1,83 @@
+/* PERSONALIZZAZIONE STANDARD COLORI */
+:root {
+    /* BASE VAPOR STANDARD */
+    --bg-content-page: rgb(228, 234, 240); /* COLORE GRIGIO SFONDO CONTENT CENTRALE */
+    --white: #ffffff;
+    --dark: #1d1a1a;
+    --main-color: #0090D1; /* COLORE PRINCIPALE */
+    --height-header: 64px;
+    --border-top-header: 0;
+    --border-image-background: unset;
+    --main-header-menu-color: #152935; /* SFONDO HEADER IN ALTO E MENU A SX */
+    --main-menu-color: #152935; /* SFONDO HEADER IN ALTO E MENU A SX */
+    --main-footer-color: #152935; /* SFONDO HEADER IN ALTO E MENU A SX */
+    --backgrund-submenu: #ffffff; /* SFONDO SUBMENU */
+    --backgrund-submenu-li: #DEF0F7; /* HOVER E ACTIVE SUBMENU */
+    --text-color-submenu-li: #152935; /* COLORE TESTO SUBMENU */
+    --main-text-color: #ffffff; /* TESTO BIANCO */
+    --bg-pulsanti-menu: rgb(0,144,209); /* COLORE SFONDO PULSANTI */
+    --bg-pulsanti-menu-gradient: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%); /* SFUMATURA SFONDO PULSANTI */
+    --bg-pulsanti-menu-gradient-hover: #00C3EA; /* SFUMATURA HOVER PULSANTI */
+    --bg-pulsanti-menu-hover: #00C3EA; /* HOVER PULSANTI */
+    --color-pulsanti-header: #ffffff; /* COLORE DEI PULSANTI HEADER */
+    --color-pulsanti-header-hover: #ffffff; /* COLORE DELL'HOVER DEI PULSANTI HEADER */
+    --bg-pulsanti-header: #ffffff; /* COLORE SFONDO PULSANTI HEADER */
+    --bg-pulsanti-header-gradient: #ffffff; /* SFUMATURA PULSANTI HEADER */
+    --bg-pulsanti-header-gradient-hover: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%); /* SFUMATURA HOVER PULSANTI HEADER */
+    --bg-pulsanti-header-hover: #0090D1; /* HOVER PULSANTI HEADER */
+    --bg-pulsanti-input-group: rgb(0,144,209); /* COLORE SFONDO PULSANTI INPUT GROUP */
+    --bg-pulsanti-input-group-menu-gradient: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%); /* SFUMATURA PULSANTI INPUT GROUP */
+    --bg-pulsanti-input-group-menu-gradient-hover: #00C3EA; /* SFUMATURA HOVER PULSANTI INPUT GROUP */
+    --bg-pulsanti-input-group-menu-hover: #00C3EA; /* HOVER PULSANTI INPUT GROUP */
+    --color-scrollbar: rgb(0,144,209); /* COLORE DELLA SCROLLBAR */
+    --modal-title: #005075; /* TITOLO MODALE */
+    --modal-text: #152935; /* TESTO MODALE */
+    --alert-color: #D82829; /* ROSSO ALERT */
+    --color-scrollbar-gradient: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%); /* SFONDO DELLA SCROLLBAR */
+    --color-h5-header-menu: #55636b;
+    --iconMenuSx-color: #F2F5F8;
+    --iconMenuSx-color-hover: #F2F5F8;
+    --textMenuSx-color: #F2F5F8;
+    --textMenuSx-color-hover: #F2F5F8;
+    --background-input-color: #F2F5F8;
+    --input-color: #000;
+    --input-readonly-bg: #ececec;
+    --input-readonly-border-color: #c1c1c463;
+    --border-input-standard: #C9D9E8;
+    --bg-color-cta-modal: #0090D1; /* COLORE PRINCIPALE */
+    --informative: #005075; /* BLU SCURO INFORMATIVA */
+    --check: #09822A; /* VERDE SUCCESS */
+    --warning: #FDB927; /* ARANCIONE ALERT */
+    --error: #D82829; /* ROSSO ERROR */
+    --tooltip-background: #005075; /* COLORE SFONDO VAPOR DEI TOOLTIP */
+    --tab-main-color: #0090D1;
+    --tab-main-color-gradient: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%);
+    --tab-main-color-hover: #00C3EA;
+    --tab-main-color-gradient-hover: #00C3EA;
+    --bg-Table-Griglia-Bando: #e9e9e9; /* SFONDO DELLA GRIGLIA NEL DETTAGLIO DI BANDI O AVVISI */
+    --borderColor-readOnly: #005075;
+    --border-color-alert:#D82829;
+    --link: #0090D1;
+    --widget-title: #005075; /* TITOLO WIDGET */
+    --page-title: #005075;
+    --footer-text: #ffffff;
+    --backgroud-search: #cccccc4f;
+    --border-search: #c9d9e8;
+    --primary-button: #0090D1;
+    --primary-button-gradient: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%);
+    --primary-button-hover: #00C3EA;
+    --primary-button-gradient-hover: #00C3EA;
+    --secondary-button-color: #0090D1;
+    --secondary-button-background: transparent;
+    --secondary-button-background-gradient: transparent;
+    --secondary-button-hover: #0090D1;
+    --secondary-button-gradient-hover: #0090D1;
+    --secondary-button-border: #0090D1;
+    --colore-pulsanti-azione: #0090D1;
+    --colore-pulsanti-azione-hover: linear-gradient(90deg, rgba(0,144,209,1) 0%, rgba(0,195,234,1) 100%);
+    --color-menu-action-disbaled: #737373;
+    --color-menu-action-disbaled-hover: #737373;
+    --background-menu-action-disbaled: none;
+    --background-menu-action-disbaled-hover: none;
+    --cube-head-table: #4f4f4f;
+}

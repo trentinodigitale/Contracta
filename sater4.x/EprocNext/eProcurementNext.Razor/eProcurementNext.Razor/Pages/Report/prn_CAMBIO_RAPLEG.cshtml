@@ -1,0 +1,415 @@
+﻿@page "/Report/prn_CAMBIO_RAPLEG.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_CAMBIO_RAPLEGModel;
+@model eProcurementNext.Razor.Pages.Report.prn_CAMBIO_RAPLEGModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+
+	CommonDbFunctions cdf = new ();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	string IDDOC = objDoc.mp_IDDoc;
+	var sqlParams = new Dictionary<string, object?>();
+
+	htmlToReturn.Write($@"<html>
+	<head>");
+	addMetaTag(htmlToReturn);
+	string GetAzienda(string cod )
+	{
+		TSRecordSet rs = null;
+		sqlParams.Clear();
+		sqlParams.Add("@cod",cod);
+		try
+		{
+			rs = cdf.GetRSReadFromQuery_("SELECT idazi from profiliutente inner join aziende on idazi=pfuidazi where idpfu=@cod", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		return GetValueFromRS(rs.Fields["idazi"]);
+
+	}
+	string GetUtente(string cod )
+	{
+		TSRecordSet rs = null;
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@cod",cod);
+			rs = cdf.GetRSReadFromQuery_("SELECT pfunome from profiliutente where idpfu=@cod", ApplicationCommon.Application.ConnectionString, sqlParams);
+			rs.MoveFirst();
+		}
+		catch
+		{
+
+		}
+		return GetValueFromRS(rs.Fields["pfunome"]);
+	}
+	int NumPag;
+	NumPag = 0;
+	/*dynamic iif(dynamic a ,dynamic b ,dynamic c )
+	{
+		if(a)
+		{
+			return b;
+		}
+		else
+		{
+			return c;
+		}
+	}*/
+	htmlToReturn.Write($@"
+	</head>
+	<body >
+
+
+		<center>
+			<table style=""width: 800px; height: 1400px;""");
+	
+	Header();
+	htmlToReturn.Write($@"
+		<tr>
+				<td height=""100%"" valign=""top"" >
+					<div style=""text-align: center; width: 800px; align: center;"">");
+	htmlToReturn.Write($@"
+					<table>
+						<tr>
+							<td>
+								<font class=""Input"">");
+	PubLegaleAZI(GetAzienda(DOC_FieldTecnical("DOCUMENT", "IdPfu")), "1111", htmlToReturn);
+	htmlToReturn.Write($@"
+											</font>
+										</td>     
+
+									</tr>
+							 </table>
+							 <br />
+
+							<table>
+									<tr>
+										<td>
+											<b>Oggetto:Cambio Rappresentante Legale</b>
+										</td>     
+
+									</tr>
+							 </table>
+							<br />");
+
+	htmlToReturn.Write($@"
+						 <table>		
+								<tr>
+								<td nowrap=""nowrap"">
+									<b>Il nuovo Rappresentante Legale &egrave;: </b>
+								</td>
+								<td>
+									<font class=""Input"">");
+	htmlToReturn.Write(GetUtente(DOC_FieldTecnical("TESTATA", "Utente")));
+	htmlToReturn.Write($@"
+									</font>
+								</td>                                        
+							</tr>
+					</table>");
+	htmlToReturn.Write($@"
+
+		<br />
+			 <table>		
+						<tr>
+							<td nowrap=""nowrap"">
+								<b>Codice Fiscale Rappresentante Legale: </b>
+							</td>
+							<td>
+								<font class=""Input"">
+									" + DOC_Field("TESTATA", "CFRapLeg") + $@"
+								</font>
+							</td> 
+						</tr>													
+						<tr>
+				<td nowrap=""nowrap"">
+								<b>Telefono 1 Rappresentante Legale: </b>
+							</td>
+							<td>
+								<font class=""Input"">
+									" + DOC_Field("TESTATA", "TelefonoRapLeg") + $@"
+								</font>
+							</td>
+						</tr>													
+						<tr>
+							<td nowrap=""nowrap"">
+								<b>Telefono 2 Rappresentante Legale:</b>
+							</td>
+							<td>
+								<font class=""Input"">
+									" + DOC_Field("TESTATA", "CellulareRapLeg") + $@"
+								</font>
+							</td>
+						</tr>
+						<tr>			
+							<td nowrap=""nowrap"">
+								<b>E-mail Rappresentante Legale: </b>
+							</td>
+
+							<td>
+								<font class=""Input"">
+									" + DOC_Field("TESTATA", "EmailRapLeg") + $@"
+								</font>
+							</td>
+						</tr>
+
+			</table>");
+	htmlToReturn.Write($@"
+		<br />
+				<table>		
+
+					<td nowrap=""nowrap"">
+						<b>Nato a: </b>
+					</td>
+					<td>
+						<font class=""Input"">
+							" + DOC_Field("TESTATA", "LocalitaRapLeg") + $@"
+						</font>
+					</td> 
+
+
+					<td nowrap=""nowrap"">
+						<b>provincia di: </b>
+					</td>
+					<td>
+						<font class=""Input"">
+							" + DOC_Field("TESTATA", "ProvinciaRapLeg") + $@"
+						</font>
+					</td>
+
+					<td nowrap=""nowrap"">
+						<b>stato:</b>
+					</td>
+					<td>
+						<font class=""Input"">
+							" + DOC_Field("TESTATA", "StatoRapLeg") + $@"
+						</font>
+					</td>
+
+
+					<td nowrap=""nowrap"">
+						<b>il: </b>
+					</td>
+
+					<td>
+						<font class=""Input"">
+							" + DOC_Field("TESTATA", "DataRapLeg") + $@"
+						</font>
+					</td>
+
+
+			</table>
+			<br />");
+	htmlToReturn.Write($@"
+			<table>		
+
+					<td nowrap=""nowrap"">
+						<b>Residente a: </b>
+					</td>
+					<td>
+						<font class=""Input"">
+							"+DOC_Field( "TESTATA", "ResidenzaRapLeg")+$@"
+						</font>
+					</td> 
+
+
+					<td nowrap=""nowrap"">
+						<b>provincia di: </b>
+					</td>
+					<td>
+						<font class=""Input"">
+							"+DOC_Field( "TESTATA", "ProvResidenzaRapLeg")+$@"
+						</font>
+					</td>
+
+					<td nowrap=""nowrap"">
+						<b>stato:</b>
+					</td>
+					<td>
+						<font class=""Input"">
+							"+DOC_Field( "TESTATA", "StatoResidenzaRapLeg")+$@"
+						</font>
+					</td>
+
+				</table>");
+
+	htmlToReturn.Write($@"
+			<table>		
+
+					<td nowrap=""nowrap"">
+						<b>indirizzo: </b>
+					</td>
+					<td>
+						<font class=""Input"">
+							"+DOC_Field( "TESTATA", "IndResidenzaRapLeg")+$@"
+						</font>
+					</td> 
+
+
+					<td nowrap=""nowrap"">
+						<b>cap: </b>
+					</td>
+					<td>
+						<font class=""Input"">
+							"+DOC_Field( "TESTATA", "CapResidenzaRapLeg")+$@"
+						</font>
+					</td>											
+
+
+			</table>");
+	htmlToReturn.Write($@"<br />
+
+
+			<table>
+					<tr>
+						<td>
+							<b>Note:</b>
+						</td>     
+
+					</tr>
+					<tr>
+						<td>
+							" + DOC_Field("TESTATA", "Note") + $@"
+						</td>     
+
+					</tr>
+			 </table>	
+		 <br />");
+	
+	htmlToReturn.Write($@"
+		 <table>");
+
+	if(!string.IsNullOrEmpty( DOC_Field( "TESTATA", "ProtocolloRiferimento")))
+	{
+		htmlToReturn.Write($@"
+			<tr>
+				<td nowrap=""nowrap"">
+					<b>Protocollo Nomina: </b>
+				</td>
+				<td>
+					<font class=""Input"">
+						"+DOC_Field( "TESTATA", "ProtocolloRiferimento")+$@"
+					</font>
+				</td>                                        
+			</tr>");
+	}
+	if (!string.IsNullOrEmpty(DOC_FieldTecnical("TESTATA", "DataRiferimento")) && DOC_FieldTecnical("TESTATA", "DataRiferimento") != " NULL ")
+	{
+		htmlToReturn.Write($@"
+		<tr>
+			<td nowrap=""nowrap"">
+				<b>Data Nomina: </b>
+			</td>
+			<td>
+				<font class=""Input"">
+					" + DOC_Field("TESTATA", "DataRiferimento") + $@"
+				</font>
+			</td>                                        
+		</tr>");
+	}
+	htmlToReturn.Write($@"
+
+
+							</table>
+
+
+
+				</div>
+
+			</td>
+		</tr>");
+	footer();
+	htmlToReturn.Write($@"</table>");
+	<!-- fine pagina 1-->
+	htmlToReturn.Write($@"
+	</center>
+
+	</body>
+	</html>");
+	void  PrintPagina()
+	{
+		htmlToReturn.Write($@"<div style=""page-break-after: always""></div>");
+	}
+	void  footerold()
+	{
+		NumPag = NumPag + 1;
+
+		htmlToReturn.Write($@"
+		<br />
+		Dati Registrazione Fornitore
+		<hr />
+		<table width=""720px"" style=""vertical-align: bottom; bottom: 0px"">
+			<tr>
+				<td valign=""bottom"" align=""right"">
+					 <br>
+					" + NumPag + $@"
+				</td>
+			</tr>
+		</table>");
+
+	}
+	void Header()
+	{
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"">");
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+		if(imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);
+		}
+		htmlToReturn.Write("</td></tr>");
+		htmlToReturn.Write($@"<tr><td height=""70px"" align=""center"" valign=""top"" ><h4>" + ApplicationCommon.CNV("HEADER_DATI_REGISTRAZIONE_FORNITORE") + $@"</h4></td></tr>");
+	}
+	//'------------------------------------------------------------------------------
+	//'-- funzione per disegnare il pie pagina
+	//'------------------------------------------------------------------------------
+	void footer()
+	{
+
+		NumPag = NumPag + 1;
+
+		htmlToReturn.Write($@"<tr><td valign=""bottom"" height=""10px"" >");
+		htmlToReturn.Write($@"<table width=""720px"" height=""10px"" style=""vertical-align: bottom; bottom: 0px""> ");
+		htmlToReturn.Write($@"        <tr><td align=""center"" style=""border-bottom: 1px solid black;"" ><b>" + ApplicationCommon.CNV("FOOTER_Dati_Registrazione_Fornitore") + $@"</b></td></tr><tr>");
+		htmlToReturn.Write($@"            <td valign=""bottom"" align=""right"" >");
+		htmlToReturn.Write($@"                ");
+		htmlToReturn.Write($@"                  <br>");
+		htmlToReturn.Write($@"                " + NumPag);
+		htmlToReturn.Write($@"            </td>");
+		htmlToReturn.Write($@"        </tr>");
+		htmlToReturn.Write($@"    </table>");
+		htmlToReturn.Write($@"    </td></tr>");
+
+	}
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+
+
+}@Html.Raw(htmlToReturn.Out())

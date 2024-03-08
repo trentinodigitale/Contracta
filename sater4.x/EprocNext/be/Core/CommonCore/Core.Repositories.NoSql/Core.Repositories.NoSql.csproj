@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>1.0.0.92</Version>
+    <Authors>FTM Dev Team</Authors>
+    <Company>Team System SpA</Company>
+    <Product>NoSql Repository</Product>
+    <Description>Repository implementation for Data accessing to Mongo DB collection</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+    <IncludeSource>true</IncludeSource>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AssemblyVersion>1.0.0.92</AssemblyVersion>
+    <FileVersion>1.0.0.92</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath></OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.9" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.9" />
+    <PackageReference Include="MongoDB.Bson" Version="2.12.3" />
+    <PackageReference Include="MongoDB.Driver" Version="2.12.3" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.9" />
+    <PackageReference Include="xxHash.Core" Version="0.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Repositories.Interfaces\Core.Repositories.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,456 @@
+//--Versione=3&data=2012-05-21&Attvita=40164&Nominativo=Sabato
+function OFFERTE_OnLoad()
+{
+    	
+    AUTO_CheckOfferta();
+}
+function OFFERTE_AFTER_COMMAND( param )
+{
+    AUTO_CheckOfferta();
+}
+
+function AUTO_CheckOfferta()
+{
+    //-- determino che riga selezionare
+    for( i = OFFERTEGrid_StartRow ; i <= OFFERTEGrid_EndRow ; i++ )
+    {
+        //-- se trovo almeno una busta non letta devo controllare sulla busta documentazione
+        if ( getObjValue( 'val_R' + ( i ) + '_bReadDocumentazione' ) == '1' )
+        {
+            i--;
+            if(  i < 0 ) i = 0;
+            getObj( 'Selezione')[i].checked = true;
+            return;
+        }
+    }
+    
+    for( i = OFFERTEGrid_StartRow ; i <= OFFERTEGrid_EndRow ; i++ )
+    {
+        //-- se trovo almeno una busta non letta devo controllare sulla busta documentazione
+        if ( getObjValue( 'val_R' + ( i ) + '_bReadEconomica' ) == '1' )
+        {
+            i--;
+            if(  i < 0 ) i = 0;
+            getObj( 'Selezione')[i].checked = true;
+            return;
+        }
+    }
+}
+
+
+function DrillMotivazioni( objGrid , Row , c )
+{
+    var idRow = getObjValue( 'R' + Row +  '_idRow' );
+    var w;
+    var h;
+    var Left;
+    var Top;
+    var altro;
+
+    w = screen.availWidth * 0.5;
+    h = screen.availHeight  * 0.4;
+    Left= (screen.availWidth - w) / 2;
+    Top= (screen.availHeight - h ) / 2;
+
+
+    //apro la lista  delle motivazioni
+    var strURL='../../DASHBOARD/Viewer.asp?TOOLBAR=&Table=PDA_LISTA_MOTIVAZIONE_ESITI&JSCRIPT=&IDENTITY=Id&DOCUMENT=ESITO&PATHTOOLBAR=../customdoc/&AreaAdd=no&Caption=Lista Motivazioni di Esito&Height=0,100*,0&numRowForPag=20&Sort=DataInvio&SortOrder=desc&Exit=si&FilterHide=LinkedDoc=' + idRow  ;
+    ExecFunction(  strURL , 'ListaEsito'  , ',left=' + Left + ',top=' + Top + ',width=' + w + ',height=' + h + altro );
+  
+}
+
+function DrillPosizionamento( objGrid , Row , c )
+{
+    
+	//-- recupero il codice della riga passata
+    //var idRow = getObjValue( 'R' + Row +  '_idRow' );
+	//ShowDocument( 'PDA_DRILL_OFFERTE' , idRow );
+	
+	ShowDocumentFromAttrib( 'PDA_DRILL_OFFERTE,R' + Row +  '_idRow,800,650' );
+
+}
+
+
+
+
+
+function OpenOfferta( objGrid , Row , c )
+{
+
+//DOCUMENTAZIONE
+//ECONOMICA
+
+    var Busta = '_bReadEconomica';
+    var BustaName = 'MicroLotti'; //'ECONOMICA';
+    
+    
+    if( getObjValue( 'val_R' + ( Row  ) + '_StatoPDA' ) == '99' )
+	{
+		alert( CNV( '../../' , 'Non e\' possibile aprire documenti invalidati' ));
+		return;
+	}
+//    //-- determino se controlloare sulla documentazioe o sulla busta ecnomica
+//    for( i = OFFERTEGrid_StartRow ; i <= OFFERTEGrid_EndRow ; i++ )
+//    {
+//        //-- se trovo almeno una busta non letta devo controllare sulla busta documentazione
+//        if ( getObjValue( 'val_R' + ( Row ) + '_bReadDocumentazione' ) == '1' )
+//        {
+//            Busta = '_bReadDocumentazione';
+//            BustaName = 'DOCUMENTAZIONE';
+//        }
+//    }
+
+    if( c == 1 )
+    {
+        Busta = '_bReadDocumentazione';
+        BustaName = 'DOCUMENTAZIONE';
+    }
+    
+    //-- per aprire la busta di documentazionelo stato deve essere valuatzione economica
+    if( BustaName == 'MicroLotti' )
+    {
+        if( getObjValue( 'val_StatoFunzionale' ) == 'VERIFICA_AMMINISTRATIVA' )
+        {
+            alert( CNV( '../../' , 'Non e\' possibile aprire il documento, e\' necessario avviare la valutazione economica' ));
+            return;
+        }
+    
+    }
+    
+
+    getObj( 'Valutazione_griglia_SECTION_TO_OPEN' ).value = BustaName;
+    //-- controlla se il documuento che si vuole aprire è quello corretto
+    if ( Row > 0 )
+    {
+		var ix = 1;
+		
+        //-- risale sul primo documento valido
+		while( Row - ix >= 0 && (  getObjValue( 'val_R' + ( Row - ix ) + '_StatoPDA' ) == '99' ||  getObjValue( 'val_R' + ( Row - ix ) + '_StatoPDA' ) == '1' ) )
+		{
+			ix++; 
+		}
+		
+        //-- se non ha aperto il documento precedente esce con errore
+		if (  Row - ix >= 0 && getObjValue( 'val_R' + ( Row - ix ) + Busta ) == '1' )
+        {
+            alert( CNV( '../../' , 'Non e\' possibile aprire il documento, non e\' nella giusta sequenza' ));
+            return;
+        }
+    }
+    
+    //-- se il documento è stato escluso posso riaprire la busta solo se era già aperta
+    if( getObjValue( 'val_R' + ( Row  ) + '_StatoPDA' ) == '1' && getObjValue( 'val_R' + ( Row  ) + Busta ) == '1' )
+	{
+		alert( CNV( '../../' , 'Non e\' possibile aprire documenti esclusi' ));
+		return;
+	}
+
+    
+
+    var idMsg =  getObjValue( 'R' + Row  + '_idMsg' );
+    var TipoDoc =  getObjValue( 'R' + Row  + '_TipoDoc' );
+    
+    if( TipoDoc == '' )
+        OpenAnyDoc( idMsg , '' , '../' );
+    else 
+        ShowDocumentFromAttrib( TipoDoc + ',' +  'R' + Row  + '_idMsg' );
+        
+        
+    //-- imposta come aperta la busta del documento
+    getObj( 'val_R' + Row + Busta ).innerHTML = '<img border="0" src="../images/Domain/bread0.gif" >';
+    SetProperty(getObj( 'val_R' + Row + Busta ), 'value', '0' );
+
+    try
+    {
+        getObj( 'Selezione')[Row].checked = true;
+    }catch(e){};
+    
+
+}
+
+
+function Esito( stato , Descrizione )
+{
+
+    //-- posiziona la scheda di valutazione
+	DocShowFolder( 'FLD_OFF' );
+	tdoc();
+
+    var Selezione = document.getElementsByName('Selezione');
+    
+    //-- recupera la riga selezionata
+    var indRow = getCheckedValue( Selezione );   
+    
+    //-- verifica se lo stato richiesto è ammissibile
+    var StatoPDA = getObjValue( 'val_R' + indRow +  '_StatoPDA' );
+    var idRow = getObjValue( 'R' + indRow +  '_idRow' );
+    
+    //-- se viene richiesta l'esclusione lo stato di partenza puo essere:in verifica(9) o vuoto(8)
+    if( stato == '1' && ( StatoPDA == '8' || StatoPDA == '9' ) )
+    {
+        DOC_NewDocumentFrom( 'ESITO_ESCLUSA#RIGA_PDA,' + idRow + '#800,600##&UpdateParent=no' );
+        return;
+    }
+
+    //-- se viene richiesta la verifica lo stato di partenza puo essere:vuoto(8)
+    if( stato == '9' && ( StatoPDA == '8'  ) )
+    {
+        DOC_NewDocumentFrom( 'ESITO_VERIFICA#RIGA_PDA,' + idRow + '#800,600##&UpdateParent=no' );
+        return;
+    }
+  
+    //-- se viene richiesta l'esclusione lo stato di partenza puo essere:in verifica(9) o vuoto(8)
+//    if( stato == '2' && ( StatoPDA == '8' || StatoPDA == '9' ) )
+//    {
+//        DOC_NewDocumentFrom( 'ESITO_AMMESSA#RIGA_PDA,' + idRow + '#800,600##&UpdateParent=no' );
+//        return;
+//    }
+
+    //-- se viene richiesta l'esclusione lo stato di partenza puo essere:in verifica(9) o vuoto(8)
+    if( stato == '8' && ( StatoPDA == '1' || StatoPDA == '9' || StatoPDA == '2' ) )
+    {
+        DOC_NewDocumentFrom( 'ESITO_ANNULLA#RIGA_PDA,' + idRow + '#800,600##&UpdateParent=no' );
+        return;
+    }
+
+     //-- se viene richiesta l'esclusione lo stato di partenza puo essere:in verifica(9) o vuoto(8)
+    if( stato == '2' && ( StatoPDA == '8'  || StatoPDA == '9' ) )
+    {
+    
+        if( StatoPDA == '8' )
+        {
+            //-- invoca il cambio di stato ( gestire l'errore )
+            SUB_AJAX( '../../customdoc/Esito_PDA.asp?ESITO=AMMESSA&IDROW=' + idRow );
+            
+            //-- ricarica la sezione delle offerte
+            ExecDocCommand( 'OFFERTE#Reload#' );
+        }
+        else
+        {
+            DOC_NewDocumentFrom( 'ESITO_AMMESSA#RIGA_PDA,' + idRow + '#800,600##&UpdateParent=no' );
+        }
+        return;
+    }
+
+ 
+    alert(  CNV( '../../' ,  'Il cambiamento richiesto non è coerente con lo stato del documento' ));
+	
+}
+
+function getCheckedValue(radioObj) {
+	if(!radioObj)
+		return "";
+	var radioLength = radioObj.length;
+	if(radioLength == undefined)
+		if(radioObj.checked)
+			return radioObj.value;
+		else
+			return "";
+	for(var i = 0; i < radioLength; i++) {
+		if(radioObj[i].checked) {
+			return radioObj[i].value;
+		}
+	}
+	return "";
+}
+
+function getIdRowChecked(radioObj) 
+{
+	if(!radioObj)
+		return "";
+	var radioLength = radioObj.length;
+	if(radioLength == undefined)
+		return -1;
+	for(var i = 0; i < radioLength; i++) {
+		if(radioObj[i].checked) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+function LISTA_MICROLOTTI_OnLoad()
+{
+
+	
+    if( getObjValue( 'val_StatoFunzionale' ) != 'VERIFICA_AMMINISTRATIVA' )
+    {
+        var NomeModelloPDA = getObj( 'ModelloPDA' ).value;
+        
+        LISTA_MICROLOTTI.location = '../../DASHBOARD/Viewer.asp?TOOLBAR=&Table=PDA_LISTA_MICROLOTTI_VIEW&ModGriglia=' + NomeModelloPDA + '&JSCRIPT=PDA_MICROLOTTI&IDENTITY=Id&DOCUMENT=PDA_DRILL_MICROLOTTO&PATHTOOLBAR=../customdoc/&AreaAdd=no&Caption=&Height=0,100*,0&numRowForPag=15&Sort=Ordinamento&SortOrder=asc&Exit=no&ShowExit=0&ROWCONDITION=BLACK,bRead=1~&FilterHide=idDoc = ' + getObj('IDDOC').value ;
+    }
+    else
+    {
+        LISTA_MICROLOTTI.location = '../../CustomDoc/PDA_ListaMicrolotti.asp';
+    }
+
+}
+
+function LISTA_DOCUMENTI_OnLoad()
+{
+
+    LISTA_DOCUMENTI.location = '../../DASHBOARD/Viewer.asp?TOOLBAR=PDA_MICROLOTTI_LISTA_DOCUMENTI_TOOLBAR&Table=PDA_MICROLOTTI_LISTA_DOCUMENTI&JSCRIPT=PDA_MICROLOTTI&IDENTITY=Id&DOCUMENT=PDA_DRILL_MICROLOTTO&PATHTOOLBAR=../customdoc/&AreaAdd=no&Caption=&Height=0,100*,0&numRowForPag=15&Sort=data&ActiveSel=2&SortOrder=asc&Exit=no&ShowExit=0&FilterHide=LinkedDoc = ' + getObj('IDDOC').value ;
+ 
+    DisplaySection();
+}
+
+
+function OpenPosizionamentoFornitori(objGrid , Row , c)
+{
+    //PDA_DRILL_MICROLOTTO
+    
+}
+
+function OpenSeduta(objGrid , Row , c) 
+{
+    var cod = getObj( 'R' + Row + '_idSeduta').value;
+
+    GridSecOpenDoc(objGrid , Row , c) 
+    
+}
+
+
+function RefreshContent()
+{
+    //RefreshDocument('');
+    //-- ricarica la sezione del riepilogo
+    ExecDocCommand( 'RIEPILOGO_FINALE#Reload#' );
+
+    
+}
+
+
+
+
+
+
+
+function COMMISSIONE_GIUDICATRICE_T_OnLoad(){
+	    InitCommissione();
+}  
+
+
+
+
+function InitCommissione(){
+	
+	var valueCriterio;
+	var CriterioAggiudicazioneGara;
+  	CriterioAggiudicazioneGara = getObj( 'val_CriterioAggiudicazioneGara') ;
+  	valueCriterio =  GetProperty( CriterioAggiudicazioneGara , 'value' );
+	if ( valueCriterio == '15531' ){
+	 getObj('cap_Static').innerHTML = CNV( '../../' , 'Commissione (soggetto incaricato)' );
+	 var objRow=getObj('RCOMMISSIONE_GIUDICATRICE_T_MODEL_AttoNomina').parentNode.parentNode;
+	 objRow.style.display='none';
+	}
+
+}
+
+
+
+function DisplaySection( obj )
+{
+    var crit = '';
+    var conf = '';
+    try{ crit = getObjValue( 'CriterioAggiudicazioneGara' ); }catch(e){ crit = ''; };
+    try{ conf = getObjValue( 'Conformita' ); }catch(e){ conf = ''; };
+    
+    //-- se è privista la conformita Ex-Ante oppure è economicamente più vantaggiosa
+    if( conf == 'Ex-Ante' || crit == '15532' )
+    {
+        //DocDisplayFolder(  'VAL'   ,'none' );
+        DocDisplayFolder(  'VAL_TEC' ,'' );
+        //DocDisplayFolder(  'RIEP' ,'' );
+
+        ShowCol( 'OFFERTE' , 'bReadEconomica' , 'none' )
+
+    }
+    else
+    {
+        //DocDisplayFolder(  'VAL'   ,'' );
+        DocDisplayFolder(  'VAL_TEC' ,'none' );
+        //DocDisplayFolder(  'RIEP' ,'none' );
+    }
+    
+    
+    //se si trattat di RDP/IDM nascondo sezione Valutazione amministrativa
+    try{ ProcGara = getObjValue( 'ProceduraGara' ); }catch(e){ ProcGara = ''; }
+    //alert(ProcGara);
+    if ( ProcGara == '15581' || ProcGara == '15479' )
+       DocDisplayFolder(  'OFF' ,'none' );
+       
+}
+
+
+
+function OpenBusteTec( objGrid , Row , c )
+{
+
+ 
+    var idMsg =  getObjValue( 'RLST_LOTTI_TECGrid_' + Row  + '_id' );
+    var TipoDoc =  'PDA_LST_BUSTE_TEC';
+    
+    //ShowDocumentFromAttrib( TipoDoc + ',' +  'RLST_LOTTI_TECGrid_' + Row  + '_id' );
+    MakeDocFrom( 'PDA_LST_BUSTE_TEC#900,800#PDA#' + idMsg );
+
+}
+
+
+function FineAmministrativa()
+{
+    var crit = '';
+    var conf = '';
+    try{ crit = getObjValue( 'CriterioAggiudicazioneGara' ); }catch(e){ crit = ''; };
+    try{ conf = getObjValue( 'Conformita' ); }catch(e){ conf = ''; };
+    
+
+    //-- se è privista la conformita Ex-Ante oppure è economicamente più vantaggiosa
+    if( conf == 'Ex-Ante' || crit == '15532' )
+    {
+        DocShowFolder( 'FLD_VAL_TEC' );tdoc();
+        ExecDocProcess( 'VALUTAZIONE_LOTTI,PDA_MICROLOTTI' );
+    
+    }
+    else
+    {
+        DocShowFolder( 'FLD_RIEP' );tdoc();
+        ExecDocProcess( 'VALUTAZIONE_ECONOMICA,PDA_MICROLOTTI' );
+    }
+    
+
+}
+
+
+
+
+
+
+function OpenRiepilogo( objGrid , Row , c )
+{
+
+    var idMsg =  getObjValue( 'RRIEPILOGO_FINALEGrid_' + Row  + '_id' );
+    var TipoDoc =  'PDA_RIEPILOGO_LOTTO';
+    try{ conf = getObjValue( 'Conformita' ); }catch(e){ conf = ''; };
+
+    var crit = getObjValue( 'CriterioAggiudicazioneGara' );
+    
+    //-- se è economicamente più vantaggiosa
+    if( conf == 'Ex-Ante' ||  crit == '15532' )
+    {
+        ShowDocumentFromAttrib( 'PDA_RIEPILOGO_LOTTO,' +  'RRIEPILOGO_FINALEGrid_' + Row  + '_id' );
+    }
+    else
+    {
+        ShowDocumentFromAttrib( 'PDA_RIEPILOGO_LOTTO,' +  'RRIEPILOGO_FINALEGrid_' + Row  + '_id' );
+        //ShowDocumentFromAttrib( 'PDA_DRILL_MICROLOTTO,' +  'RRIEPILOGO_FINALEGrid_' + Row  + '_id' );
+    }
+
+}
+
+
+
+function OFFERTE_AFTER_COMMAND( p )
+{
+    DisplaySection();
+}

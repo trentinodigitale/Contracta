@@ -1,0 +1,50 @@
+TABLE.MsgBox
+{
+}
+TABLE.MsgBox_Caption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 14pt;
+    BORDER-BOTTOM: thin solid;
+    FONT-FAMILY: Arial
+}
+.MsgBox_ButtonOK
+{
+}
+TD.MsgBox_Message
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 11pt;
+    FONT-FAMILY: Arial
+}
+DIV.OVER_MSG
+{
+    BORDER-RIGHT: 1px solid;
+    PADDING-RIGHT: 10px;
+    BORDER-TOP: 1px solid;
+    PADDING-LEFT: 10px;
+    PADDING-BOTTOM: 5px;
+    BORDER-LEFT: 1px solid;
+    PADDING-TOP: 5px;
+    BORDER-BOTTOM: 1px solid;
+    BACKGROUND-COLOR: white
+}
+TABLE.OverMsg
+{
+}
+TABLE.OverMsg_Caption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    BORDER-BOTTOM: thin solid;
+    FONT-FAMILY: Arial
+}
+.OverMsg_ButtonOK
+{
+}
+TD.OverMsg_Message
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 11pt;
+    FONT-FAMILY: Arial
+}

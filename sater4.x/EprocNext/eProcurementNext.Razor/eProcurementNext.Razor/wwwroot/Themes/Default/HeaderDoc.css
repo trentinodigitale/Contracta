@@ -1,0 +1,70 @@
+TABLE.GridContainerHeaderDoc
+{
+    WIDTH: 100%
+}
+TABLE.GridSeparateHeaderDoc
+{
+    WIDTH: 100%
+}
+TABLE.GridTitleHeaderDoc
+{
+}
+TABLE.GridTailHeaderDoc
+{
+}
+TD.CellGridContainerHeaderDoc
+{
+    TEXT-ALIGN: left
+}
+TD.CellGridSeparateHeaderDoc
+{
+}
+TD.CellGridTitleHeaderDoc
+{
+}
+TD.CellGridTailHeaderDoc
+{
+    TEXT-ALIGN: right
+}
+.FontTitleHeaderDoc
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 1.6em;
+    COLOR: #555;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+HR
+{
+    BORDER:1px solid #A2ABBA;
+    WIDTH: 100%;
+	display:none;
+}
+IMG.Header
+{
+    CURSOR: pointer;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.foglie
+{
+    FONT-SIZE: 8pt;
+    COLOR: #333;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.hr
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-TOP: lightgrey 1px solid;
+    BORDER-LEFT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+SPAN.header
+{
+    FONT-SIZE: 11px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline;
+	font-weight:bold;
+}

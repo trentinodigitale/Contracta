@@ -1,0 +1,113 @@
+BODY.BodyAttachments
+{
+    BACKGROUND-COLOR: white
+}
+TABLE.GridAttachments
+{
+    WIDTH: 100%;
+    BACKGROUND-COLOR: khaki
+}
+TABLE.GridListAttachments
+{
+    BORDER-RIGHT: black 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: black 1px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    BORDER-LEFT: black 1px;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: black 1px
+}
+TD.CellHeaderGridListAttachments
+{
+    BORDER-RIGHT: black 1px solid;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: black 1px solid;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: black 1px solid;
+    COLOR: black;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: black 1px solid;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: khaki;
+    TEXT-ALIGN: left
+}
+TD.Cell1GridListAttachments
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-ALIGN: left
+}
+TD.Cell2GridListAttachments
+{
+}
+BUTTON.ButtonActionAttachments
+{
+}
+TD.CellGridAttachments
+{
+    WIDTH: 100%
+}
+INPUT.TextFieldAttachments
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+.topic
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+INPUT.disabledcheck
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+INPUT.TextFieldsAttachmentsNotEditable
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+TABLE.GridDescAttachment
+{
+}
+TD.CellGridDescAttachment
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial
+}
+.linkAttachment
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: darkred;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+TABLE.GridButtonAttachment
+{
+    WIDTH: 100%
+}
+TD.Cell1GridButtonAttachment
+{
+    TEXT-ALIGN: left
+}
+TD.Cell2GridButtonAttachment
+{
+    TEXT-ALIGN: right
+}
+A:link
+{
+    COLOR: darkred
+}

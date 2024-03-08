@@ -1,0 +1,58 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/xml.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject ITabManage _tabManage;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.DocumentPermissionModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    validate( "DOCUMENT", Replace(GetParamURL(Request.QueryString.ToString(), "DOCUMENT"),".","_") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "TYPEDOC", Replace(GetParamURL(Request.QueryString.ToString(), "TYPEDOC"),".","_") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "READONLY", GetParamURL(Request.QueryString.ToString(), "READONLY") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "OPERATION", GetParamURL(Request.QueryString.ToString(), "OPERATION") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+    validate( "XML_ATTACH_TYPE", GetParamURL(Request.QueryString.ToString(), "XML_ATTACH_TYPE") , TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+    validate( "IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    string docToValidate = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+
+    if (string.IsNullOrEmpty(docToValidate)) 
+    {
+        docToValidate = GetParamURL(Request.QueryString.ToString(), "TYPEDOC");
+    }
+
+    int forzaEseguiDocPermission = 1;
+
+    //'--controllo permesso apertura documento
+    DocPermission(HttpContext,GetParamURL(Request.QueryString.ToString(), "IDDOC"), docToValidate, GetParamURL(Request.QueryString.ToString(), "PARAM"), session, htmlToReturn, Request, Response, forzaEseguiDocPermission);
+
+    string strfilename = "Document.xml";
+    Response.ContentType = "text/xml";
+    Response.Headers.TryAdd("Content-Disposition", $"attachment; filename={strfilename}");
+
+    eProcurementNext.Document.CTLDOC.Document temp = new(HttpContext, session, htmlToReturn);
+    temp.run(session, htmlToReturn);
+    //ServerPage "ctldoc.document"
+
+    //on error resume next
+    try
+    {
+        FreeMemDocument(session);
+    }
+    catch
+    {
+    
+    }
+}@Html.Raw(htmlToReturn.Out())

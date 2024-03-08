@@ -1,0 +1,105 @@
+﻿@page "/CTL_LIBRARY/functions/checkStato.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.checkStatoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+
+	//'--Versione=1&data=2013-06-13&Attvita=43666&Nominativo=Leone
+
+
+	//'-- Pagina atta alla verifica della presenza di uno Stato nella domini gerarchici con associata
+	// '-- una descrizione in lingua
+
+	//'-- Parametri di input : 
+	//'--		* STATO = Codice di 2 cifre per indicare il paese di provenienza
+	//'--		* DESC  = Descrizione dello stato 
+
+	//'-- Output :
+	//'--		* 0#Tutto ok
+	//'--		* 1#Messaggio di warning.
+	//'--		* 2#Errore server
+	//da gestire
+	//on error resume next
+
+	//stop
+
+	string stato = "";
+	string desc = "";
+	TSRecordSet? rs = null;
+	string strSql = "";
+
+	stato = GetParamURL(Request.QueryString.ToString(), "STATO").Trim();
+	desc = GetParamURL(Request.QueryString.ToString(), "DESC").Trim();
+
+	if(string.IsNullOrEmpty(stato) || string.IsNullOrEmpty(desc))
+	{
+		htmlToReturn.Write("2#" + ApplicationCommon.CNV("Parametri STATO e DESC obbligatori"));
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+	
+	//'-- sql replace
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@Codstato", stato);
+	sqlParams.Add("@Desc", desc);
+	strSql = "select descsi.dscTesto as italiano, DescsE.dscTesto as spagnolo, DescsFRA.dscTesto as francese ";
+	strSql = strSql + " , DescsUK.dscTesto as inglese, DescsLng1.dscTesto as lng1, DescsLng2.dscTesto as lng2 ";
+	strSql = strSql + " , DescsLng3.dscTesto as lng3, DescsLng4.dscTesto as lng4 from ctl_controllopiva a inner join dominigerarchici b ";
+	strSql = strSql + " 	on a.codiceEsterno = b.dgCodiceEsterno ";
+	strSql = strSql + "	left join descsi on descsi.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsE on DescsE.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsFRA on DescsFRA.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsUK on DescsUK.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsLng1 on DescsLng1.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsLng2 on DescsLng2.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsLng3 on DescsLng3.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	left join DescsLng4 on DescsLng4.IdDsc = b.dgiddsc ";
+	strSql = strSql + "	where stato = @Codstato and ( descsi.dscTesto = @Desc  or DescsE.dscTesto = @Desc";
+	strSql = strSql + "	 or DescsFRA.dscTesto = @Desc or DescsUK.dscTesto = @Desc or DescsLng1.dscTesto = @Desc";
+	strSql = strSql + " or DescsLng2.dscTesto = @Desc or DescsLng3.dscTesto = @Desc or DescsLng4.dscTesto = @Desc) ";
+
+	try
+	{
+		CommonDbFunctions cdb = new();
+		rs =  cdb.GetRSReadFromQuery_(strSql,  ApplicationCommon.Application.ConnectionString, sqlParams);
+	}
+	catch(Exception ex)
+	{	
+		/*
+		* if err.number <> 0 then
+
+		set rs = nothing
+		*/
+		htmlToReturn.Write("2#" +ApplicationCommon.CNV("Errore server:") + ex.Message);
+		/**
+		err.Clear
+		
+
+		end if
+		*/
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "Errore server");
+		htmlToReturn.Write("2#" + ApplicationCommon.CNV("Errore server:")+"descrizione:"+ex.Message);
+
+		//err.Clear
+		
+	}
+
+	if (rs.RecordCount >0)
+	{
+		htmlToReturn.Write("0#Tutto ok");
+	}
+	else
+	{
+		htmlToReturn.Write("1#" + ApplicationCommon.CNV("Il prefisso della partita iva inserita non combacia con lo stato scelto"));
+	}
+	//return
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+}@Html.Raw(htmlToReturn.Out())

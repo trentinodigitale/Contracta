@@ -1,0 +1,78 @@
+﻿@page "/TS_AEC/GetAttach.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.AVCP.GetAttachModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParam(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'on error resume next
+	string IDROW ="";
+	string IDDOC = "";
+	string codfisc = "";
+	string strSQL = "";
+	TSRecordSet? rs = null;
+	IDROW = GetParamURL(Request.QueryString.ToString(), "IDROW");
+	IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+	//'-------------------------------------
+	//'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+	//'-------------------------------------
+
+	if(!string.IsNullOrEmpty(IDROW))
+	{
+	
+		validate("IDROW", IDROW, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1,HttpContext,session);
+	}
+	if(!string.IsNullOrEmpty(IDDOC))
+	{
+		
+		validate( "IDDOC", IDDOC , TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1,HttpContext,session);
+	}
+
+	if(!string.IsNullOrEmpty(IDROW))
+	{
+		throw new ResponseRedirectException("/" + ApplicationCommon.Application["APPLEGACY"] + "/GetOrder.aspx?IDDOC=" + IDROW + "&OPERATION=GET_ALLEGATO", Response);
+	}
+
+	if(!string.IsNullOrEmpty(IDDOC))
+	{
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@IDDOC", CInt(IDDOC));
+		strSQL = "select CHIAVE from VIEW_TS_OFO_ATTACH_WS where id = @IDDOC";
+		rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rs is not null && rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+			codfisc = CStr(rs["CHIAVE"]);
+		}
+
+		throw new ResponseRedirectException("/" + ApplicationCommon.Application["APPLEGACY"] + "/GetOrder.aspx?IDDOC=" + IDDOC + "&CHIAVE=" + codfisc + "&OPERATION=GET_LISTA", Response);
+
+		//'Response.Clear()
+		//'response.flush()
+		//
+		//' decommentare qui sotto!!!!!
+		//'strDoc = "OFO"	
+		//'url = "ctl_library/document/userdocument.asp?lo=base&JScript=" + strDoc + "&DOCUMENT=" + strDoc + "&MODE=OPEN&IDDOC=" + IDDOC			
+		//'url = Server.URLEncode(url)	
+		//'Response.Redirect "../ctl_library/path.asp?url=" + url + "&KEY=document"
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+	}
+	//'''call Redirect_2_DownLoadFile  ( strFilePath, nomefile, "" )
+
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,35 @@
+TABLE.Folder
+{
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR:#515151;
+}
+.Folder_LabelSelected
+{
+	/*
+    BORDER-RIGHT: #161a74 1px solid;
+    BORDER-TOP: #161a74 1px solid;
+	BORDER-LEFT: #161a74 1px solid;
+	BORDER-BOTTOM: #161a74 1px;
+	*/
+	FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+
+    
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR:#fff;
+}
+.Folder_Label
+{
+    /*
+	BORDER-RIGHT: white 1px ridge;
+    BORDER-TOP: white 1px ridge;
+	BORDER-BOTTOM: white 1px ridge;
+	BORDER-LEFT: white 1px ridge;
+	*/
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR:#ececec;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #666;
+}
