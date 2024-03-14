@@ -2,7 +2,7 @@
 mirror progetto
 
 # Database
-sono predisposti due database: AFLink_TND e AFLink_TND_pub (utilizzato da Joomla per la parte portale), per entrambi l'owner e utente usato per la connessione è tssuser.
+sono predisposti due database: AFLink_TND (https://github.com/trentinodigitale/Contracta/blob/main/sater4.x/AFLink_TND.sql) e AFLink_TND_pub (utilizzato da Joomla per la parte portale).
 
 # Application Server
 # Abilitazioni rete:
