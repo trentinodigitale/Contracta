@@ -26,8 +26,8 @@ sono predisposti due database: AFLink_TND (https://github.com/trentinodigitale/C
 - Chilkat (setup non disponibile, software proprietario)
 
 # Struttura parte Web
-A fronte di una struttura su filesystem
-D:\PortaleGareTelematiche\Web
+A fronte di una struttura su filesystem D:\PortaleGareTelematiche\Web
+
 	\AppLegacy → progetto OAuth2OpenID
 	\EProcNext → progetto eProcurementNext.Razor
 	\portale → portale Joomla
@@ -41,7 +41,7 @@ IIS è configurato come:
 - default site che punta al path EProcNext (AppPool 4.0 integrated), configurare connection string in appsettings.json
   - application AppLegacy che punta al path AppLegacy (AppPool 2.0 integrated), configurare connection string in web.config
   - application portalegare che punta al path portale (AppPool 2.0 classic 32bit enabled), configurare server database in configuration.php
-  - application aflinkws che punta al patha aflinkws (AppPool 2.0 classic 32bit enabled)
+  - application aflinkws che punta al path aflinkws (AppPool 2.0 classic 32bit enabled)
   - application rest che punta al path WebAPI (AppPool 4.0 integrated)
   - application Services che punta al path Services (AppPool 4.0 integrated)
   - application TS_WebFileManager che punta al path AF_WebFileManager (AppPool 4.0 integrated)
