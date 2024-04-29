@@ -1,0 +1,98 @@
+﻿@page "/CTL_LIBRARY/MessageBoxWin.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.messageBoxWinModel;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.messageBoxWinModel
+@*
+-- parametri di INPUT
+-- URL: pagina alla quale si vuole andare. il percorso deve essere relativo, quindi non contenere http...
+-- KEY : tipo di pagina che stiamo aprendo. Es. viewer, document etc
+-- RESET : ripulisce lo stack
+*@
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@*
+<!-- #Include File="../CTL_Library/Functions/intest_nosession.inc" -->
+<!-- #Include File="../CTL_Library/Functions/trace_in_log_utente.inc" -->
+*@
+@{
+	if (UCase(GetParamURL(Request.QueryString.ToString(), "MODALE")) != "YES")
+	{
+		//StartPage
+		htmlToReturn.Write($@"<html>");
+		htmlToReturn.Write($@"<head>");
+
+		if (IsEmpty(ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"]) || ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] == "0")
+		{
+			htmlToReturn.Write($@"<meta http-equiv=""X-UA-Compatible"" content=""IE=8"">");
+		}
+
+		htmlToReturn.Write($@"    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">");
+		Response.Headers.TryAdd("X-XSS-Protection", "0");
+
+		htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/msgbox.css"" type=""text/css""/>");
+
+		//'-- ridimensioniamo e riposizioniamo il popup a meno del parametro nomove a yes 
+		if (UCase(GetParamURL(Request.QueryString.ToString(), "NO_M")) != "YES")
+		{
+			htmlToReturn.Write($@"
+					<script Language=""JavaScript"">
+
+					try
+					{{
+
+						var width=400;
+						var height=200;
+						self.moveTo((screen.availwidth-width)/2,(screen.availheight-height)/2);
+						self.resizeTo(width,height);
+					}}
+					catch(e)
+					{{
+					}}
+
+				</script>
+
+			");
+
+		}
+	}
+
+	//'-- non inserisco più la trace programmatica nel log in caso di icona di errore perchè il messaggio è già tracciato e decodificato in modo corretto. sarebbe ridondante
+	//'if ( Request.QueryString("ICO") = "2" ) then
+	//'	'-- Se si sta segnalando un errore o comunque un blocco gestito
+	//'	call traceInLogUtente( 0, "MessageBoxWin.asp", "Caption:" & Request.QueryString("CAPTION") & "...Messaggio di errore:" & Request.QueryString("MSG") )
+	//'end if
+
+	eProcurementNext.HTML.MessageBoxWin obj = new(HttpContext);
+
+	if (GetParamURL(Request.QueryString.ToString(), "MODALE") != "YES")
+	{
+		if (CStr(session["HomePageLight"]) == "1")
+		{
+			htmlToReturn.Write($@"<script>var BrowseInPage=1;</script>" + Environment.NewLine);
+		}
+		else 
+		{
+			htmlToReturn.Write($@"<script>var BrowseInPage=0;</script>" + Environment.NewLine);
+		}
+
+		obj.run(session, htmlToReturn);
+
+		htmlToReturn.Write($@"</body>");
+		htmlToReturn.Write($@"</html>");
+	}
+	else
+	{
+		obj.run(session, htmlToReturn);
+	}
+}
+@Html.Raw(htmlToReturn.Out())

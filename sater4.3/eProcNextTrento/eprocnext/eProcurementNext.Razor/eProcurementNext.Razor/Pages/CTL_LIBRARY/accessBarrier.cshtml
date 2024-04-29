@@ -1,0 +1,27 @@
+﻿@page "/CTL_LIBRARY/accessBarrier.asp"
+@using eProcurementNext.Razor.Pages.CTL_LIBRARY.functions
+@using static eProcurementNext.CommonModule.Basic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.accessBarrierModel
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    string accessGuid = securityModel.insertAccessBarrier(session, HttpContext);
+    if (GetParamURL(HttpContext.Request.QueryString, "AJAX") == "1")
+    {
+        //'-- viene dato in putput l'access guid, sarà a carico del chiamante fare la redirect e passare il guid nella modalità scelta
+        @Html.Raw(accessGuid)
+        ;
+    }
+    else
+    {
+        //'-- LA REDIRECT PASSA SOLO PARAMETRI IN GET. QUALSIASI COSA PASSATA IN POST A QUESTA PAGINA VERRA' PERSA!
+        string urlFinale = $@"{GetParamURL(HttpContext.Request.QueryString, "goto")}?1=1&";
+        if (string.IsNullOrEmpty(GetParamURL(HttpContext.Request.QueryString, "hiddenfilter_block")))
+        {
+            urlFinale = $"{urlFinale}hiddenViewerCurFilter={URLEncode(GetValueFromForm(Request, "hiddenViewerCurFilter"))}&";
+        }
+        urlFinale = $"{urlFinale}acckey={URLEncode(accessGuid)}&{HttpContext.Request.QueryString.ToString()}";
+        HttpContext.Response.Redirect(urlFinale);
+    }
+}

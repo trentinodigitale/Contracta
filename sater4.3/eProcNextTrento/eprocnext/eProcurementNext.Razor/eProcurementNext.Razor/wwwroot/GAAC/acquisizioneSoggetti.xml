@@ -1,0 +1,97 @@
+﻿<?xml version="1.0"?>
+<soapenv:Envelope xmlns:_0="http://idempiere.org/ADInterface/1_0" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <_0:createData>
+      <_0:ModelCRUDRequest>
+        <_0:ModelCRUD>
+          <_0:serviceType>InsertCandSubject</_0:serviceType>
+          <_0:DataRow>
+            <_0:field column="ORGID">
+              <_0:val>0</_0:val>
+            </_0:field>
+            <_0:field column="FINCA_Application_ID">
+              <_0:val>@@@FINCA_Application_ID@@@</_0:val>
+            </_0:field>
+            <_0:field column="FIN_OperationType">
+              <_0:val>InsertCandSubject</_0:val>
+            </_0:field>
+            <_0:field column="json">
+              <_0:val>
+                <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+								<tns:acquisizioneSoggettiRequest xmlns:tns="http://tempuri.org/">
+									<tns:DataDecorrenzaVariazione></tns:DataDecorrenzaVariazione>
+									<tns:Codice></tns:Codice>
+									<tns:Nome>@@@RAGIONE_SOCIALE@@@</tns:Nome>
+									<tns:FirstName></tns:FirstName>
+									<tns:LastName></tns:LastName>
+									<tns:Descrizione></tns:Descrizione>
+									<tns:Partita_Iva>@@@PIVA_NOPREFIX@@@</tns:Partita_Iva>
+									<tns:Generico></tns:Generico>
+									<tns:Stato_Cee>@@@NAZIONE_ISO@@@</tns:Stato_Cee>
+									<tns:Partita_Iva_Cee>@@@PIVA_CEE@@@</tns:Partita_Iva_Cee>
+									<tns:IDFiscaleEstero>@@@ID_FISCALE_ESTERO@@@</tns:IDFiscaleEstero>
+									<tns:Codice_Fiscale>@@@CF_PIVA@@@</tns:Codice_Fiscale>
+									<tns:Cliente></tns:Cliente>
+									<tns:Fornitore>Y</tns:Fornitore>
+									<tns:Data_di_Nascita></tns:Data_di_Nascita>
+									<tns:Provincia_di_Nascita></tns:Provincia_di_Nascita>
+									<tns:Comune_di_Nascita></tns:Comune_di_Nascita>
+									<tns:Sito_Web>@@@SITO_WEB@@@</tns:Sito_Web>
+									<tns:Telefono>@@@TELEFONO@@@</tns:Telefono>
+									<tns:Tipo_Soggetto>G</tns:Tipo_Soggetto>
+									<tns:Eori_Code>@@@CODICE_EORI@@@</tns:Eori_Code>
+									<tns:Conto_Cliente></tns:Conto_Cliente>
+									<tns:Conto_Fornitore></tns:Conto_Fornitore>
+									<tns:Durc></tns:Durc>
+									<tns:Classe_contabile_cliente></tns:Classe_contabile_cliente>
+									<tns:Classe_contabile_fornitore></tns:Classe_contabile_fornitore>
+									<tns:Split></tns:Split>
+									<tns:IDPeppol>@@@ID_PEPPOL@@@</tns:IDPeppol>
+									<tns:Indirizzo>
+										<tns:Codice></tns:Codice>
+										<tns:Nome>SEDE LEGALE</tns:Nome>
+										<tns:Descrizione></tns:Descrizione>
+										<tns:Tipo_Indirizzo>L</tns:Tipo_Indirizzo>
+										<tns:Telefono>@@@TELEFONO@@@</tns:Telefono>
+										<tns:Fax>@@@FAX@@@</tns:Fax>
+										<tns:Email></tns:Email>
+										<tns:Email_Per>@@@EMAIL_PEC@@@</tns:Email_Per>
+										<tns:Address1>@@@INDIRIZZO@@@</tns:Address1>
+										<tns:Address2></tns:Address2>
+										<tns:Address3></tns:Address3>
+										<tns:Address4></tns:Address4>
+										<tns:Postal>@@@CAP@@@</tns:Postal>
+										<tns:Nazione>@@@NAZIONE_PREFIX@@@</tns:Nazione>
+										<tns:Provincia>@@@ISTAT_PROVINCIA@@@</tns:Provincia>
+										<tns:Citta>@@@ISTAT_COMUNE@@@</tns:Citta>
+										<tns:Annulla>N</tns:Annulla>
+									</tns:Indirizzo>
+									<tns:IPA>
+										<tns:Codice></tns:Codice>
+										<tns:Nome></tns:Nome>
+										<tns:Descrizione></tns:Descrizione>
+										<tns:Principale></tns:Principale>
+										<tns:Annulla>N</tns:Annulla>
+									</tns:IPA>
+									<tns:Annulla>N</tns:Annulla>
+								</tns:acquisizioneSoggettiRequest>]]>
+              </_0:val>
+            </_0:field>
+            @@@ALLEGATI@@@
+          </_0:DataRow>
+        </_0:ModelCRUD>
+        <_0:ADLoginRequest>
+          <_0:user>@@@LOGIN_USER@@@</_0:user>
+          <_0:pass>@@@LOGIN_PASS@@@</_0:pass>
+          <_0:lang>it_IT</_0:lang>
+          <_0:ClientID>@@@LOGIN_CLIENT_ID@@@</_0:ClientID>
+          <_0:RoleID>@@@LOGIN_ROLE_ID@@@</_0:RoleID>
+          <_0:WarehouseID>@@@LOGIN_WAREHOUSE_ID@@@</_0:WarehouseID>
+          <_0:OrgID>@@@LOGIN_ORG_ID@@@</_0:OrgID>
+          <_0:stage>0</_0:stage>
+        </_0:ADLoginRequest>
+      </_0:ModelCRUDRequest>
+    </_0:createData>
+  </soapenv:Body>
+</soapenv:Envelope>

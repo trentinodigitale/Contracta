@@ -1,0 +1,295 @@
+﻿@page "/CTL_LIBRARY/functions/getXslt.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using eProcurementNext.Razor;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.getXsltModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'--Versione=1&data=2013-02-18&Attvita=40447&Nominativo=Leone
+	string strfilename = "document.xsl";
+	Response.ContentType = "text/xml";
+	Response.Headers.Add("Content-Disposition", "attachment; filename=" + strfilename);
+	//'on error resume next
+	string suffix = CStr(GetParamURL(Request.QueryString.ToString(), "LINGUA"));
+	string ml_xslt = CStr(GetParamURL(Request.QueryString.ToString(), "ML_XSLT"));
+	//stop
+
+	if (!string.IsNullOrEmpty(ml_xslt))
+	{
+		if (string.IsNullOrEmpty(suffix))
+		{
+			suffix = "I";
+		}
+
+		//'-- recupero contesto
+		string strContext = CStr(session[eProcurementNext.Session.SessionProperty.IdMP]);
+		if(string.IsNullOrEmpty(strContext))
+		{
+			strContext = "0";
+		}
+
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@suffix", suffix);
+		sqlParams.Add("@xslt",  ml_xslt);
+		string strSql = "SELECT ML_Description FROM Lib_Multilinguismo ";
+		strSql = strSql + " where ML_LNG = @suffix and ML_KEY = @xslt";
+		CommonDbFunctions cdb = new CommonDbFunctions();
+		TSRecordSet rs = cdb.GetRSReadFromQuery_(strSql, ApplicationCommon.Application["ConnectionString"], sqlParams);
+
+		if (rs.RecordCount > 0)// err.number = 0
+		{
+			rs.MoveFirst();
+			string value = CStr(rs["ML_Description"]);
+			if ( value.Contains("#XSLT.DATE-NOW#", StringComparison.Ordinal))
+			{
+				//'-- Forma di output atteso : 2013-02-14T14:53:09
+				DateTime tmpDate = DateTime.Now;
+
+				string strTmpDate = DateAndTime.Year(tmpDate) + "-" + getMount(tmpDate) + "-" + getDay(tmpDate) + "T" + getHour(DateAndTime.Now) + ":" + DateAndTime.Minute(DateAndTime.Now) + ":" + DateAndTime.Second(DateAndTime.Now);
+				value = value.Replace("#XSLT.DATE-NOW#", CStr(strTmpDate));
+			}
+			//'-- Risolvo SYS e ML alla stregua della CNV_ESTESA
+
+			//'dim temp 
+			//'dim cont 'as int
+			//'dim keyML 'as varchar(200) 	
+			//'dim keySYS 'as varchar(200) 	
+			//'dim valueML 'as nvarchar(4000) 	
+			//'dim valueSYS 'as nvarchar(4000) 	
+			//'dim startPos 'as integer
+			//'dim endPos 'as integer
+			//'dim v
+			//'dim strKey
+			//
+			//'cont=0
+			//
+			//'dim testCont
+			//
+			//'while ( charindex("#ML.",value) > 0 or charindex("#SYS.",value) > 0  or charindex("#PROP.",value) > 0  ) and cont < 4 
+			//
+			//'	'--individuo tutte i pattern #ML.<KEY># o #SYS.<KEY>#		
+			//'	temp=cstr(value)
+			//
+			//'	while  charindex("#ML.",temp)>0 or charindex("#SYS.",temp)>0 or charindex("#PROP.",temp)>0
+			//
+			//'		testCont = testCont + 1
+			//	
+			//'		'--risolvo chaivi ML		
+			//'		if charindex("#ML.",temp) > 0 then
+			//		
+			//'			startPos=charindex("#ML.", temp) + 4
+			//'			keyML = substring (temp, startPos, len(temp) )	
+			//'			endPos = charindex("#", keyML)
+			//'			keyML = substring(keyML,1,endPos-1)
+			//'			valueML = "???" & keyML & "???"
+			//
+			//'			'strSql = "select top 1 convert(nvarchar(4000),ML_Description) as valueML from lib_multilinguismo where ml_key='" & replace(keyML,"'","''") & "' and ml_context=0 and ml_lng='" & replace(suffix,"'","''") & "'"
+			//'			'valueML = getRSvalue( strSql, "valueML", cstr(application("ConnectionString")) )
+			//
+			//'			strKey = strContext & "_" & suffix & "_" & trim(keyML)
+			//'		    v = objNewDizMlng("MultiLinguismo")(strKey)
+			//			
+			//'			If Not IsEmpty(v) Then
+			//'				valueML = v
+			//'			End If
+			//			
+			//'			temp = replace(temp, "#ML." & keyML & "#", "" )
+			//'			value = replace(value, "#ML." & keyML & "#", valueML )
+			//'			
+			//'		end if
+			//		
+			//'		'--risolvo chiavi SYS
+			//'		if charindex("#SYS.",temp) > 0 then
+			//
+			//'			startPos=charindex("#SYS.", temp) + 5
+			//'			keySYS = substring (temp, startPos, len(temp) )	
+			//'			endPos = charindex("#", keySYS)
+			//'			keySYS = substring(keySYS,1,endPos-1)
+			//			
+			//'			'strSql = "select top 1 isnull(DZT_ValueDef,"") as valueSYS from lib_dictionary where dzt_name='" & replace(keySYS,"'","''") & "'"
+			//'			'valueSYS = getRSvalue( strSql, "valueSYS", cstr(application("ConnectionString")) )
+			//			
+			//'			v = application( mid(keySYS,5) ) '-- prendo la SYS senza il prefisso SYS_
+			//			
+			//'			If Not IsEmpty(v) Then
+			//'				valueSYS = v
+			//'			End If
+			//			
+			//'			temp = REPLACE(temp, "#SYS." & keySYS & "#", "" )
+			//'			value = REPLACE(value, "#SYS." & keySYS & "#", valueSYS )
+			//
+			//'		end	if
+			//		
+			//'		'--risolvo chiavi PROP
+			//'		if charindex("#PROP.",temp) > 0 then
+			//
+			//'			startPos=charindex("#PROP.", temp) + 6
+			//'			keyPROP = substring (temp, startPos, len(temp) )	
+			//'			endPos = charindex("#", keyPROP)
+			//'			keyPROP = substring(keyPROP,1,endPos-1)
+			//			
+			//'			strSql = "select dbo.PARAMETRI(dbo.getPos('" & replace(keyPROP,"'","''") & "','@@@',1) , dbo.getPos('" & replace(keyPROP,"'","''") & "','@@@',2) , dbo.getPos('" & replace(keyPROP,"'","''") & "','@@@',3) , dbo.getPos('" & replace(keyPROP,"'","''") & "','@@@',4) , cast(dbo.getPos('" & replace(keyPROP,"'","''") & "','@@@',5) as int)) as valuePRP "
+			//'			'response.write strSql
+			//'			'response.end
+			//'			valuePROP = getRSvalue( strSql, "valuePRP", cstr(application("ConnectionString")) )
+			//			
+			//'			temp = REPLACE(temp, "#PROP." & keyPROP & "#", "" )
+			//'			value = REPLACE(value, "#PROP." & keyPROP & "#", valuePROP )
+			//
+			//'		end	if
+			//		
+			//		
+			//'	wend
+			//
+			//'	cont=cont+1
+			//
+			//'wend
+			//
+			//'-- fine risolvo SYS e ML
+
+			//'--risolvo con CNV_ESTESA 
+			var dict2 = new Dictionary<string, object?>();
+			dict2.Add("@value", value);
+			dict2.Add("@suffix", suffix);
+			strSql = "select dbo.CNV_ESTESA(@value,@suffix) as valore";
+			//'response.write strSql
+			//'response.end
+			CommonDbFunctions cd = new CommonDbFunctions();
+			rs = cd.GetRSReadFromQuery_(CStr(strSql), ApplicationCommon.Application["ConnectionString"], dict2);
+			if (rs.RecordCount > 0)//and err.number = 0 
+			{
+				rs.MoveFirst();
+				value = CStr(rs["valore"]);
+			}
+			//'-- Ritorno il template al chiamante
+			htmlToReturn.Write(value);
+			//'response.write testCont
+
+		}
+		else
+		{
+			//set obj = nothing
+			//set rs = nothing
+		}
+
+	}
+	//set obj = nothing
+	//set rs = nothing
+	//'--faccio abandon se sessione utente vuota o -20
+	if (string.IsNullOrEmpty(CStr(session["IdPfu"])) || string.Equals(CStr(session["IdPfu"]) , "-20") ||  string.Equals(CStr(session["IdPfu"]) , "-10"))
+	{	
+		
+		MainGlobalAsa.SessionAbandon(session);
+		//session.abandon();
+	}
+	//err.clear
+	
+	//private function getRSvalue(strSql, strColName, strConnectionString)
+	//on error resume next
+	//
+	//dim obj
+	//dim rs
+	//dim output
+	//
+	//output = ""
+	//
+	//set obj = server.CreateObject("ctldb.clsTabManage")
+	//set rs = obj.GetRSReadFromQuery( cstr(strSql ) , cstr(strConnectionString) )
+	//
+	//if rs.recordcount > 0 and err.number = 0 then
+	//	
+	//	rs.movefirst
+	//	output = rs.fields(strColName)
+	//
+	//else
+	//
+	//	output = ""
+	//
+	//end if
+	//
+	//set obj = nothing
+	//set rs = nothing
+	//err.clear
+	//
+	//getRSvalue = output
+	//	
+	//
+	//end function
+	long  charindex(string strDaCercare , string strInCuiCercare )
+	{
+		//'-- InStr([start,]string1,string2[,compare])
+		long charindex = Strings.InStr(1, strInCuiCercare, strDaCercare);
+		return charindex;
+	}
+
+	string   substring(string  strOrigin, int startPos, int endPos)
+	{
+		//'-- set keySYS = substring(keySYS,1,endPos-1)
+		//'-- Mid(string,start[,length])
+		string substring = Strings.Mid(strOrigin, startPos, endPos);
+		return substring;
+	}
+	string getMount(DateTime data)
+	{
+		string getMount;
+		int tmp;
+		tmp = data.Month;
+
+		if(CStr(tmp).Length == 1 )
+		{
+			getMount = "0" + CStr(tmp);
+		}
+		else
+		{
+			getMount = CStr(tmp);
+		}
+		return getMount;
+
+	}
+
+	string getDay(DateTime data )
+	{
+		string getDay;
+		int tmp;
+		tmp = data.Day;
+		if(CStr(tmp).Length == 1)
+		{
+			getDay = "0" + CStr(tmp);
+		}
+		else
+		{
+			getDay = CStr(tmp);
+		}
+		return getDay;
+
+	}
+	string  getHour(DateTime data )
+	{
+		string getHour;
+		int tmp;
+		tmp = data.Hour;
+		if(CStr(tmp).Length == 1)
+		{
+			getHour = "0" + CStr(tmp);
+		}
+		else
+		{
+			getHour = CStr(tmp);
+		}
+		return getHour;
+
+	}
+
+}@Html.Raw(htmlToReturn.Out())

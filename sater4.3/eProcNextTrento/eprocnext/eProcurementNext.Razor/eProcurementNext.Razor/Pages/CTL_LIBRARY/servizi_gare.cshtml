@@ -1,0 +1,1253 @@
+﻿@page "/CTL_LIBRARY/servizi_gare.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.serviziGareModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.AspNetCore.Http.Features
+@using Microsoft.Extensions.Primitives
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.serviziGareModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+    CookieOptions cookieOptions = new();
+    cookieOptions.Expires = DateTimeOffset.MaxValue;
+    CommonDbFunctions cdf = new();
+}
+@{
+
+    htmlToReturn.Write("<html>");
+    htmlToReturn.Write("<head>");
+    htmlToReturn.Write($@"<meta http-equiv=""Content-Language"" content=""it""/>");
+    htmlToReturn.Write($@"<meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8""/>");
+    htmlToReturn.Write($@"<meta http-equiv=""pragma"" content=""no-cache""/>");
+    htmlToReturn.Write($@"<meta http-equiv=""cache-control"" content=""no-cache""/>");
+    htmlToReturn.Write("<title>Servizi gare</title>");
+    htmlToReturn.Write("</head>");
+
+    string ambiente = CStr(ApplicationCommon.Application["AFUPDATE_AMBIENTE"]);
+    string cliente = CStr(ApplicationCommon.Application["AFUPDATE_CLIENTE"]);
+
+    TSRecordSet rsc;
+    string strSql;
+
+    //string strSql = "select L.dzt_name from  lib_dictionary L with(nolock) inner join LIB_Dictionary CLIENTE_ECC with(nolock) on  CLIENTE_ECC.DZT_Name = 'SYS_AFUPDATE_CLIENTE' where L.DZT_Name ='SYS_AFUPDATE_AMBIENTE' and  (  L.DZT_ValueDef <> 'Produzione' or CLIENTE_ECC.DZT_ValueDef  in ('35220349') )";
+    //TSRecordSet rsc = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+    //if (rsc.RecordCount > 0)
+
+    if (ambiente.ToLower() != "produzione" || cliente == "35220349")
+    {
+
+        //'--validazione parametri ingresso
+        validate("COSA", GetParamURL(Request.QueryString.ToString(), "COSA"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("utentepreferito", GetParamURL(Request.QueryString.ToString(), "utentepreferito"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("protocollo", GetValueFromForm(Request, "protocollo").Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("utente", GetValueFromForm(Request, "utente"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("MP", GetValueFromForm(Request, "MP"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("ruolo", GetValueFromForm(Request, "ruolo"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("Azienda", GetValueFromForm(Request, "Azienda"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "RIAPERTURA_ASTA")
+        {
+            riapertura_asta(GetValueFromForm(Request, "protocollo"));
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "SCADENZA")
+        {
+            scadenza_gara(GetValueFromForm(Request, "protocollo"));
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "CANCELLA_PDA")
+        {
+            cancella_pda(GetValueFromForm(Request, "protocollo"), "0");
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "CANCELLA_PDA_E_COMMISSIONE")
+        {
+            cancella_pda(GetValueFromForm(Request, "protocollo"), "1");
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "MULTI_SESSION")
+        {
+            assegna_multisession();
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "PASSWORD")
+        {
+            scadenzaPW();
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "RIAPERTURA")
+        {
+            Riapertura_gara(GetValueFromForm(Request, "protocollo"));
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "CREDENZIALI")
+        {
+            getCredenziali(GetValueFromForm(Request, "utente"));
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ACCEDI")
+        {
+            getaccess(GetValueFromForm(Request, "utente"));
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ACCEDIPREFERITO")
+        {
+            string utentepreferito = GetParamURL(Request.QueryString.ToString(), "utentepreferito");
+            getaccesspreferito(utentepreferito);
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "DELETEUSER")
+        {
+            string utentepreferito = GetParamURL(Request.QueryString.ToString(), "utentepreferito");
+            delaccesspreferito(utentepreferito);
+        }
+
+        void assegna_multisession()
+        {
+            int IdPfu;
+            if (IsEmpty(session["IdPfu"]) || CInt(session["IdPfu"]) < -1)
+            {
+                IdPfu = 0;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(CStr(session["IdPfu"])))
+                {
+                    IdPfu = 0;
+                }
+                else
+                {
+                    IdPfu = CInt(session["IdPfu"]);
+                }
+            }
+
+            if (IdPfu == 0)
+            {
+                htmlToReturn.Write($@"Prima di eseguire la funzione ""Assegna Multi Session Utente Collegato"" bisogna accedere all'applicazione con l'utente per il quale si desidera la Multi-Session");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+            else
+            {
+                //'CONTROLLO SE HO GIà MULTI SESSION
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@IdPfu", IdPfu);
+                strSql = "select * from ProfiliUtente where idpfu=@IdPfu and pfuProfili like '%#%'";
+                TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                if (rs.RecordCount > 0)
+                {
+                    htmlToReturn.Write(strSql + "Utente collegato ha gi&agrave; il Multi-Session attivo.");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "Utente collegato ha gi&agrave; il Multi-Session attivo.");
+                }
+                //'CONTROLLO SE PRESENTE SU AMBIENTE UN PROFILO PER IL MULTI_SESSION, ALLORA ASSEGNO IL PROFILO ALTRIMENTI METTO IL SEMPLICE CANCELLETTO SU UTENTE
+                strSql = "select top 1 codice from Profili_Funzionalita where Deleted=0 and TipoProfilo like '%#%'";
+                rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    string profilo = CStr(rs["codice"]);
+                    sqlParams.Clear();
+                    sqlParams.Add("@IdPfu", IdPfu);
+                    sqlParams.Add("@profilo", profilo);
+                    strSql = "insert into ProfiliUtenteAttrib ( IdPfu ,dztNome,attValue) select @IdPfu,'Profilo',@profilo";
+                    cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                    //'REFRESH
+                    sqlParams.Clear();
+                    sqlParams.Add("@IdPfu", IdPfu);
+                    strSql = "UPDATE ProfiliUtente  SET pfufunzionalita = dbo.XOR_FUNZIONALITA_FROM_IDPFU (idpfu),pfuprofili = dbo.MERGE_PFUPROFILO_FROM_IDPFU(idpfu) WHERE idpfu in ( select idpfu from profiliutenteattrib where dztnome = 'Profilo' ) and idpfu= @IdPfu";
+                    cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                }
+                else
+                {
+                    //'INSERISCO SU UTENTE IL CANCELLETTO NELLA PROFILIUTENTE, PER CONSENTIRE LA MULTI_SESSION
+                    sqlParams.Clear();
+                    sqlParams.Add("@IdPfu", IdPfu);
+                    strSql = "UPDATE ProfiliUtente SET pfuProfili=pfuProfili + '#' WHERE idpfu=@IdPfu";
+                    cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                }
+                //'INFO UTENTE
+                sqlParams.Clear();
+                sqlParams.Add("@IdPfu", IdPfu);
+                strSql = "Select pfunome from ProfiliUtente where idpfu=@IdPfu";
+                rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    htmlToReturn.Write($@"Assegnazione Multi-Session a " + CStr(rs["pfunome"]) + " eseguito correttamente.");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, $@"Assegnazione Multi-Session a " + CStr(rs["pfunome"]) + " eseguito correttamente.");
+                }
+            }
+        }
+
+        void Riapertura_gara(string protocollo)
+        {
+            if (!(string.IsNullOrEmpty(protocollo)))
+            {
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@protocollo", protocollo);
+                strSql = "select id , fascicolo from ctl_doc with(nolock) where tipodoc like 'BANDO%' and deleted=0 and protocollo=@protocollo";
+                TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    int idbando = CInt(rs["id"]!);
+                    string fascicolo = CStr(rs["fascicolo"]);
+                    sqlParams.Clear();
+                    sqlParams.Add("@idbando", idbando);
+                    strSql = "select id from ctl_doc with(nolock) where tipodoc ='PDA_MICROLOTTI' and deleted=0 and linkeddoc=@idbando";
+                    TSRecordSet rs1 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                    if (rs1.RecordCount > 0)
+                    {
+                        htmlToReturn.Write($@"PRIMA DI PROCEDERE ALLA RIAPERTURA DELLA GARA CANCELLARE LA PDA PRESENTE NEL SISTEMA E SUCCESSIVAMENTE RIFARE LA RIAPERTURA DELLA GARA");
+                        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                    }
+                    else
+                    {
+                        //string strQuery = "update CTL_DOC set StatoFunzionale='PresOfferte' where TIPODOC <> 'BANDO_CONSULTAZIONE' AND id=@idbando";
+                        string strQuery = "update CTL_DOC set StatoFunzionale='Pubblicato' where TIPODOC = 'BANDO_CONSULTAZIONE' AND id=@idbando";
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                        strQuery = "update document_bando set DataScadenzaOfferta=GETDATE()+365, DataAperturaOfferte=GETDATE()+365 where idHeader=@idbando";
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                        htmlToReturn.Write("Riapertura Gara Eseguito Correttamente!");
+                        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                    }
+                }
+                else
+                {
+                    htmlToReturn.Write("Nessuna gara trovata per il Protocollo!");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                }
+            }
+            else
+            {
+                htmlToReturn.Write("Digitare il Protocollo!");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+        }
+
+        void scadenza_gara(string protocollo)
+        {
+
+            if (!(string.IsNullOrEmpty(protocollo)))
+            {
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@protocollo", protocollo);
+                strSql = "select id,tipodoc from ctl_doc with(nolock) where tipodoc like 'BANDO%' and deleted=0 and protocollo=@protocollo";
+                TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    int id = CInt(rs["id"]!);
+                    string tipodoc = CStr(rs["tipodoc"]);
+                    sqlParams.Clear();
+                    sqlParams.Add("@id", id);
+                    string strQuery;
+                    if (tipodoc != "BANDO_ASTA")
+                    {
+                        strQuery = "update document_bando set DataScadenzaOfferta=GETDATE(), DataAperturaOfferte=GETDATE() where idHeader=@id";
+                    }
+                    else
+                    {
+                        strQuery = "update document_bando set DataScadenzaOfferta=GETDATE() where idHeader=@id";
+                    }
+
+                    cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                    if (tipodoc == "BANDO_ASTA")
+                    {
+                        strQuery = "update CTL_Schedule_Process set DataRequestExec=GETDATE() where iddoc=@id and DPR_DOC_ID='BANDO_ASTA' and DPR_ID='END_ASTA' and state=0";
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                    }
+
+                    htmlToReturn.Write("Scadenza Gara/Asta Eseguito Correttamente!");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                }
+                else
+                {
+                    htmlToReturn.Write("Per il Protocollo inserito non &egrave; presente nessun Bando!");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                }
+            }
+            else
+            {
+                htmlToReturn.Write("Digitare il Protocollo!");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+        }
+
+
+        void cancella_pda(string protocollo, string del_commissione)
+        {
+            if (!(string.IsNullOrEmpty(protocollo)))
+            {
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@protocollo", protocollo);
+                strSql = "select id , fascicolo from ctl_doc with(nolock) where tipodoc like 'BANDO%' and deleted=0 and protocollo=@protocollo";
+                TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    int idbando = CInt(rs["id"]!);
+                    string fascicolo = CStr(rs["fascicolo"]);
+                    sqlParams.Clear();
+                    sqlParams.Add("@idbando", idbando);
+                    strSql = "select id from ctl_doc with(nolock) where tipodoc ='PDA_MICROLOTTI' and deleted=0 and linkeddoc=@idbando";
+                    TSRecordSet rs1 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                    if (rs1.RecordCount > 0)
+                    {
+                        rs.MoveFirst();
+                        int idPDA = CInt(rs1["id"]!);
+                        sqlParams.Clear();
+                        sqlParams.Add("@idPDA", idPDA);
+                        string strQuery = "--cancello logicamente il flag di lettura delle offerte " + Environment.NewLine +
+                                    "update ctl_doc_value set idheader =-idheader " + Environment.NewLine +
+                                    "where idrow  in (" + Environment.NewLine +
+                                    "select idrow from ctl_doc_value  " + Environment.NewLine +
+                                    "where dzt_name  in ( 'lettabusta' , 'richiesta_apertura_busta' ) " + Environment.NewLine +
+                                    "and idheader in ( select idmsg from Document_PDA_OFFERTE where idheader =@idPDA )" + Environment.NewLine +
+                                    ")";
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        //'CIFRO NUOVAMENTE LE OFFERTE
+                        strSql = "select idmsg,IdMittente from Document_PDA_OFFERTE where idheader = @idPDA";
+                        TSRecordSet rs11 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                        if (rs11.RecordCount > 0)
+                        {
+                            rs.MoveFirst();
+                            while (!rs11.EOF)
+                            {
+                                int IDMSG = CInt(rs11["idmsg"]!);
+                                sqlParams.Clear();
+                                sqlParams.Add("@IDMSG", IDMSG);
+                                strSql = "update Document_MicroLotti_Dettagli " + Environment.NewLine +
+                                    "set Graduatoria=NULL, " + Environment.NewLine +
+                                        "Sorteggio=NULL, " + Environment.NewLine +
+                                        "Posizione=NULL, " + Environment.NewLine +
+                                        "Aggiudicata=NULL, " + Environment.NewLine +
+                                        "Exequo=NULL, " + Environment.NewLine +
+                                        "ValoreOfferta=NULL, " + Environment.NewLine +
+                                        "Qty=NULL, " + Environment.NewLine +
+                                        "PrezzoUnitario=NULL, " + Environment.NewLine +
+                                        "CauzioneMicrolotto=NULL, " + Environment.NewLine +
+                                        "CodiceATC=NULL, " + Environment.NewLine +
+                                        "PrincipioAttivo=NULL, " + Environment.NewLine +
+                                        "FormaFarmaceutica=NULL, " + Environment.NewLine +
+                                        "Dosaggio=NULL, " + Environment.NewLine +
+                                        "Somministrazione=NULL, " + Environment.NewLine +
+                                        "UnitadiMisura=NULL, " + Environment.NewLine +
+                                        "Quantita=NULL, " + Environment.NewLine +
+                                        "ImportoBaseAstaUnitaria=NULL, " + Environment.NewLine +
+                                        "ImportoAnnuoLotto=NULL, " + Environment.NewLine +
+                                        "ImportoTriennaleLotto=NULL, " + Environment.NewLine +
+                                        "NoteLotto=NULL, " + Environment.NewLine +
+                                        "CodiceAIC=NULL, " + Environment.NewLine +
+                                        "QuantitaConfezione=NULL, " + Environment.NewLine +
+                                        "ClasseRimborsoMedicinale=NULL, " + Environment.NewLine +
+                                        "PrezzoVenditaConfezione=NULL, " + Environment.NewLine +
+                                        "AliquotaIva=NULL, " + Environment.NewLine +
+                                        "ScontoUlteriore=NULL, " + Environment.NewLine +
+                                        "EstremiGURI=NULL, " + Environment.NewLine +
+                                        "PrezzoUnitarioOfferta=NULL, " + Environment.NewLine +
+                                        "PrezzoUnitarioRiferimento=NULL, " + Environment.NewLine +
+                                        "TotaleOffertaUnitario=NULL, " + Environment.NewLine +
+                                        "ScorporoIVA=NULL, " + Environment.NewLine +
+                                        "PrezzoVenditaConfezioneIvaEsclusa=NULL, " + Environment.NewLine +
+                                        "PrezzoVenditaUnitario=NULL, " + Environment.NewLine +
+                                        "ScontoOffertoUnitario=NULL, " + Environment.NewLine +
+                                        "ScontoObbligatorioUnitario=NULL, " + Environment.NewLine +
+                                        "DenominazioneProdotto=NULL, " + Environment.NewLine +
+                                        "RagSocProduttore=NULL, " + Environment.NewLine +
+                                        "CodiceProdotto=NULL, " + Environment.NewLine +
+                                        "MarcaturaCE=NULL, " + Environment.NewLine +
+                                        "NumeroRepertorio=NULL, " + Environment.NewLine +
+                                        "NumeroCampioni=NULL, " + Environment.NewLine +
+                                        "Versamento=NULL, " + Environment.NewLine +
+                                        "PrezzoInLettere=NULL, " + Environment.NewLine +
+                                        "importoBaseAsta=NULL, " + Environment.NewLine +
+                                        "CampoTesto_1=NULL, " + Environment.NewLine +
+                                        "CampoTesto_2=NULL, " + Environment.NewLine +
+                                        "CampoTesto_3=NULL, " + Environment.NewLine +
+                                        "CampoTesto_4=NULL, " + Environment.NewLine +
+                                        "CampoTesto_5=NULL, " + Environment.NewLine +
+                                        "CampoTesto_6=NULL, " + Environment.NewLine +
+                                        "CampoTesto_7=NULL, " + Environment.NewLine +
+                                        "CampoTesto_8=NULL, " + Environment.NewLine +
+                                        "CampoTesto_9=NULL, " + Environment.NewLine +
+                                        "CampoTesto_10=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_1=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_2=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_3=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_4=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_5=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_6=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_7=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_8=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_9=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_10=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_1=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_2=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_3=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_4=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_5=NULL, " + Environment.NewLine +
+                                        "PunteggioTecnico=NULL, " + Environment.NewLine +
+                                        "ValoreEconomico=NULL, " + Environment.NewLine +
+                                        "PesoVoce=NULL, " + Environment.NewLine +
+                                        "ValoreImportoLotto=NULL, " + Environment.NewLine +
+                                        "CONTRATTO=NULL, " + Environment.NewLine +
+                                        "CODICE_AZIENDA_SANITARIA=NULL, " + Environment.NewLine +
+                                        "CODICE_REGIONALE=NULL, " + Environment.NewLine +
+                                        "DESCRIZIONE_CODICE_REGIONALE=NULL, " + Environment.NewLine +
+                                        "TARGET=NULL, " + Environment.NewLine +
+                                        "MATERIALE=NULL, " + Environment.NewLine +
+                                        "LATEX_FREE=NULL, " + Environment.NewLine +
+                                        "MISURE=NULL, " + Environment.NewLine +
+                                        "VOLUME=NULL, " + Environment.NewLine +
+                                        "ALTRE_CARATTERISTICHE=NULL, " + Environment.NewLine +
+                                        "CONFEZIONAMENTO_PRIMARIO=NULL, " + Environment.NewLine +
+                                        "PESO_CONFEZIONE=NULL, " + Environment.NewLine +
+                                        "DIMENSIONI_CONFEZIONE=NULL, " + Environment.NewLine +
+                                        "TEMPERATURA_CONSERVAZIONE=NULL, " + Environment.NewLine +
+                                        "QUANTITA_PRODOTTO_SINGOLO_PEZZO=NULL, " + Environment.NewLine +
+                                        "UM_QUANTITA_PRODOTTO_SINGOLO_PEZZO=NULL, " + Environment.NewLine +
+                                        "UM_DOSAGGIO=NULL, " + Environment.NewLine +
+                                        "PARTITA_IVA_FORNITORE=NULL, " + Environment.NewLine +
+                                        "RAGIONE_SOCIALE_FORNITORE=NULL, " + Environment.NewLine +
+                                        "CODICE_ARTICOLO_FORNITORE=NULL, " + Environment.NewLine +
+                                        "DENOMINAZIONE_ARTICOLO_FORNITORE=NULL, " + Environment.NewLine +
+                                        "DATA_INIZIO_PERIODO_VALIDITA=NULL, " + Environment.NewLine +
+                                        "DATA_FINE_PERIODO_VALIDITA=NULL, " + Environment.NewLine +
+                                        "RIFERIMENTO_TEMPORALE_FABBISOGNO=NULL, " + Environment.NewLine +
+                                        "FABBISOGNO_PREVISTO=NULL, " + Environment.NewLine +
+                                        "PREZZO_OFFERTO_PER_UM=NULL, " + Environment.NewLine +
+                                        "CONTENUTO_DI_UM_CONFEZIONE=NULL, " + Environment.NewLine +
+                                        "PREZZO_CONFEZIONE_IVA_ESCLUSA=NULL, " + Environment.NewLine +
+                                        "PREZZO_PEZZO=NULL, " + Environment.NewLine +
+                                        "SCHEDA_PRODOTTO=NULL, " + Environment.NewLine +
+                                        "CODICE_CND=NULL, " + Environment.NewLine +
+                                        "DESCRIZIONE_CND=NULL, " + Environment.NewLine +
+                                        "CODICE_CPV=NULL, " + Environment.NewLine +
+                                        "DESCRIZIONE_CODICE_CPV=NULL, " + Environment.NewLine +
+                                        "LIVELLO=NULL, " + Environment.NewLine +
+                                        "CERTIFICAZIONI=NULL, " + Environment.NewLine +
+                                        "CARATTERISTICHE_SOCIALI_AMBIENTALI=NULL, " + Environment.NewLine +
+                                        "PREZZO_BASE_ASTA_UM_IVA_ESCLUSA=NULL, " + Environment.NewLine +
+                                        "VALORE_BASE_ASTA_IVA_ESCLUSA=NULL, " + Environment.NewLine +
+                                        "RAGIONE_SOCIALE_ATTUALE_FORNITORE=NULL, " + Environment.NewLine +
+                                        "PREZZO_UM_IVA_ESCLUSA_ATTUALE_FORNITORE=NULL, " + Environment.NewLine +
+                                        "DATA_ULTIMO_CONTRATTO=NULL, " + Environment.NewLine +
+                                        "UM_UNITA_POSOLOGICA_CONTENUTA_INTERNO_DEL_BANCALE=NULL, " + Environment.NewLine +
+                                        "VALORE_COMPLESSIVO_OFFERTA=NULL, " + Environment.NewLine +
+                                        "NOTE_ENTI_STRUTTURE_AMMINISTRAZIONI=NULL, " + Environment.NewLine +
+                                        "NOTE_OPERATORE_ECONOMICO=NULL, " + Environment.NewLine +
+                                        "ONERI_SICUREZZA=NULL, " + Environment.NewLine +
+                                        "PARTITA_IVA_DEPOSITARIO=NULL, " + Environment.NewLine +
+                                        "RAGIONE_SOCIALE_DEPOSITARIO=NULL, " + Environment.NewLine +
+                                        "IDENTIFICATIVO_OGGETTO_INIZIATIVA=NULL, " + Environment.NewLine +
+                                        "AREA_MERCEOLOGICA=NULL, " + Environment.NewLine +
+                                        "PERC_SCONTO_FISSATA_PER_LEGGE=NULL, " + Environment.NewLine +
+                                        "ULTERIORE_PERC_DI_SCONTO_FISSATA_DA_AIFA1=NULL, " + Environment.NewLine +
+                                        "ULTERIORE_PERC_DI_SCONTO_FISSATA_DA_AIFA2=NULL, " + Environment.NewLine +
+                                        "ADESIONE_PAYBACK=NULL, " + Environment.NewLine +
+                                        "DescrizioneAIC=NULL, " + Environment.NewLine +
+                                        "ValoreAccessorioTecnico=NULL, " + Environment.NewLine +
+                                        "TipoAcquisto=NULL, " + Environment.NewLine +
+                                        "Subordinato=NULL, " + Environment.NewLine +
+                                        "ArticoliPrimari=NULL, " + Environment.NewLine +
+                                        "SelRow=NULL, " + Environment.NewLine +
+                                        "Erosione=NULL, " + Environment.NewLine +
+                                        "ValoreSconto=NULL, " + Environment.NewLine +
+                                        "ValoreRibasso=NULL, " + Environment.NewLine +
+                                        "PunteggioTecnicoAssegnato=NULL, " + Environment.NewLine +
+                                        "PunteggioTecnicoRiparCriterio=NULL, " + Environment.NewLine +
+                                        "PunteggioTecnicoRiparTotale=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_1=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_2=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_3=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_4=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_5=NULL, " + Environment.NewLine +
+                                        "CODICE_CIVAB=NULL, " + Environment.NewLine +
+                                        "DESCRIZIONE_CIVAB=NULL, " + Environment.NewLine +
+                                        "CODICE_EAN=NULL, " + Environment.NewLine +
+                                        "CODICE_FISCALE_OPERATORE_ECONOMICO=NULL, " + Environment.NewLine +
+                                        "CODICE_FISCALE_PRODUTTORE=NULL, " + Environment.NewLine +
+                                        "CODICE_PARAF=NULL, " + Environment.NewLine +
+                                        "TIPO_REPERTORIO=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_6=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_7=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_8=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_9=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_10=NULL, " + Environment.NewLine +
+                                        "ONERI_SICUREZZA_NR=NULL, " + Environment.NewLine +
+                                        "TIPOLOGIA_FORNITURA=NULL, " + Environment.NewLine +
+                                        "CampoTesto_11=NULL, " + Environment.NewLine +
+                                        "CampoTesto_12=NULL, " + Environment.NewLine +
+                                        "CampoTesto_13=NULL, " + Environment.NewLine +
+                                        "CampoTesto_14=NULL, " + Environment.NewLine +
+                                        "CampoTesto_15=NULL, " + Environment.NewLine +
+                                        "CampoTesto_16=NULL, " + Environment.NewLine +
+                                        "CampoTesto_17=NULL, " + Environment.NewLine +
+                                        "CampoTesto_18=NULL, " + Environment.NewLine +
+                                        "CampoTesto_19=NULL, " + Environment.NewLine +
+                                        "CampoTesto_20=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_11=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_12=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_13=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_14=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_15=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_16=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_17=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_18=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_19=NULL, " + Environment.NewLine +
+                                        "CampoNumerico_20=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_11=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_12=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_13=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_14=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_15=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_16=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_17=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_18=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_19=NULL, " + Environment.NewLine +
+                                        "CampoAllegato_20=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_6=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_7=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_8=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_9=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_10=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_11=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_12=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_13=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_14=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_15=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_16=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_17=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_18=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_19=NULL, " + Environment.NewLine +
+                                        "Campo_Intero_20=NULL, " + Environment.NewLine +
+                                        "PrezzoVenditaConfezioneIvaInclusa=NULL, " + Environment.NewLine +
+                                        "STERILE=NULL, " + Environment.NewLine +
+                                        "MONOUSO=NULL, " + Environment.NewLine +
+                                        "QT_NUM_PRODOTTO_SINGOLO_PEZZO=NULL, " + Environment.NewLine +
+                                        "PEZZI_PER_CONFEZIONE=NULL, " + Environment.NewLine +
+                                        "COSTI_MANODOPERA=NULL, " + Environment.NewLine +
+                                        "PercAgg=NULL, " + Environment.NewLine +
+                                        "Dominio_SiNo=NULL, " + Environment.NewLine +
+                                        "Intervallo_0_24=NULL, " + Environment.NewLine +
+                                        "Dominio_SiNo_2=NULL, " + Environment.NewLine +
+                                        "Dominio_SiNo_3=NULL, " + Environment.NewLine +
+                                        "CODIFICA_ARTICOLO_OE_PEZZO_SINGOLO=NULL, " + Environment.NewLine +
+                                        "PERC_RIBASSO=NULL, " + Environment.NewLine +
+                                        "Temperatura_minima_di_conservazione=NULL, " + Environment.NewLine +
+                                        "Temperatura_massima_di_conservazione=NULL, " + Environment.NewLine +
+                                        "Ftalati_free=NULL, " + Environment.NewLine +
+                                        "Infiammabile=NULL, " + Environment.NewLine +
+                                        "Presenza_medicinali=NULL, " + Environment.NewLine +
+                                        "Sostanza_corrosiva=NULL, " + Environment.NewLine +
+                                        "Sostanza_tossica=NULL, " + Environment.NewLine +
+                                        "Sostanza_velenosa=NULL, " + Environment.NewLine +
+                                        "Classe_di_Rimborsabilita=NULL, " + Environment.NewLine +
+                                        "ULTERIORE_PERC_DI_SCONTO_FISSATA_DA_AIFA3=NULL, " + Environment.NewLine +
+                                        "PunteggioEconomicoAssegnato=NULL " + Environment.NewLine +
+                                    "where IdHeader=@IDMSG AND TipoDoc='OFFERTA' ";
+                                cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                                //'response.write strSql
+                                rs11.MoveNext();
+                            }
+                        }
+
+                        sqlParams.Clear();
+                        sqlParams.Add("@fascicolo", fascicolo);
+                        strQuery = "--cancello i documenti generati sulla pda " + Environment.NewLine +
+                                "update ctl_doc " + Environment.NewLine +
+                                "set deleted=1 " + Environment.NewLine +
+                                "where fascicolo=@fascicolo and  deleted=0 " + Environment.NewLine +
+                                "and tipodoc in ('CONTRATTO_GARA','ESCLUDI_LOTTI','ESITO_AMMESSA','ESITO_ANNULLA','ESITO_ECO_LOTTO_ANNULLA','ESITO_ECO_LOTTO_ESCLUSA','ESITO_ESCLUSA', " + Environment.NewLine +
+                                "'ESITO_LOTTO_ANOMALIA','ESITO_VERIFICA','PDA_BACK_ECO','PDA_COMUNICAZIONE_GARA','PDA_COMUNICAZIONE_RISP','PDA_VALUTA_LOTTO_TEC','RETT_VALORE_ECONOMICO', " + Environment.NewLine +
+                                "'RICEZIONE_CAMPIONI','SEDUTA_PDA','VALUTAZIONE_BUSTA_AMMINISTRATIVA','VERBALEGARA','VERIFICA_ANOMALIA','OFFERTA_ALLEGATI')";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        strQuery = "--cancello i documenti OFFERTA_PARTECIPANTI generati sulla pda ma non nell'offerta" + Environment.NewLine +
+                                "update ctl_doc " + Environment.NewLine +
+                                "set deleted=1 " + Environment.NewLine +
+                                "where  fascicolo=@fascicolo and tipodoc='OFFERTA_PARTECIPANTI' and deleted=0 and jumpcheck<>'OFFERTA'";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        strQuery = "--cancello eventuali risultati di gara " + Environment.NewLine +
+                                "delete from CTL_DOC " + Environment.NewLine +
+                                "where fascicolo=@fascicolo and deleted=0 " + Environment.NewLine +
+                                "and tipodoc in ('NEW_RISULTATODIGARA','AVVISO_GARA','INVIO_ATTI_GARA','RICHIESTA_ATTI_GARA')";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        sqlParams.Clear();
+                        sqlParams.Add("@idbando", idbando);
+                        strQuery = "--cancello eventuali risultati di gara " + Environment.NewLine +
+                                "delete from Document_RisultatoDiGara where ID_MSG_BANDO=-@idbando";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        strQuery = "-- cancello logicamente la PDA " + Environment.NewLine +
+                                    "update ctl_doc set deleted = 1 where tipodoc = 'PDA_MICROLOTTI' and deleted = 0 and linkeddoc =@idbando";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        strQuery = "-- riporto lo stato del bando in presentazione offerte " + Environment.NewLine +
+                                    "update ctl_doc set  statofunzionale = 'PresOfferte' where id =@idbando";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        strQuery = "-- Ripristino lo stato seduta e chat " + Environment.NewLine +
+                                    "update Document_Bando set  StatoSeduta = NULL , StatoChat = NULL where idheader =@idbando";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        strQuery = "-- Rimuove Flag PrimaAperturaSedutaDaBusta " + Environment.NewLine +
+                                    "delete from ctl_doc_Value  where [IdHeader]=@idbando and [DSE_ID]='PrimaAperturaSedutaDaBusta' and [DZT_Name]='StatoSeduta'";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        sqlParams.Clear();
+                        sqlParams.Add("@idPDA", idPDA);
+                        strQuery = "-- Rimuove la chat " + Environment.NewLine +
+                                    "update CTL_CHAT_ROOMS set chat_stato = 'OLD' where idHeader=@idPDA";
+
+                        cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+                        if (del_commissione == "1")
+                        {
+                            sqlParams.Clear();
+                            sqlParams.Add("@idbando", idbando);
+                            strQuery = "-- cancello logicamente la commissione " + Environment.NewLine +
+                                "update ctl_doc set deleted = 1 where tipodoc = 'COMMISSIONE_PDA' and deleted = 0 and linkeddoc =@idbando";
+
+                            cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                        }
+
+                        htmlToReturn.Write("PDA Cancellata Correttamente!");
+                        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                    }
+                    else
+                    {
+                        htmlToReturn.Write("Per il Protocollo inserito non &egrave; presente nessuna PDA!");
+                        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                    }
+                }
+
+                else
+                {
+                    htmlToReturn.Write("Per il Protocollo inserito non &egrave; presente nessun Bando!");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                }
+            }
+            else
+            {
+                htmlToReturn.Write("Digitare il Protocollo!");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+        }
+
+        void scadenzaPW()
+        {
+            int IdPfu;
+            if (IsEmpty(session["IdPfu"]) || CInt(session["IdPfu"]) < -1)
+            {
+                IdPfu = 0;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(CStr(session["IdPfu"])))
+                {
+                    IdPfu = 0;
+                }
+                else
+                {
+                    IdPfu = CInt(session["IdPfu"]);
+                }
+            }
+
+            if (IdPfu == 0)
+            {
+                htmlToReturn.Write($@"Prima di eseguire la funzione ""Annulla Scadenza Password Utente Collegato"" bisogna accedere all'applicazione con l'utente per il quale si desidera utilizzare la seguente funzione");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+            else
+            {
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@IdPfu", IdPfu);
+                string strQuery = "update profiliutente set PasswordScaduta = 0, pfuDataCambioPassword=GETDATE()+100000 where idpfu =@IdPfu";
+                htmlToReturn.Write("<strong>Comando eseguito correttamente</strong>");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+        }
+
+        void riapertura_asta(string protocollo)
+        {
+            if (!(string.IsNullOrEmpty(protocollo)))
+            {
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@protocollo", protocollo);
+                strSql = "select id  from ctl_doc with(nolock) where tipodoc = 'BANDO_ASTA' and deleted=0 and protocollo=@protocollo";
+                TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    int idasta = CInt(rs["id"]!);
+                    sqlParams.Clear();
+                    sqlParams.Add("@idasta", idasta);
+                    string strQuery = "update document_asta " + Environment.NewLine +
+                                "set " + Environment.NewLine +
+                                    "StatoAsta='InCorso', " + Environment.NewLine +
+                                    "DataInizio=GETDATE(), " + Environment.NewLine +
+                                    "DataScadenzaAsta=dateadd( mi ,   60 , GETDATE() ), " + Environment.NewLine +
+                                    "DataScadOrig=dateadd( mi ,   60 , GETDATE() ) " + Environment.NewLine +
+                                "where idHeader=@idasta" + Environment.NewLine +
+
+                            "update Document_Bando  " + Environment.NewLine +
+                                "set DataScadenzaOfferta=dateadd( mi ,   60 , GETDATE() ), " + Environment.NewLine +
+                                    "DataRiferimentoInizio=GETDATE() " + Environment.NewLine +
+                                "where idHeader=@idasta" + Environment.NewLine +
+
+                            "update CTL_Schedule_Process " + Environment.NewLine +
+                                "set State=0, DataRequestExec=dateadd( mi ,   60 , GETDATE() ) " + Environment.NewLine +
+                                "where IdDoc =@idasta" + "and DPR_DOC_ID = 'BANDO_ASTA' and DPR_ID = 'END_ASTA'  " + Environment.NewLine +
+
+                            "update O " + Environment.NewLine +
+                                "set StatoDoc = 'Saved' , Statofunzionale = 'InLavorazione'  " + Environment.NewLine +
+                                "from CTL_DOC as O  " + Environment.NewLine +
+                                "where O.LinkedDoc = @idasta and o.TipoDoc = 'OFFERTA_ASTA' ";
+                    cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                    htmlToReturn.Write("comando eseguito correttamente, ora l'asta &egrave stata rimessa in corso con durata di 60 minuti");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                }
+                else
+                {
+                    htmlToReturn.Write("il protocollo inserito non corrisponde a nessuna asta.");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                }
+            }
+            else
+            {
+                htmlToReturn.Write("inserire il protocollo");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+
+        }
+
+        void getCredenziali(string idPfu)
+        {
+            if (string.IsNullOrEmpty(idPfu) || idPfu == "default")
+            {
+                htmlToReturn.Write("<strong>selezionare utente<strong/>");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+            else
+            {
+                //@IdPfu occhio alla SP con stesso par (ho usato @id_Pfu per non confonderlo con @IdPFU dichiarato dentro la procedura Sql)
+                var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@id_Pfu", CInt(idPfu));
+                string strQuery = "set nocount on " + Environment.NewLine +
+                                "declare @IdPFU as Int " + Environment.NewLine +
+                                "declare @NewPwd nvarchar(250) " + Environment.NewLine +
+                                "declare @CriptNewPwd nvarchar(250) " + Environment.NewLine +
+                                "declare @SYS_PWD_ALGORITMO nvarchar(250) " +
+                                "set @IdPFU=@id_Pfu" + Environment.NewLine +
+                                " SET @NewPwd = 'AFs227852' " + Environment.NewLine +
+                                "declare @SYS_PWD_ALGORITMO nvarchar(250) " +
+                                " exec EncryptPwdUser -1 ,@NewPwd, @CriptNewPwd output " + Environment.NewLine +
+                                "update profiliutente " + Environment.NewLine +
+                                "set pfupassword = @CriptNewPwd , " + Environment.NewLine +
+                                "PasswordScaduta = 0 , " + Environment.NewLine +
+                                "pfuAlgoritmoPassword = @SYS_PWD_ALGORITMO, " +
+                                "pfuDataCambioPassword=GETDATE()+100000 " + Environment.NewLine +
+                                "where idpfu =@IdPFU " + Environment.NewLine +
+                                "update CTL_Attivita set ATV_Execute='si' where atv_documentname='CHANGE_PWD_OBBLIG' and ATV_IdPfu=@id_Pfu" + Environment.NewLine +
+                                "select @NewPwd as npw ";
+
+                //'response.write 	strQuery
+                //'response.end
+
+                cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                sqlParams.Clear();
+                sqlParams.Add("@idPfu", CInt(idPfu));
+                strSql = "select top 1 aziLog , pfuLogin , pfunome  from aziende with(nolock) inner join ProfiliUtente with(nolock) on pfuIdAzi=IdAzi and pfuDeleted=0 where aziVenditore>0 and aziAcquirente=0 and aziDeleted=0 and aziIdDscFormaSoc<>845326 and aziE_Mail<>'' and pfuE_Mail<>'' and idpfu=@idPfu";
+                TSRecordSet rs13 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                TSRecordSet rs14 = cdf.GetRSReadFromQuery_(strQuery, ApplicationCommon.Application.ConnectionString, sqlParams);
+                htmlToReturn.Write("<strong><font size=5 >Comando eseguito correttamente<font/></strong> <br/> <br/>");
+                htmlToReturn.Write("<strong><font size=4 >Codice di accesso: ");
+                htmlToReturn.Write(CStr(rs13["aziLog"]));
+                htmlToReturn.Write("<br/><strong><font size=4 >Nome Utente: ");
+                htmlToReturn.Write(CStr(rs13["pfuLogin"]));
+                htmlToReturn.Write("<br/><strong>Password: <strong/>");
+                htmlToReturn.Write(CStr(rs14["npw"]));
+                htmlToReturn.Write("</font></strong>");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "Comando eseguito correttamente");
+            }
+        }
+
+        void getaccess(string idPfu)
+        {
+            if ( !IsNumeric(idPfu) )
+            {
+                htmlToReturn.Write("<strong>Per fare ACCEDI selezionare prima un utente<strong/>");
+                throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+            }
+
+            dynamic mplog = GetValueFromForm(Request, "MP");
+            string tempValue = "";
+            bool bValue = Request.Cookies.TryGetValue("UTENTIPREFERITI", out tempValue);
+            if (!bValue)
+            {
+                Response.Cookies.Append("UTENTIPREFERITI", idPfu, cookieOptions);
+            }
+            else if (Strings.InStr(tempValue, CStr(idPfu)) == 0  && !string.IsNullOrEmpty(tempValue)) 
+            {
+                Response.Cookies.Append("UTENTIPREFERITI", tempValue + "," + idPfu, cookieOptions);
+            }
+            session["UTENTIPREFERITI"] = idPfu;
+            //Response.Cookies["UTENTIPREFERITI"].Expires = #May 9,2037#
+
+            var sqlParams = new Dictionary<string, object?>();
+            sqlParams.Add("@idPfu", CInt(idPfu));
+            string strQuery = "declare @IdDocChangePwd as int " +
+                        "set @IdDocChangePwd = 0 " +
+                        "select @IdDocChangePwd=id from ctl_doc with (nolock) where tipodoc='CHANGE_PWD_OBBLIG' and statodoc='Saved' and idpfu = @idPfu " +
+                        "if @IdDocChangePwd <> 0 " +
+                        "	update CTL_DOC set  DataInvio = getdate() , StatoDoc = 'Sent' where id = @IdDocChangePwd " +
+
+                        "update CTL_Attivita set ATV_Execute='si' where atv_documentname='CHANGE_PWD_OBBLIG' and ATV_IdPfu=@idPfu";
+
+            cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+            session["idpfu"] = idPfu;
+
+            string accessGuid = insertAccessBarrier(session, HttpContext);
+            throw new ResponseRedirectException("../login.asp?redirectback=yes&chiamante=/portale/&strMnemonicoMP=" + session["MP"] + "&acckey=" + URLEncode(CStr(accessGuid)), Response);
+            //response.Redirect "../login.asp?redirectback=yes&chiamante=/portale/&strMnemonicoMP=" & session("MP") & "&acckey=" & server.urlencode(cstr(accessGuid))
+        }
+
+        void getaccesspreferito(string idPfu)
+        {
+            var sqlParams = new Dictionary<string, object?>();
+            sqlParams.Add("@idPfu", CInt(idPfu));
+            string strQuery = "update CTL_Attivita set ATV_Execute='si' where atv_documentname='CHANGE_PWD_OBBLIG' and ATV_IdPfu=@idPfu";
+            cdf.Execute(strQuery, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+            session["idpfu"] = idPfu;
+
+            string accessGuid = insertAccessBarrier(session, HttpContext);
+            throw new ResponseRedirectException("../login.asp?redirectback=yes&chiamante=/portale/&strMnemonicoMP=" + session["MP"] + "&acckey=" + URLEncode(CStr(accessGuid)), Response);
+            //response.Redirect "../login.asp?redirectback=yes&chiamante=/portale/&strMnemonicoMP=" & session("MP") & "&acckey=" & server.urlencode(cstr(accessGuid))
+        }
+
+        void delaccesspreferito(string idPfu)
+        {
+            string virgola = ",";
+            //'verifico che l'idpfu da cancellare sia nel mezzo
+            if (Strings.InStr(Request.Cookies["UTENTIPREFERITI"], (virgola + idPfu + virgola)) != 0)
+            {
+                Response.Cookies.Append("UTENTIPREFERITI", Replace(CStr(Request.Cookies["UTENTIPREFERITI"]), (virgola + idPfu + virgola), virgola), cookieOptions);
+                //'verifico che l'idpfu da cancellare sia l'ultimo
+            }
+            else if (Strings.InStr(Request.Cookies["UTENTIPREFERITI"], (virgola + idPfu)) != 0)
+            {
+                Response.Cookies.Append("UTENTIPREFERITI", Replace(CStr(Request.Cookies["UTENTIPREFERITI"]), (virgola + idPfu), ""), cookieOptions);
+                //'verifico che l'idpfu da cancellare sia il primo
+            }
+            else if (Strings.InStr(Request.Cookies["UTENTIPREFERITI"], (idPfu + virgola)) == 1)
+            {
+                Response.Cookies.Append("UTENTIPREFERITI", Replace(CStr(Request.Cookies["UTENTIPREFERITI"]), (idPfu + virgola), ""), cookieOptions);
+                //'verifico che l'idpfu da cancellare sia l'ultimo rimasto in seguito alle cancellazioni
+            }
+            else if (Strings.InStr(Request.Cookies["UTENTIPREFERITI"], (idPfu)) == 1)
+            {
+                Response.Cookies.Append("UTENTIPREFERITI", Replace(CStr(Request.Cookies["UTENTIPREFERITI"]), idPfu, ""), cookieOptions);
+            }
+            //'response.write "Utente cancellato dal Cookie"
+            //'response.end
+        }
+
+        htmlToReturn.Write($@"<body>
+
+	        <p><font size=""6"" color=""red"" face=""Arial Black"">Utility interno per le gare utile durante i test</font> (Server " + HttpContext.Features.Get<IHttpConnectionFeature>() != null && HttpContext.Features.Get<IHttpConnectionFeature>().LocalIpAddress != null ? HttpContext.Features.Get<IHttpConnectionFeature>().LocalIpAddress.ToString() : "" + $@")</p>
+	        <hr/>
+        ");
+
+        htmlToReturn.Write($@"
+
+	        <strong><font color=""mediumblue"" size=4 face=""century""> Questa funzione consente di essere reindirizzato al portale effettuando l'accesso con l'utente che si seleziona:</font></strong>	<br/><br/>
+	        <form method=""post"">
+	    ");
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") != "ContnuaRuolo" && GetParamURL(Request.QueryString.ToString(), "COSA") != "ContnuaAzienda")
+        {
+            htmlToReturn.Write($@"
+		        <label for=""ruolo"">Selezionare Marketplace</label>
+			        <select name=""MP"" id=""MP"">
+			");
+            strSql = "select mpLog from MarketPlace with (nolock) order by 1 desc";
+            TSRecordSet? rs15 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+            if (rs15.RecordCount > 0)
+            {
+                rs15.MoveFirst();
+                if (session["mp"] == null || session["mp"] == "")
+                {
+                    session["mp"] = CStr(rs15["mpLog"]);
+                }
+                string sel = "selected";
+                while (!rs15.EOF)
+                {
+                    if (session["mp"] == CStr(rs15["mpLog"]))
+                    {
+                        sel = "selected";
+                    }
+                    else
+                    {
+                        sel = "";
+                    }
+                    htmlToReturn.Write($@"
+				        <option " + sel + $@" value=" + CStr(rs15["mpLog"]) + $@"> " + CStr(rs15["mpLog"]) + $@" </option>
+			        ");
+                    rs15.MoveNext();
+                    sel = "";
+                }
+            }
+            rs15 = null;
+            htmlToReturn.Write($@"
+			        </select>
+			        </br>
+		            <label for=""ruolo"">Selezionare tipologia Azienda</label>
+			        <select name=""ruolo"" id=""ruolo"">
+				        <option value=""default"">  Seleziona Tipologia</option>
+				        <option value=""0"">  Ente </option>
+				        <option value=""1"">  Operatore Economico </option>
+			        </select>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=ContnuaRuolo"" value=""Contnua""><br/><br/>
+	        ");
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ContnuaRuolo" && CStr(GetValueFromForm(Request, "ruolo")) == "default" && GetParamURL(Request.QueryString.ToString(), "COSA") != "ContnuaAzienda")
+        {
+            //response.redirect "servizi_gare.asp"
+            throw new ResponseRedirectException("servizi_gare.asp", Response);
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ContnuaRuolo" && CInt(GetValueFromForm(Request, "ruolo")) == 1 && GetParamURL(Request.QueryString.ToString(), "COSA") != "ContnuaAzienda")
+        {
+            session["MP"] = GetValueFromForm(Request, "MP");
+            htmlToReturn.Write($@"
+		        <label for=""Azienda"">Seleziona Azienda dell'utente con il quale si vuole accedere</label>
+			        <select name=""Azienda"" id=""Azienda"">
+				        <option value=""default"">  Seleziona Azienda </option>
+            ");
+            strSql = "select  aziLog + '  -  ' + aziRagioneSociale + '  -  ' + vatvalore_ft as valueselect , idazi from aziende with(nolock) inner join DM_Attributi with(nolock) on lnk=IdAzi and dztNome='codicefiscale' where aziVenditore>0 and aziAcquirente=0 and aziDeleted=0  order by aziRagioneSociale asc";
+            TSRecordSet rs15 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+            if (rs15.RecordCount > 0)
+            {
+                rs15.MoveFirst();
+                while (!rs15.EOF)
+                {
+                    htmlToReturn.Write($@"
+				                <option value=""" + rs15.Fields["idazi"] + $@"""> " + rs15.Fields["valueselect"] + $@"</option>
+	                ");
+                    rs15.MoveNext();
+                }
+            }
+            htmlToReturn.Write($@"
+			            </select>
+		            <input type=""submit"" formaction=""servizi_gare.asp?COSA=ContnuaAzienda"" value=""Contnua""><br/><br/>
+	            <!--</form>-->
+	        ");
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ContnuaRuolo" && CInt(GetValueFromForm(Request, "ruolo")) == 0 && GetParamURL(Request.QueryString.ToString(), "COSA") != "ContnuaAzienda")
+        {
+            session["MP"] = GetValueFromForm(Request, "MP");
+            htmlToReturn.Write($@"
+		        <label for=""Azienda"">Seleziona Azienda dell'utente con il quale si vuole accedere</label>
+			        <select name=""Azienda"" id=""Azienda"">
+				        <option value=""default"">  Seleziona Azienda </option>
+            ");
+            strSql = "select  aziLog + '  -  ' + aziRagioneSociale + '  -  ' + vatvalore_ft as valueselect , idazi from aziende with(nolock) inner join DM_Attributi with(nolock) on lnk=IdAzi and dztNome='codicefiscale' where aziVenditore=0 and aziDeleted=0  order by aziLog asc";
+            TSRecordSet rs16 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+            if (rs16.RecordCount > 0)
+            {
+                rs16.MoveFirst();
+                while (!rs16.EOF)
+                {
+                    htmlToReturn.Write($@"
+				                <option value=""" + rs16.Fields["idazi"] + $@"""> " + rs16.Fields["valueselect"] + $@" </option>
+	                ");
+                    rs16.MoveNext();
+                }
+            }
+            htmlToReturn.Write($@"
+			        </select>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=ContnuaAzienda"" value=""Continua""><br/><br/>
+	        <!--</form>-->
+            ");
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ContnuaAzienda" && CStr(GetValueFromForm(Request, "Azienda")) == "default")
+        {
+            //response.redirect "servizi_gare.asp?"
+            throw new ResponseRedirectException("servizi_gare.asp?", Response);
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ContnuaAzienda")
+        {
+            htmlToReturn.Write($@"
+		        <label for=""utente"">Seleziona utente con il quale si vuole accedere</label>
+			        <select name=""utente"" id=""utente"">
+				        <option value=""default"">  Seleziona Utente </option>
+                ");
+            strSql = "select  pfunome + '  -  ' + pfuCodiceFiscale + '  -  ' + cast(idpfu as varchar) as valueselect , idpfu from aziende with(nolock) inner join ProfiliUtente with(nolock) on pfuIdAzi=IdAzi where pfudeleted=0 and pfuIdAzi=" + GetValueFromForm(Request, "Azienda") + " and isnull(pfunome,'')<>'' and  isnull(idpfu,'')<>'' order by pfunome asc";
+            TSRecordSet rs1111 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+            if (rs1111.RecordCount > 0)
+            {
+                rs1111.MoveFirst();
+                while (!rs1111.EOF)
+                {
+                    htmlToReturn.Write($@"
+				                <option value=""" + rs1111.Fields["idPfu"] + $@"""> " + rs1111.Fields["valueselect"] + $@" </option>
+	                ");
+                    rs1111.MoveNext();
+                }
+            }
+            htmlToReturn.Write($@"
+			        </select>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=ACCEDI"" value=""Accedi""><br/><br/>
+	        <!--</form>-->
+            ");
+        }
+
+        if (GetParamURL(Request.QueryString.ToString(), "COSA") == "ACCEDI" && CStr(GetValueFromForm(Request, "utente")) == "default")
+        {
+            //response.redirect "servizi_gare.asp?"
+            throw new ResponseRedirectException("servizi_gare.asp?", Response);
+        }
+        htmlToReturn.Write($@"
+
+	        <br/>
+	        <strong><font color=""mediumblue""><label for=""utentepreferito""  >Seleziona utente preferito con il quale si vuole accedere:</label></font></strong>
+
+        <!--			<select name=""utentepreferito"" id=""utentepreferito"">
+				        <option value=""default"">  Seleziona Utente Preferito</option>
+	    ");
+        //dim user
+        foreach (var userItem in Request.Cookies)
+        {
+            var user = userItem.Key;
+            if (user == "UTENTIPREFERITI")
+            {
+                var sqlParams = new Dictionary<string, object?>();
+                string[] reqCookiesUser = CStr(Request.Cookies[user]).Split(","); // recupero un array di stringhe per quanti sono gli idpfu contenuti nel cookie
+                reqCookiesUser = reqCookiesUser.Except(new string[] { string.Empty }).ToArray(); //FORZIAMO L'ESCLUSIONE DI EVENTUALI VALORI VUOTI CHE MANDANO IN CRASH LA SUCCESSIVA ISTRUZIONE
+                int[] intidpfu = Array.ConvertAll(reqCookiesUser, int.Parse); // valorizzo un array di int contenente tutti gli idpfu contenuti in reqCookiesUser
+                string[] paramNames = new string[intidpfu.Length]; // predispongo un array di stringhe che conterrà il nome dei parametri
+                for (int x = 0; x < reqCookiesUser.Length; x++) // ciclo per valorizzare i parametri e prepara la stringa da inserire nella clausola IN
+                {
+                    string par = $"@param{x}";
+                    paramNames[x] = par;
+                    sqlParams.Add(par, intidpfu[x]);
+                }
+                string strJoin = string.Join(", ", paramNames); // concateno tutti i nomi dei parametri
+                strSql = $"select aziRagioneSociale + '  -  ' + pfuNome  as valueselect, idpfu from Aziende with(nolock) inner join ProfiliUtente with(nolock) on pfuIdAzi=IdAzi where pfudeleted=0 and idpfu in ({strJoin}) order by pfuNome asc";
+                TSRecordSet rsuser = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                if (rsuser.RecordCount > 0)
+                {
+                    rsuser.MoveFirst();
+                    while (!rsuser.EOF)
+                    {
+                        htmlToReturn.Write($@"
+					    <option value=""" + CInt(rsuser["idPfu"]!) + $@"""> " + CStr(rsuser["valueselect"]) + $@" </option>
+				    ");
+                        rsuser.MoveNext();
+                    }
+                }
+            }
+        }
+        htmlToReturn.Write($@"
+		        </select>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=ACCEDIPREFERITO"" value=""Entra"">
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=DELETEUSER"" value=""Elimina""><br/><br/>
+        </form>-->
+		        </br>
+		        <i><label>Il Marketplace con il quale si sta accedendo è: " + session["MP"] + $@"</label></i>
+		        <table width=""50%"" border=1 class=""UtentiPreferiti""   bordercolor=black>
+			        <tr>
+			        <th class=""CellIntestGrid"" align=""center"">
+			        Tipologia
+			        </th>
+
+			        <th class=""CellIntestGrid"" align=""center"">
+			         Ragione Sociale
+			        </th>
+
+			        <th class=""CellIntestGrid"" align=""center"">
+			         Nominativo
+			        </th>
+
+			        <th class=""CellIntestGrid"" align=""center"">
+			         Operazioni
+			        </th>
+			        </tr>
+        ");
+        bool bValue = false;
+        string tempValue = "";
+        bValue = Request.Cookies.TryGetValue("UTENTIPREFERITI", out tempValue);
+        if (bValue)
+        {
+
+            //dim user2
+            foreach (var user2Item in Request.Cookies)
+            {
+                var user2 = user2Item.Key;
+                if (user2 == "UTENTIPREFERITI")
+                {
+                    var sqlParams = new Dictionary<string, object?>();
+                    string[] reqCookiesUser = CStr(Request.Cookies[user2]).Split(","); // recupero un array di stringhe per quanti sono gli idpfu contenuti nel cookie
+                    int[] intidpfu = Array.ConvertAll(reqCookiesUser, int.Parse); // valorizzo un array di int contenente tutti gli idpfu contenuti in reqCookiesUser
+                    string[] paramNames = new string[intidpfu.Length]; // predispongo un array di stringhe che conterrà il nome dei parametri
+                    for (int x = 0; x < reqCookiesUser.Length; x++) // ciclo per valorizzare i parametri e prepara la stringa da inserire nella clausola IN
+                    {
+                        string par = $"@param{x}";
+                        paramNames[x] = par;
+                        sqlParams.Add(par, intidpfu[x]);
+                    }
+                    string strJoin = string.Join(", ", paramNames); // concateno tutti i nomi dei parametri
+                    strSql = $"select distinct case when aziVenditore=0 then 'Ente' else 'Operatore Economico' end as Ruolo, Aziragionesociale , pfunome, idpfu as utentepreferito from aziende with(nolock) inner join ProfiliUtente with(nolock) on pfuIdAzi=IdAzi where pfudeleted=0 and idpfu in ({strJoin})  order by Aziragionesociale,pfunome asc";
+                    TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+                    if (rs.RecordCount > 0)
+                    {
+                        rs.MoveFirst();
+                        //on error resume next
+
+                        while (!rs.EOF)
+                        { //&& err.number = 0%>
+                            htmlToReturn.Write($@"
+			                <tr>
+			                <td align=""center"">
+			                <label>
+			                " + rs.Fields["Ruolo"] + $@"
+			                </label>
+			                </td>
+
+			                <td align=""center"">
+			                <label>
+			                " + rs.Fields["Aziragionesociale"] + $@"
+			                </label>
+			                </td>
+
+			                <td align=""center"">
+			                <label>
+			                " + rs.Fields["Pfunome"] + $@"
+			                </label>
+			                </td>
+
+			                <td align=""center"">
+			                <label>
+				            <a  href=""servizi_gare.asp?COSA=ACCEDIPREFERITO&utentepreferito=" + rs.Fields["utentepreferito"] + $@"""><img src=""images\domain\filter.png"" alt=""Entra""></a>&nbsp;&nbsp;&nbsp;&nbsp;
+				            <a  href=""servizi_gare.asp?COSA=DELETEUSER&utentepreferito=" + rs.Fields["utentepreferito"] + $@"""><img src=""images\toolbar\Delete_Light.gif"" alt=""Elimina""></a>
+
+			                </label>
+			                </td>
+			                </tr>
+                        ");
+                            rs.MoveNext();
+
+                        }
+                    }
+
+                    htmlToReturn.Write("</table>");
+                }
+            }
+        }
+        htmlToReturn.Write($@"
+	        </form>
+	        <br/>
+	        <br/>
+        ");
+
+        htmlToReturn.Write($@"
+
+	        <strong><font color=""mediumblue"" size=4 face=""century"">Con questa funzione inserendo il protocollo della gara/asta ( registro di sistema ) si ha la possibilit&agrave; di far raggiungere la scadenza alla gara/asta oppure cancellare la PDA creata su quella gara.</font></strong>
+
+	        <br/>
+	        <br/>
+
+	        <form method=""post"" >
+	        Inserire il Protocollo della gara/asta : <input type=""text"" name=""protocollo""  required ><br>
+	        <br/>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=SCADENZA"" value=""Scadenza Gara/Asta""><br/><br/>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=RIAPERTURA"" value=""Riapertura Gara""><br/><br/>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=CANCELLA_PDA"" value=""Cancella PDA""><br/><br/>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=CANCELLA_PDA_E_COMMISSIONE"" value=""Cancella PDA E COMMISSIONE""><br/><br/>
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=RIAPERTURA_ASTA"" value=""Riapertura Asta""><br/><br/>
+	        </form>
+	        <br/>
+	        <hr/>
+	        <strong><font color=""mediumblue"" size=4 face=""century"">Con questa funzione viene assegnata all'utente collegato la possibilit&agrave di lavorare in multi-session sull'ambiente.</font></strong>	<br/>
+	        <i>Ricordarsi di accedere all'applicazione con l'utente a cui si desidera assegnare il multi-sessione prima di eseguire la funzione.</i> <br/><br/>
+	        <form method=""post"" >
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=MULTI_SESSION"" value=""Assegna Multi Session Utente Collegato""><br/><br/>
+	        </form>
+	        <hr/>
+
+            <!--<strong><font color=""mediumblue"" size=4 face=""century"">Questa funzione consente alla password di non scadere.</font></strong>	<br/>
+	        <i>Ricordarsi di accedere all'applicazione con l'utente a cui si desidera annullare la scadenza della password.</i> <br/><br/>
+
+	        <form method=""post"" >
+		        <input type=""submit"" formaction=""servizi_gare.asp?COSA=PASSWORD"" value=""Annulla Scadenza Password Utente Collegato""><br/><br/>
+	        </form>
+
+	        <hr/>
+	        <strong><font color=""mediumblue"" size=4 face=""century""> Questa funzione consente di venire a conoscenza delle credenziali di accesso del fornitore selezionato.</font></strong>	<br/><br/>
+	        <form method=""post"">
+	        <label for=""utente"">Seleziona l'utente</label>
+	        <select name=""utente"" id=""utente"">
+	        <option value=""default"">  Scegliere un utente </option>
+	    ");
+
+
+        strSql = "select top 30 aziLog + '  -  ' + pfuLogin + '  -  ' + pfunome as valueselect , idpfu from aziende with(nolock) inner join ProfiliUtente with(nolock) on pfuIdAzi=IdAzi and pfuDeleted=0 where aziVenditore>0 and aziAcquirente=0 and aziDeleted=0 and aziIdDscFormaSoc<>845326 and aziE_Mail<>'' and pfuE_Mail<>'' order by IdPfu desc";
+        TSRecordSet rs111 = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+        if (rs111.RecordCount > 0)
+        {
+            rs111.MoveFirst();
+            while (!rs111.EOF)
+            {
+                htmlToReturn.Write($@"<option value=" + rs111.Fields["idPfu"] + $@"> " + rs111.Fields["valueselect"] + $@"</option>");
+                rs111.MoveNext();
+            }
+        }
+
+
+        htmlToReturn.Write($@"</select>
+	    <br><br>
+	    <input type=""submit"" formaction=""servizi_gare.asp?COSA=CREDENZIALI"" value=""Ottieni Credenziali""><br/><br/>
+	    </form>-->
+
+	    </body>
+
+	    </html>");
+
+    }
+    else
+    {
+        htmlToReturn.Write($@"<p><font size=""6"" face=""Arial Black"">Utility valida solo per i TEST in ambienti diversi dalla produzione!</font></p>");
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+    }
+
+
+}
+@Html.Raw(htmlToReturn.Out())

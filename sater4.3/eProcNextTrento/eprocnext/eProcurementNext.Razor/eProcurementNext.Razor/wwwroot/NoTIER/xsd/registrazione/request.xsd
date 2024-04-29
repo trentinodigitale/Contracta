@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="xs3p.xsl"?>
+<xs:schema
+	xmlns="http://notier.intercenter.rer.it/services/1.0/iscrizione/request"
+	targetNamespace="http://notier.intercenter.rer.it/services/1.0/iscrizione/request"
+	version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="IscrizionePMI">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Versione" type="TokenNVMax10Type"
+					minOccurs="1" maxOccurs="1" />
+				<xs:element name="DatiSoggetto" type="DatiSoggettoType" minOccurs="1"
+					maxOccurs="1" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="DatiSoggettoType">
+		<xs:sequence>
+			<xs:element name="CodicePaese" type="TokenNVMax3Type"
+				minOccurs="1" maxOccurs="1" />
+			<xs:element name="CodiceFiscale" type="TokenNVMax20Type"
+				minOccurs="1" maxOccurs="1" />
+			<xs:element name="Denominazione" type="TokenNVMax1000Type"
+				minOccurs="1" maxOccurs="1" />
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="TokenNVMax10Type">
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1" />
+			<xs:maxLength value="10" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TokenNVMax3Type">
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1" />
+			<xs:maxLength value="3" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TokenNVMax20Type">
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1" />
+			<xs:maxLength value="20" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TokenNVMax1000Type">
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1" />
+			<xs:maxLength value="1000" />
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
+

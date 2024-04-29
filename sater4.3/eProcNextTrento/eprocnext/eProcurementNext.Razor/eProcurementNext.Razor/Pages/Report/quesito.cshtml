@@ -1,0 +1,403 @@
+﻿@page "/Report/quesito.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.quesitoModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.quesitoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	var SqlParameters = new Dictionary<string, object?>();
+}
+@{
+
+	//'/application/ctl_library/pdf/pdf.asp?URL=/report/quesito.asp?&IDDOC=239&TYPEDOC=DETAIL_CHIARIMENTI
+	//'/application/ctl_library/pdf/pdf.asp?URL=/report/quesito.asp?&IDDOC=239&TYPEDOC=DETAIL_CHIARIMENTI&RISPOSTA=YES
+
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	string risposta = GetParamURL(Request.QueryString.ToString(), "RISPOSTA");
+
+	htmlToReturn.Write($@"<html>
+	<head>");
+
+	addMetaTag(htmlToReturn);
+
+	htmlToReturn.Write($@"<style>
+			.span_principale
+			{{
+				font-weight:bold;
+				text-align:left;
+				font-size:15px;
+			}}
+
+			.div_secondaria
+			{{
+				margin-left:5px;
+				text-align:justify;
+			}}
+
+		</style>
+
+	</head>
+
+	<body style=""margin-left:50px; margin-right:50px; margin-top:0px; margin-bottom:0px"">
+
+
+	<table height=""100%£"" width=""100%"" border=""0"" style=""height:100%"">");
+	SqlParameters.Clear();
+	SqlParameters.Add("@rel_type", "quesito.asp");
+	SqlParameters.Add("@value_Input", "richiesta_quesito-logo");
+	SqlParameters.Add("@rel_value_output", "yes");
+	string strSQL = "select REL_idRow from CTL_Relations with(nolock) where REL_Type = @rel_type and REL_ValueInput = @value_Input and REL_ValueOutput = @rel_value_output";
+
+	int bMostraIntestazione = 0;
+
+	TSRecordSet rs = GetRS(strSQL, SqlParameters);
+
+	//'-- Se sul cliente è richiesto di mostrare sempre l'intestazione
+	if (rs.RecordCount > 0)
+	{
+		bMostraIntestazione = 1;
+	}
+
+	//rs = null;
+
+	//'-- Mostro l'header con il logo del cliente solo se è una risposta. in quanto il mittente di un quesito non è intercenter.
+	//'--			Se è presente la relazione 'richiesta_quesito-logo' aggiunto l'intestazione anche per la domanda oltre che per la risposta
+	if ((risposta).ToUpper() == "YES" || bMostraIntestazione == 1) 
+	{
+
+		htmlToReturn.Write($@"<!--thead>
+		<tr>
+			<td align=""center""> 
+
+				<table  width=""100%"" style=""margin-top:0px"" align=""center"">
+					<tr>
+						<td style=""border:0px;"" align=""center"">
+							<table style=""font-weight:bold; align:center"">
+								<tr>
+									<td align=""center"" style=""border:0px; align:center; vertical-align=middle;"">");
+
+		//'response.Write "<tr><td height=""50px"" align=""center"" valign=""top"" >"
+
+		//'imgHeader = CNV("HEADER_STAMPE")
+
+		//'if instr(1,imgHeader,"???" ) > 0 then
+		//'	response.write "<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" & CNV("ALT LOGO") & """/>"
+		//'else
+		//'	response.write imgHeader
+		//'end if
+
+		//'response.Write "</td></tr>"
+
+
+		htmlToReturn.Write($@"</td>
+								</tr>
+								<tr>
+									<td style=""font-size:9px"">
+
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>
+		</thead-->");
+	}
+	else {
+
+		htmlToReturn.Write($@"<!--thead>
+		<tr>
+	<td align=""center"" style=""font-weight:bold;font-size:20px; align:center""> 
+
+				<"); //'=CNV("HEADER_STAMPA_CUSTOM_CHIARIMENTO")%>
+
+		htmlToReturn.Write($@"</td>
+
+		</tr>
+		</thead-->");
+	}
+
+	SqlParameters.Clear();
+	SqlParameters.Add("@id", CInt(id));
+	string strSql = $@"select doc.protocollo, {Environment.NewLine}
+								pfu.pfuNomeUtente + ' ' + pfu.pfuCognome as Responsabile, {Environment.NewLine}
+								azi2.aziragionesociale as enteAppaltante, {Environment.NewLine}
+								isnull(c.ProtocolloGeneraleIN,'') as ProtocolloGeneraleIN, {Environment.NewLine}
+								convert( varchar(10), c.DataProtocolloGeneraleIN, 103) as DataProtocolloGeneraleIN, {Environment.NewLine}
+								isnull(c.ProtocolloGenerale,'') as ProtocolloGenerale, {Environment.NewLine}
+								convert( varchar(10), c.DataProtocolloGenerale, 103) as DataProtocolloGenerale, {Environment.NewLine}
+								aziUT.aziRagioneSociale as aziRichiedente, {Environment.NewLine}
+								pfuUT.pfuNome as utenteRichiedente {Environment.NewLine}
+							from Document_Chiarimenti c {Environment.NewLine}
+									left join CTL_DOC_VIEW doc on doc.id = c.ID_ORIGIN and isnull(c.Document,'') <> '' {Environment.NewLine}
+									left join profiliutente pfu ON pfu.idpfu = doc.ResponsabileProcedimento {Environment.NewLine}
+									left join aziende azi ON azi.idazi = pfu.pfuidazi {Environment.NewLine}
+									left join aziende azi2 ON azi2.idazi = doc.azienda {Environment.NewLine}
+									left join profiliutente pfuUT ON pfuUT.idpfu = c.UtenteDomanda {Environment.NewLine}
+									left join aziende aziUT ON aziUT.idazi = pfuUT.pfuidazi {Environment.NewLine}
+							where c.id = @id";
+
+	//'response.write strSQL
+
+	rs = GetRS(strSql, SqlParameters);
+
+	string protocolloBando = string.Empty;
+	string responsabile = string.Empty;
+	string enteAppaltante = string.Empty;
+	string aziRichiedente = string.Empty;
+	string utenteRichiedente = string.Empty;
+	string protGenDomanda = string.Empty;
+	string dtProtGenDomanda = string.Empty;
+	string protGenRisp = string.Empty;
+	string dtProtGenRisp = string.Empty;
+
+	if (rs.RecordCount > 0) 
+	{
+		protocolloBando = CStr(rs["protocollo"]);
+		responsabile = CStr(rs["Responsabile"]);
+		enteAppaltante = CStr(rs["enteAppaltante"]);
+		aziRichiedente = CStr(rs["aziRichiedente"]);
+		utenteRichiedente = CStr(rs["utenteRichiedente"]);
+		protGenDomanda = CStr(rs["ProtocolloGeneraleIN"]);
+		dtProtGenDomanda = CStr(rs["DataProtocolloGeneraleIN"]);
+		protGenRisp = CStr(rs["ProtocolloGenerale"]);
+		dtProtGenRisp = CStr(rs["DataProtocolloGenerale"]);
+	}
+
+	string idDoc = objDoc.mp_IDDoc;
+
+	htmlToReturn.Write($@"<tbody>
+		<tr>
+
+			<td height=""100%"" align=""top"" valign=""top"">
+
+
+				<div class=""div_principale"">
+
+					<span class=""span_principale"">"
+					+ ApplicationCommon.CNV("Procedura") +
+								$@"</span>
+
+					<br/><br/>
+
+					<div class=""div_secondaria"">
+
+						<strong>" + ApplicationCommon.CNV("ProtocolloBando") + $@"</strong> :" + protocolloBando + $@"<br/>
+						<strong>" + ApplicationCommon.CNV("Ente Appaltante") + $@"</strong> :" + enteAppaltante + $@"<br/>
+						<strong>" + ApplicationCommon.CNV("oggetto") + $@"</strong> :" + DOC_Field("TESTATA", "Oggetto") + $@"<br/>"
+				+ getCIGeCUP(idDoc) + $@"<br/>
+					</div>
+
+				</div>
+
+				<br/>
+
+				<hr/>
+
+				<div class=""div_principale"">
+
+					<span class=""span_principale"">"
+					+ ApplicationCommon.CNV("Richiedente") +
+								$@"</span>
+
+					<br/><br/>
+
+					<div class=""div_secondaria"">
+
+						<strong>" + ApplicationCommon.CNV("Azienda") + $@"</strong> :" + aziRichiedente + $@" <br/>
+						<strong>" + ApplicationCommon.CNV("Utente") + $@"</strong> :" + utenteRichiedente + $@"<br/>
+
+					</div>
+
+				</div>
+
+				<br/><br/>
+
+				<hr/>
+
+				<div class=""div_principale"">
+
+					<span class=""span_principale"">"
+					+ ApplicationCommon.CNV("Richiesta chiarimento") +
+								$@"</span>
+
+					<br/><br/>
+
+					<div class=""div_secondaria"">
+
+						<strong>" + ApplicationCommon.CNV("Protocollo") + $@":</strong>" + DOC_Field("TESTATA", "Protocol") + $@"<strong>del</strong>" + DOC_Field("TESTATA", "DataCreazione1") + $@"<br/>");
+
+	if (!string.IsNullOrEmpty(protGenDomanda))
+	{
+		htmlToReturn.Write($@"<strong>" + ApplicationCommon.CNV("Protocollo Generale") + $@":</strong>" + protGenDomanda + $@"<strong>del</strong>" + dtProtGenDomanda + $@"<br/>");
+	}
+
+	htmlToReturn.Write($@"<strong>" + ApplicationCommon.CNV("Quesito") + $@"</strong> <br/> <br/>"
+
+	+ DOC_Field("TESTATA", "Domanda") + $@"<br/><br/>
+
+					</div>
+
+				</div>
+
+				<br/>
+
+				<hr/>");
+
+
+
+	if ((risposta).ToUpper() == "YES") 
+	{
+
+		htmlToReturn.Write($@"<div class=""div_principale"">
+
+					<span class=""span_principale"">"
+						+ ApplicationCommon.CNV("Risposta a Richiesta Chiarimento") +
+							$@"</span>
+
+					<br/><br/>
+
+					<div class=""div_secondaria"">
+
+						<strong>" + ApplicationCommon.CNV("Protocollo") + $@":</strong>" + DOC_Field("TESTATA", "ProtocolRispostaQuesito") + $@"<strong>del</strong>" + DOC_Field("TESTATA", "DataRisposta") + $@"<br/>");
+
+		if (!string.IsNullOrEmpty(protGenRisp))
+		{
+			htmlToReturn.Write($@"<strong>" + ApplicationCommon.CNV("Protocollo Generale") + $@":</strong> "+protGenRisp+$@" <strong>del</strong> "+dtProtGenRisp+$@" <br/>");
+
+		}
+
+
+		htmlToReturn.Write($@"<strong>" + ApplicationCommon.CNV("Risposta quesito") + $@"</strong> <br/> <br/>"
+
+						+ DOC_Field("TESTATA", "Risposta") + $@"<br/><br/>");
+
+		string allegatoRisposta = DOC_Field("TESTATA", "Allegato");
+
+		if (!string.IsNullOrEmpty(allegatoRisposta)) {
+
+			htmlToReturn.Write($@"<strong>" + ApplicationCommon.CNV("Allegato") + $@":</strong>" + allegatoRisposta + $@"");
+		}
+
+		htmlToReturn.Write($@"</div>
+
+				</div>");
+
+	}
+
+	htmlToReturn.Write($@"<br/>
+
+			</td>
+
+		</tr>
+
+		</tbody>");
+
+
+	//'-- Mostro IL footer solo se è una risposta.
+	//'if ucase(risposta) = "YES" then
+
+
+	htmlToReturn.Write($@"<!--tfoot>
+		<tr>
+			<td>
+
+				<table border=""0"" height=""100%"" width=""100%"" style=""vertical-align:text-bottom; margin-bottom:0px; "">
+
+					<tr>
+						<td align=""center"" style=""vertical-align: bottom;"" height=""100%"" width=""100%"" >"
+					+ ApplicationCommon.CNV("footer_stampe_custom_1") + $@"<br/>"
+						+ ApplicationCommon.CNV("footer_stampe_custom_2") +
+								$@"</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>
+		</tfoot-->");
+	//'end if
+
+
+	htmlToReturn.Write($@"</table>
+
+	</body>
+	</html>");
+
+	string getCIGeCUP( string idDoc ) 
+	{
+		string strToReturn = string.Empty;
+		string idOrigin = string.Empty;
+		string document = string.Empty;
+		TSRecordSet? rs1;
+
+		CommonDbFunctions cdf = new();
+		SqlParameters.Clear();
+		SqlParameters.Add("@id",CInt(idDoc));
+		rs1 = cdf.GetRSReadFromQuery_("select ID_ORIGIN, isnull(Document, '') as document from Document_Chiarimenti where id = @id", CStr(ApplicationCommon.Application.ConnectionString), SqlParameters);
+
+	if (rs1.RecordCount == 0) 
+	{
+		strToReturn = string.Empty;
+	} 
+	else 
+	{
+			idOrigin = CStr(rs1["ID_ORIGIN"]);
+		document = CStr(rs1["document"]);
+
+		if (string.IsNullOrEmpty(document)) 
+		{
+			//'-- Documento generico
+
+			rs1 = null;
+			SqlParameters.Clear();
+			SqlParameters.Add("@idmsg", CInt(idOrigin));
+				rs1 = cdf.GetRSReadFromQuery_("select CIG, CUP from TAB_MESSAGGI_FIELDS where IdMsg = @idmsg", CStr(ApplicationCommon.Application.ConnectionString), SqlParameters);
+			} 
+			else 
+			{
+				//'-- Documenti nuovi
+				rs1 = null;
+				SqlParameters.Clear();
+				SqlParameters.Add("@id", CLng(idOrigin));
+				rs1 = cdf.GetRSReadFromQuery_("select CIG, isnull(CUP, '') as CUP from Document_Bando with(nolock) where idHeader = @id", CStr(ApplicationCommon.Application.ConnectionString), SqlParameters);
+			}
+
+			if (rs1.RecordCount > 0) 
+			{
+				strToReturn = $"<strong>{ApplicationCommon.CNV("CIG")}:</strong>{CStr(rs1["CIG"])}";
+
+				if (!string.IsNullOrEmpty(CStr(rs1["CUP"])))
+				{
+					strToReturn = $"{strToReturn}<strong> - {ApplicationCommon.CNV("CUP")}:</strong>{CStr(rs1["CUP"])}";
+				}
+			}
+		}
+
+		return strToReturn;
+	}
+
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,331 @@
+﻿@page "/Report/STIPULA_CONTRATTO.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.GetNomeDirigenteModel;
+@using static eProcurementNext.Razor.Pages.Report.STIPULA_CONTRATTOModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.STIPULA_CONTRATTOModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+}
+@{
+
+	htmlToReturn.Write($@"<html>");
+
+	//'-- nel caso il valore del numero passato sia zero ritorna stringa vuota
+
+	string NumF(string strNum) 
+	{
+		string viewDate;
+
+		viewDate = strNum;
+
+		if (CStr(0.5).Contains(".", StringComparison.Ordinal))
+		{
+			viewDate = viewDate.Replace(".", "A");
+			viewDate = viewDate.Replace(",", ".");
+			viewDate = viewDate.Replace("A", ",");
+		}
+
+		return viewDate;
+	}
+
+	htmlToReturn.Write($@"<STYLE>
+	BODY
+	{{
+		FONT-SIZE: 10pt;
+		FONT-FAMILY: Arial
+	}}
+	TABLE
+	{{
+		FONT-SIZE: 10pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.size1
+	{{
+		FONT-SIZE: 12pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.size2
+	{{
+		FONT-SIZE: 14pt;
+		FONT-FAMILY: Arial
+	}}
+
+	.size5
+	{{
+		FONT-SIZE: 20pt;
+		FONT-FAMILY: Arial
+	}}
+
+	</STYLE>
+
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+	<title>PROVINCIA DI NAPOLI&nbsp; DIREZIONE GARE E CONTRATTI</title>
+	</head>
+
+	<body>");
+
+	int np;
+	int cp;
+	np = DOC_NumRow("DETTAGLI", "");
+
+	//'-- per ogni pagina
+	for (cp = 0; cp <= np - 1; cp++)
+	{ //to np-1
+		htmlToReturn.Write($@"<div align=""center"" width=""100%"" height=""100%""");
+
+		if (cp < np - 1) {
+			htmlToReturn.Write($@" style=""page-break-after : always"" ");
+		}
+
+		htmlToReturn.Write($@">
+
+	<table border=""0""  height=""100%"" width=""90%"" >
+	<tr>
+		<td height=""100%"" valign=""top"">
+			<!-- LOGO -->
+			<div align=""center""  >
+			<table border=""0"" valign=""top"">
+			  <tr>
+			    <td ><img src=""logo.jpg""  border=""0""></td>  
+			  </tr>
+			</table>
+			</div>
+
+
+			<!-- Intestazione foglio -->
+
+			<div align=""center"">
+			<b><font class=""size2""><font class=""size5"">P</font> R O V I N C I A &nbsp;&nbsp;D I&nbsp;&nbsp; 
+	<font class=""size5"">N </font>A P O L I</font></font></b><br>
+			<b><font class=""size1"">DIREZIONE GARE E CONTRATTI</font></b><br>
+			<i>Via Oberdan, n 32 (Palazzo BNL) IV piano - 80134 Napoli<br>
+			Sito Web:<u>http://</i>www.provincia.napoli.it</u> <br>
+			<i>e-mail address:</i> <u>contratt@provincia.napoli.it</u> <br>
+			</div>
+
+			<br>
+			<br>
+
+
+			<!-- Protocollo -->
+
+			<table border=""0""  width=""100%""  >
+
+				<tr>
+					<td align=""right"" ><font class=""size1"">Napoli, <i>" + DOC_FieldRow("DETTAGLI", "DataProt_Contratto", cp) + $@"</i></b>
+					</font></td>
+				</tr>
+				<tr>
+					<td align=""left"" ><font class=""size1"">Prot. gen. <i>" + DOC_FieldRow("DETTAGLI", "ProtocolloGenerale_Contratto", cp) + $@"</i>
+					</font></td>
+				</tr>
+			</table>
+
+			<br>
+
+			<!-- Fornitore -->");
+
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@idazi", CInt(DOC_FieldRowTecnical("DETTAGLI", "Fornitore", cp)));
+		TSRecordSet rsAzi = GetRS("select aziRagioneSociale, aziIndirizzoLeg, aziCAPLeg, aziLocalitaLeg, aziProvinciaLeg, aziFAX, dscTesto from Aziende, TipiDatiRange, DescsI where cast(aziIddscFormaSoc as varchar)=tdrCodice and tdrIdDsc=IdDsc and tdrIdTid=131 and IdAzi = @idazi", sqlParams);
+
+		htmlToReturn.Write($@"<table border=""0""  width=""100 % ""  >
+				<tr>
+					<td width=""50%"">&nbsp;</td>
+					<td align=""left"" ><b><font class=""size1"">
+						Spett.le<br>"
+						+ CStr(rsAzi["aziRagioneSociale"]) + $@"&nbsp;&nbsp;" + CStr(rsAzi["dscTesto"]) + $@"<br>"
+						+ CStr(rsAzi["aziIndirizzoLeg"]) + $@"<br>"
+						+ CStr(rsAzi["aziCAPLeg"]) + $@"&nbsp;" + CStr(rsAzi["aziLocalitaLeg"]) + $@"&nbsp;(" + CStr(rsAzi["aziProvinciaLeg"]) + $@")<br>
+						FAX" + CStr(rsAzi["aziFAX"]) + $@"<br>
+
+
+						</b></font>
+					</td>
+				</tr>
+			</table>
+
+			<br>
+			<br>
+
+
+			<!-- OGGETTO -->
+			<table border=""0""  width=""100%""  >
+				<tr>
+
+					<td align=""left"" valign=""top"" ><b><font class=""size1"">
+						<u>OGGETTO</u>:</b>
+						</font>
+					</td>
+
+					<td style=""text-align : justify"" ><b><font class=""size1"">
+						Bando n." + DOC_Field("TESTATA", "Protocol") + $@"- </b>&nbsp;&nbsp; <i>" + DOC_Field("TESTATA", "Oggetto") + $@"</i>
+						</font>
+					</td>
+
+				</tr>
+				<tr>
+
+					<td align=""left"" >
+					</td>
+
+					<td style=""text-align : justify"" ><b><font class=""size1"">
+					    Comunicazione stipula contratto ( art.79, comma 5, lett. b-ter del D.Lgs n.163/2006 )
+						<br>
+						</font></b>
+					</td>
+				</tr>
+			</table>
+
+			<br>
+			<br>
+
+			<!-- Statico -->
+
+			<table border=""0""  width=""100%""  >
+				<tr>");
+
+		//string rsA;
+		bool bATI;
+		string strSQL;
+		sqlParams.Clear();
+		sqlParams.Add("@idazi", CInt(DOC_FieldTecnical("TESTATA", "idAggiudicatrice")));
+		TSRecordSet rsA = GetRS("select aziIdDscFormaSoc, aziRagionesociale, aziLocalitaLeg, aziProvinciaLeg from Aziende where IdAzi = @idazi", sqlParams);
+		bATI = false;
+		if (CInt(rsA["aziIdDscFormaSoc"]!) == 845326)
+		{
+			bATI = true;
+			strSQL = "select aziRagionesociale, aziLocalitaLeg, aziProvinciaLeg from Aziende, Document_Aziende_RTI where isOld = 0 and idAziPartecipante = IdAzi and idAziRTI in (" + DOC_FieldTecnical("TESTATA", "idAggiudicatrice") + ") order by idAziRTI";
+			rsA = GetRS(strSQL);
+		}
+
+		htmlToReturn.Write($@"<td style=""text-align : justify"" ><font class=""size1"">
+					    Ai sensi dell'art.79, comma 5, lett. b-ter del D.Lgs n.163/06, si comunica che il contratto 
+					    relativo all'appalto in oggetto, aggiudicato in via definitiva in favore");
+
+		if (bATI == false)
+		{
+			htmlToReturn.Write($@"della Soc. <b>" + CStr(rsA["aziRagionesociale"]) + $@", </b>
+
+			con sede in <b>" + CStr(rsA["aziLocalitaLeg"]) + $@"&nbsp; ( " + CStr(rsA["aziProvinciaLeg"]) + $@") </b>,");
+		}
+		else
+		{
+			htmlToReturn.Write($@" dell'ATI ");
+			if (rsA.RecordCount > 0)
+			{
+				rsA.MoveFirst();
+
+				while (rsA.EOF == false)
+				{
+					htmlToReturn.Write($@"<b>");
+					htmlToReturn.Write(CStr(rsA["aziRagionesociale"]));
+					htmlToReturn.Write($@"</b> , con sede in <b>" + CStr(rsA["aziLocalitaLeg"]) + $@"&nbsp; ( " + CStr(rsA["aziProvinciaLeg"]) + $@" ) ");
+					rsA.MoveNext();
+					if (rsA.EOF == false)
+					{
+						htmlToReturn.Write($@" </b> - ");
+					}
+					else
+					{
+						htmlToReturn.Write($@" </b>, ");
+					}
+				}
+			}
+		}
+		htmlToReturn.Write($@"con determinazione del" + DOC_Field("TESTATA", "DataDetermina") +
+		$@"n." + DOC_Field("TESTATA", "NRDeterminazione") + $@", è stato stipulato il" + DOC_Field("TESTATA", "DataStipula") + $@",
+
+	giusto rep. gen. n." + DOC_Field("TESTATA", "Rep") +
+
+		$@"<br><br>
+						</font>
+					</td>
+				</tr>
+
+
+
+
+			</table>
+
+			<!-- segratario e dirigente -->
+
+			<table border=""0""  width=""100%""  >
+				<tr>
+					<!--td align=""center"" nowrap><b><font size=""3"">
+						Il Segretario della Commissione<br>
+						<i>" + DOC_Field("TESTATA", "Segretario") + $@"</i>
+
+
+						</b></font>
+					</td-->
+					<td align=""left"" width=""80%"">&nbsp;
+	</td>
+					<td align=""center"" nowrap>
+						<b><font class=""size1"">
+
+						F.to Il Dirigente</b><br>");
+		if (Information.IsDate(DOC_FieldRow("DETTAGLI", "DataProt_Contratto", cp))) {
+			htmlToReturn.Write($@"<i>dott." + GetNomeDirigente(GARE_E_CONTRATTI, DOC_FieldRowTecnical("DETTAGLI", "DataProt_Contratto", cp)) + $@"</i>");
+		} else {
+			htmlToReturn.Write($@"<i>dott." + GetNomeDirigente(GARE_E_CONTRATTI, DOC_FieldTecnical("TESTATA", "DataCreazione")) + $@"</i>");
+		}
+
+
+		htmlToReturn.Write($@"</font>
+						<!--
+						<img border=""0"" src=""firma_demarino.jpg""  width=""150px"">
+						-->
+
+					</td>
+					<td align=""left"" width=""10%"">&nbsp;</td>
+
+				</tr>
+			</table>
+
+			<!-- Chiusura -->
+
+		</td>
+	</tr>
+	<tr>
+		<td style=""BORDER-TOP: black 1px solid;"">
+			<b>Per informazioni e/o comunicazioni:</b>" + DOC_Field("TESTATA", "Segretario_Contratto") + $@", fax 081/5525763. Indirizzo di posta elettronica: <u>contratt@provincia.napoli.it</u>.</td>
+	</tr>
+
+	</table>
+
+
+
+	</div>");
+	}
+
+	htmlToReturn.Write($@"</body>");
+
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+}
+@Html.Raw(htmlToReturn.Out())

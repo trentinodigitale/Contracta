@@ -1,0 +1,56 @@
+﻿@page "/Portale/rss_albo.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using eProcurementNext.DashBoard
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.DashBoard.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Portale.rss_alboModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+
+	var sort = GetParamURL(Request.QueryString.ToString(), "sort");
+	var sortOrder = GetParamURL(Request.QueryString.ToString(), "sortorder");
+
+	if(string.IsNullOrEmpty(sortOrder))
+	{
+		sortOrder = "desc";
+	}
+	var mlKey = GetParamURL(Request.QueryString.ToString(), "ML_KEY");
+	if (string.IsNullOrEmpty(mlKey))
+	{
+		mlKey = "TEMPLATE_RSS_ALBO_ML";
+	}
+
+	var filterHide = CStr(GetParamURL(Request.QueryString.ToString(), "FilterHide"));
+	var filtroAlbo = CStr(GetParamURL(Request.QueryString.ToString(), "FILTRO_TIPO_ALBO"));
+
+	validate("FilterHide", filterHide, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+	validate("FILTRO_TIPO_ALBO", filterHide, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+
+	var filtro = "";
+	if (!string.IsNullOrEmpty(filtroAlbo))
+	{
+		filtro = URLEncode(filtroAlbo);
+
+		if (!string.IsNullOrEmpty(filterHide))
+		{
+			filtro += " and " + URLEncode(filterHide);
+		}
+		
+	}
+	else
+	{
+		filtro = URLEncode(filterHide);
+	}
+
+	HttpContext.Response.Redirect("rss_new.asp?Table=DASHBOARD_VIEW_ISCRIZIONEALBOFORNITORIPUBBLICI_JOOMLA&FilterHide=" + filtro + "&Filter=" + URLEncode(GetParamURL(Request.QueryString.ToString(), "Filter")) + "&ML_KEY=" + mlKey + "&sort=" + sort + "&sortorder=" + sortOrder + "&numRowForPag=" + GetParamURL(Request.QueryString.ToString(), "numRowForPag") + "&nPag=" + GetParamURL(Request.QueryString.ToString(), "nPag"));
+}

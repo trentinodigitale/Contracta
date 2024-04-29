@@ -1,0 +1,29 @@
+BODY.bodyDocument
+{
+    MARGIN: 0px;
+    BACKGROUND-COLOR: white;
+}
+.foglieBack
+{
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #e9edf3;
+	padding:0px 3px 0px 3px;
+	color:#666;
+	
+}
+.loading
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: Arial;
+}
+.foglie
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}

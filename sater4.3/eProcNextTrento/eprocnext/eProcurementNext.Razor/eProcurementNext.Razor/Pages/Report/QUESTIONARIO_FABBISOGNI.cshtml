@@ -1,0 +1,226 @@
+﻿@page "/Report/QUESTIONARIO_FABBISOGNI.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.QUESTIONARIO_FABBISOGNIModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.QUESTIONARIO_FABBISOGNIModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+}
+@{
+	var SqlParameters = new Dictionary<string, object?>();
+
+	htmlToReturn.Write($@"<html>
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/GridPrint.css""  />
+
+	<title>" + ApplicationCommon.CNV("Questionario Fabbisogni") + $@"</title>
+	</head>
+	<body>
+	<table width=""100%"" border=""0"" >
+		 <thead >
+
+		   <tr>
+			<td align=""center""> 
+
+				<table  width=""100%"" style=""margin-top:0px"" align=""center"">
+					<tr>
+						<td style=""border:0px;"" align=""center"">
+							<table style=""font-weight:bold; align:center"">
+								<tr>
+									<td align=""center"" style=""border:0px; align:center; vertical-align=middle;"">
+
+										<tr><td height=""50px"" align=""center"" valign=""top"" >");
+
+	string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+	if (Strings.InStr(1,imgHeader,"???" ) > 0) {
+		htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+	}else{
+		htmlToReturn.Write(imgHeader);
+	}
+
+	htmlToReturn.Write($@"</td></tr>
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;
+									</td>
+								</tr>
+								<tr>
+									<td style=""font-size:18px"">"
+	+ ApplicationCommon.CNV("HEADER_QUESTIONARIO_FABBISOGNI") +
+								$@"</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>
+
+
+
+    	<tr><td>&nbsp;</td></tr>	
+
+		 <table width=""100%"">
+				<tr>
+					<td style=""text-align:left"">
+						<font class=""Input"">");
+	PubLegaleAZI(DOC_FieldTecnical("TESTATA", "Azienda"), "1111", htmlToReturn);
+	htmlToReturn.Write(
+	$@"</font>
+						</td>  
+						<td style=""text-align:right"">
+							<b>Registro di Sistema: </b>" + DOC_Field( "TESTATA", "Protocollo") +
+	$@"</td>
+
+					</tr>
+			</table>
+			<table width=""100%"">
+					<tr>
+
+						<td>
+							<b>Registro di Sistema Richiesta:</b>" + DOC_Field( "TESTATA", "ProtocolloGenerale") +
+	$@"</td>
+						<td>
+							&nbsp;&nbsp;
+						</td>
+						<td>
+							<b>Data invio Richiesta:</b>" + DOC_Field( "TESTATA", "DataProtocolloGenerale") + 
+	$@"</td>
+						<td>
+							&nbsp;&nbsp;
+						</td>					
+						<td>
+							<b>Data Scadenza per l’invio della Risposta:</b>" + DOC_Field( "TESTATA", "DataScadenza") +
+	$@"</td>
+
+					</tr>
+			</table>
+
+			<tr>
+			<td  style=""border:0px;""><label style=""font-size:18px; font-weight:bold; align:left"">" + ApplicationCommon.CNV("Oggetto dell'iniziativa") + $@": </label>"
+				+ DOC_Field( "COPERTINA","Body") +
+	$@"</td>
+         </tr>	
+
+
+        <tr><td>&nbsp;</td></tr>
+
+        </thead>
+
+        <tr>
+			<td style=""border:0px;"" >");
+
+
+	//dim ObjSession
+	//ObjSession = session("Session");
+	//set ObjSession(0) = Request.QueryString
+	//set ObjSession(1) = Request.form
+
+	//'-- Passiamo di nuovo anche la request all'indice 3 per permettere alla classe ctldb.blacklist di recuperare l'ip
+	//set ObjSession(3) = request
+	//set ObjSession(5) = session
+	//set ObjSession(6) = application
+	//ObjSession(9) = application("Server_RDS")
+	//ObjSession(10) = session("Funzionalita")//' permessi utenti
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+	//session("Session") = ObjSession
+
+	//'--stampo la griglia 
+	//'--recupero modello
+	string idDoc = objDoc.mp_IDDoc;
+	SqlParameters.Add("@id", CInt(idDoc));
+	SqlParameters.Add("@dse_id", "PRODOTTI");
+	TSRecordSet rsM = cdf.GetRSReadFromQuery_("select MOD_Name from CTL_DOC_SECTION_MODEL where IdHeader = @id and DSE_ID = @dse_id", ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+	if (rsM.RecordCount > 0)
+	{ 
+		string strModelloOfferta = CStr(rsM["MOD_Name"]).Trim();
+
+		//'--recupero modello griglia
+		//mp_objDB = CreateObject("ctldb.lib_dbModelext");
+		var mp_objDB = new LibDbModelExt();
+		var mp_Columns = new Dictionary<string, Field>();
+		var mp_ColumnsProperty = new Dictionary<string, Grid_ColumnsProperty>();
+		mp_objDB.GetFilteredFieldsWeb(strModelloOfferta, ref mp_Columns, ref mp_ColumnsProperty, CStr(session["strSuffLing"]) , 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+
+		//'--rimuovo colonna Esito
+		//'mp_Columns.Remove "EsitoRiga"
+
+		Grid_ColumnsProperty prop;
+		try 
+		{
+			prop = mp_ColumnsProperty["EsitoRiga"];
+		}
+		catch
+		{
+			prop = new eProcurementNext.HTML.Grid_ColumnsProperty();
+			prop.Hide = true;
+			mp_ColumnsProperty.Add("EsitoRiga", prop);
+		}
+
+		//'--recupero recordset dei dati per la griglia
+
+		var mp_objGrid = new eProcurementNext.HTML.Grid();
+		//mp_objGrid = CreateObject("ctlhtml.grid");
+
+		mp_objGrid.Columns = mp_Columns;
+		mp_objGrid.ColumnsProperty = mp_ColumnsProperty;
+
+		//' mp_objGrid.RecordSetWeb rs, strColId, bAutocol
+		mp_objGrid.SetMatrixDisposition(false);
+
+		if (!(string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "BUSTA"))))
+		{
+			mp_objGrid.SetMatrix(objDoc.Sections[Replace(GetParamURL(Request.QueryString.ToString(), "BUSTA"), "'", "''")].mp_Matrix);
+		}
+		else
+		{
+			mp_objGrid.SetMatrix(objDoc.Sections["PRODOTTI"].mp_Matrix);
+		}
+
+		mp_objGrid.id = "GridViewer";
+		mp_objGrid.width = "100%";
+		mp_objGrid.Editable = false;
+		//'--mp_objGrid.ShowTotal CNV("totale") , "2"
+		mp_objGrid.Html(htmlToReturn);
+
+		mp_objGrid = null;
+	}
+
+
+	htmlToReturn.Write($@"</td>
+	</tr>
+        
+   </table>
+    
+	</body>
+	</html>");
+
+
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+		{
+			FreeMemDocument(session);
+		}
+		catch
+		{
+
+		}
+}@Html.Raw(htmlToReturn.Out())

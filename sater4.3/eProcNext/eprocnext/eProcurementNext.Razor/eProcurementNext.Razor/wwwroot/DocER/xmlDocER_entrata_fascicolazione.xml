@@ -1,0 +1,66 @@
+<Segnatura xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<Intestazione>
+
+		<Oggetto>TEST protocollazione AF + fascicolazione</Oggetto>
+
+		<Flusso>
+
+			<!--E=Entrata; U=Uscita; I=Interno -->
+			<TipoRichiesta>E</TipoRichiesta>
+			<Firma>NF</Firma>
+			<ForzaRegistrazione>1</ForzaRegistrazione>
+		</Flusso>
+
+		<!-- Informazioni relative  al  soggetto  che ha inoltrato la richiesta di protocollazione -->
+		<!-- obbligatorio per prot.entrata può essere Persona , PersonaGiuridica, Amministrazione, AOO ed ammette valori multipli -->
+		<Mittenti>
+			<Mittente>
+				<PersonaGiuridica id="0" tipo="PG">
+					<!-- se non lo trova in EG, lo aggiunge automaticamnete-->
+					<Denominazione>Test rova srl</Denominazione>
+					<Metadati>
+						<Parametro nome="CODICE_FISCALE" valore="AAABBBCCCDD" />
+						<Parametro nome="PARTITA_IVA" valore="98765432132" />
+					</Metadati>
+				</PersonaGiuridica>
+			</Mittente>
+		</Mittenti>
+
+		<!-- non obbligatorio per prot.entrata/registrazione perchè è sempre l'ente. Può essere multiplo -->
+		<Destinatari>
+			<Destinatario>
+
+				<Amministrazione>
+
+					<Denominazione>Emilia Romagna</Denominazione>
+					<CodiceAmministrazione>EMR</CodiceAmministrazione>
+
+					<!-- UO censita in EG, recuperare i codici-->
+					<UnitaOrganizzativa tipo="temporanea">
+						<Denominazione>UO</Denominazione>
+						<Identificativo>000INCER</Identificativo>
+					</UnitaOrganizzativa>
+
+				</Amministrazione>
+
+				<AOO>
+					<Denominazione>Bbbb</Denominazione>
+					<CodiceAOO>AOO_AI</CodiceAOO>
+				</AOO>
+
+			</Destinatario>
+		</Destinatari>
+
+		<!-- Opzionale  -->
+		<FascicoloPrimario>
+			<CodiceAmministrazione>EMR</CodiceAmministrazione>
+			<CodiceAOO>AOO_AI</CodiceAOO>
+			<!-- voce di titolario -->
+			<Classifica>250.50</Classifica>
+			<Anno>2015</Anno>
+			<Progressivo>1</Progressivo>
+		</FascicoloPrimario>
+
+	</Intestazione>
+</Segnatura>

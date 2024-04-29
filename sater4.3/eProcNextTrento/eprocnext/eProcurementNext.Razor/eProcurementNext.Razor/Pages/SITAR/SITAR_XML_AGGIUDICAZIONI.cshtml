@@ -1,0 +1,265 @@
+﻿@page "/SITAR/SITAR_XML_AGGIUDICAZIONI.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.IO;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.ctl_profiler
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.CtlProcess;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.SITAR.SITAR_XML_AGGIUDICAZIONIModel
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+    CommonDbFunctions cdf = new();
+
+    HttpContext.Response.ContentType = "TEXT/XML";
+    if (GetParamURL(Request.QueryString.ToString(), "VIDEO") != "1")
+    {
+        HttpContext.Response.Headers.Add("Content-Disposition", "attachment; filename=SITAR_XML_AGGIUDICAZIONI.XML");
+    }
+
+    string vbTab = string.Empty;
+    string RUP_Login = string.Empty;
+    string RUP_Pwd = string.Empty;
+    string CF_Ente = string.Empty;
+    string g_ID_DOC = string.Empty; // '-- ID della GARA
+    string g_id_PDA = string.Empty;
+    string g_SQLfilter = string.Empty;
+    string OPERATION = string.Empty;
+    string cfRapLeg = string.Empty;
+    string STRsql = string.Empty;
+
+    var sqlParams = new Dictionary<string, object?>();
+
+    //'-- init
+    vbTab = "    ";
+
+    string SOVRASCR = "true";
+
+    g_ID_DOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+    OPERATION = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+
+    validate("IDDOC", g_ID_DOC, TIPO_PARAMETRO_INT, 0, "", 1, HttpContext, session);
+    validate("OPERATION", OPERATION, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+    TSRecordSet rs_Lotti = new TSRecordSet();
+    TSRecordSet rs_Lotti_PDA = new TSRecordSet();
+    TSRecordSet rs_Gara = new TSRecordSet();
+    TSRecordSet rs_ComAggiudic = new TSRecordSet();
+    TSRecordSet rs_Aziende = new TSRecordSet();
+    TSRecordSet rs_RapLeg = new TSRecordSet();
+    TSRecordSet rs_pwd = new TSRecordSet();
+
+    rs_pwd = GetRS("select dbo.OCP_getPasswordWS('') as account");
+
+    rs_pwd.MoveFirst();
+
+    string sitar_account = CStr(rs_pwd["account"]);
+    string[] arr = sitar_account.Split("@@@");
+
+    string SITAR_LOGIN = arr[0];
+    string SITAR_PASSWORD = arr[1];
+
+    //'-- se è stato richiesto l'invio a lotti
+
+    sqlParams.Add("@ID_DOC", CInt(g_ID_DOC));
+    if (OPERATION.ToUpper() == "ISTANZIAAGGIUDICAZIONELOTTI")
+    {
+        STRsql = "select * from SITAR_XML_LOTTI_AGGIUDICATI where idRow = @ID_DOC";
+        rs_Lotti_PDA = GetRS(STRsql, sqlParams);
+
+        //'-- recupero l'id del documento dai lotti
+        rs_Lotti_PDA.MoveFirst();
+        g_ID_DOC = CStr(rs_Lotti_PDA["idHeader"]);
+        sqlParams.Clear();
+        sqlParams.Add("@ID_DOC", CInt(g_ID_DOC));
+    }
+    else
+    {
+        STRsql = "select * from SITAR_XML_LOTTI_AGGIUDICATI where idheader = @ID_DOC";
+        rs_Lotti_PDA = GetRS(STRsql, sqlParams);
+        rs_Lotti_PDA.MoveFirst();
+    }
+
+    rs_Gara = GetRS("select CFEIN from SITAR_XML_DATI_GARA with(nolock) where idHeader =  @ID_DOC", sqlParams);
+
+    CF_Ente = CStr(rs_Gara["CFEIN"]);
+
+    response.Write(@"<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/' xmlns:bean='http://beans.ws.vigilanza.sil.eldasoft.it'>
+	<soapenv:Header/>
+	<soapenv:Body>
+		<bean:istanziaAggiudicazione>
+			<bean:login>
+				<bean:login>" + SITAR_LOGIN + @"</bean:login>
+				<bean:password>" + SITAR_PASSWORD + @"</bean:password>
+			</bean:login>
+			<bean:aggiudicazione>
+				<bean:testata>
+					<bean:CFEIN>" + CF_Ente + @"</bean:CFEIN>
+					<bean:SOVRASCR>" + SOVRASCR + @"</bean:SOVRASCR>
+				</bean:testata>
+				<bean:oggettoXML>
+					<![CDATA[
+    <bean:richiestaSincrona_IstanzaAggiudicazione test='false' xmlns:bean='http://beans.vigilanza.sil.eldasoft.it'>");
+
+    //'-- Ciclo sui lotti
+    while (!rs_Lotti_PDA.EOF)
+    {
+        response.Write(@"<bean:listaLottiAggiuidicati>
+		        <bean:W3CIG>" + encodeXML(CStr(rs_Lotti_PDA["W3CIG"]).Trim()) + @"</bean:W3CIG>
+		        <bean:aggiudicazione>");
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3PROCEDUR"]), "bean:W3PROCEDUR"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3PREINFOR"]), "bean:W3PREINFOR"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3TERMINE"]), "bean: W3TERMINE"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3MOD_IND"]), "bean: W3MOD_IND"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3IMPR_AMM"]), "bean: W3IMPR_AMM"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3IMPR_OFF"]), "bean: W3IMPR_OFF"));
+
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3DVERB"]), "bean: W3DVERB"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3DSCAPO"]), "bean: W3DSCAPO"));
+
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3IMP_AGGI"]), "bean: W3IMP_AGGI"));
+        response.Write(@"<bean:W3ASTA_ELE>false</bean:W3ASTA_ELE>");
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3PERC_RIB"]), "bean: W3PERC_RIB"));
+
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3PERC_OFF"]), "bean: W3PERC_OFF"));
+
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3FLAG_RIC"]), "bean: W3FLAG_RIC"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3OFFE_MAX"]), "bean: W3OFFE_MAX"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3OFFE_MIN"]), "bean: W3OFFE_MIN"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3I_SUBTOT"]), "bean: W3I_SUBTOT"));
+
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W9APOUSCOMP"]), "bean: W9APOUSCOMP"));
+
+
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W9APDATA_STI"]), "bean: W9APDATA_STI"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3RELAZUNIC"]), "bean: W3RELAZUNIC"));
+
+
+        response.Write(@"</bean:aggiudicazione>");
+
+        //'-- OE AGGIUDICATARI 1 o enne in caso di RTI
+        sqlParams.Clear();
+        sqlParams.Add("@idRow", CInt(rs_Lotti_PDA["idRow"]!));
+        rs_Aziende = GetRS("select * from SITAR_XML_IMPRESE_AGGIUDICATARIE where LinkedDoc = @idRow", sqlParams);
+
+        //'-- Ciclo sulle partecipanti
+        if (rs_Aziende.RecordCount > 0)
+        {
+            rs_Aziende.MoveFirst();
+            while (!rs_Aziende.EOF)
+            {
+                response.Write(@"<bean:listaImpreseAggiudicatarie>");
+
+                response.Write(addOptionalTag(Left(CStr(rs_Aziende["CFIMP"]), 16), "bean:CFIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["NOMIMP"]), "bean:NOMIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3AGIDGRP"]), "bean:W3AGIDGRP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["AGGAUS"]), "bean:AGGAUS"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3ID_TIPOA"]), "bean:W3ID_TIPOA"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3RUOLO"]), "bean:W3RUOLO"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3FLAG_AVV"]), "bean:W3FLAG_AVV"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["CFIMP_AUSILIARIA"]), "bean:CFIMP_AUSILIARIA"));
+
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3AGIMP_AGGI"]), "bean:W3AGIMP_AGGI"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3AGPERC_OFF"]), "bean:W3AGPERC_OFF"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["W3AGPERC_RIB"]), "bean:W3AGPERC_RIB"));
+
+                response.Write(addOptionalTag(CStr(rs_Aziende["G_NAZIMP"]), "bean:G_NAZIMP"));
+                response.Write(addOptionalTag(Left(CStr(rs_Aziende["INDIMP"]), 60), "bean:INDIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["NCIIMP"]), "bean:NCIIMP"));
+                response.Write(addOptionalTag(Left(CStr(rs_Aziende["CAPIMP"]), 5), "bean:CAPIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["LOCIMP"]), "bean:LOCIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["TELIMP"]), "bean:TELIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["FAXIMP"]), "bean:FAXIMP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["EMAI2IP"]), "bean:EMAI2IP"));
+                response.Write(addOptionalTag(CStr(rs_Aziende["NCCIAA"]), "bean:NCCIAA"));
+
+                //'-- LEGALI RAPPRESENTANTI
+                rs_RapLeg = GetRS("select isnull(CFTIM,'') as CFTIM,COGTIM,NOMETIM from SITAR_XML_LEGALI_RAPPRESENTANTI where idHeader = @idRow", sqlParams);
+
+                if (rs_RapLeg.RecordCount > 0)
+                {
+                    rs_RapLeg.MoveFirst();
+                    while (!rs_RapLeg.EOF)
+                    {
+                        cfRapLeg = CStr(rs_RapLeg["CFTIM"]);
+
+                        if (!string.IsNullOrEmpty(cfRapLeg))
+                        {
+                            response.Write(@"<bean:listaLegaliRappresentanti>");
+                            response.Write(addOptionalTag(cfRapLeg, "bean:CFTIM"));
+                            response.Write(addOptionalTag(CStr(rs_RapLeg["COGTIM"]), "bean:COGTIM"));
+                            response.Write(addOptionalTag(CStr(rs_RapLeg["NOMETIM"]), "bean:NOMETIM"));
+                            response.Write(@"</bean:listaLegaliRappresentanti>");
+                        }
+                        rs_RapLeg.MoveNext();
+                    }
+                }
+                response.Write("		</bean:listaImpreseAggiudicatarie>" + Environment.NewLine);
+                rs_Aziende.MoveNext();
+            }
+        }
+        response.Write(@"<bean:listaFinanziamenti>");
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3ID_FINAN"]), "bean:W3ID_FINAN"));
+        response.Write(addOptionalTag(CStr(rs_Lotti_PDA["W3I_FINANZ"]), "bean:W3I_FINANZ"));
+        response.Write(@"</bean:listaFinanziamenti>");
+
+
+        response.Write(@"</bean:listaLottiAggiuidicati>");
+
+        rs_Lotti_PDA.MoveNext();
+    }
+    response.Write(@"</bean:richiestaSincrona_IstanzaAggiudicazione>
+						]]>
+				</bean:oggettoXML>
+			</bean:aggiudicazione>
+		</bean:istanziaAggiudicazione>
+	</soapenv:Body>
+    </soapenv:Envelope>");
+
+
+
+
+
+    string addOptionalTag(string Value, string tag)
+    {
+        //on error resume next
+
+        string result = string.Empty;
+        if (!string.IsNullOrEmpty(Value))
+        {
+            try
+            {
+                string encodedValue = encodeXML(Value);
+                result = $"<{tag}>{encodedValue}</{tag}>{Environment.NewLine}";
+                //response.Write vbcrlf
+            }
+            catch { }
+        }
+        return result;
+    }
+
+    string encodeXML(string str)
+    {
+        //on error resume next
+
+        string result = string.Empty;
+        if (!string.IsNullOrEmpty(str))
+        {
+            result = System.Net.WebUtility.HtmlEncode(str);
+            result = result.Replace("'", "&apos;");
+        }
+        return result;
+        //on error goto 0
+    }
+}
+@Html.Raw(response.Out())

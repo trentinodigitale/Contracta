@@ -1,0 +1,17 @@
+﻿@page "/CTL_LIBRARY/functions/download.aspx"
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.Application
+@using eProcurementNext.BizDB
+@using eProcurementNext.CommonModule
+@inject IConfiguration configuration;
+@inject eProcurementNext.Application.IEprocNextApplication application;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.downloadModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.downloadModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+	Page_Load(HttpContext, htmlToReturn, session);
+}
+@Html.Raw(htmlToReturn.Out())

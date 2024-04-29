@@ -1,0 +1,87 @@
+﻿@page "/CTL_LIBRARY/updateblacklist.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject eProcurementNext.BizDB.ITabManage _TabManage;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.Extensions.Primitives
+@using Microsoft.VisualBasic;
+@using System.Text
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    //on error resume next
+    //stop
+
+    string guid = GetParamURL(Request.QueryString.ToString(), "toupdate");
+
+    if (string.IsNullOrEmpty(CStr(guid)))
+    {
+        htmlToReturn.Write(ApplicationCommon.CNV("Parametro toupdate vuoto"));
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "Parametro toupdate vuoto");
+    }
+
+    //'-- Se la richiesta � di aggiornare anche il db.
+    //'-- questo serve per quando si st� refreshando la blacklist tra le macchine in bilanciamento.
+    //'-- faccio aggiornare solo application perch� il DB � 1 solo e viene aggiornato 1 volta sola
+    if (string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "onlyapplication")))
+    {
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@guid", guid);
+        string strSql = "update ctl_blacklist set statoblocco = 'not-blocked',dataRefresh = getDate(),NumeroRefresh = NumeroRefresh + 1  where guid = @guid";
+
+        CommonDbFunctions cdf = new();
+        cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+    }
+
+    //'Ricarichiamo la blacklist
+    refreshBlackList();
+
+    //'ip = objDB.getIpByGuid (CStr(guid), ObjSession)
+    //'dim collblack
+    //'set collblack = Application("blacklist")
+    //'collblack.remove (ip)
+    //'set Application("blacklist") = collblack
+
+    //'if (err.number > 0) then
+    //'	Response.Write "ERROR : " & err.Description
+    //'else
+    htmlToReturn.Write(ApplicationCommon.CNV("Blacklist aggiornata con successo"));
+    //'end if
+
+    //'-- Se c'� il parametro onlyapplication allora la macchina corrente non � quella da cui � partita la refresh
+    //'-- ma st� su una macchina 'slave' e quindi non dovr� invocare la refresh su altre macchine perch� ci st� gia pensando la macchina 'master'
+    if (string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "onlyapplication")))
+    {
+        string ipRefresh = CStr(ApplicationCommon.Application["app-to-refresh"]);
+        string[] vetListIp = Strings.Split(ipRefresh, "@");
+
+        for (int k = 0; k <= vetListIp.Length - 1; k++)
+        {//For k = 0 To UBound(vetListIp)
+            string page = vetListIp[k] + "/ctl_library/updateblacklist.asp?toupdate=" + guid + "&onlyapplication=yes&backoffice=yes";
+
+            invokeUrl(page);
+        }
+    }
+
+    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+    void refreshBlackList()
+    {
+        ////'-- Caricamento della black list in application
+        eProcurementNext.BizDB.BlackList objDB = new BlackList();
+        ApplicationCommon.BlackList.Clear();
+        Dictionary<string, dynamic> bl = new Dictionary<string, dynamic>();
+        objDB.loadBlackListInMem(ApplicationCommon.Application.ConnectionString, ref bl);
+        ApplicationCommon.Application["blacklist"] = bl;
+        ApplicationCommon.BlackList = bl;
+    }
+}
+@Html.Raw(htmlToReturn.Out())

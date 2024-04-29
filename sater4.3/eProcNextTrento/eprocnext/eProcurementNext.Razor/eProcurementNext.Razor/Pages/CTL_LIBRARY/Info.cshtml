@@ -1,0 +1,46 @@
+﻿@page "/CTL_LIBRARY/Info.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Session.SessionMiddleware
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.InfoModel
+@{
+	CommonDbFunctions cdb = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	htmlToReturn.Write("<HTML>");
+	htmlToReturn.Write("<HEAD>");
+	htmlToReturn.Write("<TITLE></TITLE>");
+	htmlToReturn.Write("</HEAD>");
+	htmlToReturn.Write("<BODY>");
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@id", "845326");
+	string strSQL = "select count(*) as C from Aziende with(nolock) where aziVenditore > 0 and aziiddscformasoc <> @id ";
+	
+	TSRecordSet rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	htmlToReturn.Write($@"Numero Fornitori:<div id=""NumeroFornitori"" >" + CStr(rs["C"]) + "</div><br>");
+
+	strSQL = "select count(*) as C from Aziende with(nolock) where aziAcquirente > 0 and aziiddscformasoc <> @id ";
+	rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	htmlToReturn.Write($@"Numero Enti:<div id=""NumeroEnti"" >" + CStr(rs["C"]) + "</div><br>");
+
+	
+	strSQL = "select count(*) as C from ProfiliUtente with(nolock) inner join aziende with(nolock) on idazi = pfuidazi where pfuVenditore > 0 and aziiddscformasoc <> @id  ";
+	rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	htmlToReturn.Write($@"Numero Utenti Fornitori:<div id=""NumeroUtentiFornitori"" >" + CStr(rs["C"]) + "</div><br>");
+
+	strSQL = "select count(*) as C from ProfiliUtente with(nolock) where pfuAcquirente > 0  ";
+	rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+	htmlToReturn.Write($@"Numero Utenti Enti:<div id=""NumeroUtentiEnti"" >" + CStr(rs["C"]) + "</div><br>");
+
+	htmlToReturn.Write("</BODY>");
+	htmlToReturn.Write("</HTML>");
+}@Html.Raw(htmlToReturn.Out())

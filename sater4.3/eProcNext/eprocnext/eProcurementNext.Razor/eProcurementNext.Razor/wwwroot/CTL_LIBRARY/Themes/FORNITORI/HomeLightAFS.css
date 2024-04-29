@@ -1,0 +1,109 @@
+body, p{ font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif; font-size:11px; padding:0px; margin:0px;}
+
+p{ padding:10px;}
+
+#header{ width:100%; min-width:790px; height:34px; background:#CCC; border-bottom:1px solid #fff; background:#ccc;}
+#UserName{ width:49%; height:34px; float:left;}
+#RagSociale{ width:49%; height:34px; float:right;}
+#utente{ width:49%; float:left; height:34px;}
+
+span.uppercase{ text-transform:uppercase; font-weight:bold;}
+span.big{ font-size:14px;}
+
+#toolbar{float:right; height:34px; text-align:right; width:49%;}
+
+#toolbar .Toolbar {margin-top:10px; float:right;}
+#toolbar .Toolbar TR {height:16px; font-size:11px; color:#666;  }
+
+#TOOLBAR_HOMELIGHT_fittizio{width:100%;}
+
+#toolbar .Toolbar TR #TOOLBAR_HOMELIGHT_Opzioni,#toolbar .Toolbar TR #TOOLBAR_HOMELIGHT_Anagrafica, #toolbar .Toolbar TR #TOOLBAR_HOMELIGHT_Archivio, #toolbar .Toolbar TR #TOOLBAR_HOMELIGHT_home, #toolbar .Toolbar TR #TOOLBAR_HOMELIGHT_Esci{ cursor:pointer;}
+
+#TOOLBAR_HOMELIGHT_Opzioni{ padding-left:20px; background:url(../../images/toolbar/bandocentrico/opzioni.jpg) bottom left no-repeat; text-align:left;text-decoration:underline;}
+#TOOLBAR_HOMELIGHT_Opzioni:hover {background-position:left bottom;color:#000; cursor:pointer; }
+
+#TOOLBAR_HOMELIGHT_Anagrafica{ padding-left:20px; background:url(../../images/toolbar/bandocentrico/anagrafica.jpg) bottom left no-repeat; text-align:left;text-decoration:underline;}
+#TOOLBAR_HOMELIGHT_Anagrafica:hover {background-position:left bottom;color:#000; cursor:pointer;}
+
+#TOOLBAR_HOMELIGHT_Archivio{ padding-left:20px; background:url(../../images/toolbar/bandocentrico/archivio.jpg) bottom left no-repeat; text-align:left;text-decoration:underline;}
+#TOOLBAR_HOMELIGHT_Archivio:hover {background-position:left bottom;color:#000; cursor:pointer;}
+
+#TOOLBAR_HOMELIGHT_home{ padding-left:20px; background:url(../../images/toolbar/bandocentrico/home.jpg) bottom left no-repeat; text-align:left;text-decoration:underline;}
+#TOOLBAR_HOMELIGHT_home:hover {background-position:left bottom; color:#333; cursor:pointer;}
+
+#TOOLBAR_HOMELIGHT_Esci{ padding-left:20px; background:url(../../images/toolbar/bandocentrico/exit.jpg) bottom left no-repeat; text-align:left;text-decoration:underline;}
+#TOOLBAR_HOMELIGHT_Esci:hover {background-position:left bottom;color:#000; cursor:pointer;}
+
+#TLB_Fill_TOOLBAR_HOMELIGHT{display:none;}
+
+#info{ width:100%; height:35px; background: #515151;}
+#info p{ color:#fff; padding:10px; font-size:12px;}
+#percorso{float:left; height:46px;}
+#percorso a{color:#ccc; font-size:12px; text-decoration:none; padding-left:5px;}
+#percorso a:hover{text-decoration:underline;}
+label.big{ font-size:12px; font-weight:bold; text-decoration:underline;}
+
+#legenda{ float:right; height:16px;  text-align:right; cursor:pointer;}
+#legenda p:hover{ text-decoration:underline; }
+
+/*Stile per la finestra modale*/
+#overlay{ position:absolute; top:0px; left:0px;background-color:#111; height:100%; width:100%; display:none; position:fixed; z-index:999;}
+#modal{ position:absolute;top:50%;left:50%;background-color:#515151; height:0px; width:0px; display:none;padding:10px; overflow:hidden; border:1px solid #FFF; z-index:1000; padding-top:10px;}
+#mb_box a#closelbl{ position:absolute; top: 5px; right: 9px; text-transform:capitalize; cursor:pointer; color:#fff; text-transform:uppercase; font-weight:bold; font-size:1.0em; margin-bottom:3px;}
+
+
+#closelbl:hover{ text-decoration:underline;}
+#mb_box{ background-color:#FFF; padding:3px 1px; margin-top:20px;}
+#mb_box h2{ left center no-repeat; color:#555; text-transform:uppercase; font-weight:bold; padding-left:5px; font-size:1.2em; margin-left:1em;}
+*:focus{outline:none;}
+#mb_box fieldset{ margin:15px 0px 20px 0px; background-color:#f9efcc; padding:15px 0px;}
+
+#mb_box p{ margin:1.5em 1.5em 2em 3em; font-size:1.2em;}
+#mb_box fieldset div{ text-align:right; margin:5px 9em;}
+#mb_box fieldset div input.txt{ margin-left:10px; font-size:1.1em; width:310px;}
+#mb_box fieldset div label{ font-size:1.2em;}
+#mb_box  div.btns{ text-align:right; margin-right:15px;}
+#mb_box  div.btns input,input.btn{ background-color:#FFF; color:#333; cursor:pointer; text-transform:uppercase; font-size:1.2em; border:1px solid #fba224;border-left:15px solid #fba224; margin-left:10px;}
+#mb_box h3{ color:#749696; text-transform:uppercase; font-weight:bold;font-size:1.3em; margin-left:2.7em; margin-bottom:5px; margin-top:25px;}
+#mb_box a{ color:#749696; text-decoration:none; font-size:1.1em;}
+#mb_box a:hover{ text-decoration:underline;}
+#mb_box strong{ font-weight:bold; font-size:1.1em; color:#BF0B27;}
+#DocumentiCollegati{width: 100%; height:520px;  }
+/*fine Stile per la finestra modale*/
+
+/* stile per i suggerimenti*/
+div.tipsbar{   font-size:12px;  text-align:right;  valign:middle; padding-right: 10px;  margin-right:10px;}
+div.tipsbar a{ text-decoration:none; color:#666; font-size:12px; vertical-align:top; line-height:3;}
+div.tipsbar a:hover{ text-decoration:underline; }
+div.tipsbar a.suggest{  display:none; cursor:help; }
+div.tipsbar a.mostra{ cursor:help;  }
+div.tips div{position:relative;}
+div.tipscontent{position:relative; font-size:13px; overflow:auto; padding:20px 10px 10px 10px; margin:10px; color:#333; background:#F4F4F4; border:1px solid #ccc; border-radius:10px;}		
+div.tipscontent ul{margin: 0px 5px 0px 0px; list-style-type:disc; padding:10px;}
+div.tipscontent ul li{ font-weight:normal; font-size:12px; color:#333; font-style:italic; padding-left:10px;}
+
+
+
+/* fine stile per i suggerimenti*/
+
+#Content{width: 100%; height:100%;  overflow:auto; }
+.TDContent{ height:100%; }
+.MainTable{ height:100%; width:100%; }
+#LogoAFS{width: 100%; height:28px}
+
+
+table.legendatable{ width:100%; border:none; border-collapse:collapse;  font-size:12px; color:#666;   }
+table.legendatable th{ background-color:#ccc; width:40px; height:40px; border-bottom:1px solid #fff;}
+table.legendatable tr{ background-color:#efefef; border-bottom:1px solid #fff;}
+table.legendatable td{ padding:5px; border-bottom:1px solid #fff; background-color:#E6E5E5;}
+
+table.VerticalModel_ReadOnlyField TD label{ margin-top:5px;}
+
+#TOOLBAR_HOMELIGHT_CambioPassword{
+  background: url("../../images/toolbar/bandocentrico/pass.jpg") no-repeat scroll left bottom transparent;
+  padding-left: 20px;
+  text-align: left;
+  text-decoration: underline;
+  cursor:pointer;
+}
+

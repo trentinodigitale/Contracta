@@ -1,0 +1,111 @@
+TABLE.GridRiepilogoDoc
+{
+}
+TABLE.GridTab1RiepilogoDoc
+{
+    WIDTH: 100%
+}
+TD.CellGridLinkRiepilogoDoc
+{
+}
+TABLE.GridTab2RiepilogoDoc
+{
+    WIDTH: 100%;
+	margin-bottom:5px;
+}
+TD.CellGridInfoRiepilogoDoc
+{
+    TEXT-ALIGN: left
+}
+TD.CellGridScadRiepilogoDoc
+{
+    TEXT-ALIGN: right
+}
+INPUT.TextFieldRiepilogo
+{
+}
+.FontTextRiepilogo
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+INPUT.TextFieldLocked
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-DECORATION: none;
+	padding:0px 3px 0px 3px;
+}
+.FontTextIceRiepilogo
+{
+    FONT-SIZE: 12px;
+    COLOR: #808080;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.FontTextLinkRiepilogo
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline;
+}
+TD.CellGridStateRiepilogoDoc
+{
+    TEXT-ALIGN: right
+}
+TD.BorderCellGridStateRiepilogoDoc
+{
+    border:1px solid #ccc;
+    BACKGROUND-COLOR: #EFEFEF;
+}
+.FontDescr
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.FontTextTender
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.FontValue
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 10pt;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+INPUT.TextTime
+{
+    FONT-SIZE: 12px;
+    WIDTH: 25px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+.FontTime
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: center
+}
+.ButtonHyerarchiesVerticalModel
+{
+    BORDER-RIGHT: #161a74 1px outset;
+    BORDER-TOP: #161a74 1px outset;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: #161a74 1px outset;
+    BORDER-BOTTOM: #161a74 1px outset;
+    BACKGROUND-COLOR: #e9edf3
+}

@@ -1,0 +1,82 @@
+BODY
+{
+}
+TABLE.GridHyerarchiesButtons
+{
+    BORDER-RIGHT: medium none;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: medium none;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: medium none;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: medium none
+}
+TD.CellGridHyerarchiesButtons
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+HR
+{
+    BORDER-RIGHT: #161a74 1px solid;
+    BORDER-TOP: #161a74 1px solid;
+    BORDER-LEFT: #161a74 1px solid;
+    WIDTH: 100%;
+    BORDER-BOTTOM: #161a74 1px solid;
+    BACKGROUND-COLOR: darkred
+}
+BODY.BodyButtonsHyerarchies
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    PADDING-TOP: 0px;
+    BACKGROUND-COLOR: white
+}
+BODY.BodyConfirmHyerarchies
+{
+    MARGIN: 5px 15px 0px 5px;
+    BACKGROUND-COLOR: white
+}
+.HeaderConfirmHyerarchies
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+A.LinkHyerarchies
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: #161a74;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+.HeaderSubTitleHyerarchies
+{
+    FONT-SIZE: 10pt;
+    COLOR: blue;
+    FONT-STYLE: oblique
+}
+.FontHyerarchiesSelected
+{
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial
+}
+.LinkHyerarchies
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: #161a74;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}

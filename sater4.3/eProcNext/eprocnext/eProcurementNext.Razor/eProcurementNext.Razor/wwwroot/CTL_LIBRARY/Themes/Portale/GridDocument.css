@@ -1,0 +1,271 @@
+Grid_FldBold
+{
+}
+TABLE.Grid
+{
+    BORDER-RIGHT: blue;
+    BORDER-TOP: blue;
+    PADDING-LEFT: 2px;
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: blue;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+TD.Grid_RowCaption
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    PADDING-RIGHT: 2px;
+    BORDER-TOP: white 1px solid;
+    PADDING-LEFT: 2px;
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 2px;
+    MARGIN: 0px;
+    BORDER-LEFT: white 1px solid;
+    COLOR: black;
+    PADDING-TOP: 2px;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: #fcf0d4
+}
+TD.Grid_RowCaption_Sort
+{
+    BORDER-RIGHT: lightgrey 1pt solid;
+    PADDING-RIGHT: 2px;
+    BORDER-TOP: white 1pt solid;
+    PADDING-LEFT: 2px;
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 2px;
+    MARGIN: 0px;
+    BORDER-LEFT: white 1pt solid;
+    CURSOR: hand;
+    COLOR: black;
+    PADDING-TOP: 2px;
+    BORDER-BOTTOM: lightgrey 1pt solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: #fcf0d4;
+    TEXT-DECORATION: underline
+}
+TD.Grid_Total
+{
+    MARGIN-TOP: 10px;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12pt;
+    LINE-HEIGHT: 30px;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TD.Grid_Total_GridCol_Link_Number
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TD.Grid_Total_Fld_Number
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TR.GR0
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: white
+}
+TR.GR1
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: white
+}
+TR.GR_OverRow
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: aliceblue
+}
+TR.GR0_Sel
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: aliceblue
+}
+TR.GR1_Sel
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: aliceblue
+}
+TR.GR_OverRow_Sel
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: cornflowerblue
+}
+TD.GR0
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+TD.GR1
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+TD.GR0_TextArea
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+TD.GR1_TextArea
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+TD.Grid_TitleCell
+{
+    FONT-WEIGHT: bolder
+}
+TD.GR0_GridCol_Link
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: hand;
+    COLOR: #256662;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    TEXT-DECORATION: underline
+}
+TD.GR1_GridCol_Link
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: hand;
+    COLOR: #256662;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    TEXT-DECORATION: underline
+}
+TD.GR0_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 8pt;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TD.GR1_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 8pt;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TD.GR0_GridCol_Link_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: hand;
+    COLOR: #256662;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+TD.GR1_GridCol_Link_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: hand;
+    COLOR: #256662;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+TD.GR0_Text
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+TD.GR1_Text
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+TD.GR1_FldDomainValue
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 8pt;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    FONT-FAMILY: Arial
+}
+TD.GR0_FldDomainValue
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    BORDER-BOTTOM: lightgrey 1px solid;
+    FONT-FAMILY: Arial
+}
+TD.GR1_Foto
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR0_Foto
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR1_FldExtDom
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR0_FldExtDom
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR0_Attach
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR1_Attach
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR0_FldHier
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR1_FldHier
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR0_Fld_DescDB
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR1_Fld_DescDB
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR0_checkbox
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+TD.GR1_checkbox
+{
+    BORDER-RIGHT: lightgrey 1px solid
+}
+DIV
+{
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial
+}

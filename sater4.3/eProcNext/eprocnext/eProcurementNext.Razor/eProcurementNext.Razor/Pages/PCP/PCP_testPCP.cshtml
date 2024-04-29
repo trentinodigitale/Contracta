@@ -1,0 +1,24 @@
+﻿@page "/PCP/PCP_testPCP.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.Xml;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.PCP.PCP_testPCP
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var idProc = GetParamURL(Request.QueryString.ToString(), "ID");
+
+    validate("ID", idProc, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    var id = CInt(idProc);
+    
+    var res = Model.testPCP(id);
+
+    var esito = res;
+
+    @Html.Raw(esito)
+}

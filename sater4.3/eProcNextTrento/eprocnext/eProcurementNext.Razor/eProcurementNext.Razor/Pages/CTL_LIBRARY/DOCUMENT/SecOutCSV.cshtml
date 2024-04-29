@@ -1,0 +1,196 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/SecOutCSV.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using System.Data.SqlClient
+@using static  eProcurementNext.CommonDB.CommonDbFunctions;
+@* <!-- #Include File="print_document.asp" --> *@
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.SecOutCSVModel
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+
+    htmlToReturn.Clear();
+    //'Response.CodePage = 65001 
+    //'Response.CharSet = "utf-8" 
+
+    ////TODO vedere in debug se necessario settaggio Response.ContentType = "windows-1252"
+    // Response.CodePage = 1252 
+    // Response.CharSet = "windows-1252"
+
+    string strfilename = "";
+    strfilename = GetParamURL(Request.QueryString.ToString(), "TitoloFile");
+
+    if (string.IsNullOrEmpty(strfilename))
+    {
+        strfilename = "Articoli";
+    }
+
+    strfilename = strfilename + ".csv";
+
+    Response.ContentType = "application/CSV";
+    Response.Headers.TryAdd("content-disposition", "attachment; filename=" + strfilename);
+
+    string Section;
+    Section = GetParamURL(Request.QueryString.ToString(), "SECTION");
+
+    string HIDECOL;
+
+    HIDECOL = GetParamURL(Request.QueryString.ToString(), "HIDECOL");
+
+    objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+    
+    CSV_Dettagli_TABLE(Section, HIDECOL);
+
+    throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+
+
+    void CSV_Dettagli_TABLE(string strSectionName, string strColHide) {
+
+        string strGrid;
+        dynamic[,] MatrixValue;
+        int NumRow;
+        int NumCol;
+        int indRow;
+        int indCol;
+        //var indiceRiga;
+        bool bShowCol;
+        Field objField;
+        string strTechValue;
+        string strVisualValue;
+        string strClassCell;
+
+
+        //'response.Write strSectionName
+
+        NumRow = objDoc.Sections[strSectionName].mp_numRec - 1;
+        NumCol = objDoc.Sections[strSectionName].mp_Columns.Count;
+
+
+
+        MatrixValue = objDoc.Sections[strSectionName].mp_Matrix;
+        if (IsEmpty(MatrixValue)) {
+            NumRow = -1;
+        }
+
+        //'--CICLO SULLE RIGHE
+        for (indRow = -1; indRow <= NumRow; indRow++)
+        {
+            indCol = 1;
+
+            //'--CICLO SULLE COLONNE
+            while (indCol <= NumCol)
+            {
+
+
+                objField = objDoc.Sections[strSectionName].mp_Columns.ElementAt(indCol - 1).Value;
+                string strAttrib = objField.Name;
+
+                bShowCol = true;
+                //'-- controlla se la colonna è da visualizzare 
+
+                if (!string.IsNullOrEmpty(strColHide))
+                {
+                    if (Strings.InStr(1, ("," + strColHide + ",").ToUpper(), ("," + strAttrib + ",").ToUpper()) > 0)
+                    {
+                        bShowCol = false;
+                    }
+                }
+
+
+                if (bShowCol)
+                {
+
+
+                    if (indRow == -1)
+                    {
+                        strVisualValue = DOC_FieldRow_Label(strSectionName, strAttrib);
+                    }
+                    else
+                    {
+
+                        //'--se si tratta di un attributo numerico cambio classe di stile	
+                        if (objField.getType() == TIPOATTRIB_NUMBER)
+                        {
+                            strVisualValue = "";
+
+                            strTechValue = MatrixValue[indCol - 1, indRow] + "";
+                            strVisualValue = strTechValue.Replace(".", ",");
+
+
+                        }
+                        else
+                        {
+                            //'--valore visuale della colonna
+                            strTechValue = "";
+
+                            strTechValue = MatrixValue[indCol - 1, indRow];
+
+                            objField.Value = strTechValue;
+
+                            strVisualValue = "";
+
+
+                            strVisualValue = objField.TxtValue();
+                        }
+
+
+                    }
+                    //'-- se nel valore sono presenti doppi apici, oppure a capo , oppure un punto e virgola si mettono gli apici di inizio e fine e si raddoppiano i doppi apici
+                    if (Strings.InStr(1, strVisualValue, @"""") > 0 || Strings.InStr(1, strVisualValue, $@"{Strings.Chr(13)}") > 0 || Strings.InStr(1, strVisualValue, ";") > 0)
+                    {
+
+                        htmlToReturn.Write($@"""" + strVisualValue.Replace(@"""", @"""""") + @"""");
+
+                    }
+                    else
+                    {
+                        htmlToReturn.Write(strVisualValue);
+
+                    }
+
+
+                    if (indCol < NumCol)
+                    {
+
+                        htmlToReturn.Write(";");
+                    }
+
+
+
+                }
+
+
+                indCol = indCol + 1;
+
+            }
+
+
+            if (indRow < NumRow)
+            {
+
+                htmlToReturn.Write(Environment.NewLine);
+            }
+
+
+        }
+
+
+
+    }
+
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,184 @@
+﻿@page "/CustomDoc/OpenImpostaReg.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.OpenImpostaRegModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.OpenImpostaRegModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string strSQL = string.Empty;
+	dynamic fSoc;
+	string idDoc = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	//on error resume next
+	void ShowError(string ErrText )
+	{
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=yes&MSG=" + URLEncode(TruncateMessage(ErrText)) + "&CAPTION=Errore&ICO=2", Response);
+	}
+	string  F(string v )
+	{
+		if(CStr(0.5).Contains(".", StringComparison.Ordinal ))
+		{
+			v = v.Replace(",", ".");
+		}
+		else
+		{
+			v = v.Replace(".", ",");
+		}
+
+		v = Strings.FormatNumber(CDbl(v), 2);
+		//'v = cstr(v)
+		if( CStr(0.5).Contains(".", StringComparison.Ordinal ))
+		{
+			v = v.Replace(".","A");
+			v = v.Replace(",",".");
+			v = v.Replace("A", ",");
+		}
+		return v;
+
+	}
+	var SqlParameters = new Dictionary<string, object?>();
+	SqlParameters.Add("@id", CInt(idDoc));
+	//'-- verifico se esiste già il documento
+	TSRecordSet rs = cdf.GetRSReadFromQuery_("select * from Document_ImpostaReg where ID_Repertorio = @id", ApplicationCommon.Application.ConnectionString, SqlParameters);
+	TSRecordSet rsTxt = null;
+	if (rs.RecordCount == 0)
+	{
+		string TestoDetermina = string.Empty;
+
+		//err.Clear
+		//'-- controllo campi
+		if (CInt(DOC_FieldTecnical("TESTATA","Rep")) == 0)
+		{
+			ShowError("Occorre inserire il numero Repertorio");
+		}
+		if(string.IsNullOrEmpty(DOC_FieldTecnical("TESTATA","DataStipula").Trim()))
+		{
+			ShowError("Occorre inserire la data stipula");
+		}
+		if( CInt(DOC_FieldTecnical("TABELLA_A","NumReversale") ) == 0)
+		{
+			ShowError("Occorre inserire il numero Reversale");
+		}
+		if(string.IsNullOrEmpty(DOC_FieldTecnical("TABELLA_A","DataReversale").Trim()))
+		{
+			ShowError("Occorre inserire la data Reversale");
+		}
+		if(string.IsNullOrEmpty(DOC_FieldTecnical("TESTATA","Esercizio")))
+		{
+			ShowError("Occorre inserire l'esercizio");
+		}
+		if(string.IsNullOrEmpty(DOC_FieldTecnical("TESTATA","DatiBilancio")))
+		{
+			ShowError("Occorre inserire l'anno di Bilancio");
+		}
+
+		//  '-- recupero il testo in funzione dell'esercizio
+		if (DOC_FieldTecnical("TESTATA","Esercizio") == "Def")
+		{
+			rsTxt = cdf.GetRSReadFromQuery_("select * from Document_ImpostaReg where ID_Repertorio = -1 ", ApplicationCommon.Application.ConnectionString);
+		}
+		else
+		{
+			rsTxt = cdf.GetRSReadFromQuery_("select * from Document_ImpostaReg where ID_Repertorio = -2 ", ApplicationCommon.Application.ConnectionString);
+		}
+		if(rsTxt.RecordCount >0)
+		{
+			TestoDetermina = GetValueFromRS(rsTxt.Fields["TestoDetermina"]);
+		}
+		else
+		{
+			ShowError("Manca il modello di riferimento per la generazione del documento");
+		}
+		SqlParameters.Clear();
+		SqlParameters.Add("@anno",  CStr(DOC_FieldTecnical("TESTATA", "DatiBilancio")));
+		// '-- recupero i dati base 
+		rsTxt = cdf.GetRSReadFromQuery_("select top 1 * from Document_DatiBilancio where BP_Anno = @anno order by BP_Anno desc ", ApplicationCommon.Application.ConnectionString, SqlParameters);
+		if(rsTxt.RecordCount >0)
+		{
+			// '-- sostituisco il testo
+			int i = 0;
+			for(i = 1; i<rsTxt.Columns.Count-1; i++)
+			{
+				TestoDetermina = TestoDetermina.Replace("[" + GetValueFromRS(rsTxt.Columns[i].ColumnName) + "]", GetValueFromRS(rsTxt.Fields[i]));
+
+			}
+			TestoDetermina = TestoDetermina.Replace("[BP_Anno_Prec]", CStr(CInt(GetValueFromRS(rsTxt.Fields["BP_Anno"]) - 1)));
+			TestoDetermina = TestoDetermina.Replace("[Importo_AE]", CStr(CInt(GetValueFromRS(rsTxt.Fields["Importo_AE"])) - 1));
+			TestoDetermina = TestoDetermina.Replace("[Data_AE]", CStr(CInt(GetValueFromRS(rsTxt.Fields["Data_AE"]) - 1)));
+			TestoDetermina = TestoDetermina.Replace("[Det_ImpBollo]", CStr(CInt(GetValueFromRS(rsTxt.Fields["Det_ImpBollo"]) - 1)));
+			TestoDetermina = TestoDetermina.Replace("[Data_ImpBollo]", CStr(CInt(GetValueFromRS(rsTxt.Fields["Data_ImpBollo"]) - 1)));
+
+		}
+		else
+		{
+			ShowError("Non sono presenti dati per l'anno di Bilancio selezionato");
+		}
+		TestoDetermina = TestoDetermina.Replace("[Importo]", F(DOC_FieldTecnical("TABELLA_A", "Importo")));
+		TestoDetermina = TestoDetermina.Replace("[NumReversale]", DOC_FieldTecnical("TABELLA_A", "NumReversale"));
+		TestoDetermina = TestoDetermina.Replace("[NumImpegno]", DOC_FieldTecnical("TABELLA_A", "NumImpegno"));
+		TestoDetermina = TestoDetermina.Replace("[DataReversale]", DOC_Field("TABELLA_A", "DataReversale"));
+
+		TestoDetermina = TestoDetermina.Replace("[Oggetto]", DOC_FieldTecnical("TESTATA", "Oggetto"));
+		TestoDetermina = TestoDetermina.Replace("[DataStipula]", DOC_Field("TESTATA", "DataStipula"));
+		TestoDetermina = TestoDetermina.Replace("[Rep]", DOC_FieldTecnical("TESTATA", "Rep"));
+		SqlParameters.Clear();
+		SqlParameters.Add("@azi",  CStr( DOC_FieldTecnical("TESTATA", "idAggiudicatrice")));
+		rsTxt = cdf.GetRSReadFromQuery_("select  * from aziende where idazi = @azi", ApplicationCommon.Application.ConnectionString, SqlParameters);
+		if(rsTxt.RecordCount >0)
+		{
+			TestoDetermina = TestoDetermina.Replace("[idAggiudicatrice]", GetValueFromRS(rsTxt.Fields["aziRagionesociale"]));
+
+		}
+		TestoDetermina = TestoDetermina.Replace("'", "''");
+		SqlParameters.Clear();
+		SqlParameters.Add("@idDoc", idDoc);
+		SqlParameters.Add("@valore", DOC_FieldTecnical("TESTATA", "idAggiudicatrice"));
+		SqlParameters.Add("@valore1", DOC_FieldTecnical("TESTATA", "Oggetto").Replace("'", "''"));
+		SqlParameters.Add("@valore2", DOC_FieldTecnical("TABELLA_A", "Importo").Replace(",", "."));
+		SqlParameters.Add("@valore3", DOC_FieldTecnical("TABELLA_A", "NumReversale"));
+		SqlParameters.Add("@valore4", Strings.Left(DOC_FieldTecnical("TABELLA_A", "DataReversale"), 10));
+		SqlParameters.Add("@valore5",DOC_FieldTecnical("TESTATA", "Rep"));
+		SqlParameters.Add("@valore6", Strings.Left(DOC_FieldTecnical("TESTATA", "DataStipula"), 10));
+		// '-- recupero i dati e creo il nuovo documento
+		strSQL = "insert into Document_ImpostaReg ( ID_Repertorio ,  idAggiudicatrice , Oggetto , Importo ,  NumReversale , DataReversale , TestoDetermina , Rep , DataStipula ) ";
+		strSQL = strSQL + " values ( @idDoc , @valore , @valore1 , @valore2, @valore3, @valore4 , '" + TestoDetermina + "' , @valore5 , @valore6 )";
+		try
+		{
+			cdf.Execute(strSQL, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+		}
+		catch
+		{
+			ShowError("Errore in creazione documento , ripetere l'operazione");
+		}
+		SqlParameters.Clear();
+		SqlParameters.Add("@id",idDoc );
+		rs = cdf.GetRSReadFromQuery_("select * from Document_ImpostaReg where ID_Repertorio = @id" , ApplicationCommon.Application.ConnectionString, SqlParameters);
+		if(rs.RecordCount == 0)
+		{
+			ShowError("Errore in creazione documento , ripetere l'operazione");
+		}
+	}
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+	//'-- apro il documento
+	throw new ResponseRedirectException("../CTL_Library/Document/document.asp?UpdateParent=no&JScript=IMPOSTA_REG&DOCUMENT=IMPOSTA_REG&MODE=OPEN&IDDOC=" + GetValueFromRS(rs.Fields["Id"]), Response); 
+}
+@Html.Raw(htmlToReturn.Out())

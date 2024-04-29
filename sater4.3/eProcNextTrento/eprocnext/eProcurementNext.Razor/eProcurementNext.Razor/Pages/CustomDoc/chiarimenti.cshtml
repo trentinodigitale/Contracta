@@ -1,0 +1,62 @@
+﻿@page "/CustomDoc/chiarimenti.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.initialize_ComponentModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.chiarimenti;
+@using Microsoft.VisualBasic;
+@*
+<!-- #Include File="../ctl_library/functions/verificabrowser.inc" -->
+<!-- #INCLUDE FILE="../ctl_library/Functions/CheckSession.inc" -->
+<!-- #INCLUDE FILE="../ctl_library/functions/security.inc" -->
+<!-- #Include File="../ctl_library/functions/trace_in_log_utente.inc" -->
+*@
+@model eProcurementNext.Razor.Pages.CustomDoc.chiarimenti
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+
+	//'--recupero id del messaggio corrente
+	string lIdMsg = GetParamURL(Request.QueryString.ToString(), "IDMSG");
+
+	//'--recupero collezione field xml associata
+	//set ObjDictContenitore=session(lIdMsg & "_Contenitore_179")
+
+
+	//recupero IDDOC del bando
+	//IdDocBando=ObjDictContenitore("IdDoc")
+
+
+	//recupero IDMSG del bando in arrivo
+	//set objDB = createobject( "ctldb.clsTabManage" )
+	//set rs = objDB.GetRSReadFromQuery( "select IdMsg from DASHBOARD_VIEW_BANDITRADIZIONALIPUBBLICI where iddoc='" & IdDocBando & "'" , Application("ConnectionString"))
+	//if rs.recordcount > 0 then
+	//'	rs.movefirst
+	//'	cod=rs("IdMsg").value
+	//'end if
+
+	//'--controllo se ci sono quesiti sul bando
+	//'set objDB = createobject( "ctldb.clsTabManage" )
+	//'set rs = objDB.GetRSReadFromQuery( "select ID_ORIGIN from document_chiarimenti where ID_ORIGIN=" & lIdMsg , Application("ConnectionString"))
+	//'if rs.recordcount > 0 then
+
+	string strUrl = $"../CTL_Library/Document/document.asp?JScript=CHIARIMENTI&DOCUMENT=CHIARIMENTI&MODE=OPEN&IDDOC={lIdMsg}";
+
+	//'else
+
+	//'strUrl="../ctl_library/MessageBoxWin.asp?NO_CANCEL=1&ON_OK=" & server.URLEncode("self.close();")  & "&ICO=1&CAPTION=" & CNVMP(IDMP,"CHIARIMENTI" ) & "&MSG=" & CNVMP(IDMP,"Nessun quesito Presente per il Bando") & "&TITLE=" & CNVMP(IDMP,"CHIARIMENTI")
+
+	//'end if
+
+	throw new ResponseRedirectException(strUrl, Response);
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+}
+@Html.Raw(htmlToReturn.Out())

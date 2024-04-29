@@ -1,0 +1,18 @@
+﻿@page "/Report/DASHBOARD_SP_LISTINI.aspx"
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.Application
+@using eProcurementNext.BizDB
+@using eProcurementNext.CommonModule
+@inject IConfiguration configuration;
+@inject eProcurementNext.Application.IEprocNextApplication application;
+@model eProcurementNext.Razor.Pages.Report.DASHBOARD_SP_LISTINIModel
+@using static eProcurementNext.Razor.Pages.Report.DASHBOARD_SP_LISTINIModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+	DASHBOARD_SP_LISTINIModel Model = new();
+	Model.Page_Load(HttpContext, htmlToReturn, session);
+}
+@Html.Raw(htmlToReturn.Out())

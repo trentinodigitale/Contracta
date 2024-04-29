@@ -1,0 +1,10 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xb="xmlbeans.massload.simog.avlp.it">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <xb:consultaGara>
+      <ticket>@@@TICKET@@@</ticket>
+      <schede>3.04.0.0</schede>
+      <CIG>@@@CIG@@@</CIG>
+    </xb:consultaGara>
+  </soapenv:Body>
+</soapenv:Envelope>

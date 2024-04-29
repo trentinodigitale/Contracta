@@ -1,0 +1,57 @@
+﻿@page "/CTL_LIBRARY/functions/FIELD/DisplayPubLeg.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.FIELD.displayPubLegModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	htmlToReturn.Write("<html>");
+	htmlToReturn.Write("<head>");
+	htmlToReturn.Write($@"<script src=""../../jscript/getObj.js"" ></script>");
+	htmlToReturn.Write("</head>");
+
+	htmlToReturn.Write("<body>");
+	//'-- recupera i dati azienda da visualizzare
+	//'stop 
+
+	CommonDbFunctions cdb = new();
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@idAzi", CLng(GetParamURL(Request.QueryString.ToString(), "Azi")));
+	TSRecordSet rsAzi = cdb.GetRSReadFromQuery_("select * from aziende where idazi = @idAzi", ApplicationCommon.Application.ConnectionString, sqlParams);
+	htmlToReturn.Write($@"<div id=""PUBLEG"" >");
+	htmlToReturn.Write($@"<table border=""0"" cellspacing=""0"" cellpadding=""0"" class=""FldPubLeg_Tab"" >");
+	htmlToReturn.Write("<tr>");
+	htmlToReturn.Write("<td ><b>" + CStr(rsAzi["aziRagioneSociale"]) + "</b></td>");
+	htmlToReturn.Write("</tr>");
+	htmlToReturn.Write("<tr>");
+	htmlToReturn.Write("<td >" + CStr(rsAzi["aziIndirizzoLeg"]) + CStr(rsAzi["aziCAPLeg"]) + CStr(rsAzi["aziLocalitaLeg"]) + "" + (CStr(rsAzi["aziProvinciaLeg"])) + CStr(rsAzi["aziStatoLeg"]) + $@"</td>");
+	htmlToReturn.Write("</tr>");
+	htmlToReturn.Write("<tr>");
+	htmlToReturn.Write("<td >Tel" + CStr(rsAzi["aziTelefono1"]) + "- Fax " + CStr(rsAzi["aziFAX"]) + $@"- <a href=""http://""" + CStr(rsAzi["aziSitoWeb"]) + $@">" + CStr(rsAzi["aziSitoWeb"]) + $@"</a> </td>");
+	htmlToReturn.Write("</tr>");
+	htmlToReturn.Write("<tr>");
+	htmlToReturn.Write("<td >Cod. Fisc. e Part. IVA " + CStr(rsAzi["aziPartitaIVA"]) + " </td>");
+	htmlToReturn.Write("</tr>");
+	htmlToReturn.Write("</table>");
+	htmlToReturn.Write("</div>");
+	htmlToReturn.Write("</body>");
+
+	htmlToReturn.Write("</html>");
+
+	htmlToReturn.Write($@"
+		<script type=""text/javascript"" language=""javascript"" >
+			getObjPage('" + GetParamURL(Request.QueryString.ToString(), "OBJECTNAME") + $@"', 'parent').innerHTML = getObj('PUBLEG').innerHTML;
+
+		</script>
+	");
+}@Html.Raw(htmlToReturn.Out());

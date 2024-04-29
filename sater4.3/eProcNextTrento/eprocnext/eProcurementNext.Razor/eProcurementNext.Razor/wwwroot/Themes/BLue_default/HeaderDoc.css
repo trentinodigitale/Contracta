@@ -1,0 +1,74 @@
+TABLE.GridContainerHeaderDoc
+{
+    WIDTH: 100%
+}
+TABLE.GridSeparateHeaderDoc
+{
+    WIDTH: 100%
+}
+TABLE.GridTitleHeaderDoc
+{
+}
+TABLE.GridTailHeaderDoc
+{
+}
+TD.CellGridContainerHeaderDoc
+{
+    TEXT-ALIGN: left
+}
+TD.CellGridSeparateHeaderDoc
+{
+}
+TD.CellGridTitleHeaderDoc
+{
+}
+TD.CellGridTailHeaderDoc
+{
+    TEXT-ALIGN: right
+}
+.FontTitleHeaderDoc
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 14pt;
+    COLOR: #161a74;
+    FONT-STYLE: italic;
+    FONT-FAMILY: Arial
+}
+HR
+{
+    BORDER-RIGHT: #161a74 1px solid;
+    BORDER-TOP: #161a74 1px solid;
+    BORDER-LEFT: #161a74 1px solid;
+    WIDTH: 100%;
+    COLOR: #161a74;
+    BORDER-BOTTOM: #161a74 1px solid;
+    BACKGROUND-COLOR: #161a74
+}
+IMG.Header
+{
+    CURSOR: pointer;
+    FONT-FAMILY: Arial
+}
+.foglie
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.hr
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    BORDER-TOP: lightgrey 1px solid;
+    BORDER-LEFT: lightgrey 1px solid;
+    BORDER-BOTTOM: lightgrey 1px solid
+}
+SPAN.header
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: #161a74;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}

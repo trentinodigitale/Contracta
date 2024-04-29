@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\**" />
+    <EmbeddedResource Remove="Controllers\**" />
+    <None Remove="Controllers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Constants\BaseCustomClaims.cs" />
+    <Compile Remove="Constants\JWTTokenConstants.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Controllers\SearchResult.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CommonCore\Core.Common\Core.Common.csproj" />
+    <ProjectReference Include="..\..\CommonCore\Core.DTO\Core.DTO.csproj" />
+    <ProjectReference Include="..\..\CommonCore\Core.Repositories.NoSql\Core.Repositories.NoSql.csproj" />
+    <ProjectReference Include="..\EprocNext.Repositories\EprocNext.Repositories.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Biz\" />
+    <Folder Include="Constants\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,81 @@
+@page "/CTL_LIBRARY/PDF/pdf_stamp.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonModule
+@using eProcurementNext.Core.Storage
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.PDF.pdf_stampModel
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+    //' non serve il verifica browser, passiamo il parametro nocache
+    string strFile = GetParamURL(Request.QueryString, "FILE-NAME");
+    string strPathFile = CStr(GetParamURL(Request.QueryString, "FILE-PATH"));
+
+    //'response.write "test:" & replace(strFile," ","_")
+    //'response.end
+
+    string strOut = CStr(ApplicationCommon.Application["PathFolderAllegati"]);
+   
+    if (strOut.EndsWith("\\", StringComparison.Ordinal) || strOut.EndsWith("/", StringComparison.Ordinal))
+    {
+        strPathFile = strOut.ToLower() + strPathFile;
+    }
+    else
+    {
+        strPathFile = strOut.ToLower() + "\\" + strPathFile;
+    }
+
+    //'--faccio abandon se sessione utente vuota o -20
+    //'--		commentato perchè la produzione del pdf lato portale è priva di idpfu e non deve fare session abandon
+    //'if cstr(session("IdPfu")) = "" or  cstr(session("IdPfu")) = "-20" or cstr(session("IdPfu")) = "-10" then
+    //'	session.abandon()
+    //'end if
+
+    //'response.write strPathfile
+    //'response.end
+
+    //'-- Validazione input, permettiamo il download solo di un file pdf
+    if (strPathFile.ToLower().EndsWith(".pdf", StringComparison.Ordinal))
+    {
+        if (!CommonStorage.ExistsFile(strPathFile))
+        {
+            response.Write("File PDF non generato correttamente. Ripetere l'operazione");
+            throw new ResponseEndException(response.Out(), Response, "File PDF non generato correttamente");
+        }
+
+        Response.ContentType = "application/pdf";
+        //'Response.ContentType = "application/octet-stream" questo lo fa scaricare direttamente a prescindere dal 'Content-Disposition'
+
+        //' Se non trova la sys (o un valore caricato da application.ini) DOWNLOAD_PDF_INLINE lo fà scaricare come allegato
+        if (string.IsNullOrEmpty(CStr(ApplicationCommon.Application["DOWNLOAD_PDF_INLINE"])) && CStr(ApplicationCommon.Application["DOWNLOAD_PDF_INLINE"]) != "yes")
+        {
+            
+            Response.Headers.TryAdd("Content-Disposition", "attachment; filename=" + Replace(strFile, " ", "_"));
+        }
+        else
+        { //'altrimenti lo visualizza nella finestra
+
+            Response.Headers.TryAdd("Content-Disposition", "inline; filename=" + Replace(strFile, " ", "_"));
+        }
+
+        LoadFromFile(strPathFile, response,HttpContext); 
+
+        // on error resume next
+
+        //'-- Cancelliamo il file dopo averlo letto e sparato a video
+        if (CommonStorage.ExistsFile(strPathFile))
+        {
+            CommonStorage.DeleteFile(strPathFile);
+        }
+        //Response.flush
+        //Response.End
+    }
+    else
+    {
+        response.Clear();
+        response.Write("Estensione non consentita");
+        //Response.End
+    }
+}

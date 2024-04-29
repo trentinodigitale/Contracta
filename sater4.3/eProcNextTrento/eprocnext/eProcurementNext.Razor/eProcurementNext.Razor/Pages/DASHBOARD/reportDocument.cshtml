@@ -1,0 +1,77 @@
+﻿@page "/DASHBOARD/reportDocument.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonModule
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.DashBoard
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@inject IWebHostEnvironment _host;
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@using Microsoft.AspNetCore.Routing
+@inject EndpointDataSource EndpointsDataSource;
+@model eProcurementNext.Razor.Pages.DASHBOARD.reportDocumentModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'-- pagina che farà il redirect per l'apertura del documento o alla sua versione report
+	//'-- se troviamo il file sotto report per il documento richiesto
+
+	validate( "DOCUMENT", GetParamURL(Request.QueryString.ToString(), "DOCUMENT"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC").Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	string document = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+	document = document.Replace("/", "");
+	document = document.Replace("..", "");
+	string layout = GetParamURL(Request.QueryString.ToString(), "lo");
+
+	if(string.IsNullOrEmpty(layout))
+	{
+		layout = "base";
+	}
+	//Set ObjFso = Server.CreateObject("Scripting.FileSystemObject")
+
+	//OLD Code
+	//string strPrintUrl = "./Report/" + document + ".asp";
+	//string strFile = System.IO.Path.Combine(_host.WebRootPath, strPrintUrl);
+	//if (!CommonStorage.ExistsFile(strFile))
+	//{
+	//	strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/ctl_library/document/Document.asp?IDDOC=" + CLng(GetParamURL(Request.QueryString.ToString(), "IDDOC")) + "&DOCUMENT=" + URLEncode(document) + "&JScript=" + URLEncode(document) + "&MODE=OPEN";
+	//}
+	//else
+	//{
+	//	strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/Report/" + document + ".asp";
+	//	strPrintUrl = strPrintUrl + "?IDDOC=" + CLng(GetParamURL(Request.QueryString.ToString(), "IDDOC"))  + "&TYPEDOC=" + URLEncode( document );			
+	//}
+	//throw new ResponseRedirectException(strPrintUrl + "&lo=" + URLEncode(layout), Response);
+
+	//New Code 
+	string strPrintUrl = "/Pages/Report/" + document + ".cshtml";
+	List<string> ListOfRoutes = new List<string>();
+	foreach (var endpoint in EndpointsDataSource.Endpoints)
+	{
+		foreach (var metadata in endpoint.Metadata)
+		{
+			if (metadata is PageActionDescriptor)
+			{
+				ListOfRoutes.Add(((PageActionDescriptor)metadata).RelativePath.ToLower());
+			}
+		}
+	}
+	if (!ListOfRoutes.Contains(strPrintUrl.ToLower()))
+	{
+		strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/ctl_library/document/Document.asp?IDDOC=" + CLng(GetParamURL(Request.QueryString.ToString(), "IDDOC")) + "&DOCUMENT=" + URLEncode(document) + "&JScript=" + URLEncode(document) + "&MODE=OPEN";
+	}
+	else
+	{
+		strPrintUrl = ApplicationCommon.Application["strVirtualDirectory"] + "/Report/" + document + ".asp";
+		strPrintUrl = strPrintUrl + "?IDDOC=" + CLng(GetParamURL(Request.QueryString.ToString(), "IDDOC"))  + "&TYPEDOC=" + URLEncode( document );			
+	}
+	throw new ResponseRedirectException(strPrintUrl + "&lo=" + URLEncode(layout), Response);
+
+}@Html.Raw(htmlToReturn.Out())

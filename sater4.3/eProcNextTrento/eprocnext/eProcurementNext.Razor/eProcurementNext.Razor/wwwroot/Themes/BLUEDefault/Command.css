@@ -1,0 +1,63 @@
+BODY
+{
+}
+TD.ImageCellMiddleButton
+{
+}
+INPUT.fontCommand
+{
+    BORDER-RIGHT: navy 1px outset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: navy 1px outset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 1px;
+    BORDER-LEFT: navy 1px outset;
+    COLOR: navy;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: navy 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: cornflowerblue;
+    TEXT-DECORATION: none
+}
+INPUT.congelati
+{
+}
+.fontLinkActive
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: navy;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+.fontCommandbold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.fontcommand
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.TextLink
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: navy;
+    FONT-FAMILY: Arial
+}
+.FoglieBluSott
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: navy;
+    FONT-FAMILY: Arial
+}

@@ -1,0 +1,98 @@
+BODY
+{
+}
+.PrintCols
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.PrintValues
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+TABLE.GridPrintArticles
+{
+    BACKGROUND-COLOR: white
+}
+TD.CellGridPrintArticles
+{
+    BACKGROUND-COLOR: white
+}
+TABLE.GridPrintProducts
+{
+    BORDER-RIGHT: black 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: black 1px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    BORDER-LEFT: black 1px;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: black 1px;
+    BACKGROUND-COLOR: white
+}
+TD.CellGridPrintProducts
+{
+    BORDER-RIGHT: black 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: black 1px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: black 1px;
+    COLOR: black;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: black 1px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-ALIGN: left
+}
+TD.CellGridNumericPrintProducts
+{
+    BORDER-RIGHT: black 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: black 1px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: black 1px;
+    COLOR: black;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: black 1px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-ALIGN: right
+}
+HR
+{
+    BORDER-RIGHT: black 2px solid;
+    BORDER-TOP: black 2px solid;
+    BORDER-LEFT: black 2px solid;
+    BORDER-BOTTOM: black 2px solid
+}
+.DescSection
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12pt;
+    FONT-FAMILY: Arial
+}
+.RAgSoc
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12pt;
+    FONT-FAMILY: Arial
+}
+.boldSmall
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial
+}

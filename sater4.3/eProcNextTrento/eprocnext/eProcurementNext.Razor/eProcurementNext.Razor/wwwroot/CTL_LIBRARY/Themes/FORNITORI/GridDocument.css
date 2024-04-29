@@ -1,0 +1,646 @@
+
+
+Grid_FldBold
+{
+}
+
+TABLE.Grid TD{
+
+border:1px solid #C0BFBF;}
+
+TABLE.Grid#GridViewer TD{ /*border:none;*/}
+
+	
+TABLE.Grid
+{
+    border-collapse: collapse;
+    PADDING-LEFT: 2px;
+    FONT-WEIGHT: lighter;
+    COLOR: #0F3D7C;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	border:1px solid #ccc;
+    
+}
+
+
+TD.Grid_RowCaption
+{
+    PADDING-RIGHT: 2px;
+    PADDING-LEFT: 2px;
+    FONT-WEIGHT:  bold;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 2px;
+    MARGIN: 0px;
+    PADDING-TOP: 2px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR:#ccc; 
+    COLOR: #333;
+    border-collapse: collapse;
+
+}
+TD.Grid_RowCaption_Sort
+{
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 8px;
+    MARGIN: 0px;
+    CURSOR: pointer;
+    COLOR:#333;
+    PADDING-TOP: 8px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #ccc;
+    border-collapse: collapse;
+	text-decoration:underline;
+}
+TD.Grid_Total
+{
+    MARGIN-TOP: 10px;
+    FONT-WEIGHT: bold;
+    LINE-HEIGHT: 30px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: right
+}
+TD.Grid_Total_GridCol_Link_Number
+{
+    FONT-WEIGHT: bold;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: right
+}
+TD.Grid_Total_Fld_Number
+{
+    FONT-WEIGHT: bold;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-ALIGN: right
+}
+
+
+
+TR.GR0
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: white
+}
+TR.GR1
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+
+
+    PADDING-TOP: 5px
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: white
+}
+TR.GR0_Sel
+{
+ 
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+
+
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #0F3D7C;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: aliceblue
+}
+TR.GR1_Sel
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+
+
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #0F3D7C;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: aliceblue
+}
+
+TR.GR_OverRow
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+
+
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #CB1D15;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: #ececec;
+
+}
+
+TR.GR_OverRow_Sel
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+
+
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #0F3D7C;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: #ccccFF;
+}
+
+TD.GR0
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+    WIDTH: 5px;
+}
+TD.GR1
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+    WIDTH: 5px;
+}
+TD.GR0_TextArea
+{
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+}
+TD.GR1_TextArea
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+}
+TD.Grid_TitleCell
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+    FONT-WEIGHT: bolder
+}
+TD.GR0_GridCol_Link
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    TEXT-ALIGN: justify
+}
+TD.GR1_GridCol_Link
+{
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+}
+TD.GR0_GridCol_Link1
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    TEXT-ALIGN: justify
+}
+TD.GR1_GridCol_Link1
+{
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+}
+TD.GR0_Fld_Number
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    TEXT-ALIGN: right
+}
+TD.GR1_Fld_Number
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    TEXT-ALIGN: right
+}
+TD.GR0_GridCol_Link_Number
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+TD.GR1_GridCol_Link_Number
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    CURSOR: pointer;
+    COLOR: #CB1D15f;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+TD.GR0_Text
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR1_Text
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR1_FldDomainValue
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+
+}
+TD.GR0_FldDomainValue
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+
+}
+TD.GR1_Foto
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+
+}
+TD.GR0_Foto
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+
+}
+TD.GR1_FldExtDom
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR0_FldExtDom
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+
+}
+TD.GR0_Attach
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR1_Attach
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR0_FldHier
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR1_FldHier
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR0_Fld_DescDB
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR1_Fld_DescDB
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+}
+TD.GR0_checkbox
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+
+}
+TD.GR1_checkbox
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+DIV
+{
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+TABLE.VerticalModel_Tab
+{
+    PADDING-RIGHT: 20px;
+    PADDING-TOP: 3px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    HEIGHT: 30px;
+    BACKGROUND-COLOR: #fdf8e5
+}
+
+
+TD.GR0_Date
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+TD.GR1_Date
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+}
+
+
+TD.NOTREAD_TextArea
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    FONT-WEIGHT: bold;
+    PADDING-TOP: 5px
+    
+}
+
+
+TD.NOTREAD_Fld_Number
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+    FONT-WEIGHT: bold;
+    TEXT-ALIGN: right
+    
+}
+
+
+TD.NOTREAD_Date
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    FONT-WEIGHT: bold;
+    PADDING-TOP: 5px;
+
+}
+
+
+TD.NOTREAD_Text
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    FONT-WEIGHT: bold;
+    PADDING-TOP: 5px;
+
+}
+
+
+TD.NOTREAD_GridCol_Link
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    TEXT-ALIGN: justify
+}
+
+
+td.NOTREAD_HidCol  { display:none;}
+ 
+
+TD.NOTREAD_GridCol_Link1
+{
+
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px;
+
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #CB1D15;
+    TEXT-ALIGN: justify
+}
+
+TR.NOTREAD
+{
+ 
+    PADDING-RIGHT: 3px;
+    PADDING-LEFT: 3px;
+    PADDING-BOTTOM: 5px;
+    VERTICAL-ALIGN: middle;
+    PADDING-TOP: 5px
+
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    N-HEIGHT: 30px;
+    BACKGROUND-COLOR: white
+}
+
+TABLE.comunicazione_Tab TD{ border:none;}
+label.GridCol_Link:hover{ cursor:pointer;}

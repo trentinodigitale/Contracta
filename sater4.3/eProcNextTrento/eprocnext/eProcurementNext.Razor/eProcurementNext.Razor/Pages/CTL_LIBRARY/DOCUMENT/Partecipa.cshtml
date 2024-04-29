@@ -1,0 +1,790 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/Partecipa.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using System.Data.SqlClient
+@using static eProcurementNext.CommonDB.CommonDbFunctions;
+@inject eProcurementNext.Application.IEprocNextApplication _application;
+@inject eProcurementNext.DashBoard.IViewer _viewer;
+@inject IConfiguration configuration;
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.PartecipaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+
+    validate("IdMsgPar", GetParamURL(Request.QueryString.ToString(), "IdMsgPar"), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+    validate("TIPODOC", GetParamURL(Request.QueryString.ToString(), "TIPODOC"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+    //'-- verifico se è passato come parametro il documento da creare sul partecipa
+    string TIPODOC = GetParamURL(Request.QueryString.ToString(), "TIPODOC");
+    int idRow = CInt(GetParamURL(Request.QueryString.ToString(), "IdMsgPar"));
+
+    DebugTrace dbtrace = new DebugTrace();
+
+    dbtrace.Write($"IdMsgPar:{idRow} - INIZIO DEBUG TRACE PARTECIPA.ASP");
+    dbtrace.Write($"IdMsgPar:{idRow} - QUERYSTRING : {Request.QueryString.ToString()}");
+    dbtrace.Write($"IdMsgPar:{idRow} - IDPFU : {session["IdPfu"]}");
+
+    string strSQL = "";
+    string sql = "";
+    string sql2 = "";
+
+    TSRecordSet? rs = null;
+    TSRecordSet? rs3 = null;
+    TSRecordSet? rs31 = null;
+
+
+
+    int idpfuInCharge;
+    SqlTransaction? transaction = null;
+    SqlConnection? connAtt = null;
+
+    string url = "";
+
+    string TipoProceduraCaratteristica = "";
+    int tipoBandoGara = 0;
+    idpfuInCharge = 0;
+    int idDocIStanza = 0;
+
+    string tipoDocRispostaGara = string.Empty;
+    string strSQL2 = string.Empty;
+    TSRecordSet? rs4 = null;
+
+    //'-- Controllo di sicurezza per i nuovi documenti (non documento generico)
+    //'-- Verifico se il bando al quale si vuole partecipare è ad invito e se l'utente (la sua azienda) è tra gli invitati
+    //'-- Se lo è, o se il bando è aperto, lo faccio passare.
+    var sqlParams = new Dictionary<string, object?>();
+    sqlParams.Add("@idRow", idRow);
+    sql = @"select isnull(tipobandogara,0) as tipobandogara,isnull(TipoProceduraCaratteristica,'') as TipoProceduraCaratteristica
+                 from CTL_DOC doc with(nolock)
+                            inner join Document_Bando db  with(nolock) on doc.id=db.idheader
+                 where doc.id = @idRow";
+
+    rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        rs.MoveFirst();
+        tipoBandoGara = CInt(rs["tipobandogara"]!);
+        TipoProceduraCaratteristica = CStr(rs["TipoProceduraCaratteristica"]);
+
+        dbtrace.Write($"IdMsgPar:{idRow} - tipoBandoGara : {tipoBandoGara} - TipoProceduraCaratteristica : {TipoProceduraCaratteristica} ");
+
+        //'-- se la procedura è ad invito
+        if (tipoBandoGara == 3)
+        {
+            dbtrace.Write($"IdMsgPar:{idRow} - tipoBandoGara 3");
+
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+            sqlParams.Add("@idRow", idRow);
+            sql = @"select dest.* 
+                        from profiliutente pfu  with(nolock) 
+                                INNER JOIN Aziende az  with(nolock) ON pfu.pfuidazi = az.idazi and pfu.idpfu = @IdPfu 
+                                INNER JOIN ctl_doc_destinatari dest  with(nolock) ON dest.idAzi = az.idazi 
+                         where dest.idheader = @idRow";
+            rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+            if (rs is null || rs.RecordCount == 0)
+            {
+                BlackList blackList = new BlackList();
+                try
+                {
+                    blackList.addIp(blackList.getAttackInfo(HttpContext, CStr(session["IdPfu"]), "Privilege Escalation: Tentativo di accesso ad un bando ad invito da parte di un non invitato"), session, ApplicationCommon.Application.ConnectionString);
+                }
+                catch
+                {
+                }
+                //'Se è presente NOMEAPPLICAZIONE nell'application
+                if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"])))
+                {
+                    throw new ResponseRedirectException("/" + ApplicationCommon.Application["NOMEAPPLICAZIONE"] + "/blocked.asp", Response);
+                }
+                else
+                {
+                    throw new ResponseRedirectException("/application/blocked.asp", Response);
+                }
+            }
+        }
+    }
+    //'-- Se l'utente non ha completato il giro di approvazione della sua anagrafica lo blocco.
+    sqlParams.Clear();
+    sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+    sql = "select idpfu from ProfiliUtenteAttrib  with(nolock) where dztnome = 'Profilo' and attValue = 'RapLegOE_Limitato' and idpfu = @IdPfu";
+    rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        exitError("Prima di procedere all'operazione e' necessario completare il giro di approvazione della propria anagrafica");
+    }
+
+    if (TIPODOC == "OFFERTA")
+    {
+        dbtrace.Write($"IdMsgPar:{idRow} - IF TIPODOC OFFERTA");
+
+        //'-- Se l'utente che vuole partecipare appartiene all'azienda che ha indetto la procedura. blocco
+        sqlParams.Clear();
+        sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+        sqlParams.Add("@idRow", idRow);
+        sql = "select top 1 doc.id" + Environment.NewLine;
+        sql = sql + " from ctl_doc doc with(nolock) " + Environment.NewLine;
+        sql = sql + "		inner join aziende azi  with(nolock) ON doc.Azienda = azi.idazi and azivenditore = 0" + Environment.NewLine;
+        sql = sql + "		inner join DM_Attributi attr1  with(nolock) ON attr1.lnk = azi.idazi and attr1.dztNome = 'codicefiscale'" + Environment.NewLine;
+        sql = sql + "		inner join DM_Attributi attr2  with(nolock) ON attr2.vatValore_FT = attr1.vatValore_FT and attr2.dztNome = 'codicefiscale'" + Environment.NewLine;
+        sql = sql + "		inner join aziende azi2  with(nolock) ON azi2.idazi = attr2.lnk" + Environment.NewLine;
+        sql = sql + "		inner join profiliutente pfu  with(nolock) ON pfu.pfuidazi = azi2.idazi" + Environment.NewLine;
+        sql = sql + " where doc.id = @idRow and pfu.idpfu = @IdPfu";
+
+        rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+        if (rs is not null && rs.RecordCount > 0)
+        {
+            exitError("Non e' possibile partecipare a procedure indette dalla propria azienda");
+        }
+    }
+    // '--------------------------------------------------------------------
+    // '-- verifico la tipologia di gara al quale si chiede di partecipare
+    // '--------------------------------------------------------------------
+    sqlParams.Clear();
+    sqlParams.Add("@idRow", idRow);
+    sql = @"select   db.TipoBando  ,ISNULL(db.ProceduraGara,0) as ProceduraGara,ISNULL(db.Divisione_lotti,0) as Divisione_lotti , doc.fascicolo, doc.tipodoc , db.TipoBandoGara
+             	from ctl_doc doc   with(nolock)
+            	        inner join Document_Bando db  with(nolock) on doc.id=db.idheader
+                where doc.id = @idRow";
+    rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+    if (rs!.RecordCount == 0)
+    {
+        session["MSG_ERROR"] = "ML=yes&MSG=Errore nel recuperare le informazioni, si prega di ripetere il comando&CAPTION=Attenzione&ICO=4";
+        throw new ResponseRedirectException("../../home/main.asp?lo=base&GROUPS_NAME=MAIN_GROUP", Response);
+    }
+
+    rs.MoveFirst();
+
+    //'--------------------------------------------------------------------
+    //'-- se la gara non è ristretta ed è a lotti allora ammette più documenti anche di più utenti altrimenti è possibile creare un solo documento
+    //'-- e non si tratta di un avviso ( Gli avvisi non prevedono la definizione di RTI, quindi non è necessario effettuare la preparazione di più documenti di risposta )
+    //'--------------------------------------------------------------------
+    //'--if rs.fields("ProceduraGara") <> "15477" and rs.fields("Divisione_lotti") <> "0" and ( rs.fields("tipodoc") = "BANDO_GARA" or rs.fields("tipodoc") = "BANDO_SEMPLIFICATO" ) then
+    //'--ENRPAN : solo se sto facendo documenti di tipo OFFERTA
+    if (CStr(rs["Divisione_lotti"]) != "0" && CStr(rs["TipoBandoGara"]) != "1" && (CStr(rs["tipodoc"]) == "BANDO_GARA" || CStr(rs["tipodoc"]) == "BANDO_SEMPLIFICATO") && TIPODOC == "OFFERTA")
+    {
+        dbtrace.Write($"IdMsgPar:{idRow} - IF Divisione_lotti etc");
+
+        //'-- se per l'utente  ci sono documenti allora devo mostrare l'elenco per consentirgli la scelta
+        sqlParams.Clear();
+        sqlParams.Add("@idRow", idRow);
+        sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+        sql = @"select  doc.id
+                        from ctl_doc doc   with(nolock)
+                            inner join Document_Bando db  with(nolock) on doc.id=db.idheader
+                            inner join ctl_doc istanza  with(nolock) on istanza.Deleted = 0 and istanza.LinkedDoc = doc.id
+                        where doc.id = @idRow and istanza.idpfuincharge = @IdPfu";
+        rs3 = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+        if (rs3 is not null && rs3.RecordCount > 0)
+        {
+            url = $"dashboard/Viewer.asp?Table=MSG_LINKED_ISCRIZIONE_ALBO&lo=base&OWNER=idPfu&IDENTITY=IdMsg&TOOLBAR=OFFERTE_UTENTE_TOOLBAR&DOCUMENT=OFFERTA&PATHTOOLBAR=../CustomDoc/&JSCRIPT=OFFERTA&AreaAdd=no&Caption=&Height=150,100*,210&numRowForPag=25&Sort=&SortOrder=&ACTIVESEL=2&FilterHide=Folder = '186' and  fascicolo='{CStr(rs["fascicolo"])}'&AreaFiltro=no&ROWCONDITION=NOTREAD,bread=1~&ID_MSG_FROM={idRow}&TIPODOCUMENTO={CStr(rs["tipodoc"])}";
+            throw new ResponseRedirectException("../../ctl_library/path.asp?url=" + UrlEncode(url) + "&KEY=viewer", Response);
+        }
+    }
+
+    if (CStr(rs["Divisione_lotti"]) != "0" && CStr(rs["TipoBandoGara"]) != "1" && (CStr(rs["tipodoc"]) == "BANDO_GARA" || CStr(rs["tipodoc"]) == "BANDO_SEMPLIFICATO") && TIPODOC == "OFFERTA")
+    {
+        dbtrace.Write($"IdMsgPar:{idRow} - IF Divisione_lotti etc");
+
+        //'-- se per l'utente  ci sono documenti allora devo mostrare l'elenco per consentirgli la scelta
+        sqlParams.Clear();
+        sqlParams.Add("@idRow", idRow);
+        sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+        sql = @"select  doc.id
+                        from ctl_doc doc   with(nolock)
+                            inner join Document_Bando db  with(nolock) on doc.id=db.idheader
+                            inner join ctl_doc istanza  with(nolock) on istanza.Deleted = 0 and istanza.LinkedDoc = doc.id
+                        where doc.id = @idRow and istanza.idpfuincharge = @IdPfu";
+        rs3 = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+        if (rs3 is not null && rs3.RecordCount > 0)
+        {
+            url = $"dashboard/Viewer.asp?Table=MSG_LINKED_ISCRIZIONE_ALBO&lo=base&OWNER=idPfu&IDENTITY=IdMsg&TOOLBAR=OFFERTE_UTENTE_TOOLBAR&DOCUMENT=OFFERTA&PATHTOOLBAR=../CustomDoc/&JSCRIPT=OFFERTA&AreaAdd=no&Caption=&Height=150,100*,210&numRowForPag=25&Sort=&SortOrder=&ACTIVESEL=2&FilterHide=Folder = '186' and  fascicolo='{CStr(rs["fascicolo"])}'&AreaFiltro=no&ROWCONDITION=NOTREAD,bread=1~&ID_MSG_FROM={idRow}&TIPODOCUMENTO={CStr(rs["tipodoc"])}";
+            throw new ResponseRedirectException("../../ctl_library/path.asp?url=" + UrlEncode(url) + "&KEY=viewer", Response);
+        }
+    }
+
+    tipoDocRispostaGara = ",OFFERTA,DOMANDA_PARTECIPAZIONE,MANIFESTAZIONE_INTERESSE,RISPOSTA_CONCORSO,";
+    strSQL2 = " select REL_ValueOutput " +
+                "	from CTL_Relations with (nolock) " +
+                " 	where  REL_TYPE='PARTECIPA.ASP' and REL_ValueInput='TIPODOC_RISPOSTA_GARA' ";
+
+    rs4 = cdf.GetRSReadFromQuery_(strSQL2, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+    if (rs4 is not null && rs4.RecordCount > 0)
+    {
+        tipoDocRispostaGara = CStr(rs4["REL_ValueOutput"]);
+    }
+
+    // 'if rs.fields("tipodoc") = "BANDO_GARA" or rs.fields("tipodoc") = "BANDO_SEMPLIFICATO"  then
+    //'--esteso ragionamento anche alle domande di partecipazione ed alle manifestazioni di interesse
+    //if (TIPODOC == "OFFERTA" || TIPODOC == "DOMANDA_PARTECIPAZIONE" || TIPODOC == "MANIFESTAZIONE_INTERESSE")
+    if (InStr(1, tipoDocRispostaGara, TIPODOC) > 0)
+    {
+        dbtrace.Write($"IdMsgPar:{idRow} - IF TIPOLOGIE OFFERTE");
+
+        // '--------------------------------------------------------------------
+        //'-- se per un bando senza lotti  c'è un documento in carico ad un'altro utente si deve bloccare le operazioni
+        //'--------------------------------------------------------------------
+        sqlParams.Clear();
+        sqlParams.Add("@TIPODOC", TIPODOC);
+        sqlParams.Add("@idRow", idRow);
+        sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+        sql = @"select  db.TipoBando  ,ISNULL(db.Divisione_lotti,0) as Divisione_lotti , doc.fascicolo, doc.tipodoc ,doc.id as idmsg,istanza.id, istanza.idpfu, isnull(istanza.idpfuInCharge,0) as idpfuInCharge
+                        from ctl_doc doc with (nolock)
+                            inner join Document_Bando db with (nolock) on doc.id=db.idheader
+                            inner join ctl_doc istanza with (nolock) on istanza.LinkedDoc = doc.id  and istanza.Tipodoc = @TIPODOC
+                            inner join profiliutente p with (nolock) ON p.idpfu = istanza.idpfu  and p.pfuDeleted=0
+                            inner join aziende AZ with (nolock) ON az.idazi = p.pfuidazi
+                            inner join profiliutente p2 with (nolock) ON p2.pfuidazi = az.idazi
+                        where istanza.statofunzionale = 'InLavorazione' and istanza.Deleted = 0 and doc.id = @idRow and p2.idpfu = @IdPfu
+                            and ISNULL(db.Divisione_lotti,0) = 0 and (( istanza.idpfuincharge = 0 and istanza.idPfu <> @IdPfu ) or  ( istanza.idpfuincharge <> 0 and istanza.idpfuincharge <> @IdPfu ))
+                        order by istanza.id desc";
+        rs3 = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        string KEY_ML_BLOCCO = "Attenzione esiste un'offerta in corso di redazione prodotta da un'altro utente dello stesso Operatore Economico";
+        if (TIPODOC == "DOMANDA_PARTECIPAZIONE")
+        {
+            KEY_ML_BLOCCO = "Attenzione esiste una Domanda di Partecipazione in corso di redazione prodotta da un'altro utente dello stesso Operatore Economico";
+        }
+        if (TIPODOC == "MANIFESTAZIONE_INTERESSE")
+        {
+            KEY_ML_BLOCCO = "Attenzione esiste una Manifestazione di interesse in corso di redazione prodotta da un'altro utente dello stesso Operatore Economico";
+
+            if (tipoBandoGara == 4 || tipoBandoGara == 5)
+            {
+                KEY_ML_BLOCCO = "Attenzione esiste una Risposta avviso in corso di redazione prodotta da un'altro utente dello stesso Operatore Economico";
+            }
+        } 
+        else // generalizzo per evitare di andare ad aggiungere altri IF
+        {
+            KEY_ML_BLOCCO = "Attenzione esiste un " + TIPODOC + " in corso di redazione prodotta da un'altro utente dello stesso Operatore Economico";
+        }
+        if (rs3 is not null && rs3.RecordCount > 0)
+        {
+            session["MSG_ERROR"] = "ML=yes&MSG=" + KEY_ML_BLOCCO + "&CAPTION=Attenzione&ICO=4";
+            throw new ResponseRedirectException("../../home/main.asp?lo=base&GROUPS_NAME=MAIN_GROUP", Response);
+        }
+    }
+    else
+    {
+        //'--------------------------------------------------------------------
+        //'-- se per una iscrizione allo SDA o al ME  c'è un documento salvato in carico ad un'altro utente si deve bloccare le operazioni
+        //'--------------------------------------------------------------------
+        sqlParams.Clear();
+        sqlParams.Add("@idRow", idRow);
+        sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+        sqlParams.Add("@TIPODOC", TIPODOC);
+        sql = @"select  db.TipoBando  ,ISNULL(db.Divisione_lotti,0) as Divisione_lotti , doc.fascicolo, doc.tipodoc ,doc.id as idmsg,istanza.id, istanza.idpfu, isnull(istanza.idpfuInCharge,0) as idpfuInCharge
+                        from ctl_doc doc  with (nolock)
+                                inner join Document_Bando db with (nolock) on doc.id=db.idheader
+                                inner join ctl_doc istanza with (nolock) on istanza.LinkedDoc = doc.id
+                                inner join profiliutente p with (nolock) ON p.idpfu = istanza.idpfu  and p.pfuDeleted=0
+                                inner join aziende AZ with (nolock) ON az.idazi = p.pfuidazi
+                                inner join profiliutente p2 with (nolock) ON p2.pfuidazi = az.idazi
+                     where istanza.StatoDoc = 'Saved' and istanza.Deleted = 0 and doc.id = @idRow and p2.idpfu = @IdPfu
+                        and ISNULL(db.Divisione_lotti,0) = 0 and (( istanza.idpfuincharge = 0 and istanza.idPfu <> @IdPfu ) or ( istanza.idpfuincharge <> 0 and istanza.idpfuincharge <> @IdPfu ))";
+
+        if (!string.IsNullOrEmpty(TIPODOC))
+        {
+            sql = $"{sql} and istanza.TipoDoc = @TIPODOC ";
+        }
+        else
+        {
+            sql = $"{sql} and istanza.TipoDoc like 'ISTANZA%' ";
+        }
+        sql = $"{sql} order by istanza.id desc";
+
+        dbtrace.Write($"IdMsgPar:{idRow} - ELSE - CASO ISCRIZIONE ALBO - {sql}");
+
+        rs3 = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rs3 is not null && rs3.RecordCount > 0)
+        {
+            session["MSG_ERROR"] = "ML=yes&MSG=Attenzione esiste un'istanza in corso di redazione prodotta da un'altro utente dello stesso Operatore Economico&CAPTION=Attenzione&ICO=4";
+            throw new ResponseRedirectException("../../home/main.asp?lo=base&GROUPS_NAME=MAIN_GROUP", Response);
+        }
+    }
+    //'--------------------------------------------------------------------
+    //'-- recupera la presenza di documenti creati dall' utente  nello stato salvato oppure in carico a lui nello stato salvato
+    //'--------------------------------------------------------------------
+    sqlParams.Clear();
+    sqlParams.Add("@idRow", idRow);
+    sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+    sqlParams.Add("@TIPODOC", TIPODOC);
+    sql = @"select  db.TipoBando  ,ISNULL(db.Divisione_lotti,0) as Divisione_lotti , doc.fascicolo, doc.tipodoc ,doc.id as idmsg,istanza.id, istanza.idpfu, isnull(istanza.idpfuInCharge,0) as idpfuInCharge
+                     from ctl_doc doc  with(nolock)
+                            inner join Document_Bando db  with(nolock) on doc.id=db.idheader
+                            inner join ctl_doc istanza with(nolock)  on istanza.LinkedDoc = doc.id
+                     where istanza.statodoc = 'Saved' and istanza.Deleted = 0 and doc.id = @idRow and ( isnull(istanza.idpfuInCharge,0) = @IdPfu or ( isnull(istanza.idpfuInCharge,0) = 0 and istanza.idpfu  = @IdPfu ) )";
+    if (!string.IsNullOrEmpty(TIPODOC))
+    {
+        sql = $"{sql} and istanza.TipoDoc = @TIPODOC ";
+    }
+    else
+    {
+        sql = $"{sql} and istanza.TipoDoc like 'ISTANZA%' ";
+    }
+
+    sql = $"{sql} order by istanza.id desc";
+
+    rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+    url = string.Empty;
+
+    dbtrace.Write($"IdMsgPar:{idRow} - TEST PRESENZA DOCUMENTI - {sql}");
+
+    //'-- è già presente un documento per l'azienda OE salvato lo riapro
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        rs.MoveFirst();
+        idDocIStanza = CInt(rs["id"]!);
+        string TipoBando = CStr(rs["TipoBando"]);
+        idpfuInCharge = CInt(rs["idpfuInCharge"]!);
+
+        dbtrace.Write($"IdMsgPar:{idRow} - DOCUMENTO TROVATO! - TipoBando:{TipoBando} - idpfuInCharge:{idpfuInCharge}");
+
+        //'-- se documento esiste ed è in stato salvato e idpfuInCharge è vuoto oppure idpfuInCharge=clng(session("IdPfu")
+        if (idpfuInCharge == 0 || idpfuInCharge == CInt(session["IdPfu"]))
+        {
+            dbtrace.Write($"IdMsgPar:{idRow} - se il documento esiste ed è in stato di salvato e idpfuInCharge è vuoto oppure idpfuInCharge=idpfuinsessione");
+
+            if (!string.IsNullOrEmpty(TIPODOC))
+            {
+                insertCicloEidPfuInCharge(idDocIStanza, TIPODOC, CInt(session["IdPfu"]), null, null);
+            }
+            else
+            {
+                insertCicloEidPfuInCharge(idDocIStanza, TipoBando, CInt(session["IdPfu"]), null, null);
+            }
+        }
+        //'-- pre precauzione si svuota il campo JumpCheck che poteva essere avvalorato nel caso di conferma
+        sqlParams.Clear();
+        sqlParams.Add("@idDocIStanza", idDocIStanza);
+        cdf.Execute("update CTL_DOC set JumpCheck = '' where Id = @idDocIStanza", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+        if (!string.IsNullOrEmpty(TIPODOC))
+        {
+            url = $"document.asp?DOCUMENT={TIPODOC}&MODE=OPEN&JScript={TIPODOC}&IDDOC={CStr(idDocIStanza)}";
+        }
+        else
+        {
+            url = $"document.asp?DOCUMENT=ISTANZA_{TipoBando}&MODE=OPEN&JScript=ISTANZA_{TipoBando}&IDDOC={CStr(idDocIStanza)}";
+        }
+
+        dbtrace.Write($"IdMsgPar:{idRow} - FINE GENERAZIONE - URL:{url}");
+
+    }
+    if (rs is not null && rs.RecordCount == 0)
+    {
+        //'-- verifichiamo se esiste una versione inviata in precedenza
+        sqlParams.Clear();
+        sqlParams.Add("@idRow", CInt(idRow));
+        sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+        sqlParams.Add("@TIPODOC", TIPODOC);
+        sql = @"select top 1 db.TipoBando  ,ISNULL(db.ProceduraGara,0) as ProceduraGara ,ISNULL(db.Divisione_lotti,0) as Divisione_lotti, b.fascicolo, b.tipodoc ,b.id as idmsg,d1.id, isnull(d1.idpfuInCharge,0) as idpfuInCharge , d1.Tipodoc as TipoDocumentoLinked, db.TipoBandoGara
+                         from ctl_doc b with(nolock)
+                            inner join Document_Bando db with(nolock) on b.id=db.idheader
+                            inner join ctl_doc d1 with(nolock) on d1.LinkedDoc = b.id
+                            inner join profiliutente p with(nolock) ON p.idpfu = d1.idpfu
+                            inner join aziende AZ with(nolock) ON az.idazi = p.pfuidazi
+                            INNER JOIN profiliutente p2  with(nolock) ON p2.pfuidazi = az.idazi
+                         where ( d1.statodoc = 'Sended' or d1.statofunzionale='Ritirata' ) and d1.Deleted = 0 and b.id = @idRow and p2.idpfu = @IdPfu";
+
+        if (!string.IsNullOrEmpty(TIPODOC))
+        {
+            sql = $"{sql} and d1.TipoDoc = @TIPODOC ";
+        }
+        else
+        {
+            sql = $"{sql} and d1.TipoDoc like 'ISTANZA%' ";
+        }
+        sql = $"{sql} order by d1.datainvio desc";
+
+        dbtrace.Write($"IdMsgPar:{idRow} - verifichiamo se esiste una versione inviata in precedenza - sql:{sql}");
+
+        rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rs is not null && rs.RecordCount > 0)
+        {
+            //'select per controllare se prendere come idpfuincharge (se avvalorato controllo che sia anche della stessa azienda ) oppure idpfu
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+            sqlParams.Add("@idpfuInCharge", CInt(rs["idpfuInCharge"]));
+            sql = " select case when count(*) = 0 then @IdPfu else @idpfuInCharge end as idpfu1 from profiliUtente with(nolock) where idpfu=@idpfuInCharge and pfuIdAzi=(Select pfuIdAzi from ProfiliUtente where idpfu=@IdPfu)";
+            rs31 = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+            dbtrace.Write($"IdMsgPar:{idRow} - select per controllare se prendere come idpfuincharge (se avvalorato controllo che sia anche della stessa azienda ) oppure idpfu - sql:{sql}");
+
+            //' Se troviamo il record ed è un'offerta (BANDO DI PARTENZA BANDO_GARA o SEMPLIFICATO) apriamo il viewer ( con briciole di pane avvalorate ) dove l'utente sceglie come procedere
+            if ((CStr(rs["tipodoc"]) == "BANDO_GARA" || CStr(rs["tipodoc"]) == "BANDO_SEMPLIFICATO") && CStr(rs["TipoDocumentoLinked"]) == "OFFERTA" && CInt(rs31["idpfu1"]!) == CInt(session["IdPfu"]))
+            {
+                //'Apro il viewer per le offerte multiple solo se il bando è a lotti e non è ristretta
+
+                //'--apro il viewer sempre tranne nel primo giro della ristretta e della negoziata
+                if (CStr(rs["Divisione_lotti"]) != "0" && (CStr(rs["ProceduraGara"]) == "15476" || CStr(rs["TipoBandoGara"]) == "3"))
+                {
+                    url = $"dashboard/Viewer.asp?Table=MSG_LINKED_ISCRIZIONE_ALBO&lo=base&OWNER=idPfu&IDENTITY=IdMsg&TOOLBAR=OFFERTE_UTENTE_TOOLBAR&DOCUMENT=OFFERTA&PATHTOOLBAR=../CustomDoc/&JSCRIPT=OFFERTA&AreaAdd=no&Caption=&Height=150,100*,210&numRowForPag=25&Sort=&SortOrder=&ACTIVESEL=2&FilterHide=Folder = '186' and OPEN_DOC_NAME='OFFERTA' and fascicolo='{CStr(rs["fascicolo"])}'&AreaFiltro=no&ROWCONDITION=NOTREAD,bread=1~&ID_MSG_FROM={CStr(rs["idmsg"])}&TIPODOCUMENTO={CStr(rs["tipodoc"])}";
+                    throw new ResponseRedirectException($"../../ctl_library/path.asp?url={UrlEncode(url)}&KEY=viewer", Response);
+                }
+            }
+            //'-- Esiste gia un documento inviato.
+            //'-- quindi creo il documento per copia
+            string TipodocNew = string.Empty;
+            string TipoBando = CStr(rs["TipoBando"]);
+            if (!string.IsNullOrEmpty(TIPODOC))
+            {
+                TipodocNew = TIPODOC;
+            }
+            else
+            {
+                TipodocNew = $"ISTANZA_{TipoBando}";
+            }
+
+            sqlParams.Clear();
+            sqlParams.Add("@id", CInt(rs["id"]));
+            sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+            sqlParams.Add("@TipodocNew", TipodocNew);
+            sql = "exec ISTANZA_COPY_FROM @id, @IdPfu, @TipodocNew";
+
+            dbtrace.Write($"IdMsgPar:{idRow} - istanza copy from - sql:{sql}");
+
+            try
+            {
+                //'--creo connessione
+                string strConnectionString = ApplicationCommon.Application.ConnectionString;
+                connAtt = cdf.SetConnection(strConnectionString);
+                connAtt.Open();
+
+                //'--inizio transazione
+                transaction = connAtt.BeginTransaction();
+
+                dbtrace.Write($"IdMsgPar:{idRow} - INIZIO TRANSAZIONE !");
+
+                //'--creo Recordset
+                rs = new TSRecordSet();
+                rs.OpenWithTransaction(sql, connAtt, transaction, sqlParams);
+
+                if (rs.RecordCount > 0)
+                {
+                    rs.MoveFirst();
+                    int idNewIstanza = CInt(rs["id"]!);
+
+                    if ( !string.IsNullOrEmpty(TIPODOC) )
+                    {
+                        url = $"document.asp?DOCUMENT={TIPODOC}&MODE=OPEN&JScript={TIPODOC}&IDDOC={CStr(idNewIstanza)}";
+                        insertCicloEidPfuInCharge(CInt(rs["id"]!), TIPODOC, CInt(session["IdPfu"]), connAtt, transaction);
+                    }
+                    else
+                    {
+                        url = $"document.asp?DOCUMENT=ISTANZA_{TipoBando}&MODE=OPEN&JScript=ISTANZA_{TipoBando}&IDDOC={CStr(idNewIstanza)}";
+                        insertCicloEidPfuInCharge(CInt(rs["id"]!), TipoBando, CInt(session["IdPfu"]), connAtt, transaction);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                string errDescription = ex.Message;
+
+                //'--annullo transazione
+                if (transaction is not null)
+                {
+                    transaction.Rollback();
+                }
+
+                //'--chiudo connessione
+                if (connAtt is not null && connAtt.State == System.Data.ConnectionState.Open)
+                {
+                    connAtt.Close();
+                }
+
+                //'--traccio errore event viewer
+                TraceErr(ex, ApplicationCommon.Application.ConnectionString, "Partecipa.asp");
+
+                if (CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "yes" || CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower == "si")
+                {
+                    errDescription = $"Errore in creazione documento, ripetere l'operazione - {errDescription}";
+                }
+                else
+                {
+                    errDescription = ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO") + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                }
+
+                //'--messaggio a video
+                exitError(errDescription);
+            }
+            finally
+            {
+                dbtrace.Write($"IdMsgPar:{idRow} - FINALLY TRANSAZIONE !");
+
+                //'--confermo transazione
+                if (transaction is not null)
+                {
+                    transaction.Commit();
+                }
+                //'--chiudo connessione
+                if (connAtt is not null && connAtt.State == System.Data.ConnectionState.Open)
+                {
+                    connAtt.Close();
+                }
+            }
+        }
+        else
+        {
+            // '-- verifica se esiste la relazione dell'azienda nei destinatari del bando
+            sqlParams.Clear();
+            sqlParams.Add("@IDAZI", CInt(session["IDAZI"]));
+            sqlParams.Add("@idRow", idRow);
+            rs = cdf.GetRSReadFromQuery_("select idheader from CTL_DOC_Destinatari with(nolock) where idazi = @IDAZI and idheader = @idRow", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+            if (rs!.RecordCount == 0)
+            {
+
+                dbtrace.Write($"IdMsgPar:{idRow} - TEST CTL_DOC_Destinatari - recordcount = 0");
+
+                //'-- crea l'associazione con il bando nei destinatari del bando se non esiste
+                sqlParams.Clear();
+                sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+                sqlParams.Add("@idRow", idRow);
+                sql2 = " select ISNULL(pfuIdAzi,'') as pfuIdAzi ,ISNULL(aziRagioneSociale,'') as aziRagioneSociale ,ISNULL(aziPartitaIVA,'') as aziPartitaIVA,ISNULL(aziE_Mail,'') as aziE_Mail,ISNULL(aziIndirizzoLeg,'') as aziIndirizzoLeg ,ISNULL(aziLocalitaLeg,'') as aziLocalitaLeg ,ISNULL(aziProvinciaLeg,'') as aziProvinciaLeg,ISNULL(aziStatoLeg,'') as aziStatoLeg,ISNULL(aziCAPLeg,'') as aziCAPLeg ,ISNULL(aziTelefono1,'') as aziTelefono1 ,ISNULL(aziFAX,'') as aziFAX from CTL_DOC with(nolock) inner join ProfiliUtente with(nolock) on ProfiliUtente.idpfu=@IdPfu inner join Aziende on idazi=pfuidazi where CTL_DOC.id=@idRow";
+                rs3 = cdf.GetRSReadFromQuery_(sql2, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                
+                sqlParams.Clear();
+                sqlParams.Add("@idRow", idRow);
+                sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+                sqlParams.Add("@IdAzi", CStr(rs3["pfuIdAzi"]));
+                sqlParams.Add("@RagioneSociale", CStr(rs3["aziRagioneSociale"]));
+                sqlParams.Add("@PIVA", CStr(rs3["aziPartitaIVA"]));
+                sqlParams.Add("@eMail", CStr(rs3["aziE_Mail"]));
+                sqlParams.Add("@IndirizzoLeg", CStr(rs3["aziIndirizzoLeg"]));
+                sqlParams.Add("@LocalitaLeg", CStr(rs3["aziLocalitaLeg"]));
+                sqlParams.Add("@ProvinciaLeg", CStr(rs3["aziProvinciaLeg"]));
+                sqlParams.Add("@StatoLeg", CStr(rs3["aziStatoLeg"]));
+                sqlParams.Add("@CAPLeg", CStr(rs3["aziCAPLeg"]));
+                sqlParams.Add("@Tel1", CStr(rs3["aziTelefono1"]));
+                sqlParams.Add("@FAX", CStr(rs3["aziFAX"]));
+                strSQL = @"insert into CTL_DOC_Destinatari (idHeader, IdPfu, IdAzi, aziRagioneSociale, aziPartitaIVA,
+                                        aziE_Mail, aziIndirizzoLeg, aziLocalitaLeg, aziProvinciaLeg, aziStatoLeg, aziCAPLeg,
+                                        aziTelefono1, aziFAX, aziDBNumber, aziSitoWeb)
+                                    values (@idRow, @IdPfu, @IdAzi, @RagioneSociale,
+                                                @PIVA, @eMail, @IndirizzoLeg, @LocalitaLeg, @ProvinciaLeg,
+                                                @StatoLeg, @CAPLeg, @Tel1, @FAX,'','')";
+
+                cdf.Execute(strSQL, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+                
+            }
+            //'-- se non esiste un documento (sia inviato che salvato) lo creo invocando le stored di creazione
+            //'-- e poi apro quello
+
+            int idNewIstanza = createIstanzaFrom(idRow, CInt(session["IdPfu"]));
+
+
+            //'-- apre un nuovo documento
+            sqlParams.Clear();
+            sqlParams.Add("@idRow", idRow);
+            sql = "select TipoBando from CTL_DOC with(nolock) inner join Document_Bando with(nolock) on id=idheader where id=@idRow";
+            rs = cdf.GetRSReadFromQuery_(sql, ApplicationCommon.Application.ConnectionString, sqlParams);
+            
+            rs.MoveFirst();
+            //'-- se ha creato il documento verifica che ci sono solo documenti salvati
+            if (!string.IsNullOrEmpty(TIPODOC))
+            {
+                insertCicloEidPfuInCharge(idNewIstanza, TIPODOC, CInt(session["IdPfu"]), null,null);
+
+                url = $"document.asp?DOCUMENT={TIPODOC}&MODE=OPEN&JScript={TIPODOC}&IDDOC={CStr(idNewIstanza)}";
+            }
+            else
+            {
+                insertCicloEidPfuInCharge(idNewIstanza, CStr(rs["TipoBando"]), CInt(session["IdPfu"]), null, null);
+
+                url = $"document.asp?DOCUMENT=ISTANZA_{CStr(rs["TipoBando"])}&MODE=OPEN&JScript=ISTANZA_{CStr(rs["TipoBando"])}&IDDOC={CStr(idNewIstanza)}";
+            }
+            
+            dbtrace.Write($"IdMsgPar:{idRow} - APRE UN NUOVO DOCUMENTO :{url}");
+
+        }
+    }
+    //' aggiorna lo stato a iscritto in caso di RFQ
+    string idAzienda = string.Empty;
+    if (TipoProceduraCaratteristica == "RFQ")
+    {
+        if (idDocIStanza > 0 && !string.IsNullOrEmpty(CStr(idDocIStanza)))
+        {
+            sqlParams.Clear();
+            sqlParams.Add("@IdPfu", CInt(session["IdPfu"]));
+            rs = cdf.GetRSReadFromQuery_("select pfuidazi from profiliutente where idpfu=@IdPfu", ApplicationCommon.Application.ConnectionString, sqlParams);
+            if (rs is not null && rs.RecordCount > 0)
+            {
+                idAzienda = CStr(rs["pfuidazi"]);
+            }
+
+            sqlParams.Clear();
+            sqlParams.Add("@idRow", CInt(idRow));
+            sqlParams.Add("@idazi", CInt(idAzienda));
+            cdf.Execute("update CTL_DOC_Destinatari set  StatoIscrizione = 'Iscritto' where idHeader = @idRow and idazi=@idAzienda", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+        }
+    }
+
+    url = $"CTL_LIBRARY/DOCUMENT/{url}&lo=base";
+
+    //'-- altrimenti creo il nuovo documento richiesto
+    throw new ResponseRedirectException($"../../ctl_library/path.asp?url={UrlEncode(url)}&KEY=document", Response);
+
+    void insertCicloEidPfuInCharge(int idDoc, string tipoDoc, int idPfu, SqlConnection? connAtt, SqlTransaction? objTransaction)
+    {
+        string strSql = "";
+
+        dbtrace.Write($"IdMsgPar:{idRow} - insertCicloEidPfuInCharge prima dell'if");
+
+        //'--se utente in carico 0 oppure diverso da utente corrente traccio cronologia ed aggiorno idPfuInCharge sul documento
+        if (idpfuInCharge != idPfu)
+        {
+
+            dbtrace.Write($"IdMsgPar:{idRow} - insertCicloEidPfuInCharge nell'if - (idpfuInCharge != idPfu");
+
+            sqlParams.Clear();
+            sqlParams.Add("@tipoDoc", tipoDoc);
+            sqlParams.Add("@idDoc", idDoc);
+            sqlParams.Add("@idPfu", CStr(idPfu));
+            strSql = @"INSERT INTO CTL_ApprovalSteps
+                                (APS_Doc_Type,APS_ID_DOC,APS_State,APS_IdPfu,APS_IsOld)
+                                VALUES (@tipoDoc, @idDoc,'PARTECIPA' , @idPfu, 0)";
+
+            if (objTransaction is null)
+            {
+                cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+            }
+            else
+            {
+                cdf.ExecuteWithTransaction(strSql, connAtt.ConnectionString, connAtt, objTransaction, parCollection: sqlParams);
+            }
+
+            sqlParams.Clear();
+            sqlParams.Add("@idPfu", idPfu);
+            sqlParams.Add("@idDoc", idDoc);
+            strSql = @"update CTL_DOC
+                                set idPfuInCharge = @idPfu
+                            where Id = @idDoc";
+
+            if (objTransaction is null)
+            {
+                cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+            }
+            else
+            {
+                cdf.ExecuteWithTransaction(strSql, connAtt.ConnectionString, connAtt, objTransaction, parCollection: sqlParams);
+            }
+        }
+
+        //'SE IL DOCUMENTO E' ISTANZA INVOCA LA STORED CHE FA ULTERIORI CONTROLLI PRIMA DI AGGIORNARE I DATI
+        sqlParams.Clear();
+        sqlParams.Add("@idDoc", idDoc);
+        strSql = "Select Id from CTL_DOC with(nolock) where Id=@idDoc and TipoDoc like 'Istanza%' ";
+        TSRecordSet? rsControllo = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rsControllo is not null && rsControllo.RecordCount > 0)
+        {
+            dbtrace.Write($"IdMsgPar:{idRow} - test istanza precedente ed aggiornamento dati {strSql}");
+
+            sqlParams.Clear();
+            sqlParams.Add("@idDoc", idDoc);
+            sqlParams.Add("@idPfu", idPfu);
+            strSql = "exec UPDATE_DATI_UTENTE_COLLEGATO_ISTANZA @idDoc, @idPfu";
+            if (objTransaction is null)
+            {
+                cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+            }
+            else
+            {
+                cdf.ExecuteWithTransaction(strSql, connAtt.ConnectionString, connAtt, objTransaction, parCollection: sqlParams);
+            }
+        }
+    }
+
+    int createIstanzaFrom(int idBando, int idPfu)
+    {
+        int _createIstanzaFrom = 0;
+        sqlParams.Clear();
+        sqlParams.Add("@idBando", idBando);
+        sqlParams.Add("@idPfu", idPfu);
+        
+        string strSql;
+        TSRecordSet? rs;
+
+        dbtrace.Write($"IdMsgPar:{idRow} - metodo createIstanzaFrom");
+
+        if (TIPODOC.ToUpper() == "MANIFESTAZIONE_INTERESSE")
+        {
+            strSql = "exec MANIFESTAZIONE_INTERESSE_CREATE_FROM_BANDO_GARA @idBando, @idPfu";
+        }
+        else if (TIPODOC.ToUpper() == "RISPOSTA_CONSULTAZIONE")
+        {
+            strSql = "exec RISPOSTA_CONSULTAZIONE_CREATE_FROM_BANDO_CONSULTAZIONE @idBando, @idPfu";
+        }
+        else
+        {
+            strSql = "exec ISTANZA_CREATE_FROM @idBando, @idPfu";
+        }
+
+        dbtrace.Write($"IdMsgPar:{idRow} - metodo createIstanzaFrom - sql:{strSql}");
+
+        try
+        {
+            rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+        }
+        catch (Exception ex)
+        {
+            // '--aggiunta gestione degli errori la transazione è gestita
+            //'--nella stored ISTANZA_CREATE_FROM
+
+            string errDescription = ex.Message;
+
+            //'--traccio errore event viewer
+            TraceErr(ex, ApplicationCommon.Application.ConnectionString, "Partecipa.createIstanzaFrom()");
+            //TraceErr s, d, n, "Partecipa.createIstanzaFrom()"
+            if (CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "yes" || CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "si")
+            {
+                errDescription = "Errore creazione istanza. Partecipa.createIstanzaFrom() - " + errDescription;
+            }
+            else
+            {
+                errDescription = ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO") + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            exitError(errDescription);
+        }
+        if (rs is not null && rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            _createIstanzaFrom = CInt(rs["id"]!);
+
+            dbtrace.Write($"IdMsgPar:{idRow} -ID GENERATO : - _createIstanzaFrom:{_createIstanzaFrom}");
+
+            return _createIstanzaFrom;
+        }
+
+        exitError("Errore creazione istanza. Partecipa.createIstanzaFrom()");
+
+        return _createIstanzaFrom;
+    }
+    void exitError(string msg)
+    {
+        dbtrace.Write($"IdMsgPar:{idRow} - EXIT ERROR : {msg}");
+
+        //'-- Messaggio tramite modale
+        session["MSG_ERROR"] = "ML=yes&MSG=" + msg + "&CAPTION=Stop&ICO=2";
+
+        //'-- Ritorno sulla briciola di pane precedente
+        popBreadCrumb("../../", session, Response);
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+    }
+}

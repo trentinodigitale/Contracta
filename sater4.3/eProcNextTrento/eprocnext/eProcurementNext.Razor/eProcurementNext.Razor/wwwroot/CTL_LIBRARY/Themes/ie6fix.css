@@ -1,0 +1,31 @@
+#header img,h2 img{behavior: url(/Registration/css/iepngfix.htc),url(/Registration/css/iepngfix.htc); }
+#coldx h2.iealpha,#colcontainer #colsx h2.iealpha,#colcontainer #coldx h2.iealpha span,#colcontainer #colsx h2.iealpha span
+{background-image: url(/Registration/images/h2bg.gif);}
+#coldx a,#colsx a,form div#accordion h3{background-image:url(/Registration/images/arrow.gif);  }
+#coldx{overflow-x:hidden;}
+/*div#colcx.large{ width:auto;}*/
+div#colcx.large{ width:auto;FLOAT: left; MARGIN: 0px; OVERFLOW: visible; padding-right:2%}
+div#colcx1.large1{ width:98%; margin-right:-1px;}
+div#colcx2.large2{ width:98%; margin-right:-1px;}
+div#colcx3.large3{ width:100%; margin-right:-1px;}
+#overlay{ position:absolute;}
+h2 img{ height:16px; width:110px;}
+img#h1{ width:116px;}
+img#h2{width:102px;}
+img#h3{width:113px;}
+img#h4{width:68px;}
+img#h5{width:150px;}
+div.filter{ height:70px;}
+div.filter input.btn{ float:right;}
+#printbtn{ left:-20em;}
+#header h1 img {width:378px;height:144px;}
+img#all{background-image:url(../images/tutti_bandi.gif);}
+img#soloservizi{background-image:url(../images/solo_servizi.gif);}
+img#soloforniture{background-image:url(../images/solo_forniture.gif);}
+#paginazione{text-align:left;}
+#paginazione ul{float:right;margin-top:-20px;}
+#printbtn{position:static}
+ul.tabs li img {height:46px;}
+#coldx ul li, #colsx ul li {zoom:1}
+#template_doc td div#accordion h3{background-image:url(/Registration/images/arrow.gif); font-size:1.0em; }
+

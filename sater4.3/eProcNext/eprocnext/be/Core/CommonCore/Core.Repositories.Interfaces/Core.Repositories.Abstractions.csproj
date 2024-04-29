@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Description>Repository package - Abstractions contains all the definition of Interfaces and Abstract Classes implemented in package Core.Repositories</Description>
+    <Version>1.0.0.43</Version>
+    <PackageId>Core.Repositories.Abstractions</PackageId>
+    <Authors>FTM Dev Team</Authors>
+    <Company>Team System SpA</Company>
+    <Product>API - Core.Repositories.Abstractions</Product>
+    <AssemblyVersion>1.0.0.43</AssemblyVersion>
+    <FileVersion>1.0.0.43</FileVersion>
+    <PackageReleaseNotes>
+      v. 1.0.0.8
+      - Added Force Refresh on IQueryingFilter for forcing refresh data from Database on GetCachedData
+      - Added CachingExpirationTime on IQueryingFilterfor changing the expiration time on distributed cache
+      v. 1.0.
+      - Added CurrentUser in ISession
+    </PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EmbedAllSources>true</EmbedAllSources>
+    <IncludeSource>true</IncludeSource>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath></OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.DistribuitedCache\Core.DistribuitedCache.csproj" />
+  </ItemGroup>
+
+</Project>

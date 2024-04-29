@@ -1,0 +1,48 @@
+﻿@page "/CustomDoc/GetInfoModelloMicroLotto.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.GetInfoModelloMicroLottoModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.GetInfoModelloMicroLottoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string strInfoAllegato = "";
+	//'--recupero CODICE Modello Micro Lotto
+	string Codice = GetParamURL(Request.QueryString.ToString(), "CODICE");
+
+	//'--recupero info allegato micro lotto
+	TSRecordSet? rs = null;
+	var sqlParams = new Dictionary<string, object?>();
+    sqlParams.Add("@codice", Codice);
+	rs = cdf.GetRSReadFromQuery_("select top 1 allegato,ModelloBando,ModelloOfferta from Document_Modelli_MicroLotti where codice= @codice ", ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rs is not null && rs.RecordCount > 0)
+	{
+		rs.MoveFirst();
+		strInfoAllegato = CStr(rs["allegato"]);
+		//'--ricavo la forma visuale dell'allegato
+		Fld_Attach objattach = new Fld_Attach();
+		if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+			objattach.Path = "/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + "/";
+		}else{
+			objattach.Path = "/application/";
+		}
+		objattach.Init(0,"Allegato", strInfoAllegato,null,null,"IN", true);
+		htmlToReturn.Write($@"<span class=""StampaCont"">" + ApplicationCommon.CNV("DownLoad Micro Lotto") + "</span>");
+		objattach.Html(htmlToReturn, false);
+
+		htmlToReturn.Write("@@@" + CStr(rs["ModelloBando"]) + "@@@" + CStr(rs["ModelloOfferta"]));
+	}
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,87 @@
+
+
+	BODY,DIV ,TABLE, TD {
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:9pt;
+	 font-style:normal;
+	 font-weight:normal
+	 
+		
+	}
+	.Input
+	{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:10pt;
+	 font-style:normal;
+	 font-weight:bold
+		
+	}
+
+	.TITLE{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:12pt;
+	 font-style: bold;
+	 font-weight:bold
+
+
+		
+	}
+	
+	.CellIntestGrid { 
+	background:#ffffff;
+	--text-transform:uppercase;
+	font-weight:bold;
+	font-size:9pt;
+	width:500px;
+	}
+	.CellIntestGrid_Horizontal { 
+	background:#ffffff;
+	font-weight:bold;
+	font-size:9pt;
+	
+	}
+
+	.CellGridPrintProducts { 
+	background:#ffffff;
+	font-size:9pt;
+	}
+	
+	.CellRow{
+		padding-top:5px;
+	}
+
+	@media print
+	  {
+	  #Ricevuta {}
+	  }
+	  
+	  @media screen
+	  {
+	  #Ricevuta {}
+	  }
+	  
+	 ul li, table ul li { list-style-type:none; } 
+	 
+	 #piedipagina {
+		position: absolute;
+		width: 800px;
+		height: 5px;
+		top: auto;
+		bottom: 0;
+		/*right: 0;*/
+		/*left: 0;*/
+		}
+	
+	.contenitore_stampa
+		{
+			width:950;
+			margin: 0 auto;
+		}
+	
+	html, body {margin: 0};
+	
+	table{border-collapse:collapse; border-spacing: 0;}  
+	
+	.firmatodigitalmente{
+    font-style:italic; color:blue; float:right; margin-right:2em;
+  }

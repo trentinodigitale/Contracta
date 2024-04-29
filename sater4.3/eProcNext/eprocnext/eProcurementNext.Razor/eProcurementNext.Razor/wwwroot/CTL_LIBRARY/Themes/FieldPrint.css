@@ -1,0 +1,319 @@
+TEXTAREA.TextArea
+{
+    WIDTH: 100%;
+	border:1px solid #ccc;
+	background-color:#fff;
+	margin-top:5px;
+	color:#333;
+}
+
+TEXTAREA.TextArea:hover{
+	BORDER-COLOR:#333;
+}
+
+TEXTAREA.TextArea:focus{
+	BACKGROUND-COLOR:#FFF;
+	border-color:#333;
+	color:#333;
+}
+
+INPUT.TextTime
+{
+    FONT-SIZE: 8pt;
+    WIDTH: 24px;
+    FONT-FAMILY: Arial
+}
+
+TEXTAREA.TextArea:hover{
+	border-color:333;
+}
+TEXTAREA.TextAreaFull
+{
+    WIDTH: 100%;
+    HEIGHT: 100%
+}
+TABLE.Foto_Tab
+{
+    CURSOR: pointer
+}
+TD.Foto_label
+{
+    FONT-SIZE: 10pt;
+    COLOR: #2268B3;
+    FONT-FAMILY: arial
+}
+INPUT.Fld_Number
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: arial;
+    TEXT-ALIGN: right
+}
+SELECT.FldDomainValue
+{
+    BORDER: 1px solid #ccc;
+	background-color:#fff;
+    FONT-SIZE: 9pt;
+    FONT-FAMILY: arial;
+	color:#2268B3;
+	margin-left:5px;
+}
+select:hover{
+	border-color:#333;
+}
+
+select:focus{
+	background-color:#fff;
+}
+
+LABEL.Fld_number
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: arial;
+    TEXT-ALIGN: right
+}
+.Fld_Number_POS
+{
+    FONT-SIZE: 10pt;
+    COLOR: green;
+    FONT-FAMILY: arial;
+    TEXT-ALIGN: right
+}
+.Fld_Number_NEG
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: red;
+    FONT-FAMILY: arial;
+    TEXT-ALIGN: right
+}
+TABLE.Attach_Tab
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: #161a74;
+    FONT-FAMILY: arial
+}
+LABEL.Attach_label
+{
+    FONT-SIZE: 10pt;
+    COLOR: #2268B3;
+    FONT-FAMILY: arial
+}
+TABLE.Foto_Tab
+{
+    CURSOR: pointer
+}
+TD.Foto_label
+{
+    FONT-SIZE: 10pt;
+    COLOR: #2268B3;
+    FONT-FAMILY: arial
+}
+TD.FldHier_unselectable
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: arial
+}
+TD.FldHier_selectable
+{
+    FONT-SIZE: 10pt;
+    CURSOR: pointer;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: underline
+}
+TD.FldHier_selectableMouseOver
+{
+    FONT-SIZE: 10pt;
+    CURSOR: pointer;
+    COLOR: white;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: navy
+}
+INPUT.FldHier_edit
+{
+    BORDER: 1px solid #ccc;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+	margin:3PX;
+	padding-left:3px;
+	color:#2268B3;
+}
+INPUT.FldHier_edit:focus
+{
+	background-color:#fff;
+}
+
+
+
+TABLE.FldHier_path
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px 0px 0px 12px;
+    PADDING-TOP: 0px
+}
+TABLE.FldHier_node
+{
+    PADDING-RIGHT: 4px;
+    MARGIN-TOP: 2px
+}
+BODY.ExtField
+{
+    MARGIN: 0px
+}
+IMG.FldHier_PlusMinus
+{
+    CURSOR: pointer
+}
+TABLE.FldHier_border
+{
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    BORDER-LEFT: black 1px solid;
+    BORDER-BOTTOM: black 1px solid
+}
+.FldCaption_Bold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: arial
+}
+LABEL.Attach_label
+{
+    FONT-SIZE: 10pt;
+    CURSOR: pointer;
+    COLOR: #2268B3;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: underline;
+	font-weight:bold;
+}
+TABLE.FldPubLeg_Tab
+{
+    BORDER-RIGHT: gray 1px;
+    BORDER-TOP: gray 1px;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: gray 1px;
+    BORDER-BOTTOM: gray 1px;
+    FONT-FAMILY: arial
+}
+TD.Fld_DescDB_label
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: arial
+}
+INPUT.FldExtDom_E2
+{
+    Z-INDEX: 2;
+    POSITION: absolute;
+    BACKGROUND-COLOR: transparent
+}
+INPUT.FldExtDom_E
+{
+    FONT-SIZE: 9pt;
+    Z-INDEX: 2;
+    LEFT: -1000px;
+    FONT-FAMILY: ARIAL;
+    POSITION: absolute;
+    TOP: -1000px;
+    BACKGROUND-COLOR: transparent;
+	border:1px solid #ccc;
+	color:#333;
+	font-weight:normal;
+}
+
+INPUT.FldExtDom_E:focus{ 
+	background-color:#fff; 
+	border-color:#333;
+}
+
+
+INPUT.FldExtDom_V
+{
+    FONT-SIZE: 9pt;
+    Z-INDEX: 1;
+    FONT-FAMILY: ARIAL;
+    BACKGROUND-COLOR:#fff;
+	BORDER:1px solid #ccc;
+	margin-left:3px;
+}
+
+
+
+INPUT:HOVER{ border-color:#333;}
+
+.GridCol_Link_Number_POS
+{
+    FONT-SIZE: 10pt;
+    COLOR: green;
+    FONT-FAMILY: arial;
+    TEXT-ALIGN: right
+}
+.GridCol_Link_Number_NEG
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: red;
+    FONT-FAMILY: arial;
+    TEXT-ALIGN: right
+}
+INPUT.FldHier_button
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px 0px 0px 1px;
+    COLOR: #0F3D7C;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #e9edf3;
+	margin-right:3px;
+	border:1px solid #ccc;
+}
+INPUT.Text
+{
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+	border:1px solid #ccc;
+	background-color:#fff;
+	color:#333;
+	margin:3px;
+	padding-left:3px;
+	height:20px;
+}
+INPUT.Text:hover{ border-color:#333;}
+INPUT.Text:focus{ border-color:#333; background-color:#fff; color:#333;}
+
+
+
+INPUT.FldExtDom_button
+{
+    BORDER: 1px solid #ccc;
+    FONT-SIZE: 12px;
+    MARGIN-LEFT: 1px;
+    COLOR: #2268B3;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #e9edf3
+}
+INPUT.Attach_button
+{
+    FONT-SIZE: 12px;
+    MARGIN-LEFT: 1px;
+    COLOR: #2268B3;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #e9edf3;
+	border:1px solid #ccc;
+}
+
+
+INPUT.Text_err
+{
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+	border:1px solid #F00; color:#000; background-color:#FFC;
+}
+
+INPUT, LABEL {font-size:12px; padding-right:5px;}
+
+.TextArea_Label{}

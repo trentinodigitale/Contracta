@@ -1,0 +1,53 @@
+<Segnatura xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Intestazione>
+
+		<Oggetto>@@@Oggetto@@@</Oggetto>
+
+		<Flusso>
+			<TipoRichiesta>E</TipoRichiesta>
+			<Firma>NF</Firma>
+			<ForzaRegistrazione>1</ForzaRegistrazione>
+		</Flusso>
+
+		<Mittenti>
+			<Mittente>
+				<PersonaGiuridica id="0" tipo="PG">
+					<Denominazione>@@@Denominazione-azi@@@</Denominazione>
+					<Metadati>
+						<Parametro nome="CODICE_FISCALE" valore="@@@CodiceFiscale-azi@@@" />
+						<Parametro nome="PARTITA_IVA" valore="@@@PartitaIva-azi@@@" />
+					</Metadati>
+				</PersonaGiuridica>
+			</Mittente>
+		</Mittenti>
+
+		<Destinatari>
+			<Destinatario>
+				<Amministrazione>
+					<Denominazione>@@@Denominazione-Amministrazione@@@</Denominazione>
+					<CodiceAmministrazione>@@@Codice-Amministrazione@@@</CodiceAmministrazione>
+
+					<UnitaOrganizzativa tipo="temporanea">
+						<Denominazione>@@@denominazione-UO@@@</Denominazione>
+						<Identificativo>@@@codice-UO@@@</Identificativo>
+					</UnitaOrganizzativa>
+				</Amministrazione>
+				<AOO>
+					<Denominazione>@@@denominazione-AOO@@@</Denominazione>
+					<CodiceAOO>@@@codice-AOO@@@</CodiceAOO>
+				</AOO>
+			</Destinatario>
+		</Destinatari>
+
+		<!-- Opzionale  -->
+		<FascicoloPrimario>
+			<CodiceAmministrazione>@@@Codice-Amministrazione@@@</CodiceAmministrazione>
+			<CodiceAOO>@@@codice-AOO@@@</CodiceAOO>
+			<!-- voce di titolario -->
+			<Classifica>@@@titolario-fascicolo@@@</Classifica>
+			<Anno>@@@anno-fascicolo@@@</Anno>
+			<Progressivo>@@@progressivo-fascicolo@@@</Progressivo>
+		</FascicoloPrimario>
+
+	</Intestazione>
+</Segnatura>

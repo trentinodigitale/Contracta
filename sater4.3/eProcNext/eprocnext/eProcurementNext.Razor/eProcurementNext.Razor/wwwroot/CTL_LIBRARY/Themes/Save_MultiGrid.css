@@ -1,0 +1,308 @@
+TD.Grid_TotalCaption
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.Grid_TotalValue
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: white 1px solid;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: khaki;
+    TEXT-ALIGN: right
+}
+TD.Grid_RowCaption_DimColDesc
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.Grid_RowCaption_DimColValue_1
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki;
+    TEXT-ALIGN: center
+}
+TD.Grid_RowCaption_DimColValue_2
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki;
+    TEXT-ALIGN: center
+}
+TD.Grid_RowCaption_DimRowDesc
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.Grid_RowCaption_DimRowValue_1
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.Grid_RowCaption_DimRowValue_2
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: white;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.Grid_RowCaption_DimRowValue_3
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki
+}
+TD.Grid_CaptionData
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: 600;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: khaki;
+    TEXT-ALIGN: center
+}
+.GR0Red_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    COLOR: red;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0Green_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    COLOR: green;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.Grid_TotalValueGreen
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: white 1px solid;
+    COLOR: green;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+.Grid_TotalValueRed
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: white 1px solid;
+    COLOR: red;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+.Grid_TotalValueOrange
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: white 1px solid;
+    COLOR: orange;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+.GR0BRed_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9pt;
+    COLOR: red;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0BGreen_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9pt;
+    COLOR: green;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0Orange_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9pt;
+    COLOR: orange;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.Grid_TotalValueBGreen
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12pt;
+    BORDER-LEFT: white 1px solid;
+    COLOR: green;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+.Grid_TotalValueBRed
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12pt;
+    BORDER-LEFT: white 1px solid;
+    COLOR: red;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+.Grid_TotalValueBOrange
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12pt;
+    BORDER-LEFT: white 1px solid;
+    COLOR: orange;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+.GR0_Center
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    COLOR: black;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0_CenterBlue
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    COLOR: black;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0_CenterGreen
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    COLOR: green;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.NoteGrid
+{
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.GR0_CenterLink
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    CURSOR: hand;
+    COLOR: black;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0_CenterGreenLink
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    CURSOR: hand;
+    COLOR: green;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0_CenterBlueLink
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    CURSOR: hand;
+    COLOR: black;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0_NumGrid
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    COLOR: black;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right
+}
+.GR0_NumGridLink
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    FONT-SIZE: 9pt;
+    CURSOR: pointer;
+    COLOR: black;
+    BORDER-BOTTOM: silver 1px solid;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}

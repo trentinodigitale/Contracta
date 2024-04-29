@@ -1,0 +1,112 @@
+﻿@page "/CustomDoc/TEMPLATE_REQUEST_COMMAND.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject eProcurementNext.Application.IEprocNextApplication _application;
+@inject IConfiguration configuration;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using eProcurementNext.Cache;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.ctl_profiler
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+
+    long TimeStartPage = DateTime.Now.Ticks;
+    string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC" );
+    string COMANDO = GetParamURL(Request.QueryString.ToString(), "COMANDO" );
+    string Modulo = GetParamURL(Request.QueryString.ToString(), "Modulo" );
+    string Gruppo = GetParamURL(Request.QueryString.ToString(), "Gruppo" );
+    string Indice = GetParamURL(Request.QueryString.ToString(), "Indice");
+    string Versione = CStr(GetParamURL(Request.QueryString.ToString(), "Versione"));
+    string modello = "";
+
+    validate("IDDOC", IDDOC, TIPO_PARAMETRO_INT, 0, "", 0, HttpContext, session);
+    validate("Versione", Versione, TIPO_PARAMETRO_STRING, 0, "", 0, HttpContext, session);
+
+    if (Versione != "2" ){
+        validate("COMANDO", COMANDO, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 1, HttpContext, session);
+        validate( "Modulo", Modulo , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate( "Gruppo", Gruppo.Replace( "." , "" ).Replace(@"/" , @"" ) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate( "Indice", Indice , TIPO_PARAMETRO_INT, 0, "", 0, HttpContext, session);
+        validate( "IDDOC", IDDOC , TIPO_PARAMETRO_INT, 0, "", 0, HttpContext, session);
+    }
+
+    //IDDOC = CLng(IDDOC);
+
+    if (Versione == "2" )
+    {
+
+        //'--per la nuova versione
+
+        //'-- toglie dalla sessione il flag per indicare che il documento è in memoria
+        string objDocument_Id = "MODULO_TEMPLATE_REQUEST";
+        string strSecName = "DOC_SEC_MEM_" + objDocument_Id + "_" + IDDOC;
+        session[strSecName] = ""		;
+
+    }else{
+
+        //'--per la versione precedente del DGUE
+        //'-- controllo che i parametri passati siano coerenti con la pagina
+
+        DebugTrace dbt = new DebugTrace();
+        string strSQL = "exec TEMPLATE_REQUEST_COMMAND " + IDDOC + ",'" + COMANDO + "','" + Modulo + "','" + Gruppo + "'," + Indice;
+
+        dbt.Write($"TEMPLATE_REQUEST_COMMAND.cshtml - {IDDOC} - {strSQL}");
+
+        TSRecordSet? rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+
+        //'-- effettua la cancellazione dalla memoria del modello ritornato
+
+        if (rs != null && rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+
+            if (rs.ColumnExists("Modello"))
+            {
+                if (rs["Modello"] is not null)
+                {
+                    modello = (string)rs["Modello"]!;
+                }
+            }
+
+            int NunOccorrenze;
+            NunOccorrenze = 0;
+
+            if (!string.IsNullOrEmpty(modello))
+            {
+                //Dictionary<dynamic, dynamic> objCache = ApplicationCommon.Application["ctldb_Cache"];
+                IEprocNextCache objCache = ApplicationCommon.Cache;
+
+                modello = modello.ToLower(); //chiavi in cache minuscole
+
+                if (objCache != null)
+                {
+                    foreach (string x in objCache.Keys)
+                    {
+                        if (x.ToLower().Contains(modello)) //if (InStr(1,x,modello) > 0) then
+                        {
+                            NunOccorrenze++;
+                            objCache.Remove(x);
+                        }
+                    }
+                }
+            }
+
+            dbt.Write($"TEMPLATE_REQUEST_COMMAND.cshtml - {IDDOC} - modello:{modello} - NumOccorrenze:{NunOccorrenze}");
+            dbt.Write($"TEMPLATE_REQUEST_COMMAND.cshtml - COMANDO:{COMANDO}");
+
+        }
+    }
+    htmlToReturn.Write(Versione);
+}
+@Html.Raw(htmlToReturn.Out())
+@{
+    Write_CTL_Profiler("TEMPLATE_REQUEST_COMMAND.ASP" , "TEMPLATE_REQUEST_COMMAND" , "", Request, TimeStartPage, configuration, _application);
+}

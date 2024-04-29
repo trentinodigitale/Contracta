@@ -1,0 +1,16 @@
+<efac:LotTender>
+	<cbc:ID>@@@LOT_TENDER_ID@@@</cbc:ID>
+	@@@LOT_TENDER_NO_ENCODE_RANK_CODE@@@
+	@@@LOT_TENDER_NO_ENCODE_TENDER_RANKED_INDICATOR@@@
+	@@@LOT_TENDER_NO_ENCODE_CONCESSION_REVENUE@@@
+	@@@LOT_TENDER_NO_ENCODE_LEGAL_MONETARY_TOTAL@@@
+	<efac:TenderingParty>
+		<cbc:ID>@@@LOT_TENDER_TENDERING_PARTY_ID@@@</cbc:ID>
+	</efac:TenderingParty>
+	<efac:TenderLot>
+		<cbc:ID>@@@LOT_TENDER_TENDER_LOT_ID@@@</cbc:ID>
+	</efac:TenderLot>
+	<efac:TenderReference>
+		<cbc:ID>@@@LOT_TENDER_TENDER_REF_ID@@@</cbc:ID>
+	</efac:TenderReference>
+</efac:LotTender>

@@ -1,0 +1,74 @@
+﻿@page "/CustomDoc/getDatiDestinatarioFromPID.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@model eProcurementNext.Razor.Pages.CustomDoc.getDatiDestinatarioFromPIDModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string pid = CStr(GetParamURL(Request.QueryString.ToString(), "pid"));
+	validate("pid", pid.Replace(":", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 1, HttpContext, session);
+
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@pid", pid);
+	string strSql = @"select isnull(a.aziStatoLeg, 'NAN') as Stato, isnull(dv.DMV_Cod, 'NAN') as StatoSigla, isnull(dp.DMV_Cod, 'NAN') as Provincia, isnull(a.aziLocalitaLeg, 'NAN') as Citta, isnull(a.aziCAPLeg, 'NAN') as Cap, isnull(a.aziIndirizzoLeg, 'NAN') as Indirizzo, isnull(a.aziTelefono1, 'NAN') as Telefono, isnull(a.aziE_Mail, 'NAN') as email 
+						from Document_NoTIER_Destinatari as p with(nolock) 
+							inner join DM_Attributi as dm on dm.vatValore_FT = p.piva_cf 
+							inner join Aziende as a on a.IdAzi = dm.lnk 
+							LEFT join LIB_DomainValues as dv on dv.DMV_DescML = a.aziStatoLeg and dv.DMV_Deleted = 0 AND dv.DMV_DM_ID = 'ISO3166_1_ALPHA2'
+							LEFT join LIB_DomainValues as dp on dp.DMV_DescML = a.aziProvinciaLeg and dp.DMV_Deleted = 0 AND dp.DMV_DM_ID = 'Province'
+						where p.ID_PEPPOL = @pid";
+
+	string strOUT = string.Empty;
+	string out_sql = string.Empty;
+	string Stato = string.Empty;
+	string StatoSigla = string.Empty;
+	string Provincia = string.Empty;
+	string Citta = string.Empty;
+	string Cap = string.Empty;
+	string Indirizzo = string.Empty;
+	string Telefono = string.Empty;
+	string email = string.Empty;
+
+	try
+	{
+		TSRecordSet? rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rs is not null && rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+			Stato = CStr(rs["Stato"]);
+			StatoSigla = CStr(rs["StatoSigla"]);
+			Provincia = CStr(rs["Provincia"]);
+			Citta = CStr(rs["Citta"]);
+			Cap = CStr(rs["Cap"]);
+			Indirizzo = CStr(rs["Indirizzo"]);
+			Telefono = CStr(rs["Telefono"]);
+			email = CStr(rs["email"]);
+
+			out_sql = Stato + "@@@" + StatoSigla + "@@@" + Provincia + "@@@" + Citta + "@@@" + Cap + "@@@" + Indirizzo + "@@@" + Telefono + "@@@" + email + "@@@";
+		}
+		else
+		{
+			out_sql = "NOT_FOUND";
+		}
+		strOUT = $"1#{out_sql}";
+	}
+	catch (Exception ex)
+	{
+		strOUT = $"0#{ex.Message}";
+	}
+	htmlToReturn.Write(strOUT);
+}
+@Html.Raw(htmlToReturn.Out())
+

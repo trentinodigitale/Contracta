@@ -1,0 +1,29 @@
+﻿@page "/PCP/PCP_ConfermaAppalto.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.Xml;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.PCP.PCP_ConfermaAppalto
+@{
+
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var idProc = GetParamURL(Request.QueryString.ToString(), "ID");
+    var idPfu = GetParamURL(Request.QueryString.ToString(), "IDPFU");
+    var operation = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+    
+    validate("ID", idProc, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("IDPFU", idPfu, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    var id = CInt(idProc);
+    var iduser = CInt(idPfu);
+
+    var res = Model.Conferma_Appalto(id, iduser, operation);
+
+    var esito = res;
+
+    @Html.Raw(esito)
+}

@@ -1,0 +1,48 @@
+body.site {
+}
+
+/* INIZIO Sovrascrivo queste 2 regole per aridurre lo spazio tra l'area di login ed i comandi sottostanti */
+div#nav .moduletable ul {
+    padding: 0em 0.4em 3em;
+}
+
+.moduletable form {
+    padding: 1.5em 0em 0em;
+}
+/* FINE Sovrascrivo queste 2 regole per aridurre lo spazio tra l'area di login ed i comandi sottostanti */
+
+
+/*INIZIO modifiche per domini registrazione_pro*/
+
+.form_row .form_field table td {
+    border: 1px dotted #fff;
+    width: 0px;
+    display: contents;
+}
+
+.form_row .form_field table td input[type=button] {
+   /*width: auto;
+   margin: 10px;*/
+}
+
+.button_domain {
+    /*
+    background: var(--bg-pulsanti-primary-gradient) !important;
+    font-size: 16px;
+    color: #FFFFFF !important;
+    letter-spacing: 0.2px;
+    text-align: center;
+    text-shadow: 1px 1px 0 rgba(21,41,53,0.24);
+    font-family: Roboto;
+    font-weight: 500;
+    border: 0;
+    min-height: 40px;
+    min-width: 143px; 
+    width: 10px !important;*/
+    background: var(--bg-pulsanti-primary) !important;
+    min-width: 50px !important;
+    margin-top: -5px !important;
+    width: 11px !important;
+    display: inline !important;
+}
+/*Fine modifiche per domini registrazione_pro*/

@@ -1,0 +1,19 @@
+TABLE.MsgBox
+{
+}
+TABLE.MsgBox_Caption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 14pt;
+    BORDER-BOTTOM: thin solid;
+    FONT-FAMILY: Arial
+}
+.MsgBox_ButtonOK
+{
+}
+TD.MsgBox_Message
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 11pt;
+    FONT-FAMILY: Arial
+}

@@ -1,0 +1,112 @@
+BODY
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px 10px;
+    PADDING-TOP: 0px
+}
+BODY.BodyCompanyData
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    COLOR: black;
+    PADDING-TOP: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none
+}
+.FontTitleHeaderCompanyData
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 16pt;
+    COLOR: black;
+    FONT-STYLE: italic;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+TABLE.GridContainerHeaderCompanyData
+{
+    WIDTH: 100%
+}
+TABLE.GridSeparateHeaderComapanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    WIDTH: 100%;
+    BORDER-BOTTOM: medium none
+}
+TABLE.GridTailHeaderCompanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-BOTTOM: medium none
+}
+TABLE.GridTitleHeaderCompanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-BOTTOM: medium none
+}
+TD.CellGridContainerHeaderCompanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-BOTTOM: medium none;
+    TEXT-ALIGN: left
+}
+TD.CellGridSeparateHeaderCompanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-BOTTOM: medium none
+}
+TD.CellGridTailHeaderCompanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-BOTTOM: medium none;
+    TEXT-ALIGN: right
+}
+TD.CellGridTitleHeaderCompanyData
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    BORDER-BOTTOM: medium none
+}
+TABLE.GridFieldsCompanyData
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BACKGROUND-COLOR: white;
+}
+
+
+
+
+TD.CellGridFieldsCompanydata
+{
+    BORDER:none;
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none;
+	padding:3px;
+}
+
+TD.CellGridFieldsCompanydata a img{ border:none;}

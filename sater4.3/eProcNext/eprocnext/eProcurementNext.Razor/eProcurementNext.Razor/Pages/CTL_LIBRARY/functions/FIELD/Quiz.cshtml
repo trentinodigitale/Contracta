@@ -1,0 +1,1255 @@
+﻿@page "/CTL_LIBRARY/functions/FIELD/Quiz.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.Extensions.Primitives;
+@using Microsoft.VisualBasic;
+@using System.Collections.Specialized
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.FIELD.QuizModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    htmlToReturn.Write($@"
+		<script src=""../../jscript/getObj.js""></script>
+	");
+    //'--recupero parametri
+
+    string Field;
+    string Format;
+    string Value;
+    string Description;
+    int IsFaseII = 0;
+    //dynamic ObjSession;
+    if (IsMasterPageNew())
+    {
+        IsFaseII = 1;
+    }
+    Dictionary<string, eProcurementNext.HTML.Field> mp_ColumnsGrid = null;
+
+    //OrderedDictionary mp_ColumnsGrid = new OrderedDictionary();
+    Dictionary<string, Grid_ColumnsProperty> mp_ColumnsPropertyGrid = null;
+    Dictionary<string, eProcurementNext.HTML.Field> mp_ColumnsC = null;
+    Dictionary<string, Grid_ColumnsProperty> mp_ColumnsPropertyC = null;
+    LibDbModelExt objDB;
+    int nNumCol = 0;
+    string strValore = "";
+    string TipoGiudizioTecnico = "";
+    string TipoAttributo = "";
+    string dztFormat = "";
+    dynamic AttributoCriterio;
+    string PunteggioMax;
+    string Attributo = "";
+
+
+    //'--Field	=	Contiene il Nome del campo che conterrà il risultato
+    //'--Format	=	Contiene C per la costruzuione/V per la sola visualizzazione
+    //'--Value	=	valore nella forma <VALORE>#=#<TIPOQUIZ>#=#<VALORI CRITERI> ad es."1.0#=#dominio#=#Si#~##~##~#1.00#~#No#~##~##~#0.00"
+    //'--Description = Descrizione del criterio
+
+    Field = GetValueFromForm(Request, "Field");
+    Format = GetValueFromForm(Request, "Format");
+    Value = GetValueFromForm(Request, "Value");
+    Description = GetValueFromForm(Request, "Description");
+    TipoGiudizioTecnico = GetValueFromForm(Request, "TempTipoGiudizioTecnico");//  '-- domain o altro
+    TipoAttributo = GetValueFromForm(Request, "TipoAttributo");
+    string DescrizioneAttributoCriterio = GetValueFromForm(Request, "DescrizioneAttributoCriterio");
+    PunteggioMax = GetValueFromForm(Request, "PunteggioMax");
+
+    if (string.IsNullOrEmpty(PunteggioMax))
+    {
+        PunteggioMax = "1";
+    }
+    //'TipoAttributo = "SDA_Farmaci_66030.FormaFarmaceutica"
+
+    string attributo = "";
+
+    if (!string.IsNullOrEmpty(TipoAttributo))
+    {
+        string querysql = "declare @value as nvarchar(2000)" + Environment.NewLine;
+        querysql = querysql + "set @value='" + TipoAttributo.Replace("'", "''") + "' " + Environment.NewLine;
+        querysql = querysql + "declare @query nvarchar(MAX) " + Environment.NewLine;
+        querysql = querysql + "select @query=DM_QUERY from LIB_Domain where DM_ID='AttributoCriterio' " + Environment.NewLine;
+        querysql = querysql + "set @query = SUBSTRING(@query,0,CHARINDEX('order by',@query)) " + Environment.NewLine;
+        querysql = querysql + "set  @query = ' select top 1 DZT_TYPE,Attributo,DZT_Format from ( ' + @query + ') a where a.DMV_Cod ='''+ @value +'''' " + Environment.NewLine;
+        querysql = querysql + "exec (@query)";
+
+        //'response.write querysql
+        CommonDbFunctions cdb = new();
+        TSRecordSet rs = cdb.GetRSReadFromQuery_(querysql, ApplicationCommon.Application.ConnectionString);
+        rs.MoveFirst();
+
+        TipoAttributo = CStr(GetValueFromRS(rs.Fields["DZT_TYPE"]));
+        Attributo = CStr(GetValueFromRS(rs.Fields["Attributo"]));
+        dztFormat = CStr(GetValueFromRS(rs.Fields["DZT_Format"]));
+
+        session["TipoAttributoQUIZ"] = TipoAttributo;
+        session["AttributoQUIZ"] = Attributo;
+        session["FormatAttributoQUIZ"] = dztFormat;
+    }
+    else
+    {
+        TipoAttributo = session["TipoAttributoQUIZ"];
+        Attributo = session["AttributoQUIZ"];
+        dztFormat = session["FormatAttributoQUIZ"];
+    }
+    //'response.write "Field:" & Field
+    //'response.write "<br/>Value:" & value
+    //'response.write "<br/>Description:" & Description
+    //'response.write "<br/>TipoAttributo:" & TipoAttributo
+    //'response.write "<br/>Attributo:" & Attributo
+    //'response.end
+    //'--inizializzo oggetto session per il server
+    //ObjSession = session["Session"];
+    objDB = new LibDbModelExt();
+
+    //'--recupero modello testata
+    //da capire il tipo
+    dynamic nCodRit = objDB.GetFilteredFieldsWeb("ATTRIBUTO_QUIZ_TESTATA", ref mp_ColumnsC, ref mp_ColumnsPropertyC, session["strSuffLing"], 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+    //'--recupro modello detatgli
+    nCodRit = objDB.GetFilteredFieldsWeb("ATTRIBUTO_QUIZ_DETTAGLI", ref mp_ColumnsGrid, ref mp_ColumnsPropertyGrid, session["strSuffLing"], 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+
+    string strTipoQuiz = "";
+    //'dim MatrixCriteri
+
+    string[,] MatrixFinal = new string[0, 0];
+
+    int NumRowMatrix = 0;
+
+    InitVariables();
+
+    htmlToReturn.Write("<html><head>");
+    //StartPage();
+
+    DrawPage();
+
+    //TerminatePage();
+    htmlToReturn.Write("</body></html>");
+    htmlToReturn.Write($@"
+
+	<script language=""javascript"">
+
+		var flag = 0;
+
+		window.onload = InitQuiz ;
+
+		function FiltraTipologiaCriterio()
+		{{
+		var strTipoDocParent='';
+
+		try{{
+			if ( " + IsFaseII + $@" )
+			{{
+				strTipoDocParent = parent.getObj('TipoDoc').value ;
+			}}
+			else
+			{{
+				strTipoDocParent = parent.opener.getObj('TipoDoc').value ;
+			}}
+
+		}}catch(e){{}}
+
+
+		//se il tipoAttributo non è un numerico allora filtro Tipologia Criterio lasciando solo Dominio
+	");
+    if (Format == "C" && (TipoAttributo != "2"))
+    {
+        htmlToReturn.Write($@"
+		if ( flag == 0 )
+		{{
+			var filter =  'SQL_WHERE= DMV_COD in (\'dominio\')';
+			//alert(filter);
+			FilterDom( 'TipoQuiz' , 'TipoQuiz' , getObjValue('TipoQuiz') , filter , ''  , '');
+			flag = 1;
+		}}
+		");
+    }
+    else
+    {
+
+        htmlToReturn.Write($@"
+			//PER LE ASTE FILTRO PER AVERE SOLO DOMINIO E RANGE SUI NUMERICI
+			if (strTipoDocParent == 'BANDO_ASTA' && flag == 0 )
+			{{	var filter =  'SQL_WHERE= DMV_COD in (\'dominio\',\'range\')';
+				//alert(filter);
+				FilterDom( 'TipoQuiz' , 'TipoQuiz' , getObjValue('TipoQuiz') , filter , ''  , 'InitQuiz();');
+			flag = 1;
+			}}
+			else
+			{{
+				//Se l'attributo è numerico aggiungo lascio il dominio intero. quindi includendo anche Rialzo massimo e Ribasso massimo
+				var filter =  'SQL_WHERE= DMV_COD not in (\'dominio\')';
+				//alert(filter);
+				FilterDom( 'TipoQuiz' , 'TipoQuiz' , getObjValue('TipoQuiz') , filter , ''  , 'InitQuiz();');
+				flag = 1;
+			}}
+			");
+    }
+    htmlToReturn.Write($@"
+	}}
+
+	function InitQuiz(){{
+
+		try{{
+			FiltraTipologiaCriterio();
+		}}catch(e){{}}
+
+		var strTipoQuiz;
+
+		try{{
+			strTipoQuiz = getObj('TipoQuiz').value;
+		}}catch(e){{
+			strTipoQuiz = GetProperty( getObj('val_TipoQuiz') , 'value');
+		}}
+
+
+		//alert(strTipoQuiz);
+		//a seconda del TipoQuiz=dominio/range nascondo le colonne
+		var objGRid =  getObj('div_Grid');
+		objGRid.style.display = '';
+		");
+    if (Format == "C")
+    {
+        htmlToReturn.Write($@"
+		var aggiungi = getObj( 'aggiungi');
+		aggiungi.style.display = '';
+		");
+    }
+    htmlToReturn.Write($@"
+
+
+		var HELP_QUIZ_MAX = getObj( 'HELP_QUIZ_MAX');
+		HELP_QUIZ_MAX.style.display = 'none';
+
+		var HELP_QUIZ_MIN = getObj( 'HELP_QUIZ_MIN');
+		HELP_QUIZ_MIN.style.display = 'none';
+
+		var HELP_QUIZ_RIALZOMAX = getObj( 'HELP_QUIZ_RIALZOMAX');
+		var HELP_QUIZ_RIBASSOMAX = getObj( 'HELP_QUIZ_RIBASSOMAX');
+
+		var Vsogi;
+		var cap_Vsogi;
+
+		if ( getObj('Vsogi_V') )
+		{{Vsogi = getObj('Vsogi_V');
+	cap_Vsogi  = getObj('cap_Vsogi');
+
+	try
+	{{
+		Vsogi.style.display = 'none';
+		cap_Vsogi.style.display = 'none';
+	}}
+	catch(e)
+	{{
+	}}
+		}}
+
+		try
+		{{HELP_QUIZ_RIALZOMAX.style.display = 'none';
+		HELP_QUIZ_RIBASSOMAX.style.display = 'none';
+		}}
+		catch(e)
+		{{
+
+	}}
+
+
+		if ( strTipoQuiz == 'dominio' )
+		{{ShowCol('', 'Descrizione', '');
+	ShowCol( '' , 'ValoreQuizDa' , 'none' );
+	ShowCol( '' , 'ValoreQuizA' , 'none' );
+		}}
+		else  if ( strTipoQuiz == 'range' )
+		{{ShowCol('', 'ValoreQuizDa', '');
+	ShowCol( '' , 'ValoreQuizA' , '' );
+	ShowCol( '' , 'Descrizione' , 'none' );
+		}}
+		else  if ( strTipoQuiz == 'rialzoMax' )
+		{{objGRid.style.display = 'none';
+	try{{aggiungi.style.display = 'none';}}catch(e){{}}
+
+	try
+	{{
+		HELP_QUIZ_RIALZOMAX.style.display = '';
+		Vsogi.style.display = '';
+		cap_Vsogi.style.display = '';
+	}}
+	catch(e)
+	{{
+	}}
+
+		}}
+		else  if ( strTipoQuiz == 'ribassoMax' )
+		{{objGRid.style.display = 'none';
+	try{{aggiungi.style.display = 'none';}}catch(e){{}}
+
+	try
+	{{
+		HELP_QUIZ_RIBASSOMAX.style.display = '';
+		Vsogi.style.display = '';
+		cap_Vsogi.style.display = '';
+	}}
+	catch(e)
+	{{
+
+	}}
+		}}
+		else
+		{{objGRid.style.display = 'none';
+	try{{aggiungi.style.display = 'none';}}catch(e){{}}
+
+			if( strTipoQuiz == 'min'  )
+				HELP_QUIZ_MIN.style.display = '';
+			else
+				HELP_QUIZ_MAX.style.display = '';
+
+		}}
+
+	}}
+	</script>
+	");
+
+    void DrawPage()
+    {
+        string strTitle = "";
+
+        strTitle = ApplicationCommon.CNV("Criterio di Valutazione a Quiz");
+        htmlToReturn.Write("<title>" + HtmlEncode(strTitle) + "</title>");
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/caption.css"" type=""text/css"" >");
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/field.css"" type=""text/css"" >");
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/model.css"" type=""text/css"" >");
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/ButtonBar.css"" type=""text/css"" >");
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/grid.css"" type=""text/css"" >");
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/Toolbar.css"" type=""text/css"" >");
+        if (IsMasterPageNew())
+        {
+            htmlToReturn.Write($@"<link rel=stylesheet href=""../../../css/vapor/vapor.css"" type=""text/css"" >");
+            htmlToReturn.Write($@"<link rel=stylesheet href=""../../../css/vapor/customColor.css"" type=""text/css"" >");
+        }
+
+        htmlToReturn.Write($@"<link rel=stylesheet href=""../../Themes/Toolbar.css"" type=""text/css"" >");
+        htmlToReturn.Write($@"<script src=""../../jscript/CNV.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/FIELD/ck_Quiz.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/FIELD/ck_VN.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../jscript/DOCUMENT/sec_Dettagli.js"" ></script>");
+
+        htmlToReturn.Write($@"<script src=""../../JScript/FIELD/FldHierarchy.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/FIELD/FldDom.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/FIELD/FldExtDom.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/FIELD/SearchDocumentForExtendeAttrib.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/main.js"" ></script>");
+        htmlToReturn.Write($@"<script src=""../../JScript/document/document.js"" ></script>");
+
+        if (IsMasterPageNew())
+        {
+            htmlToReturn.Write(@"</head><body class=""quizFaseII"">");
+        }
+        else
+        {
+            htmlToReturn.Write("</head><body>");
+        }
+
+        if (string.Equals(Format, "C"))
+        {
+            htmlToReturn.Write($@"<form name=""FormQuiz"" method=""post"" action=""Quiz.asp"">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""MODE"" name=""MODE"" value=""MODIFY"">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""Field"" name=""Field"" value=""" + HtmlEncode(Field) + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""Value"" name=""Value"" value=""" + HtmlEncode(Value) + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""Format"" name=""Format"" value=""" + HtmlEncode(Format) + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""Description"" name=""Description"" value=""" + HtmlEncode(Description) + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""NumRowMatrix"" name=""NumRowMatrix"" value=""" + NumRowMatrix + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""IndRowDelete"" name=""IndRowDelete"" value="""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""TempTipoGiudizioTecnico"" name=""TempTipoGiudizioTecnico"" value=""" + TipoGiudizioTecnico + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""PunteggioMax"" name=""PunteggioMax"" value=""" + PunteggioMax + $@""">");
+            htmlToReturn.Write($@"<input type=""hidden"" id=""DescrizioneAttributoCriterio"" name=""DescrizioneAttributoCriterio"" value=""" + DescrizioneAttributoCriterio + $@""">");
+
+            //MODE=MODIFY&Field=" & Field & "&Format=" & Format & "&Description=" & Description &
+        }
+        //'--tabella contenitore
+        htmlToReturn.Write($@"<table border=0 width=""100%"" height=""97%"">");
+
+        //'--disegno caption
+        if (IsMasterPageNew())
+        {
+            htmlToReturn.Write(@"<tr><td class=""pageTitle"">");
+        }
+        else
+        {
+            htmlToReturn.Write("<tr><td>");
+        }
+
+        Caption objCaption;
+        objCaption = new Caption();
+        objCaption.Init(session);
+        objCaption.strPath = "../images/Caption/";
+        objCaption.OnExit = "self.close();";
+        objCaption.Text = strTitle;
+        objCaption.Html(htmlToReturn);
+
+        htmlToReturn.Write("</td></tr>");
+        //'--disegno Attributo per cui stò definendo i criteri di valutazione e tipologia criterio di valutazione
+        htmlToReturn.Write("<tr><td>");
+        //'--setto i valori dei due attributi
+
+        mp_ColumnsC["Descrizione"].Value = Description;
+        mp_ColumnsC["TipoQuiz"].Value = strTipoQuiz;
+        mp_ColumnsC["CampoTesto"].Value = DescrizioneAttributoCriterio;
+
+        Model objMod = new Model();
+        objMod.Fields = mp_ColumnsC;
+        objMod.PropFields = mp_ColumnsPropertyC;
+
+        if (string.Equals(Format, "V"))
+        {
+            objMod.Editable = false;
+        }
+
+        objMod.id = "ATTRIBUTO_QUIZ_TESTATA";
+        objMod.Html(htmlToReturn);
+
+        //'-- se l'attributo di destinazione è un numerico
+        if (string.Equals(TipoAttributo, "2"))
+        {
+            LibDbDictionary ctldbDict;
+
+            ctldbDict = new LibDbDictionary();
+
+            Field campo2 = ctldbDict.GetFilteredFieldExt(CStr(Attributo), CStr(session["strSuffLing"]), CLng(session["IdPfu"]), session, CStr(""), ApplicationCommon.Application.ConnectionString, CInt(0));
+            campo2.Name = "Vsogi";
+            campo2.Caption = "Costante Vsogi";
+            //'campo2.strFormat = dztFormat
+            if (!string.IsNullOrEmpty(dztFormat))
+            {
+                campo2.numDecimal = 5;
+            }
+            string strValueCriteri = "";
+            if (!(string.IsNullOrEmpty(Value)))
+            {
+                //on error resume next
+                try
+                {
+                    string[] aInfo = Value.Split("#=#");
+                    strTipoQuiz = aInfo[1];
+                    strValueCriteri = CStr(aInfo[2]);
+                }
+                catch
+                {
+
+                }
+
+                //on error goto 0
+            }
+            if (!string.IsNullOrEmpty(strValueCriteri) && IsNumeric(strValueCriteri))
+            {
+                campo2.Value = strValueCriteri;
+            }
+            campo2.width = 7;
+            htmlToReturn.Write("<hr/>");
+            htmlToReturn.Write($@"<table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"">");
+            htmlToReturn.Write("	<tr>");
+            htmlToReturn.Write($@"		<td class=""VerticalModel_Caption"" width=""20%"">");
+
+            htmlToReturn.Write($@"			<label id=""cap_Vsogi"" class=""FldCaption"">" + ApplicationCommon.CNV("Costante Vsogi") + "</label>");
+
+            htmlToReturn.Write("		</td>");
+            htmlToReturn.Write($@"		<td class=""VerticalModel_Value"">");
+
+            if (string.Equals(Format, "C"))
+            {
+                campo2.ValueHtml(htmlToReturn, true);
+            }
+            else
+            {
+                campo2.ValueHtml(htmlToReturn, false);
+            }
+            htmlToReturn.Write("		</td>");
+            htmlToReturn.Write("	</tr>");
+            htmlToReturn.Write("</table>");
+
+
+        }
+        htmlToReturn.Write("</td></tr>");
+        //'--disegno toolbar con comando aggiungi se editabile
+        if (string.Equals(Format, "C"))
+        {
+            htmlToReturn.Write("<tr><td>");
+            htmlToReturn.Write("<table border=0 ><tr>");
+            htmlToReturn.Write($@"<td nowrap  Title=""" + ApplicationCommon.CNV("Aggiungi Criterio") + $@"""  valign=""middle""  onclick=""Javascript:ADD_CriterioQuiz();""  class=""Toolbar_button"" id=""aggiungi"" name=""aggiungi"" >" + ApplicationCommon.CNV("Aggiungi Criterio") + $@"</td>");
+            htmlToReturn.Write("</tr></table>");
+            htmlToReturn.Write("</td></tr>");
+        }
+        //'--disegno griglia dei criteri di valutazione
+        htmlToReturn.Write("<tr><td>");
+        //'--se non editabile stto la griglia non editabile
+        Grid objGRid = new Grid();
+        //'-- Se l'attributo di destinazione è un dominio mi recupero il field specifico per quell'attributo dominio e lo sostituisco
+        //'-- 	con il vecchio field per imputare il valore puntuale. Facendo così glielo facciamo scegliere dal dominio piuttosto che dalla text
+        if (string.Equals(TipoAttributo, "4") || string.Equals(TipoAttributo, "5") || string.Equals(TipoAttributo, "8"))
+        {
+            LibDbDictionary Objects;
+            dynamic campo;
+
+            Objects = new LibDbDictionary();
+            campo = Objects.GetFilteredFieldExt(CStr(Attributo), CStr(session["strSuffLing"]), CLng(session["IdPfu"]), session, CStr(""), ApplicationCommon.Application.ConnectionString, CInt(0));
+            //'campo.ValueHtml response  ,true
+
+            //'response.write "<h1>" & mp_ColumnsGrid(6).name & "</h1>"
+
+            Field oldElem = mp_ColumnsGrid.ElementAt(6 - 1).Value;
+            campo.Name = "Descrizione";
+            campo.Caption = "Valore Puntuale";
+
+            //'-- Cancello e ri-inserisco 2 field per mantenere l'ordinamento
+            //'call mp_ColumnsGrid.remove(6)
+            mp_ColumnsGrid.Remove("Descrizione");
+
+            //mp_ColumnsGrid.Add(campo, "Descrizione",, "FNZ_DEL");
+
+            var fromDicList = mp_ColumnsGrid.ToList();
+            int Indice = fromDicList.Count - 1;
+            for (int i = 0; i <= fromDicList.Count; i++)
+            {
+                if (fromDicList[i].Key == "FNZ_DEL")
+                {
+                    Indice = i;
+                    break;
+                }
+            }
+            fromDicList.Insert(Indice + 1, new KeyValuePair<string, eProcurementNext.HTML.Field>("Descrizione", campo));
+            var fromListDic = new Dictionary<string, eProcurementNext.HTML.Field>(fromDicList);
+
+            mp_ColumnsGrid = fromListDic;
+
+            //mp_ColumnsGrid.Add("Descrizione",campo,"","FNZ_DEL");
+            //'Call mp_ColumnsGrid.Add(oldElem, "GiudizioTecnico")
+
+            //'response.write mp_ColumnsGrid(2).name
+        }
+        objGRid.Columns = mp_ColumnsGrid;
+        objGRid.ColumnsProperty = mp_ColumnsPropertyGrid;
+        objGRid.id = "Grid";
+        objGRid.Editable = true;
+        if (string.Equals(Format, "V"))
+        {
+            objGRid.Editable = false;
+            //'--nascono la colonna del cestino
+            mp_ColumnsPropertyGrid["FNZ_DEL"].Hide = true;
+        }
+        //'--se
+        //'Response.Write TipoGiudizioTecnico
+        //'Response.end
+        if (string.Equals(TipoGiudizioTecnico, "domain"))
+        {
+            mp_ColumnsPropertyGrid["PunteggioQuiz"].Hide = true;
+        }
+        else
+        {
+            mp_ColumnsPropertyGrid["GiudizioTecnico"].Hide = true;
+        }
+
+        objGRid.SetMatrix(MatrixFinal);
+
+        objGRid.Html(htmlToReturn);
+        //'-- area preposta a mostrare il significato se si seleziona min o max
+        htmlToReturn.Write($@"<div id=""HELP_QUIZ_MAX"" style=""display:none"">" + ApplicationCommon.CNV("HELP_QUIZ_MAX") + "</div>");
+        htmlToReturn.Write($@"<div id=""HELP_QUIZ_MIN"" style=""display:none"">" + ApplicationCommon.CNV("HELP_QUIZ_MIN") + "</div>");
+        htmlToReturn.Write($@"<div id=""HELP_QUIZ_RIBASSOMAX"" style=""display:none"">" + ApplicationCommon.CNV("HELP_QUIZ_RIBASSOMAX") + "</div>");
+        htmlToReturn.Write($@"<div id=""HELP_QUIZ_RIALZOMAX"" style=""display:none"">" + ApplicationCommon.CNV("HELP_QUIZ_RIALZOMAX") + "</div>");
+
+        htmlToReturn.Write("</td></tr>");
+
+        htmlToReturn.Write($@"<tr width=""100%"" height=""100%""><td width=""100%"" height=""100%"">&nbsp;");
+        htmlToReturn.Write("</td></tr>");
+        //'--se editabile disegno bottoni Conferma/Annulla
+        if (string.Equals(Format, "C"))
+        {
+            if (IsMasterPageNew())
+            {
+                htmlToReturn.Write(@"<tr><td class=""div_pulsanti_finestra cover"">");
+            }
+            else
+            {
+                htmlToReturn.Write("<tr><td>");
+            }
+            Fld_Button objButton;
+            objButton = new Fld_Button();
+            objButton.Init("btn_conferma", ApplicationCommon.CNV("Conferma"), true);
+            objButton.Html(htmlToReturn);
+
+            htmlToReturn.Write("&nbsp;&nbsp;&nbsp;");
+            Fld_Button _objButton = new Fld_Button();
+            _objButton.Init("btn_annulla", ApplicationCommon.CNV("Annulla"), true);
+            _objButton.Html(htmlToReturn);
+
+
+            htmlToReturn.Write("</td></tr>");
+
+            htmlToReturn.Write($@"
+			<script language=""javascript"">
+			function ConfermaQuiz(){{
+
+			var strTipoQuiz;
+
+			var PunteggioMax = " + PunteggioMax + $@";
+
+
+			try{{strTipoQuiz = getObj('TipoQuiz').value;
+			}}catch(e){{strTipoQuiz = GetProperty(getObj('val_TipoQuiz'), 'value');
+			}}
+
+			if (strTipoQuiz == ''){{alert('" + ApplicationCommon.CNV("Selezionare Tipologia Criterio") + $@"');
+			return;
+			}}
+
+
+			document.FormQuiz.MODE.value = 'CONFIRM';
+
+			if ( document.FormQuiz.NumRowMatrix.value == '0' && ( strTipoQuiz == 'dominio' || strTipoQuiz == 'range' )){{alert('" + ApplicationCommon.CNV("Inserire almeno un criterio di valutazione") + $@"');
+			return;
+			}}
+
+			if ( ( strTipoQuiz == 'rialzoMax' || strTipoQuiz == 'ribassoMax' )  && getObjValue('Vsogi') == '' )
+			{{
+			alert( '" + ApplicationCommon.CNV("Inserire un valore per il campo") + @" \'" + ApplicationCommon.CNV("Costante Vsogi") + @"\'" + $@"');
+			return;
+			}}
+
+			if ( getObjValue('TempTipoGiudizioTecnico') != 'domain' )
+			{{var i=0;
+
+			for( i = 0 ; i <= GetProperty( getObj('Grid') , 'numrow') ; i++ )
+			{{
+			if(getObjValue('R' + i + '_PunteggioQuiz') < 0 || getObjValue('R' + i + '_PunteggioQuiz') > PunteggioMax )
+					{{
+					if ( PunteggioMax == 1 )
+					alert( '" + ApplicationCommon.CNV("Il punteggio deve essere compreso tra 0 ed 1") + $@"' );
+					else
+					alert( '" + ApplicationCommon.CNV("Il punteggio deve essere compreso tra 0 ed il massimo previsto") + $@"' );
+			return;
+		}}
+		}}
+		}}
+
+			document.FormQuiz.submit();
+		}}
+
+		function CloseWin()
+		{{
+			if ( " + IsFaseII + $@" )
+			{{
+				window.parent.closeDrawer();
+				return;
+			}}
+			else
+			{{
+				self.close();
+			}}
+		}}
+
+		getObj('btn_conferma').onclick = ConfermaQuiz ;
+		getObj('btn_annulla').onclick = CloseWin ;
+
+		</script>
+
+		");
+        }
+        htmlToReturn.Write("</table>");
+        if (string.Equals(Format, "C"))
+        {
+            htmlToReturn.Write("</form>");
+        }
+        //'Response.Write "</body></html>"
+    }
+    void InitVariables()
+    {
+        strTipoQuiz = "dominio";
+
+        //'Value="#=#dominio#=#Si#~##~##~#1.00#~#No#~##~##~#0.00"
+        //'Response.write Value
+        //'Response.end
+        string strValueCriteri = "";
+        if (!string.IsNullOrEmpty(Value))
+        {
+            string[] aInfo = Value.Split("#=#");
+            strTipoQuiz = aInfo[1];
+            strValueCriteri = aInfo[2];
+        }
+        //'--le colonne sono 4 quindi
+        nNumCol = 5;
+        //'--valorizzo la matrice di memoria a partire dai criteri memorizzati nel campo Value
+        if (!string.IsNullOrEmpty(strValueCriteri))
+        {
+            string[] ainfoCriteri = strValueCriteri.Split("#~#");
+            //'--setto il numero delle righe
+
+            NumRowMatrix = (ainfoCriteri.Length - 1 + 1) / 4;
+
+
+
+            //'redim MatrixCriteri(nNumCol,nNumRow-1)
+
+            MatrixFinal = new string[NumRowMatrix - 1 + 1, nNumCol + 1];
+
+            //'--popolo la matrice
+            //'--per tutte le righe
+
+            for (int i = 0; i <= NumRowMatrix - 1; i++)
+            {
+                //'--per tutte le colonne
+                for (int j = 1; j <= nNumCol; j++)
+                {
+                    //'MatrixCriteri(j,i) = ainfoCriteri( (i*(nNumCol-1)) + (j-1) + i )
+                    if (j > 3)
+                    {
+                        if (TipoGiudizioTecnico != "domain")
+                        {
+                            MatrixFinal[i, 4] = ainfoCriteri[(i * (4 - 1)) + (4 - 1) + i];
+                            break;
+                        }
+                        else
+                        {
+                            MatrixFinal[i, 5] = ainfoCriteri[(i * (4 - 1)) + (4 - 1) + i];
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        MatrixFinal[i, j] = ainfoCriteri[(i * (4 - 1)) + (j - 1) + i];
+                    }
+                }
+            }
+        }
+        string strMODE = "";
+        if (!string.IsNullOrEmpty(GetValueFromForm(Request, "MODE")))
+        {
+            strMODE = GetValueFromForm(Request, "MODE");
+        }
+        switch (CStr(strMODE))
+        {
+            case "NEW":
+                strTipoQuiz = "Dominio";
+                break;
+            case "ADD":
+                strTipoQuiz = GetValueFromForm(Request, "TipoQuiz");
+
+                NumRowMatrix = CInt(GetValueFromForm(Request, "NumRowMatrix")) + 1;
+                //'--aggiorno la matrice in memoria dei criteri
+                if (Request.HasFormContentType && Request.Form.Count > 0)
+                {
+
+                    BuildMatrix();
+                }
+                break;
+            case "DEL":
+                strTipoQuiz = GetValueFromForm(Request, "TipoQuiz");
+
+                int IndRowDelete = CInt(GetValueFromForm(Request, "IndRowDelete"));
+
+                NumRowMatrix = CInt(GetValueFromForm(Request, "NumRowMatrix"));
+                //'--aggiorno la matrice in memoria dei criteri
+                if (Request.HasFormContentType && Request.Form.Count > 0)
+                {
+
+                    BuildMatrix();
+
+                    //'--travaso la matrice in un'altra senza la riga da cancellare
+                    //Controllo tipo NumRowMatrixNew,MatrixFinalNew
+                    int NumRowMatrixNew = NumRowMatrix - 1;
+                    dynamic MatrixFinalNew = new string[NumRowMatrixNew - 1 + 1, nNumCol + 1];
+
+
+
+                    int r = -1;
+                    for (int i = 0; i <= NumRowMatrix - 1; i++)
+                    {
+                        if (CStr(IndRowDelete) != CStr(i))
+                        {
+                            r = r + 1;
+                            for (int j = 1; j <= nNumCol; j++)
+                            {
+
+                                MatrixFinalNew[r, j] = MatrixFinal[i, j];
+                            }
+                        }
+                    }
+
+                    MatrixFinal = MatrixFinalNew;
+
+                    NumRowMatrix = NumRowMatrixNew;
+                }
+
+                break;
+            case "CONFIRM":
+                bool bValidate = false;
+
+                strTipoQuiz = GetValueFromForm(Request, "TipoQuiz");
+
+                //'--a partire dal form aggiorno strValueCriteri per poi aggiornare il campo tecnico
+                NumRowMatrix = CInt(GetValueFromForm(Request, "NumRowMatrix"));
+
+                if (Request.HasFormContentType && Request.Form.Count > 0)
+                {
+
+                    BuildMatrix();
+
+                    bValidate = true;
+
+                    //'--controllo che i range sono ben definiti per il criterio
+                    if (string.Equals(strTipoQuiz, "range"))
+                    {
+                        bValidate = false;
+                        bValidate = CheckMatrixCriteri_Range();
+                    }
+                    if (string.Equals(strTipoQuiz, "dominio"))
+                    {
+                        //'--controllo che i domini sono ben definiti per il criterio
+                        bValidate = false;
+                        bValidate = CheckMatrixCriteri_Domini();
+                    }
+                    if (string.Equals(strTipoQuiz, "rialzoMax") || string.Equals(strTipoQuiz, "ribassoMax"))
+                    {
+                        if (string.IsNullOrEmpty(CStr(GetValueFromForm(Request.Form, "Vsogi").Trim())))
+                        {
+                            bValidate = false;
+                        }
+
+                    }
+                    //'response.write bValidate
+                    //'response.end
+                    if (bValidate == true)
+                    {
+                        //'--aggiorno i valori a partire dalla matrice
+                        strValueCriteri = "";
+                        if (!string.Equals(strTipoQuiz, "rialzoMax") && !string.Equals(strTipoQuiz, "ribassoMax"))
+                        {
+                            for (int i = 0; i <= NumRowMatrix - 1; i++)
+                            {
+                                for (int j = 1; j <= nNumCol; j++)
+                                {
+                                    if (string.IsNullOrEmpty(strValueCriteri))
+                                    {
+                                        strValueCriteri = MatrixFinal[i, j];
+                                    }
+                                    else
+                                    {
+                                        //'strValueCriteri = strValueCriteri & "#~#" & replace(MatrixFinal(i,j),"'","\'")
+                                        if (j > 3)
+                                        {
+                                            if (!string.Equals(TipoGiudizioTecnico, "domain"))
+                                            {
+                                                //'--punteggio editato
+                                                strValueCriteri = strValueCriteri + "#~#" + MatrixFinal[i, 4];
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                //'--punteggio espresso con il giudizio
+                                                strValueCriteri = strValueCriteri + "#~#" + MatrixFinal[i, 5];
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            strValueCriteri = strValueCriteri + "#~#" + MatrixFinal[i, j];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        //''#=#range#=#
+
+                        //''Punteggio decrescente in base alla vetustà del veicolo#~#0.00#~#1.00#~#1.0000000000#~##~#1.00#~#2.00#~#0.8000000000#~##~#2.00#~#4.00#~#0.6000000000#~##~#4.00#~#5.00#~#0.4000000000#~##~#5.00#~#6.00#~#0.2000000000#~##~#6.00#~##~#0.0000000000
+                        if (string.Equals(strTipoQuiz, "range"))
+                        {
+                            //if (string.Equals(strTipoQuiz, "range") && string.IsNullOrEmpty(MatrixFinal[0, 1].Trim()))
+                            if (string.Equals(strTipoQuiz, "range") && string.IsNullOrEmpty(MatrixFinal[0, 1]))
+                            {
+                                strValueCriteri = "#~#" + strValueCriteri;
+                            }
+                            //'--CONTROLLO SE IL PRIMO LIMITE A RANGE è VUOTO
+                            //if (string.Equals(strTipoQuiz, "range") && string.IsNullOrEmpty(MatrixFinal[0, 2].Trim()))
+                            if (string.Equals(strTipoQuiz, "range") && string.IsNullOrEmpty(MatrixFinal[0, 2]))
+                            {
+                                strValueCriteri = "#~#" + strValueCriteri;
+                            }
+                        }
+                        if (string.Equals(strTipoQuiz, "rialzoMax") || string.Equals(strTipoQuiz, "ribassoMax"))
+                        {
+                            strValueCriteri = GetValueFromForm(Request.Form, "Vsogi");
+                        }
+                        //'--aggiorno il Value del campo tecnico sulla pagina chiamante
+                        Value = "#=#" + strTipoQuiz + "#=#" + strValueCriteri;
+
+                        htmlToReturn.Write($@"<input type=""TEXT"" id=""ValueCriteri"" name=""ValueCriteri"" value=""" + HtmlEncode(Value) + @""">");
+
+                        htmlToReturn.Write($@"
+						<script language=""javascript"">
+							var strField = '" + Field + $@"';
+							//aggiorno campo nascosto del controllo
+							//alert(getObj('ValueCriteri').value);
+							if ( " + IsFaseII + $@" )
+							{{
+								parent.getObj(strField).value = getObj('ValueCriteri').value;
+							}}
+							else
+							{{
+								parent.opener.getObj(strField).value = getObj('ValueCriteri').value;
+							}}
+							//invoco una funzione per aggiornare i criteri tecnici con le formule
+								try{{
+								if ( " + IsFaseII + $@" )
+								{{
+									parent.AggiornaCriteriTecnici( strField , '', '../../' );
+								}}
+								else
+								{{
+									parent.opener.AggiornaCriteriTecnici( strField , '', '../../' );
+								}}
+							}}catch(e){{}}
+
+							if ( " + IsFaseII + $@" )
+							{{
+								window.parent.closeDrawer();
+							}}
+							else
+							{{
+								self.close();
+							}}
+						</script>
+
+					");
+
+                        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+                    }
+                    else
+                    {
+                        htmlToReturn.Write($@"
+						<script language=""javascript"">
+						alert( CNV ('../../' , 'I criteri {strTipoQuiz} non sono ben definiti.') );
+						</script>");
+
+                    }
+                }
+                break;
+        }
+    }
+    //'--costruisce la matrice a partire dal form
+    void BuildMatrix()
+    {
+
+        MatrixFinal = new string[NumRowMatrix - 1 + 1, nNumCol + 1];
+        for (int i = 0; i <= NumRowMatrix - 1; i++)
+        {
+            //'Response.Write "<br>"
+            for (int j = 1; j <= nNumCol; j++)
+            {
+                if (!IsEmpty(GetValueFromForm(Request, "R" + i + "_" + mp_ColumnsGrid.ElementAt(j + 1 - 1).Value.Name)))
+                {
+                    MatrixFinal[i, j] = GetValueFromForm(Request, "R" + i + "_" + mp_ColumnsGrid.ElementAt(j + 1 - 1).Value.Name);
+                    //'Response.Write "-riga=" & i & "-col=" & j & "=" &  MatrixFinal(i,j) & "<br>"
+                }
+            }
+        }
+        //'Response.end
+    }
+    //'--controlla che il criterio a range sia ben definito
+
+    bool CheckMatrixCriteri_Range()
+    {
+        bool bValidate = true;
+
+        string tempvalue = "";
+        int i = 0;
+        int j = 0;
+        int NumRowMatrix = 0;
+        int nNumCol = 0;
+        bool BLastValueIsEmpty;
+        double dTempValue = 0;
+        double dCurrValue = 0;
+        Dictionary<string, string> objMappaGiudizio;
+        objMappaGiudizio = new Dictionary<string, string>();
+        BLastValueIsEmpty = false;
+        bool _CheckMatrixCriteri_Range = false;
+        NumRowMatrix = MatrixFinal.GetUpperBound(0);//1 domensione
+        nNumCol = MatrixFinal.GetUpperBound(1);//2 dimensione
+
+        ///'--controllo se il primo valore è vuoto
+        if (IsEmpty(MatrixFinal[0, 2]) || string.IsNullOrEmpty(MatrixFinal[0, 2]))
+        {
+            tempvalue = "";
+        }
+        else
+        {
+            tempvalue = MatrixFinal[0, 2];
+        }
+        //on error resume next
+        try
+        {
+            dTempValue = CDbl(tempvalue);
+            if (CStr(0.5).Contains(",", StringComparison.Ordinal))
+            {
+                dTempValue = CDbl(tempvalue.Replace(".", ","));
+            }
+        }
+        catch
+        {
+            //err.Clear
+        }
+        //on error goto 0
+        //'--controllo ultimo valore è vuoto
+        if (IsEmpty(MatrixFinal[NumRowMatrix, 3]) || string.IsNullOrEmpty(MatrixFinal[NumRowMatrix, 3]))
+        {
+            BLastValueIsEmpty = true;
+        }
+        //'Response.Write BLastValueIsEmpty
+        //'Response.End
+        for (i = 0; i <= NumRowMatrix; i++)
+        {
+            for (j = 2; j <= 3; j++)
+            {
+                if (i == 0)
+                {
+                    j = 3;
+                }
+
+                //'--se sono sulla prima cella salto alla seconda
+                if (i == NumRowMatrix && j == 3 && BLastValueIsEmpty)
+                {
+                    _CheckMatrixCriteri_Range = true;
+                    return _CheckMatrixCriteri_Range;
+                }
+                //'--controllo che sia valorizzato
+                if (IsEmpty(MatrixFinal[i, j]) || string.IsNullOrEmpty(MatrixFinal[i, j]))
+                {
+                    _CheckMatrixCriteri_Range = false;
+                    return _CheckMatrixCriteri_Range;
+                }
+                //'--prendo il valore corrente
+                dCurrValue = CDbl(MatrixFinal[i, j]);
+                if (CStr(0.5).Contains(",", StringComparison.Ordinal))
+                {
+                    dCurrValue = CDbl(MatrixFinal[i, j].Replace(".", ","));
+                }
+                if (j == 2)
+                {
+                    //'--il limite inferiore deve coincidere con il limite superiore precedente
+                    if (string.Equals(dCurrValue, dTempValue))
+                    {
+                        bValidate = false;
+                        break;
+                    }
+                    else
+                    {
+                        dTempValue = CDbl(MatrixFinal[i, j]);
+
+                        if (CStr(0.5).Contains(",", StringComparison.Ordinal))
+                        {
+                            dTempValue = CDbl(MatrixFinal[i, j].Replace(".", ","));
+                        }
+
+                    }
+                }
+                else
+                {
+                    //'--il secondo limite deve essere maggiore del primo limite
+                    if (dCurrValue <= dTempValue)
+                    {
+                        bValidate = false;
+                        break;
+                    }
+                    else
+                    {
+                        dTempValue = CDbl(MatrixFinal[i, j]);
+                        if (CStr(0.5).Contains(",", StringComparison.Ordinal))
+                        {
+                            dTempValue = CDbl(MatrixFinal[i, j].Replace(".", ","));
+                        }
+                    }
+                }
+            }
+
+            //'--controllo che ho valorizzato il punteggio per ogni riga
+            if (!string.Equals(TipoGiudizioTecnico, "domain"))
+            {
+                if (IsEmpty(MatrixFinal[i, 4]) || string.IsNullOrEmpty(MatrixFinal[i, 4]))
+                {
+                    //'Response.Write "punteggio non definito riga" & i
+                    //'Response.end
+                    bValidate = false;
+                }
+
+            }
+            else
+            {
+                if (IsEmpty(MatrixFinal[i, 5]) || string.IsNullOrEmpty(MatrixFinal[i, 5]))
+                {
+                    //'Response.Write "giudizio non definito riga" & i
+                    //'Response.end
+                    bValidate = false;
+                }
+                else
+                {
+
+                    ////'--controllo che il giudizio non sia ripetuto
+                    if (!objMappaGiudizio.ContainsKey(MatrixFinal[i, 5].Trim()))
+                    {
+                        objMappaGiudizio.Add(MatrixFinal[i, 5].Trim(), MatrixFinal[i, 5].Trim());
+                    }
+                    else
+                    {
+                        bValidate = false;
+                    }
+
+                }
+            }
+            if (!bValidate)
+            {
+                break;
+            }
+
+        }
+        return bValidate;
+    }
+
+    //'--controllo che il criterio a dominio sio ben definito
+    bool CheckMatrixCriteri_Domini()
+    {
+        bool bValidate = false;
+        string tempvalue = "";
+        int i;
+        int NumRowMatrix = 0;
+        int nNumCol = 0;
+        Dictionary<string, string> objMappa;
+        objMappa = new Dictionary<string, string>();
+        Dictionary<string, string> objMappaGiudizio;
+        objMappaGiudizio = new Dictionary<string, string>();
+        bool CheckMatrixCriteri_Domini = false;
+        bValidate = true;
+
+        NumRowMatrix = MatrixFinal.GetUpperBound(0);
+        nNumCol = MatrixFinal.GetUpperBound(1);
+        //'Response.Write TipoGiudizioTecnico & "-" & NumRowMatrix & "-" & nNumCol
+        //'Response.end
+        for (i = 0; i <= NumRowMatrix; i++)
+        {
+            if (IsEmpty(MatrixFinal[i, 1]) || string.IsNullOrEmpty(MatrixFinal[i, 1]))
+            {
+                CheckMatrixCriteri_Domini = false;
+                //'Response.Write "codice dominio non valorizzato riga" & i
+                //'Response.end
+                return CheckMatrixCriteri_Domini;
+
+            }
+            //'--controllo che il codice non sia ripetuto
+            if (!objMappa.ContainsKey(MatrixFinal[i, 1].Trim()))
+            {
+                objMappa.Add(MatrixFinal[i, 1].Trim(), MatrixFinal[i, 1].Trim());
+            }
+            else
+            {
+                //'Response.Write "codice dominio ripetuto"
+                //'Response.end
+                CheckMatrixCriteri_Domini = false;
+                return CheckMatrixCriteri_Domini;
+
+            }
+            if (!string.Equals(TipoGiudizioTecnico, "domain"))
+            {
+                //'--controllo che ho valorizzato il punteggio per ogni riga
+                if (IsEmpty(MatrixFinal[i, 4]) || string.IsNullOrEmpty(MatrixFinal[i, 4]))
+                {
+                    CheckMatrixCriteri_Domini = false;
+                    //'Response.Write "punteggio non valorizzato"
+                    //'Response.end
+                    return CheckMatrixCriteri_Domini;
+
+                }
+            }
+            else
+            {
+                //'--controllo che ho valorizzato il giudizio per ogni riga
+                if (IsEmpty(MatrixFinal[i, 5]) || string.IsNullOrEmpty(MatrixFinal[i, 5]))
+                {
+                    CheckMatrixCriteri_Domini = false;
+                    //'Response.Write "giudizio non valorizzato"
+                    //'Response.end
+                    return CheckMatrixCriteri_Domini;
+
+                }
+                //'--controllo che il giudizio non sia ripetuto
+                if (!objMappaGiudizio.ContainsKey(MatrixFinal[i, 5].Trim()))
+                {
+                    objMappaGiudizio.Add(MatrixFinal[i, 5].Trim(), MatrixFinal[i, 5].Trim());
+                }
+                else
+                {
+                    CheckMatrixCriteri_Domini = false;
+                    return CheckMatrixCriteri_Domini;
+
+                }
+
+            }
+        }
+        CheckMatrixCriteri_Domini = bValidate;
+        return CheckMatrixCriteri_Domini;
+
+    }
+    htmlToReturn.Write($@"
+	<script language=""javascript"">
+
+	function FilterDom( objName , FieldName , valore , filter , row  , OnChange)
+	{{
+
+	//alert(FieldName);
+	ajax = GetXMLHttpRequest();
+	if(ajax){{
+
+			//ajax.open(""GET"",  '../../CTL_Library/GetFilteredField.asp?FIELD=' +  FieldName  + '&VALUE=' +  valore  + '&FILTER=' +  filter +'&ROW=' + row + '&ONCHANGE=OnChangeCategoria(this);', false);
+			ajax.open(""GET"",  '../../../CTL_Library/GetFilteredField.asp?FIELD=' +  FieldName  + '&VALUE=' +  encodeURIComponent(valore)  + '&FILTER=' +  encodeURIComponent(filter) +'&ROW=' + row + '&ONCHANGE=' + encodeURIComponent(OnChange) , false);
+
+			ajax.send(null);
+			if(ajax.readyState == 4) {{
+				if(ajax.status == 200)
+				{{
+					//-- funziona solo per i domini chiusi perchè sono in un div
+
+					//alert(ajax.responseText);
+
+					getObj( 'val_' + objName ).parentNode.innerHTML =  ajax.responseText;
+
+					return ;
+				}}
+			}}
+		}}
+		getObj( 'val_' + objName ).innerHTML = 'Error!!!';
+
+	return ;
+	}}
+	function GetXMLHttpRequest() {{
+
+		var XHR = null,
+		browserUtente = navigator.userAgent.toUpperCase();
+
+		if(typeof(XMLHttpRequest) === ""function""|| typeof(XMLHttpRequest) === ""object"")
+		XHR = new XMLHttpRequest();
+		else if(window.ActiveXObject && browserUtente.indexOf(""MSIE 4"") < 0) {{
+			if(browserUtente.indexOf(""MSIE 5"") < 0)
+				XHR = new ActiveXObject(""Msxml2.XMLHTTP"");
+			else
+				XHR = new ActiveXObject(""Microsoft.XMLHTTP"");
+		}}
+		return XHR;
+	}};
+	</script>
+	 ");
+
+}@Html.Raw(htmlToReturn.Out())

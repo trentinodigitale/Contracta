@@ -1,0 +1,505 @@
+﻿
+@inject eProcurementNext.Session.ISession session;
+@*@using ADODB*@
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@*
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;*@
+
+@using Microsoft.VisualBasic;
+@using static  eProcurementNext.Razor.Pages.Portale.INC.aflink_wrapperModel;
+@* <!-- #Include File="aflink_wrapper.inc" --> *@
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.antiFixationModel;
+@* <!-- #INCLUDE File="../../Application/CTL_LIBRARY/FUNCTIONS/AntiFixation.inc" --> *@
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+<!-- #Include File="../CTL_LIBRARY/FUNCTIONS/cnv.inc" -->
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.cookie_bannerModel;
+@* <!-- #Include File="../../Application/ctl_library/cookie_banner.inc" --> *@
+
+
+@*
+
+
+*@
+
+@{
+
+	string? titlePagina = (ViewData["Title"] != null) ? ViewData["Title"].ToString() : "";// Implementato! Vedere cosa è stato fatto in Viewer.cshtml (Viewer.asp)
+	string? pagina = (ViewData["Title"] != null) ? ViewData["Title"].ToString() : "";
+	
+	//EprocResponse htmlToReturn = new EprocResponse(GetParamURL(Context.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+
+@{
+    string virtualDirectoryPortale = "";
+    string tsCache = "";
+    string urlPortale = "";
+    // drawHtmlHead(pagina)
+    Context.Response.Headers.TryAdd("Content-Type", "text/html;charset=UTF-8");
+    //Response.CodePage = 65001;
+    //Response.CharSet = "UTF-8";
+    try
+    {
+		virtualDirectoryPortale = CStr(ApplicationCommon.Application["NOMEAPPPORTALE_JOOMLA"]);
+
+		if ( string.IsNullOrEmpty(virtualDirectoryPortale) )
+		{
+			virtualDirectoryPortale = CStr(CStr(Context.Request.Path.ToString().Split("/")[1]));
+		}
+    }
+    catch
+    {
+
+    }
+
+    urlPortale = CStr(ApplicationCommon.Application["WEBSERVERPORTALE"]) + "/" + virtualDirectoryPortale + "/index.asp";
+
+	tsCache = CStr(getTimeStamp());
+	//titlePagina da passare come parametro
+}
+	<!DOCTYPE html>
+	<html lang="it-it" dir="ltr">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+		<meta charset="utf-8" />
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+		
+		<title>@(Html.Raw(HtmlEncode(titlePagina)))</title>
+
+		<link href="/@(Html.Raw(virtualDirectoryPortale))/favicon.ico?nocache=@(Html.Raw(tsCache))" rel="shortcut icon" type="image/vnd.microsoft.icon" />
+		<link href="/@(Html.Raw(virtualDirectoryPortale))/CSS/layout.css?nocache=@(Html.Raw(tsCache))"  rel="stylesheet" />
+		<link href="/@(Html.Raw(virtualDirectoryPortale))/CSS/template.css?nocache=@(Html.Raw(tsCache))" rel="stylesheet" />
+		<link href="/@(Html.Raw(virtualDirectoryPortale))/CSS/general.css?nocache=@(Html.Raw(tsCache))" rel="stylesheet" />
+		<link href="/@(Html.Raw(virtualDirectoryPortale))/CSS/personal.css?nocache=@(Html.Raw(tsCache))" rel="stylesheet" />
+		<link href="/@(Html.Raw(virtualDirectoryPortale))/CSS/modal.css?nocache=@(Html.Raw(tsCache))" rel="stylesheet" />
+		
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/CSS/aflink_style.css?nocache=@(Html.Raw(tsCache))" type="text/css" media="screen,projection" />
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/CSS/aflink_style_print.css?nocache=@(Html.Raw(tsCache))" type="text/css" media="print" />
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/CSS/aflink_style_chromefix.css?nocache=@(Html.Raw(tsCache))" type="text/css" media="screen,projection" />
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/CSS/last_style.css?nocache=@(Html.Raw(tsCache))"  type="text/css" />
+
+		<!-- CSS BOOTSTRAP -->
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/css/bootstrap/bootstrap.css?nocache=@(Html.Raw(tsCache))" type="text/css" media="screen" />
+        <link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/css/bootstrap/bootstrap-grid.css?v=@(Html.Raw(tsCache))" type="text/css" media="screen" />
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/css/bootstrap/bootstrap-reboot.css?v=@(Html.Raw(tsCache))" type="text/css" media="screen" />
+
+		<!-- NUOVI CSS PORTALE NEW -->
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/css/fontawesome.min.css?nocache=@(Html.Raw(tsCache))" type="text/css" />
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/css/customColorPortale.css?nocache=@(Html.Raw(tsCache))" type="text/css" />
+		<link rel="stylesheet" href="/@(Html.Raw(virtualDirectoryPortale))/css/vaporPortale.css?nocache=@(Html.Raw(tsCache))" type="text/css" />
+		
+		
+		<!--<link href="//fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" />-->
+		<link href='https://fonts.googleapis.com/css?family=Titillium Web' rel='stylesheet'>
+	
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/jui/js/jquery.min.js?nocache=@(Html.Raw(tsCache))"></script>
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/jui/js/jquery-noconflict.js?nocache=@(Html.Raw(tsCache))"></script>
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/jui/js/jquery-migrate.min.js?nocache=@(Html.Raw(tsCache))"></script>
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/jui/js/bootstrap.min.js?nocache=@(Html.Raw(tsCache))"></script>
+
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/system/caption.js?nocache=@(Html.Raw(tsCache))"></script>
+
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/template.js?nocache=@(Html.Raw(tsCache))"></script>
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/system/core.js?nocache=@(Html.Raw(tsCache))" ></script>
+	
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/system/mootools-core.js?nocache=@(Html.Raw(tsCache))" ></script>
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/system/mootools-more.js?nocache=@(Html.Raw(tsCache))"></script>
+		<script src="/@(Html.Raw(virtualDirectoryPortale))/js/system/modal.js?nocache=@(Html.Raw(tsCache))"></script>
+
+		<!--[if lt IE 9]><script src="/@(Html.Raw(virtualDirectoryPortale))/JS/jui/js/html5.js"></script><![endif]-->
+		<script type="text/javascript" src="/@(Html.Raw(virtualDirectoryPortale))/js/md_stylechanger.js?nocache=@(Html.Raw(tsCache))" ></script>
+		<script>
+		@{
+				<text>
+						jQuery(window).on('load',  function() {
+						new JCaption('img.caption');
+					});
+					
+				jQuery(function($) {
+					SqueezeBox.initialize({});
+					SqueezeBox.assign($('a.modal').get(), {
+						parse: 'rel'
+					});
+				});
+
+				window.jModalClose = function () {
+					SqueezeBox.close();
+				};
+				
+				// Add extra modal close functionality for tinyMCE-based editors
+				document.onreadystatechange = function () {
+					if (document.readyState == 'interactive' && typeof tinyMCE != 'undefined' && tinyMCE)
+					{
+						if (typeof window.jModalClose_no_tinyMCE === 'undefined')
+						{	
+							window.jModalClose_no_tinyMCE = typeof(jModalClose) == 'function'  ?  jModalClose  :  false;
+							
+							jModalClose = function () {
+								if (window.jModalClose_no_tinyMCE) window.jModalClose_no_tinyMCE.apply(this, arguments);
+								tinyMCE.activeEditor.windowManager.close();
+							};
+						}
+				
+						if (typeof window.SqueezeBoxClose_no_tinyMCE === 'undefined')
+						{
+							if (typeof(SqueezeBox) == 'undefined')  SqueezeBox = {};
+							window.SqueezeBoxClose_no_tinyMCE = typeof(SqueezeBox.close) == 'function'  ?  SqueezeBox.close  :  false;
+				
+							SqueezeBox.close = function () {
+								if (window.SqueezeBoxClose_no_tinyMCE)  window.SqueezeBoxClose_no_tinyMCE.apply(this, arguments);
+								tinyMCE.activeEditor.windowManager.close();
+							};
+						}
+					}
+				};
+				
+
+				jQuery(function($){ $(".hasTooltip").tooltip({"html": true,"container": "body"}); });
+			</text>
+		}
+		</script>
+
+
+	</head>
+	<!---drawBodyHeader(pagina)--->
+
+	<body class="site com_content view-featured no-layout no-task itemid-101">
+
+
+		<!--link accessibilità-->
+		<ul class="skiplinks">
+			<li><a href="#main" class="u2">Vai ai contenuti</a></li>
+			<li><a href="#nav" class="u2">Vai al menu</a></li>
+		</ul>
+
+
+		<!--Body-->
+	<div class="body">
+
+	<div class="container-fluid">
+
+	<!--Header-->
+	<div id="header">
+		<header class="row header" role="banner">
+			<div class="col-md-3 header-inner">
+				<a class="brand pull-left stemma" href="http://www.regione.emilia-romagna.it">
+					<img src="images/i_logo_new.png" alt="Logo">
+				</a>
+				<!--a class="brand pull-left" href="http://www.regione.emilia-romagna.it">
+					Descrizione portale Acquisti AFSoluzioni
+				</a-->
+			</div>
+            <div class="col-md-3 header-banner"><a href="https://www.regione.emilia-romagna.it">Piattaforma SVILUPPO 3.X</a></div>
+			<div class="col-md-6 HeaderTools">
+				<div class="HeaderMenu">
+					<nav class="navigation" role="navigation">
+						<div class="navbar pull-left">
+								<a class="btn btn-navbar collapsed" data-toggle="collapse" data-target=".nav-collapse">
+									<span class="icon-bar"></span>
+									<span class="icon-bar"></span>
+									<span class="icon-bar"></span>
+								</a>
+							</div>
+						<div class="nav-collapse">
+							
+						</div>
+					</nav>
+				</div>
+				<div class="header-search" id="links_top_access"><h3 id="dimensione_font">Dimensione font:</h3><a title="Aumenta dimensioni font" href="#" onclick="changeFontSize(2); return false">A(+)</a>|<a href="#" title="Ripristina dimensioni font" onclick="revertStyles(); return false">Ripristina font</a>|<a href="#" title="Riduci dimensione font" onclick="changeFontSize(-2); return false">a(-)</a></div>
+			</div>
+		</header>
+	</div>
+	<!--drawBreadCrumb(pagina);-->
+	@{		int addItem = 0;
+			string extraHtml = $@"class=""active""";
+
+			if (pagina.ToLower() != "home")
+			{
+				addItem = 1;
+				extraHtml = "";
+			}
+	}
+	
+	<!--drawMenu();-->
+	
+	<div class="row" style="margin:0;" id ="nav">
+	<!--Begin Sidebar-->
+		<div id="sidebar" class="col-md-6 col-lg-6 col-xl-4">
+					<div id="breadcrumbs">
+						<table class="container">
+							<tr class="row">
+								<td class="col">
+									<div class="moduletable">
+
+										<ul itemscope itemtype="https://schema.org/BreadcrumbList" class="vapor-breadcrumbs">
+											<li><a href="@(Html.Raw(urlPortale))">@(Html.Raw(ApplicationCommon.CNV("Agenzia per lo sviluppo dei mercati telematici")))</a></li>
+
+											<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" @(Html.Raw(extraHtml))>
+												<span itemprop="name">Home</span>
+
+												@if (addItem == 1)
+												{
+													<span class="divider"><img src="/@(Html.Raw(virtualDirectoryPortale))/images/arrow.png"></span>
+												}
+												<meta itemprop="position" content="1">
+											</li>
+
+											@if (addItem == 1)
+											{
+												<li itemprop="itemListElement" itemscope="" itemtype="https://schema.org/ListItem" class="active">
+													<span itemprop="name">
+														@(Html.Raw(pagina))
+													</span>
+													<meta itemprop="position" content="2">
+												</li>
+											}
+										</ul>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+			<div class="">
+				<div id="sater_TopTitle" class="TopTitle">
+					<h1>Descrizione portale Acquisti AFSoluzioni</h1>
+				</div>
+				<div class="moduletable">
+					<h3>@(Html.Raw(ApplicationCommon.CNV("Area Privata")))</h3>
+			<script type="text/javascript">
+			@{
+						<text>
+						function vacio(q) { 
+							for ( i = 0; i @Html.Raw("<") q.length; i++ ) 
+							{   
+									if ( q.charAt(i) != " " ) {
+										return true   
+									}   
+							} 
+							return false   
+						}  
+
+						function evidenziaCampo(obj)
+						{
+							obj.setAttribute("class","txt required fieldError");
+						}
+
+
+						function resetCampo(obj)
+						{
+							obj.style.background="";
+							obj.setAttribute("class","txt required");
+						}
+
+						// Tutto il campi completi.   
+
+					 	function valida(form) 
+					 	{
+							var totCampiOk = 0;
+
+							try
+							{
+								document.getElementById('msg-errore-login').style.display = 'none';
+							}
+							catch(e)
+							{
+							}
+
+							if( vacio(document.getElementById('login_idazienda').value) == false) 
+							{   
+								evidenziaCampo(document.getElementById('login_idazienda'));
+							}
+							else
+							{
+								totCampiOk++;
+								resetCampo(document.getElementById('login_idazienda'));
+							}
+
+							if( vacio(document.getElementById('login_username').value) == false) 
+							{  
+								evidenziaCampo(document.getElementById('login_username'));
+							} 
+							else
+							{  
+								resetCampo(document.getElementById('login_username'));
+								totCampiOk++;
+							}  	
+
+							if( vacio(document.getElementById('login_password').value) == false) 
+							{   
+								evidenziaCampo(document.getElementById('login_password'));
+							}
+							else
+							{   
+								resetCampo(document.getElementById('login_password'));
+								totCampiOk++;
+							}	
+
+							if (totCampiOk == 3)
+							{
+								return true;
+							}
+							else
+							{
+								document.getElementById('messaggio_errore').innerHTML =  "<p class='error-notify'><b>Attenzione</b>: I campi evidenziati non sono stati compilati correttamente!</p>";
+								return false;  
+							}  	
+						}
+
+						function TomaCampo(obj)
+						{
+							document.write (totCampiOK);
+						}
+
+						</text>
+			}
+			</script> 
+			<form name="form" action="@(ApplicationCommon.Application["strVirtualDirectory"])/login.asp?redirectback=yes&amp;chiamante=@(Html.Raw( urlPortale))" method="post" id="login" autocomplete="off" onSubmit="return valida(this);">
+
+			<div>
+				<span id="messaggio_errore">
+		
+				@if(!string.IsNullOrEmpty(GetParamURL(Context.Request.QueryString.ToString(), "Errore")))
+				{
+					//'--non accettiamo una stringa superiore a 150 caratteri
+					//'--o che inizia con "<script". In questo caso non faccio uscire niente a video
+					@if (GetParamURL(Context.Request.QueryString.ToString(), "Errore").Length < 150 && !string.Equals(Strings.Left(GetParamURL(Context.Request.QueryString.ToString(), "Errore"), 7).ToLower(), "<script"))
+					{
+				
+						<strong id='msg-errore-login'>@(Html.Raw( HtmlEncode(CStr(GetParamURL(Context.Request.QueryString.ToString(), "Errore"))))) </strong>
+			
+
+				
+					}
+				}
+			
+				</span>
+			</div>
+			<div>
+				@if(!string.IsNullOrEmpty(ApplicationCommon.Application["URL_LOGIN_SSO"]))
+				{
+			
+					<div id="FORM_LOGIN" name="FORM_LOGIN">
+				
+						<label for="login_idazienda">@(Html.Raw(ApplicationCommon.CNV("Codice di accesso")))</label>
+						<input type="text" name="IDAZIENDA" class="txt required" id="login_idazienda" style="" autofocus/>
+						<label for="login_username">@(Html.Raw( ApplicationCommon.CNV("Nome Utente")))</label>
+						<input type="text" name="USERNAME" class="txt required" id="login_username" style=""/>
+						<label for="login_password">@(Html.Raw(ApplicationCommon.CNV("Password")))</label>
+						<input type="password" name="PASSWORD" class="txt required" id="login_password" style=""/>
+						<input type="submit" value=" @(Html.Raw(ApplicationCommon.CNV("Accedi")))" class="button primary-button" id="submit1" name="submit1"/>
+				
+					</div>
+				}
+				else
+				{
+						<label for="login_idazienda">@(Html.Raw(ApplicationCommon.CNV("Codice di accesso")))</label>
+						<input type="text" name="IDAZIENDA" class="txt required" id="login_idazienda" style="" autofocus/>
+						<label for="login_username">@(Html.Raw( ApplicationCommon.CNV("Nome Utente")))</label>
+						<input type="text" name="USERNAME" class="txt required" id="login_username" style=""/>
+						<label for="login_password">@(Html.Raw(ApplicationCommon.CNV("Password")))</label>
+						<input type="password" name="PASSWORD" class="txt required" id="login_password" style=""/>
+						<input type="submit" value=" @(Html.Raw(ApplicationCommon.CNV("Accedi")))"  class="button primary-button" id="submit1" name="submit1"/>					
+				}
+				@if(!string.IsNullOrEmpty(ApplicationCommon.Application["URL_LOGIN_SSO"]))
+				{
+					<input type="button" value="@(Html.Raw( ApplicationCommon.CNV("Accedi con Login SSO")))" class="button primary-button" id="submit2" name="submit2" onclick="document.location='@(Html.Raw( ApplicationCommon.Application["URL_LOGIN_SSO"]))'" />
+				}
+				
+				<input type="hidden" name="strMnemonicoMP" value="PA"/>
+				<input type="hidden" value="1" name="strCheckIscrizione"/>
+
+
+			</div>
+		</form>
+
+		<div class="moduletable_menu">
+		<ul class="nav menu">
+
+			<li id="moduletable_menu_0">
+				@if (CStr(ApplicationCommon.Application["PORTALE_ACCESSO_SPID"]).ToUpper() == "YES")
+				{
+					//se richiesto inserisco bottone per accesso SPID
+					@(Html.Raw(ApplicationCommon.CNV("Portale Punto di Accesso Spid")))
+				}
+			</li>
+
+			<li id="moduletable_menu_1" >
+			<a class="modal modal-link" rel="{handler: 'iframe', size: {x: 600, y: 400}}" href="/@(Html.Raw( ApplicationCommon.Application["NOMEAPPLICAZIONE"]))/modal/recuperopwd_joomla.asp" title="Hai dimenticato la password?">
+			@(Html.Raw(ApplicationCommon.CNV("Hai dimenticato la password?")))</a>
+			</li>
+
+			<li id="moduletable_menu_2" >
+				<a class="modal modal-link" rel="{handler: 'iframe', size: {x: 600, y: 400}}" href="/@(Html.Raw(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))/modal/recuperouser_joomla.asp" title="Hai dimenticato Codice di Accesso e Nome Utente ?">
+				@(Html.Raw(ApplicationCommon.CNV("Hai dimenticato Codice di Accesso e Nome Utente ?"))) 
+				</a>
+			</li>
+
+			<li id="moduletable_menu_3" >
+				<a href="registrazione_oe.asp">
+				<h2>@(Html.Raw(ApplicationCommon.CNV("Registrazione Operatore Economico")))</h2>
+				</a>
+			</li>
+
+			<li id="moduletable_menu_4" >
+
+				<a href="registrazione_ente.asp">
+					<h2>
+					@(Html.Raw(ApplicationCommon.CNV("Registrazione utente P.A.")))
+					</h2>
+				</a>
+			</li>
+
+		</ul>
+
+		</div>
+	</div>
+	</div>
+	</div>
+			<!--- End Sideba--->
+			<!---fine drawmenu--->
+				<div id="main" class="col-md-6 col-lg-6 col-xl-8">
+			<main id="content" role="main" class="">
+			<!---Begin Content--->
+
+			<div id="system-message-container"></div>
+
+			<div class="blog-featured" itemscope itemtype="https://schema.org/Blog">
+
+			<div class="items-leading clearfix">
+			<div class="leading-0 clearfix" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+
+			@RenderBody()
+
+			</div>
+			</div>
+			</div>
+
+			<!--End Content-->
+			</main>
+
+		</div>
+
+	</div>
+
+</div>
+			<!---drawHtmlFooter-->
+			
+			@if(CStr(ApplicationCommon.Application["COOKIE_BANNER"]).ToUpper() == "YES")
+			{
+				
+				@(Html.Raw(COOKIE_BANNER("",Context)))
+			}
+
+			@(Html.Raw(ApplicationCommon.CNV("Contenuto html footer portale")))
+
+
+		</body>
+	</html>
+	
+
+

@@ -1,0 +1,14 @@
+﻿<efac:LotResult>
+	<!-- OPT-322 - LotResult Technical Identifier - RES-NNNN -->
+	<cbc:ID>@@@LOTTO_RESULT_ID@@@</cbc:ID>
+	<!-- BT-142 - Winner Chosen - Stato di selezione dei vincitori - Stato Lotto -->
+	<cbc:TenderResultCode listName="winner-selection-status">@@@LOTTO_RESULT_TENDER_RESULT_CODE@@@</cbc:TenderResultCode>
+	<efac:DecisionReason>
+		<!-- BT-144 -  Motivo per cui un vincitore non è stato scelto -->
+		<efbc:DecisionReasonCode listName="non-award-justification">@@@LOTTO_RESULT_DECISION_REASON@@@</efbc:DecisionReasonCode>
+	</efac:DecisionReason>
+	<efac:TenderLot>
+		<!-- BT-13713 - Result Lot Identifier - L'identificatore del lotto di risultato -->
+		<cbc:ID>@@@LOTTO_RESULT_TENDER_LOT_ID@@@</cbc:ID>
+	</efac:TenderLot>
+</efac:LotResult>

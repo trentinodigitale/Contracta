@@ -1,0 +1,36 @@
+﻿@page "/Portale/registrazione_oe.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.Portale.INC.layoutModel;
+@using static  eProcurementNext.Razor.Pages.Portale.INC.aflink_wrapperModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session, registrazione: true);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	Layout = IsMasterPageNew() ? "~/Pages/Portale/INC/layoutNew.cshtml" : "~/Pages/Portale/INC/layout.cshtml";
+
+}
+@{
+	ViewData["Title"] = "Registrazione Operatore Economico";
+
+	//drawLayout("Registrazione Operatore Economico",htmlToReturn,Response,Request);
+	htmlToReturn.Write($@"<div class=""page-header""><h2 itemprop=""headline"">Registrazione Operatore Economico</h2></div>");
+
+	//'WEBSERVERAPPLICAZIONE_INTERNO
+
+	string linkRegistrazioneOE = ApplicationCommon.Application["LINK_PAGINA_REGISTRAZIONE_OE"];
+	if (String.IsNullOrEmpty(linkRegistrazioneOE))
+	{
+		linkRegistrazioneOE = "registrazione_er.asp";
+	}
+	wrapperPage(linkRegistrazioneOE, htmlToReturn, Request, session, HttpContext);
+
+}@Html.Raw(htmlToReturn.Out())

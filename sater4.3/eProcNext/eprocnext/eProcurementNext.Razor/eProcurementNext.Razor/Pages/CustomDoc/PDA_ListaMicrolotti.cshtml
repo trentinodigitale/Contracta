@@ -1,0 +1,46 @@
+﻿@page "/CustomDoc/PDA_ListaMicrolotti.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.PDA_ListaMicrolottiModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.PDA_ListaMicrolottiModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+    htmlToReturn.Write("<html>");
+    htmlToReturn.Write("<head>");
+    htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/body.css"" type=""text/css"">");
+
+    htmlToReturn.Write($@"<style>
+    div
+    {{
+        text-align:center;
+        vertical-align:middle;
+        width: 100%;
+        height: 300px;
+        FONT-SIZE: 12pt;
+        margin-top: 50px;
+
+    }}
+
+    </style>");
+    htmlToReturn.Write("</head>");
+    htmlToReturn.Write("<body>");
+
+    htmlToReturn.Write("<div>");
+    htmlToReturn.Write(ApplicationCommon.CNV("Per la visualizzazione dei lotti è necessario aver avviato la valutazione economica"));
+    htmlToReturn.Write("</div>");
+
+    htmlToReturn.Write("</body>");
+    htmlToReturn.Write("</html>");
+}
+@Html.Raw(htmlToReturn.Out())

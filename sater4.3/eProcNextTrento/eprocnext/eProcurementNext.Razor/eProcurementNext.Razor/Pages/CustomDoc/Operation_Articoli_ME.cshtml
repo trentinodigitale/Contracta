@@ -1,0 +1,125 @@
+﻿@page "/CustomDoc/Operation_Articoli_ME.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.Operation_Articoli_MEModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.Operation_Articoli_MEModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	int lIdPfu = 0;
+	string ID = string.Empty;
+	//dim objDB
+
+	//'--lavoro con idpfu negativo per non confondermi con il carrello classico
+	lIdPfu = -session["idpfu"];
+	string OPERATION = ((CStr(GetParamURL(Request.QueryString.ToString(), "OPERATION"))).ToUpper()).Trim(); //' -- ADDROW/DELETE_ALL
+	string QT = GetParamURL(Request.QueryString.ToString(), "QT");
+	int PrezzoUnitario = 0;
+	int ValoreAccessorio = 0;
+	double totale = 0;
+	string not_editable=GetParamURL(Request.QueryString.ToString(), "not_editable");
+	ID=GetParamURL(Request.QueryString.ToString(), "ID");
+	string IDDOC_RIDOTTO = string.Empty;
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+
+	if(OPERATION != "ADDROW" && OPERATION != "DELETE_ALL")
+	{
+		traceAttack("Valore non consentito per il parametro OPERATION",session,HttpContext);
+	}
+
+	validate("ID", ID, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("QT", QT, TIPO_PARAMETRO_FLOAT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("not_editable", Replace(not_editable, " ", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	//'--aggiunge riga al carrello
+	if(OPERATION == "ADDROW")
+	{
+		if(string.IsNullOrEmpty(IDDOC_RIDOTTO)  || IDDOC_RIDOTTO == "0" )
+		{
+			//'--controllo che qt sia positiva
+			if(CDbl(QT) <= 0)
+			{
+				htmlToReturn.Write("Quantita deve essere maggiore di 0");
+				throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+			}
+		}
+		else
+		{
+			 totale = (CDbl(QT) * CDbl(PrezzoUnitario)) + CDbl(ValoreAccessorio);
+			if(totale >0)
+			{
+				htmlToReturn.Write("Il totale per le riduzioni ordinativo deve essere negativo");
+				throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+			}
+		}
+		//'--inserisco la riga nel carrello se non presente
+		string strSql = "select id_product from carrello_ME with(nolock) where id_product=" + CStr(CLng(ID)) + " and idpfu=" + lIdPfu;
+		//'Response.Write strSql
+		//'Response.End
+		TSRecordSet rsMsg = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+		if(rsMsg.RecordCount >0)
+		{
+			htmlToReturn.Write("articolo gia presente nel carrello");
+			throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+		}
+		else
+		{
+			var SqlParamters = new Dictionary<string, object?>();
+            SqlParamters.Add("@qt", CDbl(QT));
+			SqlParamters.Add("@idpfu", lIdPfu);
+			SqlParamters.Add("@noteditable",  not_editable);
+			SqlParamters.Add("@id", CInt(ID));
+			strSql = @"insert into Carrello_ME ( Codice, Descrizione, QTDisp, PrezzoUnitario, idPfu, Id_Catalogo, Id_Product, Iva,Titolo, Not_Editable)
+								select CodiceProdotto, Descrizione, qt, PREZZO_OFFERTO_PER_UM, @idpfu, idheader, D.id, aliquotaiva, C.Titolo, @noteditable
+								from Document_MicroLotti_Dettagli D with(nolock) inner join CTL_DOC C with(nolock) on D.IdHeader=C.Id where D.id=@id";
+
+			//Response.Write strSql
+			//'Response.End
+			cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: SqlParamters);
+			throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+		}
+	}
+	string stringa_errore = "";
+
+	//'--svuota carrello
+	if( OPERATION == "DELETE_ALL")
+	{
+		stringa_errore = Svuota_Carrello();
+		htmlToReturn.Write(stringa_errore);
+		throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+	}
+	//'--svuoto il carrello
+	string Svuota_Carrello ()
+	{
+		string errore = "";
+		var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@idpfu", lIdPfu);
+		string strSql = "delete carrello_me where idpfu=@idpfu";
+		try
+		{
+			cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+		}
+		catch(Exception e)
+		{
+			errore = e.Message;
+		}
+		return errore;
+
+	}
+}
+@Html.Raw(htmlToReturn.Out())

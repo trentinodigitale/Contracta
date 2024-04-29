@@ -1,0 +1,1153 @@
+﻿@page "/Report/BANDO_ASTA.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel
+@{
+	Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+}
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+    //'*******************************************
+    //'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+    //'*******************************************
+    var sqlParams = new Dictionary<string, object?>();
+    validate("IDDOC", CStr(GetParamURL(Request.QueryString.ToString(), "IDDOC")), TIPO_PARAMETRO_NUMERO, CInt(""), "", 1, HttpContext, session);
+    validate( "DOCUMENT", GetParamURL(Request.QueryString.ToString(), "DOCUMENT").Replace(".","_") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "TYPEDOC", GetParamURL(Request.QueryString.ToString(), "TYPEDOC").Replace(".","_") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    dynamic User = session["idPfu"]; 
+
+    dynamic getAziRagioneSociale( dynamic azienda ){
+
+        //'on error resume next
+
+        if (!string.IsNullOrEmpty(CStr(azienda))){
+
+            //dim obj
+            //dim rsAzi
+            //dim rsStructAzi
+
+            //   set obj = server.CreateObject("ctldb.clsTabManage")
+
+            sqlParams.Clear();
+            sqlParams.Add("@id", azienda);
+            TSRecordSet rsAzi = cdf.GetRSReadFromQuery_("select * from aziende with (nolock) where idazi = @id", ApplicationCommon.Application.ConnectionString, sqlParams);
+            if (rsAzi.RecordCount == 0 ){
+                return "";
+            }else{
+                return rsAzi.Fields["aziRagioneSociale"];
+            }
+            //set rsAzi = nothing
+
+        }
+
+        return "";
+
+    }
+
+    string PrintDataORA( string strDataOda ){
+        //'aggiunge i secondi se non presenti
+        if (strDataOda.Length == 16 ){
+            strDataOda = strDataOda + ":00";
+        }
+        return Strings.Left( strDataOda , 10 ) + " " + ApplicationCommon.CNV("ore") + " " + Strings.Right( strDataOda , 8 );
+    }
+
+    dynamic getClasseIscrizione( string cod ){
+        //on error resume next
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@codice", cod.Replace("'", "''"));
+        TSRecordSet rs = GetRS("SELECT  v.DMV_DescML  FROM (SELECT 15  AS DMV_DM_ID, dgCodiceInterno AS DMV_Cod , '000.' + dgPath  AS DMV_Father , dgLivello AS DMV_Level , dscTesto AS DMV_DescML , CASE dgFoglia WHEN 1 THEN 'node.gif' ELSE 'folder.gif' END AS DMV_Image, 0 AS DMV_Sort  , CASE CHARINDEX('-', dscTesto) WHEN 0 THEN '0' ELSE LEFT(dscTesto, CHARINDEX('-', dscTesto) -  1) END AS DMV_CodExt FROM DominiGerarchici, DizionarioAttributi , DescsI WHERE dztNome = 'ClasseIscriz'AND dztIdTid = dgTipoGerarchia AND dztDeleted = 0 AND IdDsc = dgIdDsc AND dgDeleted = 0) v where DMV_COD=@codice",sqlParams);
+        try{
+            rs.MoveFirst();
+            return rs.Fields[ "DMV_DescML" ];
+        }catch{
+            return "";
+        }
+
+        //set rs = nothing
+    }
+
+    string PresenzaRevoca(string cod){
+
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@tipo","PDA_COMUNICAZIONE_GENERICA");
+        sqlParams.Add("@funzionale","Inviato");
+        sqlParams.Add("@check", "0-REVOCA_BANDO");
+        sqlParams.Add("@codice", cod.Replace("'", "''"));
+        TSRecordSet rs = GetRS("Select id from CTL_DOC,ctl_doc_allegati  with (nolock)  where idheader=id and Tipodoc=@tipo and StatoFunzionale=@funzionale and jumpcheck = @check and LinkedDoc=@codice", sqlParams);
+        //'rs.moveFirst
+
+        if (rs.RecordCount > 0 ){			
+            return "si";
+        }else{
+            return "no";					
+        }
+
+        //set rs = nothing	
+    }
+
+    string PresenzaProroga( string cod){
+
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@tipo","PROROGA_GARA");
+        sqlParams.Add("@stato", "Inviato");
+        sqlParams.Add("@check", "BANDO_GARA");
+        sqlParams.Add("@doc", cod.Replace("'", "''"));
+        TSRecordSet rs = GetRS("Select id from CTL_DOC  with (nolock) where Tipodoc=@tipo and StatoFunzionale=@stato and jumpcheck = @check and LinkedDoc=@doc",sqlParams);
+        //'rs.moveFirst
+
+        if (rs.RecordCount > 0){// then			
+            return "si";
+        }else{
+            return "no";					
+        }
+
+    }
+
+    string PresenzaRettifica(string cod){
+
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@tipo","RETTIFICA_GARA");
+        sqlParams.Add("@stato", "Inviato");
+        sqlParams.Add("@check", "BANDO_GARA");
+        sqlParams.Add("@doc", cod.Replace("'", "''"));
+        TSRecordSet rs = GetRS( "Select id from CTL_DOC  with (nolock) where Tipodoc=@tipo and StatoFunzionale=@stato and jumpcheck = @check and LinkedDoc=@doc",sqlParams );
+        //'rs.moveFirst
+
+        if (rs.RecordCount > 0){// then			
+            return "si";
+        }else{
+            return "no";					
+        }
+
+        //set rs = nothing	
+    }
+
+    dynamic getDataTermineQuesitiOriginale(string cod){
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@cod",cod);
+        sqlParams.Add("@DSE_ID", "TESTATA");
+        sqlParams.Add("@nome", "OLD_DataTermineQuesiti");
+        TSRecordSet rs = GetRS("Select  convert(varchar(10),cast(value as datetime),103)+' '+convert(varchar(8),cast(value as datetime),114)  as DataOriginale from ctl_doc_value where idheader=( Select  min(c2.id) from ctl_doc c inner join  ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc in ( 'RETTIFICA_GARA','PROROGA_GARA') where c.id=@cod) and DSE_ID=@DSE_ID and Dzt_name=@nome ");
+        if (rs.RecordCount > 0 ){//then			
+            rs.MoveFirst();
+            return rs.Fields["DataOriginale"];
+        }else{
+            return "";				
+        }
+        //set rs = nothing	
+    }
+
+    dynamic getDataTermineRispostaQuesitiOriginale(string cod){
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@cod",cod);
+        sqlParams.Add("@DSE_ID", "TESTATA");
+        sqlParams.Add("@nome", "OLD_DataTermineRispostaQuesiti");
+        TSRecordSet rs = GetRS( "Select  convert(varchar(10),cast(value as datetime),103)+' '+convert(varchar(8),cast(value as datetime),114)  as DataOriginale from ctl_doc_value with (nolock)  where idheader=( Select  min(c2.id) from ctl_doc c inner join  ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc in ( 'RETTIFICA_GARA','PROROGA_GARA') where c.id=@cod) and DSE_ID=@DSE_ID and Dzt_name=@nome " ,sqlParams);
+
+        if (rs.RecordCount > 0){//then	
+            rs.MoveFirst();			
+            return rs.Fields["DataOriginale"];
+        }else{
+            return "";					
+        }
+        //set rs = nothing	
+    }
+
+    dynamic getDataScadenzaOfferta(string cod){
+        //dim rs
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@cod",cod);
+        sqlParams.Add("@DSE_ID", "TESTATA");
+        sqlParams.Add("@nome", "OLD_DataPresentazioneRisposte");
+        TSRecordSet rs = GetRS("Select  convert(varchar(10),cast(value as datetime),103)+' '+convert(varchar(8),cast(value as datetime),114)  as DataOriginale from ctl_doc_value with (nolock)  where idheader=( Select  min(c2.id) from ctl_doc c inner join  ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc in ( 'RETTIFICA_GARA','PROROGA_GARA')  where c.id=@cod) and DSE_ID=@DSE_ID and Dzt_name=@nome ",sqlParams);
+
+        rs.MoveFirst();
+        if (rs.RecordCount > 0){// then			
+            return rs.Fields["DataOriginale"];
+        }else{
+            return "";			
+        }
+        //set rs = nothing	
+    }
+
+    dynamic getDataAperturaOfferte(string cod){
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@cod",cod);
+        sqlParams.Add("@DSE_ID", "TESTATA");
+        sqlParams.Add("@nome", "OLD_DataSeduta");
+        TSRecordSet rs = GetRS("Select  convert(varchar(10),cast(value as datetime),103)+' '+convert(varchar(8),cast(value as datetime),114)  as DataOriginale from ctl_doc_value  with (nolock) where idheader=( Select  min(c2.id) from ctl_doc c inner join  ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc in ( 'RETTIFICA_GARA','PROROGA_GARA')  where c.id=@cod) and DSE_ID=@DSE_ID and Dzt_name=@nome ",sqlParams);
+        rs.MoveFirst();
+        if (rs.RecordCount > 0 ){		
+            return rs.Fields["DataOriginale"];
+        }else{
+            return "";
+        }
+        //set rs = nothing	
+    }
+
+    int AttivaTimer(string cod){
+
+        //dim rs
+        sqlParams.Clear();
+        sqlParams.Add("@cod",cod.Replace("'", "''"));
+        TSRecordSet rs = GetRS("Select DATEDIFF(SECOND, GETDATE(),DataRiferimentoInizio) as timer from document_bando  with (nolock) where DATEDIFF(MINUTE, GETDATE(),DataRiferimentoInizio)>0 AND DATEDIFF(MINUTE, GETDATE(),DataRiferimentoInizio)<=60 AND idheader=@cod",sqlParams);
+
+
+        if (rs.RecordCount > 0 ){	
+            rs.MoveFirst();			
+            return CInt(rs.Fields["timer"]) * 1000;
+            //AttivaTimer = AttivaTimer*1000
+        }else{
+            return 0;					
+        }
+
+        //set rs = nothing	
+    }
+
+    objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+
+    string idDoc = objDoc.mp_IDDoc;
+
+    TSRecordSet rsModello;
+    string NomeModello;
+    sqlParams.Clear();
+    sqlParams.Add("@idBando",idDoc);
+    rsModello = GetRS( "select N_Lotto from BANDO_GARA_CRITERI_VALUTAZIONE_PER_LOTTO with (nolock)  where (  CriterioAggiudicazioneGara = '15532' or CriterioAggiudicazioneGara = '25532' or Conformita <> 'no' )  and idBando = @idBando",sqlParams);
+
+    if (rsModello.RecordCount > 0) {// then
+        NomeModello = "_MOD_OffertaINPUT";
+    } else {
+        NomeModello = "_MOD_Offerta";
+    }
+
+    //dim obj
+    //set obj = server.CreateObject("ctldb.clsTabManage")
+
+    //'-- verifica se il fornitore sta partecipando
+    //dim rsPartecipante
+    sqlParams.Clear();
+    sqlParams.Add("@idpfu",User);
+    sqlParams.Add("@id", idDoc);
+    TSRecordSet rsPartecipante = cdf.GetRSReadFromQuery_("select * from CTL_DOC_Destinatari d  with (nolock) inner join profiliutente p with (nolock) on pfuidazi = idazi where p.idpfu = @idpfu and idheader = @id", ApplicationCommon.Application.ConnectionString, sqlParams );
+
+
+    int bPartecipante;
+    bPartecipante = 0;
+    if (rsPartecipante.RecordCount > 0){// then
+        bPartecipante = 1;
+    }
+
+    //'--verifica se il fornitore � indiretto
+    //dim RsIndiretti
+    sqlParams.Clear();
+    sqlParams.Add("@idDoc",idDoc);
+    sqlParams.Add("@tipoDoc", "OFFERTA");
+    sqlParams.Add("@stato", "Inviato");
+    string strSqlIndiretti ="select p.idpfu from " +
+                    " ctl_doc O  with (nolock) inner join ctl_doc OP  with (nolock) on OP.linkeddoc=O.id and OP.TipoDoc='OFFERTA_PARTECIPANTI' and OP.StatoFunzionale='Pubblicato' " + 
+                    " inner join 	document_offerta_partecipanti DO   with (nolock) on OP.id=DO.idheader " +
+                    " inner join profiliutente p  with (nolock) on pfuidazi = DO.idazi and p.idpfu = " + User + 
+                    " where O.linkeddoc = @idDoc and O.tipodoc=@tipoDoc and O.statofunzionale=@stato ";
+    //'Response.Write strSqlIndiretti
+    //'Response.end
+    TSRecordSet RsIndiretti = cdf.GetRSReadFromQuery_(strSqlIndiretti, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+    //set obj = nothing
+
+    int bIndiretto;
+    bIndiretto = 0;
+    if (RsIndiretti.RecordCount > 0) {// then
+        bIndiretto = 1;
+    }
+
+    Fld_Attach objattach;
+
+    void drawContent(){
+
+        //dim obj
+        //set obj = server.CreateObject("ctldb.clsTabManage")
+
+        //'-- verifica se il fornitore sta partecipando
+        //dim rsPartecipante
+        sqlParams.Clear();
+        sqlParams.Add("@user",User);
+        sqlParams.Add("@idheader", idDoc);
+        TSRecordSet rsPartecipante = cdf.GetRSReadFromQuery_("select * from CTL_DOC_Destinatari d  with (nolock) inner join profiliutente p  with (nolock) on pfuidazi = idazi where  p.idpfu = @user and idheader = @idheader", ApplicationCommon.Application.ConnectionString, sqlParams);
+        //set obj = nothing
+
+        int bPartecipante;
+        bPartecipante = 0;
+        if (rsPartecipante.RecordCount > 0){// then
+            bPartecipante = 1;
+        }
+
+        //' Codice che recuper la Caption del documento e la mette sulla stampa in testa alla pagina
+
+        eProcurementNext.HTML.Caption obj = new Caption();//createobject( "CtlHtml.Caption" )
+                                                   //set objdb = server.CreateObject("ctldb.clsTabManage")
+                                                   //dim rs
+        dynamic caption = "";
+        sqlParams.Clear();
+        sqlParams.Add("@id",idDoc);
+        TSRecordSet rs = cdf.GetRSReadFromQuery_("select ISNULL(M.ML_Description,C.CaptionDoc) as Caption from Document_Bando_Semplificato_view C left join lib_multilinguismo M on M.ML_KEY=C.CaptionDoc where C.id=@id", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rs.RecordCount > 0){// then
+            rs.MoveFirst();
+            caption = rs.Fields[ "Caption" ];
+        }
+        //set objdb = nothing		
+        if (IsMasterPageNew())
+        {
+            htmlToReturn.Write($@"
+                <table width=""100%"" class=""Caption"" border=""0"" cellspacing=""0"" cellpadding=""0"">
+                    <tbody>
+                        <tr class=""pageTitle"">
+                            <td> " + CStr(caption) + $@" </td>
+                        </tr>
+                    </tbody>
+                </table>
+            ");
+        }
+        else
+        {
+            htmlToReturn.Write(obj.SetCaption(CStr(caption)));
+        }
+        //set obj = nothing
+
+        htmlToReturn.Write($@"
+
+	    <!--SUGGERIMENTI solo sul portale -->                        		                      	
+        <div class=""tips"" id=""contenitoresuggerimento"">
+  	        <div class=""tipsbar"">
+    		    <a href=""#suggerimento"">" + ApplicationCommon.CNV("Nascondi suggerimenti") + $@"</a>
+      		    <a href=""#suggerimento"" class=""suggest"">" + ApplicationCommon.CNV("Mostra suggerimenti") + $@"</a>
+  	        </div>
+  	        <div id=""suggerimento"" class=""tipscontent"">
+
+  	    ");
+        //'-- da rivedere in funzione delle caratteristiche di gara, aperta ,ristretta,negoziata,invito ecc.. 
+        htmlToReturn.Write($@"
+               " + ApplicationCommon.CNV("Suggerimento_Iscrizione GARA") + $@"
+
+
+               <br>
+	           <br>
+
+            </div>
+        </div>            
+
+  	    <br>
+
+  	    ");
+
+        string ProceduraGara;
+        string TipoBandoGara;
+
+        ProceduraGara = DOC_Field("TESTATA", "ProceduraGara");
+        TipoBandoGara = DOC_FieldTecnical("TESTATA","TipoBandoGara");
+        //'response.Write "TipoBandoGara = [" & TipoBandoGara & "]"
+        //'response.end
+        int timer;
+        timer = AttivaTimer(idDoc);
+        //'response.Write timer
+        //'response.end
+        if (timer > 0) {// then 
+
+            htmlToReturn.Write($@"
+		    <script type=""text/javascript"">
+		    setTimeout(function() {{
+		    location.reload();
+		    }}, " + timer + $@");
+		    </script>  
+		    ");
+        }
+
+
+        htmlToReturn.Write($@"
+
+
+	    <!--TOOLBAR DI TESTA  E TITOLO-->      
+
+        ");
+        //'--------------------------
+        //'-- Toolbar LATO PORTALE 
+        //'--------------------------
+        htmlToReturn.Write($@"
+		    <div id=""paginazione"" class=""paging"" >  
+			    <div class=""icons"">
+				    <a href=""javascript:window.print();"" class=""print"">" + ApplicationCommon.CNV("StampaEffettiva") + $@"</a>  
+			    </div>
+
+			    <!--ELEMENTI NASCOSTI PER TOOLBAR DI CODA-->
+			    <ul>
+				    <li style=""display:none;"">
+					    <a id=""modalepartecipa"" href=""" + ApplicationCommon.Application["WEBSERVERPORTALE"] + "/" + ApplicationCommon.Application["NOMEAPPPORTALE"] + $@"/modal/partecipa.asp?STRURLPARTECIPA=..%2F..%2F..%2F..%2FCtl_Library%2FDOCUMENT%2FPartecipa.asp%3FTIPODOC%3DOFFERTA_ASTA%26IdMsgPar%3D" + idDoc + $@""" rel=""modal[620|350| ]"" title=""" + ApplicationCommon.CNV("Partecipa") + $@""">" + ApplicationCommon.CNV("Partecipa") + $@"
+					    <!-- <a id=""modalepartecipa"" href=""" + ApplicationCommon.Application["WEBSERVERPORTALE"] + "/" + ApplicationCommon.Application["NOMEAPPPORTALE"] + $@"/modal/partecipa.asp?URL=../../../../Ctl_Library/DOCUMENT/Partecipa.asp?TIPODOC=OFFERTA&IdMsgPar=" + idDoc + $@""" rel=""modal[620|350| ]"" title=""" + ApplicationCommon.CNV("Partecipa") + $@""">" + ApplicationCommon.CNV("Partecipa") + $@" -->
+					    </a>
+				    </li>		
+			    </ul>		
+
+			    <h2>" + getAziRagioneSociale(DOC_Field("TESTATA", "Azienda")) + $@"</h2>
+
+
+		    </div>
+
+        ");
+        //'--------------------------
+        //'-- Toolbar lato applicazione BANDI PUBBLICI
+        //'--------------------------
+        htmlToReturn.Write($@"
+    	    <div id=toolbarprivate class=""paging comandi"" style=""display:none;"">
+
+			    <div class=""icons1"">
+				    <ul>
+					    <li style=""background:url(" + ApplicationCommon.Application["WEBSERVERAPPLICAZIONE"] + "/" + ApplicationCommon.Application["NOMEAPPLICAZIONE"] + $@"/images/stampa.jpg) center left no-repeat; padding:28px;margin-top:0px;margin-bottom:0px; "" ><a style=""cursor:pointer;"" onclick=""javscript:window.print();"">" + ApplicationCommon.CNV("StampaEffettiva") + $@"</a></li> 
+				    </ul>
+			    </div>
+
+			    <div class=""comandi_interni"" >
+				    <ul>
+
+	    ");
+        //'-- il comando di partecipa lato interno parte privata si attiva solo se la scadenza non è stata raggiunta ed il tipodocumento ( tipoBando ) non è un avviso
+        //'-- Per gli avvisi non è privista risposta
+        //'-- il bottene viene attivato se sono stato invitato
+        //'-- il bottone � presente se la Modalita di Partecipazione=telematica (16308)							
+        if (DOC_FieldTecnical("TESTATA", "ModalitadiPartecipazione") == "16308" && DOC_Field("DOCUMENT", "StatoFunzionale").Trim() != "Revocato" && DOC_Field("DOCUMENT", "StatoFunzionale").Trim() != "Bando In Rettifica") {
+            if (DateAndTime.Now.Ticks < CDate(DOC_FieldTecnical("TESTATA", "DataScadenzaOfferta")).Ticks && DateAndTime.Now.Ticks >= CDate(DOC_FieldTecnical("TESTATA", "DataRiferimentoInizio")).Ticks && (TipoBandoGara == "2" || TipoBandoGara == "4" || bPartecipante == 1)) {
+                if (ProceduraGara == "15477") { //'--ristretta - deve creare la domanda e non l'offerta
+                    htmlToReturn.Write($@"    
+
+					    <li><input id=""Iscriviti"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Partecipa") + $@""" onclick=""Javascript:CREATE_ANSWER_NEW('../Ctl_Library/Document/Partecipa.asp?TIPODOC=DOMANDA_PARTECIPAZIONE&IdMsgPar=" + idDoc + $@"');"" ></li>
+				    ");
+                } else {
+
+                    htmlToReturn.Write($@"     
+
+					    <li><input id=""Iscriviti"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Partecipa") + $@""" onclick=""Javascript:CREATE_ANSWER_NEW('../Ctl_Library/Document/Partecipa.asp?TIPODOC=OFFERTA_ASTA&IdMsgPar=" + idDoc + $@"');"" ></li>
+				    ");
+                }
+
+            }
+
+        }
+
+        //'--se sono l'invitato apro i collegati altrimenti i collegati indiretti
+        if (bPartecipante == 1 ){
+            htmlToReturn.Write($@"
+		        <li><input id=""DocCollegati"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Documenti Collegati") + $@""" onclick=""Javascript:OpenCollegati('" + DOC_FieldTecnical("DOCUMENT","Fascicolo").Trim() + $@"');"" ></li>
+	        ");
+        }
+
+        if (bIndiretto == 1 && bPartecipante == 0 ){
+            htmlToReturn.Write($@"
+                <li><input id=""DocCollegati"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Documenti Collegati") + $@""" onclick=""Javascript:OpenCollegatiIndiretti('" + DOC_FieldTecnical("DOCUMENT","Fascicolo").Trim() + $@"');"" ></li>            
+	        ");
+        }
+
+        //'--scarica allegati stessa condizione degli atti di gara
+        if (TipoBandoGara != "3" || bPartecipante == 1 ){
+            htmlToReturn.Write($@"
+		        <li><input id=""ScaricaAllegati"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Scarica Allegati") + $@""" onclick=""Javascript:ScaricaAllegati('TMP_DIFF=" + DateAndTime.Now.Ticks + $@"&OPERATION=DOWNLOAD&DOCUMENT=BANDO_GARA&IDDOC=" + idDoc + $@"&MODEL=MODELLI_LOTTI_" + DOC_FieldTecnical( "TESTATA" , "TipoBando" ) + NomeModello + $@"&HIDECOL=ValoreImportoLotto&URL_EXTRA_ATTACH=../../Report/CSV_Lotti.asp,../../Report/avvisi_di_revoca.asp,../../Report/avvisi_di_proroga.asp,../../Report/avvisi_di_rettifica.asp&SOURCE=DOCUMENTAZIONE');""></li>
+	        ");
+        }
+
+        if (("," + ApplicationCommon.Application["MODULI_GRUPPI"] + ",").Contains("GROUP_Richieste_Accesso_Atti", StringComparison.Ordinal ) ){
+            htmlToReturn.Write($@"
+		        <!--- comando per attivare il bottone di Richiesta Atti -->
+		        <li><input id=""Atti"" type=button  class=""btn"" value=""Richiesta Accesso Atti"" onclick=""Javascript:CREATE_ANSWER_NEW('../ctl_library/document/document.asp?JScript=RICHIESTA_ATTI_GARA&lo=base&DOCUMENT=RICHIESTA_ATTI_GARA&MODE=CREATEFROM&PARAM=BANDO," + idDoc + $@"');"" ></li>
+	        ");
+        }
+        htmlToReturn.Write($@"
+				    </ul>
+			    </div>
+
+		    </div>
+
+        ");
+
+        //'--------------------------
+        //'-- Toolbar lato applicazione BANDI PRIVATI a cui stai partecipandi
+        //'--------------------------
+
+        htmlToReturn.Write($@"
+		    <div id=toolbarpublic class=""paging comandi"" style=""display:none;"">
+			    <div class=""icons1"">
+				    <ul>
+					    <li style=""background:url(" + ApplicationCommon.Application["WEBSERVERPORTALE"] + "/" + ApplicationCommon.Application["NOMEAPPPORTALE"] + $@"/images/stampa.jpg) center left no-repeat; padding:28px;margin-top:0px;margin-bottom:0px; "" ><a style=""cursor:pointer;"" onclick=""javscript:window.print();"">" + ApplicationCommon.CNV("StampaEffettiva") + $@"</a></li> 
+
+				    </ul>
+			    </div>
+
+			    <div class=""comandi_interni"" >
+				    <ul>
+	    ");
+        //'-- il comando di partecipa sul portale si attiva solo se la scadenza non è stata raggiunta ed il tipodocumento ( tipoBando ) è un Bando
+        //'-- avvisi ed inviti non hanno modo di partecipare lato pubblico
+        //'-- oppure sono stato invitato
+        //'-- il bottone � presente se la Modalita di Partecipazione=telematica (16308)	
+
+        if (DOC_FieldTecnical("TESTATA","ModalitadiPartecipazione") == "16308" && DateAndTime.Now.Ticks < CDate( DOC_FieldTecnical("TESTATA","DataScadenzaOfferta") ).Ticks && DateAndTime.Now.Ticks >= CDate( DOC_FieldTecnical("TESTATA","DataRiferimentoInizio") ).Ticks  && ( TipoBandoGara == "2" || TipoBandoGara == "4" || bPartecipante == 1 )) {
+            if (ProceduraGara == "15477" ){ //'--ristretta - deve creare la domanda e non l'offerta
+                htmlToReturn.Write($@"  
+			        <li><input id=""Iscriviti"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Partecipa") + $@""" onclick=""Javascript:CREATE_ANSWER_NEW('../Ctl_Library/Document/Partecipa.asp?TIPODOC=DOMANDA_PARTECIPAZIONE&IdMsgPar=" + idDoc + $@"');"" ></li>
+		        ");
+            }else{
+                htmlToReturn.Write($@"  
+			        <li><input id=""Iscriviti"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Partecipa") + $@""" onclick=""Javascript:CREATE_ANSWER_NEW('../Ctl_Library/Document/Partecipa.asp?TIPODOC=OFFERTA_ASTA&IdMsgPar=" + idDoc + $@"');"" ></li>
+		        ");
+            }
+
+        }
+
+        //'--scarica allegati stessa condizione degli atti di gara
+        if  (TipoBandoGara != "3"  || bPartecipante == 1 ){
+            htmlToReturn.Write($@" 
+	            <li><input id=""ScaricaAllegati"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Scarica Allegati") + $@""" onclick=""Javascript:ScaricaAllegati('TMP_DIFF=" + DateAndTime.Now.Ticks + $@"&OPERATION=DOWNLOAD&DOCUMENT=BANDO_GARA&IDDOC=" + idDoc + $@"&MODEL=MODELLI_LOTTI_" + DOC_FieldTecnical("TESTATA", "TipoBando") + NomeModello + $@"&HIDECOL=ValoreImportoLotto&URL_EXTRA_ATTACH=../../Report/CSV_Lotti.asp&SOURCE=DOCUMENTAZIONE');""></li>
+	        ");
+        }
+
+        htmlToReturn.Write($@"		
+
+
+					    </ul>
+				    </div>
+
+			    </div>
+
+
+
+
+
+		    <table id=""template_doc"" >
+
+
+		    <thead>
+			    <tr>
+				    <th colspan=""4"" align=left nowrap>
+	    ");
+
+        if (DOC_FieldTecnical("TESTATA","TipoSceltaContraente") != "ACCORDOQUADRO" ){
+            htmlToReturn.Write(DOC_Field("TESTATA", "TipoBandoGara"));
+        }else{
+            htmlToReturn.Write( DOC_Field("TESTATA","TipoSceltaContraente"));
+        }
+
+        //'response.Write DOC_Field("TESTATA","TipoBandoGara") '& " - " & DOC_Field("TESTATA","ProtocolloBando")
+
+
+        htmlToReturn.Write($@"
+				    </th>
+			    </tr>
+		    </thead>
+
+		    <tbody>	
+
+
+
+		    <!-- INIZIO DAti di dettaglio del bando -->
+            <tr>
+                <th>
+                   " + ApplicationCommon.CNV("Descrizione breve") + $@"</th>
+                <td>
+        ");
+        if (DOC_Field("DOCUMENT","StatoFunzionale").Trim() == "Revocato" ){
+            htmlToReturn.Write($@"
+				    " + ApplicationCommon.CNV("bando revocato") + $@" - "
+            );
+        }
+        if (DOC_Field("DOCUMENT","StatoFunzionale").Trim() != "Revocato" &&  ( PresenzaProroga(idDoc) == "si" || PresenzaRettifica(idDoc) == "si" )){
+            htmlToReturn.Write($@"
+				    " + ApplicationCommon.CNV("bando rettificato") + $@" - "
+            );
+        }
+        if (DOC_Field("DOCUMENT","StatoFunzionale").Trim() == "Bando In Rettifica" ){ 
+            htmlToReturn.Write(
+                "<b>" + ApplicationCommon.CNV("Bando in Rettifica") + " - " + $@"</b>"
+            );
+        }
+
+        htmlToReturn.Write(
+            DOC_Field("TESTATA","Body") + $@"</td>
+            </tr>   
+        ");
+
+        if (!string.IsNullOrEmpty(DOC_Field("TESTATA","CIG").Trim()) ) { 
+            htmlToReturn.Write($@"
+	             <tr>
+		            <th>" + ApplicationCommon.CNV("CIG") + $@":</th> 
+  		            <td >" + DOC_Field("TESTATA","CIG") + $@"</td>
+                </tr>
+            ");
+        }
+        htmlToReturn.Write($@"
+
+
+            <tr>
+                <th>
+                    " + ApplicationCommon.CNV("Incaricato") + $@"</th>
+                <td>
+                    " + DOC_Field("TESTATA", "UserRUP") + $@"</td>
+            </tr>
+            <tr>
+                <th>
+                    " + ApplicationCommon.CNV("Importo appalto") + $@"</th>
+                <td>
+                    " + DOC_Field("TESTATA", "ImportoBaseAsta") + $@" &euro; ( " + DOC_Field("TESTATA", "TipoIVA") + $@" )</td>
+            </tr>
+            <tr>
+                <th>
+                    " + ApplicationCommon.CNV("Criterio aggiudicazione") + $@"</th>
+                <td>
+                    " + DOC_Field("TESTATA", "CriterioAggiudicazioneGara") + $@"</td>
+            </tr>
+            <tr>
+                <th>
+                    " + ApplicationCommon.CNV("Tipo Appalto") + $@"</th>
+                <td>
+                    " + DOC_Field("TESTATA", "TipoAppaltoGara") + $@"</td>
+            </tr>
+
+
+        ");
+        if (!string.IsNullOrEmpty(DOC_Field("TESTATA","ProtocolloRiferimento"))){//} <> "" then
+            htmlToReturn.Write($@"
+                    <tr>
+                        <th>
+                            " + ApplicationCommon.CNV("Bando di riferimento") + $@"</th>
+                        <td>
+                            " + DOC_Field("TESTATA", "ProtocolloRiferimento") + $@"</td>
+                    </tr>
+            ");
+        }
+
+        if (DOC_Field("TESTATA","DataTermineQuesiti")  != "&nbsp;" ){	
+            htmlToReturn.Write($@"
+	                <tr>
+				        <th>" + ApplicationCommon.CNV("Termine richiesta quesiti") + $@":</th> 
+            ");
+            if (PresenzaProroga(idDoc) == "si" || PresenzaRettifica(idDoc) == "si" ){
+                htmlToReturn.Write($@"
+				        <td>");
+                htmlToReturn.Write("<b>Data Originale</b> - " + PrintDataORA(getDataTermineQuesitiOriginale(idDoc)) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]  ");
+                htmlToReturn.Write("<b> Data Prorogata</b> - " + PrintDataORA(DOC_Field("TESTATA","DataTermineQuesiti")) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>");
+            }else{
+                htmlToReturn.Write($@"
+					        <td >" + PrintDataORA(DOC_Field("TESTATA","DataTermineQuesiti")) + $@" [" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>				
+        	    ");
+            }
+            htmlToReturn.Write($@"
+			        </tr>
+                ");
+        }
+
+        if (DOC_Field("TESTATA","DataTermineRispostaQuesiti") != "&nbsp;" ){
+            htmlToReturn.Write($@"
+	            <tr>
+				    <th>" + ApplicationCommon.CNV("Termine risposta quesiti") + $@":</th> 
+            ");
+            if (PresenzaProroga(idDoc) == "si" || PresenzaRettifica(idDoc) == "si" ){
+                if (!string.IsNullOrEmpty(getDataTermineRispostaQuesitiOriginale(idDoc)) && PrintDataORA(getDataTermineRispostaQuesitiOriginale(idDoc)) != "01/01/1900 ore 00:00:00" ){
+                    htmlToReturn.Write($@"
+					    <td>
+                    ");
+                    htmlToReturn.Write($@"<b>Data Originale</b> - " + PrintDataORA(getDataTermineRispostaQuesitiOriginale(idDoc)) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]  ");
+                    htmlToReturn.Write($@"<b> Data Prorogata</b> - " + PrintDataORA(DOC_Field("TESTATA", "DataTermineRispostaQuesiti")) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+				    ");
+                }else{
+                    htmlToReturn.Write($@"
+					    <td>
+                    ");
+                    htmlToReturn.Write($@"<b>Data Originale</b> - NON PRESENTE"  );
+                    htmlToReturn.Write($@"<b> Data Prorogata</b> - " + PrintDataORA(DOC_Field("TESTATA","DataTermineRispostaQuesiti")) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+				    ");
+                }
+
+            }else{
+                htmlToReturn.Write($@"
+					<td >" + PrintDataORA(DOC_Field("TESTATA","DataTermineRispostaQuesiti")) + $@" [" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>			
+                ");
+            }
+            htmlToReturn.Write($@"
+			    </tr>
+            ");
+        }
+
+        if (DOC_Field("TESTATA", "Appalto_Verde") == "si") {
+            htmlToReturn.Write($@"
+
+			    <tr>
+				    <th>
+            ");
+            htmlToReturn.Write(ApplicationCommon.CNV("Motivazione Appalto Verde"));
+
+            htmlToReturn.Write($@":
+				</th> 						
+				<td>
+					" + DOC_Field("TESTATA", "Motivazione_Appalto_Verde") + $@"
+				</td>
+
+			</tr>
+			");
+        }
+
+        if (DOC_Field("TESTATA", "Acquisto_Sociale") == "si") {
+            htmlToReturn.Write($@"
+
+			<tr>
+				<th>");
+            htmlToReturn.Write(ApplicationCommon.CNV("Motivazione Acquisto Sociale"));
+
+            htmlToReturn.Write($@":
+				</th> 						
+				<td>
+					" + DOC_Field("TESTATA", "Motivazione_Acquisto_Sociale") + $@"
+				</td>
+
+			</tr>
+			");
+        }
+
+        if (DOC_Field("TESTATA", "DataRiferimentoInizio") != "&nbsp;") {
+            htmlToReturn.Write($@"
+
+	        <tr>
+		        <th>");
+
+            htmlToReturn.Write(ApplicationCommon.CNV("Rispondere dal"));
+
+            htmlToReturn.Write($@":
+		        </th> 
+
+					<td >" + PrintDataORA(DOC_Field("TESTATA", "DataRiferimentoInizio")) + $@" [" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+
+            </tr>
+        	");
+        }   
+
+        if (DOC_Field("TESTATA","DataScadenzaOfferta") != "&nbsp;" ){
+            htmlToReturn.Write($@"
+	        <tr>
+		        <th>");
+            if (ProceduraGara == "15478" &&  TipoBandoGara == "4" ){//'-- Negoziata - Avviso con risposta
+                htmlToReturn.Write(ApplicationCommon.CNV("Presentare le Manifestazione di Interesse entro il"));
+            }else{ 
+                if (ProceduraGara == "15477" &&  TipoBandoGara == "1" ){//'-- Ristretta - Bando
+                    htmlToReturn.Write(ApplicationCommon.CNV("Termine Presentazione Domanda di Partecipazione"));
+                }else{  
+
+                    htmlToReturn.Write(ApplicationCommon.CNV("Presentare le offerte entro il"));
+
+                }
+            }
+
+            htmlToReturn.Write($@":
+		        </th> ");
+            if (PresenzaProroga(idDoc) == "si" || PresenzaRettifica(idDoc) == "si"){
+                htmlToReturn.Write($@"
+					<td>");
+                htmlToReturn.Write($@"<b>Data Originale</b> - " + PrintDataORA(getDataScadenzaOfferta(idDoc)) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]  ");
+                htmlToReturn.Write($@"<b> Data Prorogata</b> - " + PrintDataORA(DOC_Field("TESTATA","DataScadenzaOfferta")) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+				    ");
+            }else{
+                htmlToReturn.Write($@"
+				<td >" + PrintDataORA( DOC_Field("TESTATA","DataScadenzaOfferta")) + $@" [" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+                ");
+            }
+            htmlToReturn.Write($@"
+                </tr>
+            ");
+
+        }
+
+
+        if (DOC_Field("TESTATA","DataAperturaOfferte") != "&nbsp;" && DOC_Field("TESTATA","TipoProceduraCaratteristica") != "RdO" ){
+            htmlToReturn.Write($@"
+
+	        <tr>
+		        <th>");
+            if (ProceduraGara == "15478" && TipoBandoGara == "1"  ){//'-- Negoziata - Avviso 
+                htmlToReturn.Write(ApplicationCommon.CNV("Data Presunta Pubblicazione Invito"));
+            }else{
+                htmlToReturn.Write(ApplicationCommon.CNV("Data I Seduta"));
+            }
+            htmlToReturn.Write($@":
+		        </th> ");
+            if (PresenzaProroga(idDoc) == "si" || PresenzaRettifica(idDoc) == "si"  ){
+                htmlToReturn.Write($@"
+					<td>"); 
+                htmlToReturn.Write($@"<b>Data Originale</b> - " + PrintDataORA(getDataAperturaOfferte(idDoc)) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]  ");
+                htmlToReturn.Write($@"<b> Data Prorogata</b> - " + PrintDataORA(DOC_Field("TESTATA", "DataAperturaOfferte")) + $@"[" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+				    ");
+            }else{
+                htmlToReturn.Write($@"
+					<td >" + PrintDataORA(DOC_Field("TESTATA", "DataAperturaOfferte")) + $@" [" + ApplicationCommon.CNV("Ora Italiana") + $@"]</td>
+					");
+
+            }   htmlToReturn.Write($@"
+            </tr>");
+
+        }
+
+
+        //'--nel caso di ACCORDO QUADRO visualizzo Termine Accordo Quadro
+        if (DOC_FieldTecnical("TESTATA","TipoSceltaContraente") == "ACCORDOQUADRO" && DOC_Field("TESTATA","DataRiferimentoFine") != "&nbsp;" ){
+            htmlToReturn.Write($@"	
+				<tr>
+					<th>
+						" + DOC_Field_Label("TESTATA", "DataRiferimentoFine") + $@"
+					</th>
+					<td>
+						" + PrintDataORA(DOC_Field("TESTATA", "DataRiferimentoFine")) + $@" [" + ApplicationCommon.CNV("Ora Italiana") + $@"]
+					</td>
+				</tr>		
+			");
+        }
+        htmlToReturn.Write($@"	
+
+
+        <!---se questa griglia BANDO.rettifiche è vuota nasconderla-->
+        <!--tr>
+            <th>
+                #DATADOC id='cnv.Avvisi di Rettifica'/#</th>
+            <td>
+                #DATADOC id='BANDO.rettifiche' /#</td>
+        </tr-->
+        <!-- FINE Dati di dettaglio del bando -->
+
+
+
+
+        <tr>
+  			<th>" + ApplicationCommon.CNV("Documentazione") + $@":</th>   
+   		    <td style=""padding:0px;"">
+
+   		");
+
+
+
+        //'-- la documentazione è visibile solo se si sta partecipando oppure la procedura non prevede destinatari
+        //'--      ristretta - Bando                                              Negoziata - Avviso
+        //'if ( not ( TipoBandoGara = "2" and ProceduraGara = "15477"  ) and not (TipoBandoGara = "1" and ProceduraGara = "15478" ) ) or bPartecipante = 1 then
+        //'if ( ProceduraGara = "15476"  ) or ( TipoBandoGara = "2" and ProceduraGara = "15477" )  or ( TipoBandoGara = "1" and ProceduraGara = "15478" )  or bPartecipante = 1 then
+
+        //'-- gli atti di gara si vedono se il documento non è un invito oppure sono stato invitato
+        if  (TipoBandoGara != "3" || bPartecipante == 1 ){
+            htmlToReturn.Write($@"	
+
+          		    <table class=""GridPrintProducts""><tr class="""">
+
+          		    <td class=""CellIntestGrid"" width=""50%""><font class=""PrintCols"">" + ApplicationCommon.CNV("Descrizione") + $@"</font></td>
+          		    <td class=""CellIntestGrid"" width=""50%""><font class=""PrintCols"">" + ApplicationCommon.CNV("Allegato") + $@"</font></td></tr>
+
+
+   		    ");
+            objattach = new Fld_Attach();//CreateObject("ctlhtml.fld_attach")
+            if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+                objattach.Path = "/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + "/";
+            }else{
+                objattach.Path = "/application/";
+            }
+            //'-- disegnare la griglia della documentazione
+            int i;
+            //stop
+            int nr;
+            nr = DOC_NumRow( "DOCUMENTAZIONE", "" );
+            for (i = 0; i<= nr - 1; i++){ //to nr-1
+
+                objattach.Init(18, "Allegato", DOC_FieldRowTecnical("DOCUMENTAZIONE", "Allegato", i), null, null, "IN", true);
+
+                htmlToReturn.Write($@"<tr class=""""><td valign="""" class=""CellGridPrintProducts""><font class=""PrintValues"">" + DOC_FieldRow("DOCUMENTAZIONE", "Descrizione", i) + $@"</font></td><td class=""linkAttachment""><font class=""PrintValues"">");
+                objattach.Html(htmlToReturn, false);
+                htmlToReturn.Write("</font></td></tr>");
+
+            }
+            objattach.Init(18, "Allegato", DOC_FieldTecnical("TESTATA_PRODOTTI", "Allegato"), null, null, "IN", true);
+            //'IF DOC_FieldTecnical( "TESTATA_PRODOTTI", "Allegato") <> "" then
+            //'--cambiato controllo (se ci sono righe di prodotto visualizzo fligo csv)
+            int nNumRowProdotti = DOC_NumRow( "PRODOTTI", "" );
+            if (nNumRowProdotti != -1 ){
+                //'response.Write "<tr class=""""><td valign=""middle"" class=""CellGridPrintProducts""><font class=""PrintValues"">" & CNV("Foglio prodotti selezionato") & "</font></td><td class=""linkAttachment""><font class=""PrintValues"">" 
+                //'response.Write "<div id=""DIV_AllegatoCSV""><table class=""Attach_Tab"" ><tr><td noWrap=""nowrap"">"
+                //'response.Write "<label  class=""Attach_label"" id=""Allegato_CSV_V_N"" onclick=""javascript:ExecFunction( '/" & application("NOMEAPPLICAZIONE") & "/Report/CSV_LOTTI.asp?IDDOC=" & IDDOC & "&TIPODOC=BANDO_GARA&MODEL=MODELLI_LOTTI_" & DOC_FieldTecnical( "TESTATA" , "TipoBando" ) & NomeModello & "');"" >" & CNV("File da compilare") & "</label>"
+                //'Response.Write "</td></tr></table></div>"
+                //'response.Write  "</font></td></tr>"
+            }
+            htmlToReturn.Write($@"	
+
+
+
+                    </table>
+   		        <i>");
+        }else{
+            htmlToReturn.Write(HtmlEncode( ApplicationCommon.CNV("La presente procedura e' riservata ai soli operatori invitati" )) );
+        }
+
+        htmlToReturn.Write($@"	</i>
+
+
+            </td>
+  	    </tr>
+
+				    "); 
+        //'-- gli allegati di Revoca si vedono se il documento non è un invito oppure sono stato invitato
+        if (TipoBandoGara != "3" || (bPartecipante == 1)) {// then
+         //'--Stampa Allegati Revoca se presente
+            if (PresenzaRevoca(idDoc) == "si"  ){
+                htmlToReturn.Write($@"
+
+						<tr>
+							<th>" + ApplicationCommon.CNV("Avvisi di Revoca") + $@":</th>   
+						<td style=""padding:0px;"">
+
+								<table class=""GridPrintProducts""><tr class="""">
+
+								<td class=""CellIntestGrid"" width=""50%""><font class=""PrintCols"">" + ApplicationCommon.CNV("Descrizione") + $@"</font></td>
+								<td class=""CellIntestGrid"" width=""50%""><font class=""PrintCols"">" + ApplicationCommon.CNV("Allegato") + $@"</font></td></tr>
+
+
+							");
+                sqlParams.Clear();
+                sqlParams.Add("@id",idDoc);
+                sqlParams.Add("@statoFunzionale", "Revocato");
+                TSRecordSet rsrevoca = GetRS("Select Descrizione,Allegato from ctl_doc c " +
+                                                "inner join ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc='PDA_COMUNICAZIONE_GENERICA' " +
+                                                "and c2.StatoFunzionale='Inviato' and c2.jumpcheck='0-REVOCA_BANDO' " +
+                                                "inner join ctl_doc_allegati on  idheader=c2.id " +
+                                                "where c.id=@id and c.StatoFunzionale=@statoFunzionale",sqlParams);
+
+
+                if (rsrevoca.RecordCount > 0){
+                    objattach = new Fld_Attach();//CreateObject("ctlhtml.fld_attach")
+                    if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+                        objattach.Path = "/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + "/";
+                    }else{
+                        objattach.Path = "/application/";
+                    }
+
+                    for (int i = 1; i<= rsrevoca.RecordCount; i++){//to rsrevoca.recordcount
+                        objattach.Init(18, "Allegato", rsrevoca.Fields["Allegato"], null, null, "IN", true);
+
+                        htmlToReturn.Write($@"<tr class=""""><td valign="""" class=""CellGridPrintProducts""><font class=""PrintValues"">" + Myhtmlencode(CStr(rsrevoca.Fields["Descrizione"])) + $@"</font></td><td class=""linkAttachment""><font class=""PrintValues"">");
+                        objattach.Html(htmlToReturn, false);
+                        htmlToReturn.Write($@"</font></td></tr>");
+
+                        rsrevoca.MoveNext();
+                    }
+                }
+
+                htmlToReturn.Write($@"
+
+							    </table>	 
+
+						</td>
+					</tr>
+
+	            ");
+            }
+        }
+
+        //'-- gli allegati di Revoca si vedono se il documento non è un invito oppure sono stato invitato
+        if (TipoBandoGara != "3" || bPartecipante == 1 ){
+            //'--Stampa Allegati Proroga o rettifica se presente
+            if (PresenzaProroga(idDoc) == "si" || PresenzaRettifica(idDoc) == "si"){// then %>
+                htmlToReturn.Write($@"
+
+						<tr>
+							<th>" + ApplicationCommon.CNV("Avvisi di Rettifica") + $@":</th>   
+						<td style=""padding:0px;"">
+
+								<table class=""GridPrintProducts""><tr class="""">
+
+								<td class=""CellIntestGrid"" width=""50%""><font class=""PrintCols"">" + ApplicationCommon.CNV("Descrizione") + $@"</font></td>
+								<td class=""CellIntestGrid"" width=""50%""><font class=""PrintCols"">" + ApplicationCommon.CNV("Allegato") + $@"</font></td></tr>
+
+
+				");
+
+                //dim rsproroga
+                sqlParams.Clear();
+                sqlParams.Add("@id",idDoc);
+                TSRecordSet rsproroga = GetRS("Select Descrizione,Allegato from ctl_doc c " +
+                                        "inner join ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc='PROROGA_GARA' " +
+                                        "and c2.StatoFunzionale='Inviato' and c2.jumpcheck='BANDO_GARA' " +
+                                        "inner join ctl_doc_allegati on  idheader=c2.id where c.id=@id",sqlParams);
+
+                if (rsproroga.RecordCount > 0){// then
+                    objattach = new Fld_Attach();//CreateObject("ctlhtml.fld_attach")
+                    if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+                        objattach.Path = "/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + "/";
+                    }else{
+                        objattach.Path = "/application/";
+                    }
+
+                    for (int i = 1; i <= rsproroga.RecordCount; i++){// to rsproroga.recordcount
+                        objattach.Init(18, "Allegato", rsproroga.Fields["Allegato"], null, null, "IN", true);
+
+                        htmlToReturn.Write($@"<tr class=""""><td valign="""" class=""CellGridPrintProducts""><font class=""PrintValues"">" + Myhtmlencode(CStr(rsproroga.Fields["Descrizione"])) + $@"</font></td><td class=""linkAttachment""><font class=""PrintValues"">" );
+                        objattach.Html(htmlToReturn, false);
+                        htmlToReturn.Write ($@"</font></td></tr>");
+
+                        rsproroga.MoveNext();
+                    }
+                }
+
+
+
+                //dim rsrettifica
+                sqlParams.Clear();
+                sqlParams.Add("@id",idDoc);
+                TSRecordSet rsrettifica = GetRS("Select Descrizione,Allegato from ctl_doc c "+ 
+                                        "inner join ctl_doc c2 on c2.linkedDoc=c.id and c2.tipodoc='RETTIFICA_GARA' "+ 
+                                        "and c2.StatoFunzionale='Inviato' and c2.jumpcheck='BANDO_GARA' "+ 
+                                        "inner join ctl_doc_allegati on  idheader=c2.id where c.id=@id",sqlParams);	
+
+                if (rsrettifica.RecordCount > 0 ){
+                    objattach = new Fld_Attach();//CreateObject("ctlhtml.fld_attach")
+                    if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+                        objattach.Path = "/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + "/";
+                    }else{
+                        objattach.Path = "/application/";
+                    }
+
+                    for (int i = 1; i <= rsrettifica.RecordCount; i++){// to rsrettifica.recordcount
+                        objattach.Init(18, "Allegato", rsrettifica.Fields["Allegato"], null, null, "IN", true);
+
+                        htmlToReturn.Write($@"<tr class=""""><td valign="""" class=""CellGridPrintProducts""><font class=""PrintValues"">" + Myhtmlencode(CStr(rsrettifica.Fields["Descrizione"])) + $@"</font></td><td class=""linkAttachment""><font class=""PrintValues"">" );
+                        objattach.Html(htmlToReturn, false);
+                        htmlToReturn.Write($@"</font></td></tr>");
+
+                        rsrettifica.MoveNext();
+                    }
+                }
+
+                htmlToReturn.Write($@"
+
+							    </table>	 
+
+						</td>
+					</tr>
+
+			");
+            }
+        }
+        htmlToReturn.Write($@"
+
+
+			    <tr>
+				    <th>" + ApplicationCommon.CNV("Note") + $@":</th> 
+				    <td >" + DOC_Field("NOTE", "Note") + $@" </td>
+			    </tr>
+		    </tbody>
+	    </table>
+
+
+	    <br>
+	    <br>
+
+	    ");
+        //'--------------------------
+        //'-- Toolbar LATO PORTALE 
+        //'--------------------------
+        htmlToReturn.Write($@"
+
+
+	        <div id=""toolbarportale"">
+		"); 
+        //'-- il comando di partecipa sul portale si attiva solo se la scadenza non è stata raggiunta ed il tipodocumento ( tipoBando ) è un Bando
+        //'-- avvisi ed inviti non hanno modo di partecipare lato pubblico
+        if (DateAndTime.Now.Ticks < CDate( DOC_FieldTecnical("TESTATA","DataScadenzaOfferta")).Ticks && DateAndTime.Now.Ticks >= CDate( DOC_FieldTecnical("TESTATA","DataRiferimentoInizio") ).Ticks && TipoBandoGara == "2"  ){
+            htmlToReturn.Write($@"   
+			    <input id=""Iscriviti"" type=button  class=""btn"" value=""" + ApplicationCommon.CNV("Partecipa") + $@" onclick=""javascript:Partecipa('modalepartecipa');"" >
+
+		    ");
+        }
+        htmlToReturn.Write($@" 
+
+	    </div>
+ 	    <br>	 
+
+	    <!--CHIARIMENTI-->  
+	    <div id=CHIARIMENTI>
+
+	    </div>
+
+	    ");
+        //'--recupero la forma tecnica della data di scadenza
+        string strdate;
+        strdate="";
+        if (!string.IsNullOrEmpty(DOC_FieldTecnical("TESTATA","DataTermineQuesiti"))) {
+
+            //dim objdate
+            Fld_Date objdate = new Fld_Date();//createobject("Ctlhtml.Fld_date")
+            objdate.Init(6,"",DOC_FieldTecnical("TESTATA","DataTermineQuesiti"));
+            //'strdate=objdate.DateToStr(trim(DOC_Field("TESTATA","DataScadenza") ))
+            strdate = objdate.SQLValue();
+            strdate = strdate.Replace("'","");
+            strdate = strdate.Replace(" ","T");
+
+            //'strdate = "2014-11-01T10:59:00"
+            //'response.write "DATA - [" & strdate & "] -  [" & trim(DOC_FieldTecnical("TESTATA","RichiestaQuesito") ) & "]"
+
+        }
+        htmlToReturn.Write($@" 
+
+	        <!--CAMPI TECNICI DI LAVORO-->
+
+	        <input type=""hidden"" id=""EXPIRYDATE"" name=""EXPIRYDATE"" value=""" + strdate + $@"""/>
+
+	        <input type=""hidden"" id=""DOCUMENT"" name=""DOCUMENT"" value=""BANDO_ASTA""/>
+	        <input type=""hidden"" id=""IDDOC_GUID"" name=""IDDOC_GUID"" value=""" + idDoc + $@"""/>
+	        <input type=""hidden"" id=""IDDOC"" name=""IDDOC"" value=""" + idDoc + $@""">
+	        <input type=""hidden"" id=""FASCICOLO"" name=""FASCICOLO"" value=""" + DOC_FieldTecnical("DOCUMENT", "Fascicolo").Trim() + $@"""/>
+	        <input type=""hidden"" id=""PARAM_QUESITINEW"" value=""" + idDoc + $@"@""/>
+	        <input type=""hidden"" id=""TIPODOC"" value=""BANDO_GARA""/>
+	        <input type=""hidden"" id=""TYPEDOC"" value=""BANDO_GARA""/>
+
+        ");
+
+	    if (DOC_Field("DOCUMENT","StatoFunzionale").Trim() == "Revocato" || CBool(bIndiretto) ){
+            htmlToReturn.Write($@"
+		    <input type=""hidden"" id=""SYS_INSERISCIQUESITIDALPORTALE"" value=""NO""/>
+            ");
+        }else{
+            htmlToReturn.Write($@"
+		    <input type=""hidden"" id=""RichiestaQuesito"" value=""" + DOC_FieldTecnical("TESTATA","RichiestaQuesito").Trim() + $@"""/>
+            ");
+	    }
+	    try{
+            FreeMemDocument(session);
+        }catch{}
+	    
+    }
+
+    drawContent();
+    ViewData["mp_jsOnload"] = "apriDettaglioStampa();";
+    ViewData["Title"] = DOC_Field("TESTATA","TipoBandoGara");//Passare titolo della pagina al Layout (_masterPage.cshtml)
+    ViewData["pathRoot"] = "../";//Passare la pathRoot al Layout (_masterPage.cshtml)
+
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,218 @@
+
+table {
+    background-color: white;
+}
+
+.Caption td  {
+    font-size: 20px!important;
+    color: var(--modal-title)!important;
+    letter-spacing: 0;
+    font-family: Cairo;
+    font-weight: 600;
+    line-height: 2;
+    text-transform: uppercase;
+    text-align: center!important;
+    padding:10px 20px 0;
+}
+
+.SinteticHelp_Tab td.SinteticHelp_label{
+    padding-left: 15px!important;
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel {
+    width: 100%;
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel table {
+    background-color: #ffffff !important;
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel tr {
+    margin: 0px 0px;
+    display: grid;
+    justify-items: stretch;
+    
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel tbody {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+
+/*Domini estesi*/
+.VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value .FldHier_edit_new {
+    background-color: var(--iconMenuSx-color) !important;
+    height: 40px;
+    padding: 12px 16px;
+    border: 1px solid #C9D9E8;
+    width: var(--widthFieldDesk);
+    margin-bottom: 8px;
+    outline: none;
+}
+
+@media only screen and (max-width: 1200px) {
+    .VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value .FldHier_edit_new {
+        width: var(--widthFieldMobile);
+    }
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value .FldExtDom_button {
+    position: absolute;
+    transform: translate(252px, -48px);
+    background-color: #e0eaf3 !important;
+}
+
+@media only screen and (max-width: 1200px) {
+    .VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value .FldExtDom_button {
+        transform: translate(252px, -48px);
+    }
+}
+
+/*select*/
+.VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value select {
+    background-color: var(--iconMenuSx-color);
+    height: 40px;
+    padding: 12px 16px !important;
+    border: 1px solid #C9D9E8;
+    width: var(--widthFieldDesk);
+    margin-bottom: 8px !important;
+    /*custom arrow for padding*/
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAUCAMAAACtdX32AAAAdVBMVEUAAAD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhMdQaAAAAJ3RSTlMAAAECAwQGBwsOFBwkJTg5RUZ4eYCHkJefpaytrsXGy8zW3+Do8vNn0bsyAAAAYElEQVR42tXROwJDQAAA0Ymw1p9kiT+L5P5HVEi3qJn2lcPjtIuzUIJ/rhIGy762N3XaThqMN1ZPALsZPEzG1x8LrFL77DHBnEMxBewz0fJ6LyFHTPL7xhwzWYrJ9z22AqmQBV757MHfAAAAAElFTkSuQmCC);
+    background-position: 100%;
+    background-repeat: no-repeat;
+    border-radius: 0;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+}
+
+@media only screen and (max-width: 1200px) {
+    .VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value select {
+        width: var(--widthFieldMobile);
+    }
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value select:hover {
+    border: 1px solid var(--main-color);
+    /*cursor: pointer;*/
+}
+
+.VerticalModel_Tab.FaseIIVerticalModel .VerticalModel_Value select:focus-visible {
+    outline: 1px solid var(--main-color);
+}
+#Div_CubeFilter form{
+    margin: 30px 50px;
+}
+
+#Grid_Content {
+    position: unset !important;
+}
+
+#Grid_LockedCorner {
+    display: none !important;
+}
+
+#Grid_LockedCol {
+    display: none !important;
+}
+
+#Grid_LockedRow {
+    display: none !important;
+}
+
+#Grid_Showed tbody {
+    display: none;
+}
+
+#Grid_Content{
+    width:unset!important;
+}
+
+.GrigliaCubeFaseII .Grid {
+    margin: 0;
+}
+
+
+/*custom bar overflow*/
+.GrigliaCubeFaseII tbody::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #cacaca;
+}
+
+.GrigliaCubeFaseII tbody::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+    background-color: #cacaca;
+    cursor: pointer;
+}
+
+.GrigliaCubeFaseII tbody::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background: var(--color-scrollbar);
+    background: var(--color-scrollbar-gradient);
+}
+
+.GrigliaCubeFaseII tbody{
+    max-height: 100%;
+}
+
+.Grid.GrigliaCubeFaseII tbody tr:nth-child(1) {
+    position:sticky;
+    top:0px;
+    height:30px;
+    z-index:2;
+}
+.Grid.GrigliaCubeFaseII tbody tr:nth-child(2) {
+    position:sticky;
+    top:30px;
+    height:40px;
+    z-index:2;
+}
+.Grid.GrigliaCubeFaseII tbody tr:nth-child(3) {
+    position:sticky;
+    top:70px;
+    height:30px;
+    z-index:2;
+}
+.Grid.GrigliaCubeFaseII tbody tr td:first-child {
+    position:sticky;
+    left:-1px;
+    z-index:1;
+    height:30px;
+}
+
+.Grid.GrigliaCubeFaseII tbody tr:nth-child(2n+1) {
+    background-color: var(--iconMenuSx-color);
+}
+
+TD.Grid_RowCaption_DimRowValue_1,
+TD.Grid_RowCaption_DimColValue_2,
+TD.Grid_RowCaption_DimRowValue_2,
+TD.Grid_RowCaption_DimRowValue_3,
+TD.Grid_RowCaption_DimColDesc,
+TD.Grid_RowCaption_DimRowDesc,
+TD.Grid_RowCaption_DimColValue_1,
+TD.Grid_CaptionData,
+TD.Grid_RowCaption_DimColValue_3 {
+    background: var(--cube-head-table);
+    /*color:var(--modal-text);*/
+    color: white;
+}
+
+
+
+table.Grid.GrigliaCubeFaseII {
+    table-layout: fixed;
+    width: 97%;
+    margin: 0 auto;
+}
+
+.Grid_TotalCaption,
+.Grid_TotalValue{
+    background-color: white!important;
+}

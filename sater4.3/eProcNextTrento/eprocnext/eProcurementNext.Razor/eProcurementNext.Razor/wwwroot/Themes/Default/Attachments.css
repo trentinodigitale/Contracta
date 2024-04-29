@@ -1,0 +1,126 @@
+BODY.BodyAttachments
+{
+    BACKGROUND-COLOR: white
+}
+TABLE.GridAttachments
+{
+    WIDTH: 100%
+}
+TABLE.GridListAttachments
+{
+    BORDER-RIGHT: medium none;
+    BORDER-TOP: medium none;
+    BORDER-LEFT: medium none;
+    WIDTH: 100%;
+    BORDER-BOTTOM: medium none;
+    BACKGROUND-COLOR: white
+}
+TD.CellHeaderGridListAttachments
+{
+    BORDER-RIGHT: white 1px solid;
+    PADDING-RIGHT: 1px;
+    BORDER-TOP: white 1px solid;
+    PADDING-LEFT: 1px;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 1px;
+    MARGIN: 1px;
+    BORDER-LEFT: white 1px solid;
+    COLOR: #ececec;
+    PADDING-TOP: 1px;
+    BORDER-BOTTOM: white 1px solid;
+    FONT-FAMILY: verdana;
+    BACKGROUND-COLOR:#515151;
+    TEXT-ALIGN: center
+}
+TD.Cell1GridListAttachments
+{
+    BORDER-RIGHT: 1pt solid;
+    PADDING-RIGHT: 1px;
+    BORDER-TOP: 1pt solid;
+    PADDING-LEFT: 1px;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 1px;
+    MARGIN: 1px;
+    BORDER-LEFT: 1pt solid;
+    COLOR: black;
+    PADDING-TOP: 1px;
+    BORDER-BOTTOM: 1pt solid;
+    FONT-FAMILY: verdana;
+    BACKGROUND-COLOR: white;
+    TEXT-ALIGN: left
+}
+TD.Cell2GridListAttachments
+{
+    BORDER-RIGHT: 1pt solid;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: 1pt solid;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: 1pt solid;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: 1pt solid
+}
+BUTTON.ButtonActionAttachments
+{
+}
+TD.CellGridAttachments
+{
+    WIDTH: 100%
+}
+INPUT.TextFieldAttachments
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+.topic
+{
+    FONT-SIZE: 8pt;
+    CURSOR: pointer;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: verdana;
+    TEXT-DECORATION: none
+}
+INPUT.disabledcheck
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+INPUT.TextFieldsAttachmentsNotEditable
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+TABLE.GridDescAttachment
+{
+}
+TD.CellGridDescAttachment
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: verdana
+}
+.linkAttachment
+{
+    FONT-SIZE: 8pt;
+    CURSOR: pointer;
+    COLOR: #161a74;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: verdana;
+    TEXT-DECORATION: underline
+}
+TABLE.GridButtonAttachment
+{
+    WIDTH: 100%
+}
+TD.Cell1GridButtonAttachment
+{
+    TEXT-ALIGN: left
+}
+TD.Cell2GridButtonAttachment
+{
+    TEXT-ALIGN: right
+}
+A:link
+{
+    COLOR: #161a74
+}

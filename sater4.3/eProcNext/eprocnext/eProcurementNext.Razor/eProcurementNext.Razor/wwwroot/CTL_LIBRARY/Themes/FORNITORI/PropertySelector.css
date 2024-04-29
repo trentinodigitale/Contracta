@@ -1,0 +1,33 @@
+TABLE.PropertySelector_Table
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    BORDER-LEFT: 1px solid;
+    BORDER-BOTTOM: 1px solid
+}
+TR.PropertySelector_Caption
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px solid;
+    COLOR: #161a74;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: #e9edf3
+}
+TR.PropertySelector_Row
+{
+    BORDER-RIGHT: blue 1px solid;
+    BORDER-TOP: blue 1px solid;
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: blue 1px solid;
+    BORDER-BOTTOM: blue 1px solid;
+    FONT-FAMILY: Arial
+}
+TD.PropertySelector_td
+{
+    BORDER-BOTTOM: blue 1px solid
+}

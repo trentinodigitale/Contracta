@@ -1,0 +1,102 @@
+﻿@page "/OTP_PhoneChange.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule
+@using static eProcurementNext.CommonModule.Basic;
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using eProcurementNext.Razor;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.OTP_PhoneChangeModel
+@{
+    Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+    CommonDbFunctions cdf = new();
+}
+@{
+    var sqlParams = new Dictionary<string, object?>();
+    //--Al richiamo della pagina stessa dopo il submit del btn invio ottengo avvalorato il campo del form
+    string OtpCode = string.Empty;
+    string Server_Id = string.Empty;
+
+    string REQUEST_METHOD = UCase(Request.HttpContext.GetServerVariable("REQUEST_METHOD"));
+
+    if (REQUEST_METHOD == "POST")
+    {
+        OtpCode = CStr(GetValueFromForm(Request, "otp").Trim());
+        Server_Id = CStr(GetValueFromForm(Request, "Server_Id").Trim());
+    }
+
+    // Recupero dalla sessione l'idPfu
+    int idPfu = CInt(session["idpfu"]);
+
+    //--Recupero dalla sessione session("OTP_TelTrusted"), se diverso da vuoto allora procedo, altrimenti blocco
+    bool CanAccess_TelTrusted = CBool(session["CanAccess_TelTrusted"]);
+
+    //--Se il parametro è diverso da 0 allora blocco
+    if (!CanAccess_TelTrusted)
+    {
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "Tentato accesso fraudolento alla pagina.");
+    }
+
+    void drawContent()
+    {
+        TSRecordSet? rs;
+        string strSql = string.Empty;
+
+        string accessGuid = insertAccessBarrier(session, HttpContext);
+
+        if (!string.IsNullOrEmpty(CStr(GetValueFromForm(Request, "numTel").Trim())))
+        {
+            //	Recupera il numero di telefono dal form
+            string numeroTelefono = CStr(GetValueFromForm(Request, "numTel").Trim());
+
+            //--Aggiorno il numero di telefono nella tabella ProfiliUtente
+            sqlParams.Add("@pfuCell", numeroTelefono);
+            sqlParams.Add("@idPfu", idPfu);
+            strSql = " UPDATE ProfiliUtente SET pfuCell = @pfuCell where idpfu = @idPfu";
+            rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+            htmlToReturn.Write($@"
+            		<div class=""otp-container"">
+            			<div>
+            				<h2 class='has_text_centered'>Numero di telefono registrato con successo</h2>
+            				<form name=""form"" type=""submit"" action=""./otp.asp?lo=lista_attivita&accesso=multi"" method=""post"" id=""login"" autocomplete=""off"" onsubmit=""disabilitaBottone()"">
+            					<button id=""login_button"" class=""has_text_centered otp-button"">Ok</button>
+            				</form>
+            			</div>
+            		</div>
+            ");
+            htmlToReturn.Write(@"<script language=""javascript"">");
+            htmlToReturn.Write(@"        function disabilitaBottone(){document.getElementById(""login_button"").disabled = true}");
+            htmlToReturn.Write(@"</script>");
+        }
+
+        else
+        {
+            //	'--Recupero l'helper per la pagina
+            htmlToReturn.Write(ApplicationCommon.CNV("HELP_MESSAGE_OTP_CHANGE_CELL"));
+            htmlToReturn.Write($@"
+            		<div class=""otp-container"">
+            			<div>
+            				<h2 class='has_text_centered'>Inserisci il numero di telefono</h2>
+            				<form name=""form"" type=""submit"" action=""./OTP_PhoneChange.asp?lo=lista_attivita&accesso=multi"" method=""post"" id=""login"" autocomplete=""off"" >
+            					<input type=""text"" id=""numTel"" class=""otp"" name=""numTel"" pattern = ""\+?[0-9\s]+"" minlength = ""7"" maxlength = ""18"" placeholder = ""es. 3779875467"" required >
+            					<div class=""otp-container_inner"">
+            						<button class=""has_text_centered otp-button"">Invia</button>
+            						<a class=""has_text_centered otp-button"" href=""../application/"">Annulla</a>
+            					</div>
+            				</form>
+            			</div>
+            		</div>
+            ");
+        }
+    }
+
+    drawContent();
+}
+@Html.Raw(htmlToReturn.Out())

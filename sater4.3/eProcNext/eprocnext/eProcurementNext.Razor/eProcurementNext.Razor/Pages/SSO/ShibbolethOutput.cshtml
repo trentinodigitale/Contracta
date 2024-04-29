@@ -1,0 +1,338 @@
+﻿@page "/SSO/ShibbolethOutput.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using System.Globalization
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.antiFixationModel;
+@model eProcurementNext.Razor.Pages.SSO.ShibbolethOutputModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+}
+@{
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+}
+@{
+    string CodiceFiscale = GetParamURL(Request.QueryString.ToString(), "CF"); //' ServerVariables("HTTP_CodiceFiscale");
+    string ACCESSO = GetParamURL(Request.QueryString.ToString(), "ACCESSO");
+    string LOA = GetParamURL(Request.QueryString.ToString(), "LOA");
+    string Canale = GetParamURL(Request.QueryString.ToString(), "Canale");
+
+    validate("CodiceFiscale", CodiceFiscale, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("LOA", LOA, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+    validate("Canale", Canale, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+    void drawContent()
+    {
+        //'-- nel caso il livello non sia sufficiente
+        if ((ACCESSO.ToLower() == "codicefiscalevuoto"))
+        {
+            traceInLogUtente(1, "", "LOGIN SHIBBOLETH - Accesso negato codice fiscale non passato da SHIBBOLETH", HttpContext, session);
+            InsertLogSpid("", "", "", "LOGIN SHIBBOLETH - Accesso negato codice fiscale non passato da SHIBBOLETH");
+
+            htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+            htmlToReturn.Write("<p>");
+            htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato, codice fiscale non passato da SHIBBOLETH"));
+            htmlToReturn.Write("</p>");
+            htmlToReturn.Write("</div>");
+
+            //'response.end
+            return;
+        }
+
+        //'-- nel caso il livello non sia sufficiente
+        if (ACCESSO.ToLower() == "negato")
+        {
+            traceInLogUtente(1, "", $"LOGIN SHIBBOLETH - {CodiceFiscale} Accesso negato livello di affidabilità basso", HttpContext, session);
+            InsertLogSpid("", "", CodiceFiscale, "LOGIN SHIBBOLETH - " + CodiceFiscale + " Accesso negato livello di affidabilità basso");
+
+            htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+            htmlToReturn.Write("<p>");
+            htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato, il livello dell'utenza non consente l'accesso al sistema"));
+            htmlToReturn.Write("</p>");
+            htmlToReturn.Write("</div>");
+            return;
+        }
+
+        //'-- nel caso il livello non sia sufficiente
+        if (ACCESSO.ToLower() == "OE_NEGATO")
+        {
+            traceInLogUtente(1, "", $"LOGIN SHIBBOLETH - {CodiceFiscale} Accesso negato agli OE", HttpContext, session);
+            InsertLogSpid("", "", CodiceFiscale, "LOGIN SHIBBOLETH - " + CodiceFiscale + " Accesso negato agli OE");
+
+            htmlToReturn.Write($@"<div id=""Div1"" classe=""large"">");
+            htmlToReturn.Write("<p>");
+            htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato, accesso tramite SHIBBOLETH consentito solo agli enti"));
+            htmlToReturn.Write("</p>");
+            htmlToReturn.Write("</div>");
+            return;
+        }
+
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@CodiceFiscale", CodiceFiscale);
+        //'-- nel caso l'utente non sia presente
+        if (ACCESSO.ToLower() == "NonTrovato")
+        {
+            traceInLogUtente(1, "", $"LOGIN SHIBBOLETH - {CodiceFiscale} Accesso negato utente non trovato", HttpContext, session);
+            InsertLogSpid("", "", CodiceFiscale, "LOGIN SHIBBOLETH - " + CodiceFiscale + " Accesso negato utente non trovato");
+
+            TSRecordSet rs_cf = cdf.GetRSReadFromQuery_("select dbo.fn_checkCF_ANAC (@CodiceFiscale,'') as CF_VALUE", ApplicationCommon.Application.ConnectionString, sqlParams);
+            string CF_VALUE = CStr(rs_cf["CF_VALUE"]);
+            if (CInt(CF_VALUE) == 0)
+            { //'verifico che il CF sia valido
+                htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+                htmlToReturn.Write("<p>");
+
+                htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato. Il codice fiscale @CF@ non risulta nel sistema. Provveda alla creazione della sua utenza prima di riprovare.").Replace("@CF@", CodiceFiscale));
+                htmlToReturn.Write("<br/>");
+                htmlToReturn.Write(ApplicationCommon.CNV("Attenzione il Codice Fiscale ricevuto non e formalmente valido."));
+                htmlToReturn.Write("</p>");
+                htmlToReturn.Write("</div>");
+                return;
+            }
+            else
+            {
+                rs_cf = cdf.GetRSReadFromQuery_("select idpfu from profiliutente with (nolock) where pfucodicefiscale=@CodiceFiscale", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                if (rs_cf.RecordCount == 0)
+                {//'verifico se nell'elenco è presente l'utente
+
+                    htmlToReturn.Write($@"<div id=""colcx"" class=""large"">");
+                    htmlToReturn.Write("<p>");
+                    htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato. Il codice fiscale @CF@ non risulta nel sistema. Provveda alla creazione della sua utenza prima di riprovare.").Replace("@CF@", CodiceFiscale));
+                    htmlToReturn.Write("</p>");
+                    htmlToReturn.Write("</div>");
+                    return;
+                }
+                else
+                {
+                    rs_cf = cdf.GetRSReadFromQuery_("select TOP 1 pfunome, pfudeleted from profiliutente with (nolock) where pfucodicefiscale=@CodiceFiscale order by pfuLastLogin desc ", ApplicationCommon.Application["ConnectionString"], sqlParams);
+                    string nome_utente = CStr(rs_cf["pfunome"]);
+                    string pfudeleted = CStr(rs_cf["pfudeleted"]);
+
+                    if (rs_cf.RecordCount > 0 && pfudeleted == 1.ToString())
+                    {//'verifico se l'utente è cessato
+                        htmlToReturn.Write($@"<div id=""colcx"" class=""large"">");
+                        htmlToReturn.Write("<p>");
+                        htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato. l'utente: @NOME@, e stato cessato. Provveda alla riattivazione della sua utenza prima di riprovare.").Replace("@NOME@", nome_utente));
+                        htmlToReturn.Write("</p>");
+                        htmlToReturn.Write("</div>");
+                        return;
+                    }
+                }
+            }
+        }
+
+        string guid = GetParamURL(Request.QueryString, "LOGINFEDERA");
+        string ternaFedera = "";
+
+        if (!string.IsNullOrEmpty(guid))
+        {
+            //'call validate( "LOGINFEDERA",guid, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0)
+
+            ternaFedera = "";
+            ternaFedera = getFederaValues(guid); //'now & "@@@" & login & "@@@" & codicefiscale;
+
+            if (!string.IsNullOrEmpty(ternaFedera))
+            {
+                string[] fv = Strings.Split(ternaFedera, "@@@");
+
+                DateTime federaOra = CDate(fv[0]);
+                string Login = fv[1];
+                string userCF = fv[2];
+
+                if (userCF != CodiceFiscale)
+                {
+                    ternaFedera = ""; // '-- Se il codice fiscale passato ad url non combacia con quello presente in tabella.mando errore
+                }
+
+                //'-- se il tempo trascorso dal collegamento a federa è inferiore a 30 minuti
+                if (Math.Abs(DateDiff("n", federaOra, DateAndTime.Now)) > 30)
+                {
+                    ternaFedera = ""; //'-- Se il tempo tra la chiamata a federa e l'invocazione di questa pagina è troppo lungo. mando errore
+                }
+            }
+        }
+
+        if (guid == "" || ternaFedera == "")
+        {
+            traceInLogUtente(1, "", $"LOGIN SHIBBOLETH - {CodiceFiscale} Accesso negato per tentativo di forzatura del sistema", HttpContext, session);
+            InsertLogSpid("", "", CodiceFiscale, $"LOGIN SHIBBOLETH - {CodiceFiscale} Accesso negato per tentativo di forzatura del sistema");
+
+            htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+            htmlToReturn.Write("<p>");
+            htmlToReturn.Write(ApplicationCommon.CNV("La sessione di lavoro non e' valida. Sono state informate le autorita' del suo tentativo."));
+            htmlToReturn.Write("</p>");
+            htmlToReturn.Write("</div>");
+            return;
+        }
+
+        if (ACCESSO == "Multi")
+        {
+            //'-- verifico la presenza del CF sul DB
+            TSRecordSet rs = cdf.GetRSReadFromQuery_("select pfulogin , pfuidAzi , aziRagioneSociale , NEWID() as ID from profiliutente with(nolock) inner join aziende with(nolock) on pfuidazi = idazi where aziDeleted = 0 and pfuDeleted = 0 and pfuCodiceFiscale = @CodiceFiscale", ApplicationCommon.Application["ConnectionString"], sqlParams);
+
+            //'-- nel caso l'utente non è presente nel sistema
+            if (rs.RecordCount == 0)
+            {
+                htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+                htmlToReturn.Write("<p>");
+                htmlToReturn.Write(ApplicationCommon.CNV("Accesso negato. La sua utenza non risulta nel sistema. Provveda alla creazione della sua utenza prima di riprovare"));
+                htmlToReturn.Write("</p>");
+                htmlToReturn.Write("</div>");
+                return;
+            }
+
+            //'-- nel caso sia ritornato un solo utente si accede direttamente
+            if (rs.RecordCount == 1)
+            {
+                rs.MoveFirst();
+
+                TraceLoginFedera(CStr(rs["ID"]), CStr(rs["pfulogin"]), CodiceFiscale);
+                InsertLogSpid(CStr(rs["ID"]), CStr(rs["pfulogin"]), CodiceFiscale, "");
+
+                throw new ResponseRedirectException("../login.asp?redirectback=yes&amp;chiamante=/portale/index.php&amp;strMnemonicoMP=PA&amp;LOGINFEDERA=" + URLEncode(CStr(rs["ID"])) + "&amp;FEDERA_AZI=" + CStr(rs["pfuidAzi"]), Response);
+            }
+
+            if (rs.RecordCount > 1)
+            {
+                rs.MoveFirst();
+                //string guid;
+
+                guid = CStr(rs["ID"]);
+
+                TraceLoginFedera(CStr(rs["ID"]), CStr(rs["pfulogin"]), CodiceFiscale);
+                InsertLogSpid(CStr(rs["ID"]), CStr(rs["pfulogin"]), CodiceFiscale, "");
+
+                htmlToReturn.Write($@"<div id=""colcx"" classe=""large"">");
+                htmlToReturn.Write("<p>");
+                htmlToReturn.Write(ApplicationCommon.CNV("La sua utenza risulta collegata ad i seguenti Enti. Per proseguire e' necessario selezionare un Ente"));
+                htmlToReturn.Write(@"</p><br/><ul class=""ListaEnti"" >");
+
+                for (int i = 1; i <= rs.RecordCount; i++)
+                {
+
+                    htmlToReturn.Write($@"<li class=""Ente"" ><a href=""../login.asp?redirectback=yes&amp;chiamante=/portale/index.php&amp;strMnemonicoMP=PA&amp;LOGINFEDERA=" + URLEncode(guid) + $@"&amp;FEDERA_AZI=" + CStr(rs["pfuidAzi"]) + $@""" >" + HtmlEncode(CStr(rs["aziRagioneSociale"])) + "</a>");
+                    rs.MoveNext();
+
+                }
+                htmlToReturn.Write($@"</ul></div>");
+                return;
+            }
+        }
+    }
+
+    void TraceLoginFedera(string guid, string login, string codicefiscale)
+    {
+        CommonDbFunctions cdb = new();
+
+        string strKeyFedera = $"federa_{guid}";
+        string data = $"{DateAndTime.Year(DateTime.Now)}-{normalizza(DateAndTime.Month(DateTime.Now))}-{normalizza(DateAndTime.Day(DateTime.Now))} {normalizza(DateAndTime.Hour(DateTime.Now))}:{normalizza(DateAndTime.Minute(DateTime.Now))}";
+        string strValueFedera = $"{data}@@@{login}@@@{codicefiscale}";
+
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@strKeyFedera", strKeyFedera);
+        sqlParams.Add("@strValueFedera", strValueFedera);
+        cdb.Execute("INSERT INTO [CTL_LOG_PROC]([DOC_NAME],[parametri]) VALUES (@strKeyFedera, @strValueFedera)", ApplicationCommon.Application["ConnectionString"], parCollection: sqlParams);
+    }
+
+    void InsertLogSpid(string guid, string login, string codicefiscale, string responseFedera)
+    {
+        CommonDbFunctions cdb = new();
+        string strKeyFedera = "";
+
+        if (guid != "")
+        {
+            strKeyFedera = $"federa_{guid}";
+        }
+
+        if (responseFedera == "")
+        {
+            string data = $"{DateAndTime.Year(DateTime.Now)}-{normalizza(DateAndTime.Month(DateTime.Now))}-{normalizza(DateAndTime.Day(DateTime.Now))} {normalizza(DateAndTime.Hour(DateTime.Now))}:{normalizza(DateAndTime.Minute(DateTime.Now))}";
+            responseFedera = $"{data}@@@{login}@@@{codicefiscale}";
+        }
+
+        string userIp = "";
+        string ipServer = "";
+        string sessionFixation = CStr(session["AFLINKFIXATION"]);
+        string shibSessionIndex = "";
+        string authInstant = "";
+        string shibIdentityProvider = "";
+
+        try
+        {
+            var sqlParams = new Dictionary<string, object?>();
+            sqlParams.Add("@fixation", sessionFixation);
+            sqlParams.Add("@ip", ipServer);
+            sqlParams.Add("@ipuser", userIp);
+            sqlParams.Add("@session", CStr(session.SessionID));
+            sqlParams.Add("@ACCESSO", ACCESSO);
+            sqlParams.Add("@codicefiscale", codicefiscale);
+            sqlParams.Add("@responseFedera", responseFedera);
+            sqlParams.Add("@LOA", LOA);
+            sqlParams.Add("@Canale", Canale);
+            sqlParams.Add("@shibIdentityProvider", shibIdentityProvider);
+            sqlParams.Add("@shibSessionIndex", shibSessionIndex);
+            sqlParams.Add("@authInstant", authInstant);
+            sqlParams.Add("@errorCode", "");
+
+            cdb.Execute("insert into CTL_LOG_SPID (aflinkFixation, ipServer, ipChiamante, AspSessionID, status, errorCode, HTTP_SHIBIDENTITYPROVIDER, HTTP_SHIBSESSIONINDEX, HTTP_FISCALNUMBER,Response, LOA, Canale) values (@fixation, @ip, @ipuser, @session, @ACCESSO,@errorCode, @shibIdentityProvider, @shibSessionIndex,@codicefiscale, @responseFedera,@LOA,@Canale)", ApplicationCommon.Application["ConnectionString"], parCollection: sqlParams);
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+    }
+
+    string normalizza(int value)
+    {
+        string _normalizza = "";
+        if ((CStr(value).Length) < 2)
+        {
+            _normalizza = $"0{CStr(value)}";
+        }
+        else
+        {
+            _normalizza = CStr(value);
+        }
+
+        return _normalizza;
+    }
+
+    string getFederaValues(dynamic guid)
+    {
+        TSRecordSet? rs = null;
+        string _out = string.Empty;
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@DOC_NAME", $"Shibboleth_{CStr(guid)}");
+        string strSql = "select top 1 parametri from CTL_LOG_PROC with(nolock) where DOC_NAME = @DOC_NAME";
+        CommonDbFunctions cdb = new();
+        rs = cdb.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            _out = CStr(rs["parametri"]);
+
+            cdb.Execute("delete from CTL_LOG_PROC where DOC_NAME = @DOC_NAME", ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+        }
+        return _out;
+    }
+
+    ViewData["Title"] = "Selezione Utenza SHIBBOLETH";//Passare titolo della pagina al Layout (_masterPage.cshtml)
+    ViewData["pathRoot"] = "../";//Passare la pathRoot al Layout (_masterPage.cshtml)
+
+    drawContent();
+
+}
+@Html.Raw(htmlToReturn.Out())

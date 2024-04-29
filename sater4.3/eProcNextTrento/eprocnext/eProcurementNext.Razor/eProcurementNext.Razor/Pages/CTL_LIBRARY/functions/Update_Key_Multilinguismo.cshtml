@@ -1,0 +1,24 @@
+﻿@page "Update_Key_Multilinguismo.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Pages.CTL_LIBRARY.functions;
+@using eProcurementNext.Razor;
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.Update_Key_MultilinguismoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+
+    string iddoc = GetParamURL(Request.QueryString, "IDDOC");
+    string stored = GetParamURL(Request.QueryString, "STORED");
+
+    securityModel.validate("STORED", GetParamURL(Request.QueryString, "STORED"), securityModel.TIPO_PARAMETRO_STRING, securityModel.SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    securityModel.validate("IDDOC", GetParamURL(Request.QueryString, "STORED"), securityModel.TIPO_PARAMETRO_STRING, securityModel.SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+    string strsql="Exec " + stored + " " + CLng(iddoc);
+
+    MainGlobalAsa.RefreshMultiLanguage();
+
+
+}

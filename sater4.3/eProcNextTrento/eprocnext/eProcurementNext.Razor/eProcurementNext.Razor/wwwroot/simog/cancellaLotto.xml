@@ -1,0 +1,12 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xb="xmlbeans.massload.simog.avlp.it">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <xb:cancellaLotto>
+      <ticket>@@@TICKET@@@</ticket>
+      <indexCollaborazione>@@@INDEX@@@</indexCollaborazione>
+      <cig>@@@CIG@@@</cig>
+      <id_motivazione>@@@ID_MOTIVAZIONE@@@</id_motivazione>
+      <note_canc>@@@NOTE_CANC@@@</note_canc>
+    </xb:cancellaLotto>
+  </soapenv:Body>
+</soapenv:Envelope>

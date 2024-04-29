@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UnitaDocumentaria xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Intestazione>
+		<Versione>@@@CONSERVAZIONE_VERSIONE@@@</Versione>
+		<Versatore>
+			<Ambiente>@@@CONSERVAZIONE_AMBIENTE@@@</Ambiente>
+			<Ente>@@@CONSERVAZIONE_ENTE@@@</Ente>
+			<Struttura>@@@CONSERVAZIONE_STRUTTURA@@@</Struttura>
+			<UserID>@@@CONSERVAZIONE_USER_ID@@@</UserID>
+		</Versatore>
+		<Chiave>
+			<Numero>@@@CONSERVAZIONE_CHIAVE_NUMERO@@@</Numero>
+			<Anno>@@@CONSERVAZIONE_CHIAVE_ANNO@@@</Anno>
+			<TipoRegistro>@@@CONSERVAZIONE_CHIAVE_TIPO_REGISTRO@@@</TipoRegistro>
+		</Chiave>
+		<TipologiaUnitaDocumentaria>ORDINATIVO DI FORNITURA</TipologiaUnitaDocumentaria>
+	</Intestazione>
+	<Configurazione>
+		<TipoConservazione>VERSAMENTO_ANTICIPATO</TipoConservazione>
+		<ForzaAccettazione>true</ForzaAccettazione>
+		<ForzaConservazione>false</ForzaConservazione>
+		<ForzaCollegamento>true</ForzaCollegamento>
+	</Configurazione>
+	<ProfiloUnitaDocumentaria>
+		<Oggetto>ORDINATIVO DI FORNITURA-CONVENZIONE-@@@CONVENZIONE_OGGETTO@@@-@@@CONVENZIONE_NUMERO@@@</Oggetto>
+		<Data>@@@ODC_DATAINVIO@@@</Data>
+	</ProfiloUnitaDocumentaria>
+	<ProfiloNormativo versione="AGID_V_1.0">
+		<DocumentoAmministrativoInformatico>
+			<IdDoc>
+				<ImprontaCrittograficaDelDocumento>
+					<Impronta>@@@DOC_PRINCIPALE_FILE_HASH@@@</Impronta>
+					<Algoritmo>SHA-256</Algoritmo>
+				</ImprontaCrittograficaDelDocumento>
+				<Identificativo>@@@DOC_PRINCIPALE_ATT_HASH@@@</Identificativo>
+			</IdDoc>
+			<ModalitaDiFormazione>creazione tramite utilizzo di strumenti software che assicurino la produzione di documenti nei formati previsti in allegato 2</ModalitaDiFormazione>
+			<TipologiaDocumentale>ORDINATIVO DI FORNITURA</TipologiaDocumentale>
+			<DatiDiRegistrazione>
+				<TipologiaDiFlusso>U</TipologiaDiFlusso>
+				<TipoRegistro>
+					<Repertorio_Registro>
+						<TipoRegistro>Repertorio\Registro</TipoRegistro>
+						<DataRegistrazioneDocumento>@@@ODC_DATAINVIO@@@</DataRegistrazioneDocumento>
+						<NumeroRegistrazioneDocumento>@@@CONSERVAZIONE_CHIAVE_NUMERO@@@</NumeroRegistrazioneDocumento>
+						<CodiceRegistro>@@@CONSERVAZIONE_CHIAVE_TIPO_REGISTRO@@@</CodiceRegistro>
+					</Repertorio_Registro>
+				</TipoRegistro>
+			</DatiDiRegistrazione>
+			<Soggetti>
+				<Ruolo>
+					<AmministrazioneCheEffettuaLaRegistrazione>
+						<TipoRuolo>Amministrazione Che Effettua La Registrazione</TipoRuolo>
+						<PAI>
+							<IPAAmm>
+								<Denominazione>Intercent-er Agenzia Regionale per Lo Sviluppo Dei Mercati Telematici</Denominazione>
+								<CodiceIPA>IARLS</CodiceIPA>
+							</IPAAmm>
+							<IPAAOO>
+								<Denominazione>INTERCENT-ER</Denominazione>
+								<CodiceIPA>A133427</CodiceIPA>
+							</IPAAOO>
+							<IndirizziDigitaliDiRiferimento>intercenter@postacert.regione.emilia-romagna.it</IndirizziDigitaliDiRiferimento>
+						</PAI>
+					</AmministrazioneCheEffettuaLaRegistrazione>
+				</Ruolo>
+				<Ruolo>
+					<Mittente>
+						<TipoRuolo>Mittente</TipoRuolo>
+						<PAI>
+							<IPAAmm>
+								<Denominazione>@@@ODC_ENTE_ADERENTE@@@</Denominazione>
+								<CodiceIPA>NON DISPONIBILE</CodiceIPA>
+							</IPAAmm>
+							<IPAAOO>
+								<Denominazione>NON DISPONIBILE</Denominazione>
+								<CodiceIPA>NON DISPONIBILE</CodiceIPA>
+							</IPAAOO>
+							<IndirizziDigitaliDiRiferimento>NON DISPONIBILE</IndirizziDigitaliDiRiferimento>
+						</PAI>
+					</Mittente>
+				</Ruolo>
+			</Soggetti>
+			<ChiaveDescrittiva>
+				<Oggetto>ORDINATIVO DI FORNITURA-CONVENZIONE-@@@CONVENZIONE_OGGETTO@@@-@@@CONVENZIONE_NUMERO@@@</Oggetto>
+			</ChiaveDescrittiva>
+			<Allegati>
+				<NumeroAllegati>@@@ODC_NUMERO_ALLEGATI@@@</NumeroAllegati>
+				@@@ODC_INDICE_ALLEGATI@@@
+			</Allegati>
+			<Classificazione>
+				<IndiceDiClassificazione>NON DISPONIBILE</IndiceDiClassificazione>
+				<Descrizione>NON DISPONIBILE</Descrizione>
+			</Classificazione>
+			<Riservato>true</Riservato>
+			<IdentificativoDelFormato>
+				<Formato>@@@DOC_PRINCIPALE_FILE_EXT@@@</Formato>
+			</IdentificativoDelFormato>
+			<Verifica>
+				<FirmatoDigitalmente>true</FirmatoDigitalmente>
+				<SigillatoElettronicamente>false</SigillatoElettronicamente>
+				<MarcaturaTemporale>false</MarcaturaTemporale>
+				<ConformitaCopieImmagineSuSupportoInformatico>false</ConformitaCopieImmagineSuSupportoInformatico>
+			</Verifica>
+			<Agg>
+				<TipoAgg>
+					<TipoAggregazione>Serie Documentale</TipoAggregazione>
+					<IdAggregazione>ORDINATIVI DI FORNITURA_@@@CONSERVAZIONE_CHIAVE_ANNO@@@</IdAggregazione>
+				</TipoAgg>
+			</Agg>
+			<NomeDelDocumento>@@@DOC_PRINCIPALE_FILE_NAME@@@</NomeDelDocumento>
+			<VersioneDelDocumento>NON DISPONIBILE</VersioneDelDocumento>
+			<TempoDiConservazione>9999</TempoDiConservazione>
+		</DocumentoAmministrativoInformatico>
+	</ProfiloNormativo>
+	<DatiSpecifici>
+		<VersioneDatiSpecifici>1.0</VersioneDatiSpecifici>
+		<Titolo>@@@ODC_TITOLO@@@</Titolo>
+		<DataFirmaPO>@@@ODC_DATA_FIRMA_PO@@@</DataFirmaPO>
+		@@@ODC_CIG_MASTER@@@
+		<CIGDerivato>@@@ODC_CIG_DERIVATO@@@</CIGDerivato>
+		<EnteAderente>@@@ODC_ENTE_ADERENTE@@@</EnteAderente>
+		<EnteAderenteCodiceFiscale>@@@ODC_ENTE_ADERENTE_CF@@@</EnteAderenteCodiceFiscale>
+		<Fornitore>@@@ODC_FORNITORE_DESTINATARIO@@@</Fornitore>
+		<FornitorePartitaIVA>@@@ODC_FORNITORE_DESTINATARIO_PIVA@@@</FornitorePartitaIVA>
+		<FornitoreCodiceFiscale>@@@ODC_FORNITORE_DESTINATARIO_CF@@@</FornitoreCodiceFiscale>
+		@@@CONVENZIONE_COMPLETA_NUMERO@@@
+		@@@CONVENZIONE_COMPLETA_OGGETTO@@@
+		<TempoConservazione>ILLIMITATA</TempoConservazione>
+		<Consultabilita>NON PRECISATO</Consultabilita>
+		<DenominazioneApplicativo>SATER</DenominazioneApplicativo>
+		<VersioneApplicativo>@@@AFLINK_VERSIONE@@@</VersioneApplicativo>
+		<ProduttoreApplicativo>AF SOLUZIONI SRL</ProduttoreApplicativo>
+	</DatiSpecifici>
+	<DocumentiCollegati>
+		<DocumentoCollegato>
+			<ChiaveCollegamento>
+				<Numero>@@@DOC_COLLEGATO_NUMERO@@@</Numero>
+				<Anno>@@@DOC_COLLEGATO_ANNO@@@</Anno>
+				<TipoRegistro>@@@DOC_COLLEGATO_TIPOREGISTRO@@@</TipoRegistro>
+			</ChiaveCollegamento>
+			<DescrizioneCollegamento>@@@DOC_COLLEGATO_DESC_COLLEGAMENTO@@@</DescrizioneCollegamento>
+		</DocumentoCollegato>
+	</DocumentiCollegati>
+	<NumeroAllegati>@@@ODC_NUMERO_ALLEGATI@@@</NumeroAllegati>
+	<NumeroAnnessi>0</NumeroAnnessi>
+	<NumeroAnnotazioni>0</NumeroAnnotazioni>
+	<DocumentoPrincipale>
+		<IDDocumento>@@@DOC_PRINCIPALE_ATT_HASH@@@</IDDocumento>
+		<TipoDocumento>ORDINATIVO DI FORNITURA</TipoDocumento>
+		<ProfiloDocumento>
+			<Autore>@@@ODC_PO_NOMINATIVO@@@</Autore>
+		</ProfiloDocumento>
+		<StrutturaOriginale>
+			<TipoStruttura>DocumentoGenerico</TipoStruttura>
+			<Componenti>
+				<Componente>
+					<ID>@@@DOC_PRINCIPALE_ATT_HASH@@@</ID>
+					<OrdinePresentazione>1</OrdinePresentazione>
+					<TipoComponente>Contenuto</TipoComponente>
+					<TipoSupportoComponente>FILE</TipoSupportoComponente>
+					<NomeComponente>@@@DOC_PRINCIPALE_FILE_NAME@@@</NomeComponente>
+					<FormatoFileVersato>@@@DOC_PRINCIPALE_FILE_EXT@@@</FormatoFileVersato>
+					<HashVersato>@@@DOC_PRINCIPALE_FILE_HASH@@@</HashVersato>
+					<UtilizzoDataFirmaPerRifTemp>true</UtilizzoDataFirmaPerRifTemp>
+				</Componente>
+			</Componenti>
+		</StrutturaOriginale>
+	</DocumentoPrincipale>
+
+	@@@ALLEGATI@@@
+
+</UnitaDocumentaria>

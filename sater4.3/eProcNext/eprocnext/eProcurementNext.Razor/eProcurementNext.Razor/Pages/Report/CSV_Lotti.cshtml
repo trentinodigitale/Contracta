@@ -1,0 +1,393 @@
+﻿@page "/Report/CSV_Lotti.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.Report.CSV_LottiModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.Report.CSV_LottiModel
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+	
+}
+@{
+	string strfilename = "";
+	string TIPODOC = "";
+	string idDoc = "";
+	string HIDECOL = "";
+	string MODEL = "";
+	string OPERATION = "";
+	string VIEW = "";
+	string SHOW_ATTACH = "";
+
+	htmlToReturn.Clear();
+	//'Response.CodePage = 65001 
+	//'Response.CharSet = "utf-8" 
+
+	//Response.CodePage = 1252 
+	//Response.CharSet = "windows-1252"
+
+	strfilename = GetParamURL(Request.QueryString.ToString(), "TitoloFile");
+	if(string.IsNullOrEmpty(strfilename))
+	{
+		strfilename = "Articoli";
+	}
+	strfilename = strfilename + ".csv";
+	strfilename = strfilename.Replace("..", "");// '-- replace per evitare Path Traversal
+	strfilename = strfilename.Replace("/", "");// '-- replace per evitare Path Traversal
+	strfilename = strfilename.Replace(@"\",@"");// '-- replace per evitare Path Traversal
+
+	TIPODOC = GetParamURL(Request.QueryString.ToString(), "TIPODOC"); 
+	string TIPODOC_OLD = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+
+	idDoc = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	HIDECOL = GetParamURL(Request.QueryString.ToString(), "HIDECOL"); 
+	MODEL   = GetParamURL(Request.QueryString.ToString(), "MODEL");
+	VIEW    = GetParamURL(Request.QueryString.ToString(), "VIEW");
+	string XLSX    = GetParamURL(Request.QueryString.ToString(), "XLSX");
+
+	//'--DOWNOLAD = il file verrà copiata nella cartella per lo scarica allegati; altrimenti il file verrà sparato a video
+	//'--per il download diretto
+	OPERATION = GetParamURL(Request.QueryString.ToString(), "OPERATION");
+	//'-- iniazializzo parametro per capire se gestire o meno i campi di tipo attach
+	//'-- il default è NO per comptabilità comportamenteo pregresso fino al 02-03-2018
+	SHOW_ATTACH = "NO";
+
+	//'--se passato lo recupero
+	if(!string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "SHOW_ATTACH"))))
+	{
+		SHOW_ATTACH = GetParamURL(Request.QueryString.ToString(), "SHOW_ATTACH");
+	}
+	//'-------------------------------------
+	//'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+	//'-------------------------------------
+	validate("idDoc", idDoc, TIPO_PARAMETRO_INT, CInt(""), "", 0, HttpContext, session);
+	validate("MODEL", MODEL, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("OPERATION", OPERATION, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("TIPODOC", TIPODOC, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("VIEW", VIEW, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("SHOW_ATTACH", SHOW_ATTACH, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("DOCUMENT", TIPODOC_OLD, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	//if OPERATION <> "" and OPERATION <> "DISPLAY" then
+
+	//on error resume next
+	//'-- sovrascrivo valore passato nel parametro document con il tipodoc presente in tabella relativo all'idDoc passato.
+	string strSQL = "select tipoDoc from ctl_doc with(nolock) where id = " + CStr(CLng(idDoc));
+	TSRecordSet rsTipoDoc = null;
+	try
+	{
+		rsTipoDoc = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+		if(rsTipoDoc.RecordCount>0)
+		{
+			rsTipoDoc.MoveFirst();
+			TIPODOC = GetValueFromRS(rsTipoDoc.Fields["tipoDoc"]);
+		}
+	}
+	catch
+	{
+		throw new Exception("");
+	}
+	//'else
+	//'	TIPODOC_OLD = TIPODOC
+	//'end if
+
+
+	//'-- A meno che non è stata richiesta la NON generazione di un foglio XLSX 
+
+
+	if(CStr(XLSX).ToUpper() != "NO")
+	{
+		string accessGuid = insertAccessBarrier(session,HttpContext);
+		string old_acckey = GetParamURL(Request.QueryString.ToString(), "acckey");
+		string page = "xlsx.aspx?fld=" + CStr(session["TEMP_FOLDER_DOWNLOAD"]) + "&UFP=" + CStr(session["idpfu"]) + "&" + GetQueryStringFromContext(Request.QueryString).Replace("DOCUMENT=" + TIPODOC_OLD, "TIPODOC=" + TIPODOC);
+		page = Replace(page, "acckey=" + URLEncode(old_acckey), "acckey=" + URLEncode(accessGuid));
+
+		//'--se non presente sulla querystring parametro "SHOW_ATTACH" lo aggiungo 
+		if(Strings.InStr(1, page,"&SHOW_ATTACH=") == 0)
+		{
+			page = page + "&SHOW_ATTACH=" + SHOW_ATTACH;
+		}
+		if(string.IsNullOrEmpty(OPERATION) || OPERATION == "DISPLAY")
+		{
+			//'response.write page
+			//'response.end
+
+			string pathToRoot = "../";
+
+			//'-- passo TEMP_FOLDER_DOWNLOAD e idpfu su url non avendo la sessione condivisa tra asp e aspx
+			throw new ResponseRedirectException(pathToRoot + "CTL_LIBRARY/" + page, Response);
+		}
+		else
+		{
+			//'Se provengo dalla downloadAttach.asp non posso fare la redirect, perchè il controllo deve rimanere al chiamante (per permettere la generazione dello zip) quindi
+			//'faccio un invocazione server to server per far generare alla pagina xlsx.aspx il file nella directory richiesta dal chiamante ed esco
+
+			page = "CTL_LIBRARY/" + page;
+
+			//'call traceInLogUtente( 1, "csv_lotti", page)
+
+			invokeURL(page);
+
+			//'call traceInLogUtente( 1, "csv_lotti", "ok," & err.description)
+			//'response.end
+
+		}
+
+
+	}
+	else
+	{
+		string strGrid = "";
+		dynamic MatrixValue;
+		int NumRow = 0;
+		int NumCol = 0;
+		int indRow = 0;
+		int indCol = 0;
+		int indiceRiga = 0;
+		bool bShowCol = false;
+		Field objField = null;
+		string strTechValue = "";
+		string strVisualValue = "";
+		string strClassCell = "";
+		if(string.IsNullOrEmpty(OPERATION) && OPERATION == "DISPLAY")
+		{
+			//'--solo nel caso devo visualizzarlo 
+			//response.ContentType ="application/CSV"
+			Response.Headers.Add("content-disposition", "attachment; filename=" + strfilename);
+		}
+		else
+		{
+			//'--creo file che dovrò copiare nella cartella per lo scarica allegati contenuta in sessione nella variabile session("TEMP_FOLDER_DOWNLOAD")
+			//dim fs
+			//dim fname
+			//set fs=CreateObject("Scripting.FileSystemObject")
+
+			if (CommonStorage.ExistsFile(session["TEMP_FOLDER_DOWNLOAD"] + strfilename))
+			{
+				CommonStorage.DeleteFile(session["TEMP_FOLDER_DOWNLOAD"] + strfilename);
+			}
+
+
+			string fname = System.IO.File.CreateText(session["TEMP_FOLDER_DOWNLOAD"] + strfilename);
+
+		}
+		string strContext = "";
+		//'-- recupero lingua
+		string strSuffix = "";
+		strSuffix =session["strSuffLing"];
+		if(string.IsNullOrEmpty(strSuffix))
+		{
+			strSuffix = "I";
+		}
+		//'-- recupero contesto
+
+		strContext = session["IdMP"];
+		if(string.IsNullOrEmpty(strContext))
+		{
+			strContext = "0";
+		}
+
+		//on error resume next	
+
+		//'-- recupero i record da esportare in CSV
+		TSRecordSet rsDati = null;
+		if(!string.IsNullOrEmpty(VIEW))
+		{
+			rsDati = cdf.GetRSReadFromQuery_("select * from " + VIEW + " where tipodoc = '" + TIPODOC.Replace("'", "''") + "' and IdHeader = " + CStr(CLng(idDoc)) + " order by id", ApplicationCommon.Application.ConnectionString);
+
+		}
+		else
+		{
+			rsDati = cdf.GetRSReadFromQuery_("select * from Document_MicroLotti_Dettagli where tipodoc = '" + TIPODOC.Replace("'", "''") + "' and IdHeader = " + CStr(CLng(idDoc)) + " order by id", ApplicationCommon.Application.ConnectionString);
+		}
+		TSRecordSet rsColonne = null;
+		try
+		{
+			//'-- RECUPERO LE COLONNE DA VISUALIZZARE
+			rsColonne = cdf.GetRSReadFromQuery_("exec GET_COLUMN_LOTTI_TO_EXTRACT_CSV '" + MODEL.Replace("'", "''") + "' , '" + HIDECOL.Replace("'", "''") + "' , 0 , '" + SHOW_ATTACH + "'", ApplicationCommon.Application.ConnectionString);
+		}
+		catch(Exception ex)
+		{
+			//'-- gestione errore
+			//n = err.number
+			//s = err.source
+			string d = ex.Message;
+
+			traceInLogUtente(0, "CSV_Lotti.asp", "Descrizione:" + d + " --- QueryString:" + GetQueryStringFromContext(Request.QueryString),HttpContext,session);
+			//'-- Se è attiva la modalità debug visualizziamo più informazioni riguardo l'errore, query sql comprese
+			if ((CStr(ApplicationCommon.Application["debug-mode"]).ToLower() == "yes") || (CStr(ApplicationCommon.Application["debug-mode"]).ToLower() == "si") || (CStr(ApplicationCommon.Application["debug-mode"]) == "true"))
+			{
+				htmlToReturn.Write("Desc:" + d + " <br> ");
+			}
+			else
+			{
+				//'-- Se è disattivato il debug-mode ma è attiva ma la SYS di visione degli errori tecnici 
+				if (CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "yes" || CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "si" )
+				{
+					htmlToReturn.Write("Desc:" + d + " <br/> ");
+				}
+				else
+				{
+
+					TraceErr(ex, ApplicationCommon.Application.ConnectionString);
+					htmlToReturn.Write(" Errore in data : " + DateTime.Now);
+				}
+			}
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		}
+		//'--CICLO SULLE COLONNE PER ESPORTARE LA TESTATA
+		if(rsColonne.RecordCount>0)
+		{
+			rsColonne.MoveFirst();
+			indCol = 1;
+			while(!rsColonne.EOF)
+			{
+				strVisualValue = GetValueFromRS(rsColonne.Fields["Caption"]);
+				strVisualValue = ApplicationCommon.CNV(strVisualValue);
+
+				//'-- se nel valore sono presenti doppi apici, oppure a capo , oppure un punto e virgola si mettono gli apici di inizio e fine e si raddoppiano i doppi apici
+				if(strVisualValue.Contains(@"""", StringComparison.Ordinal) || strVisualValue.Contains(Strings.Chr(13), StringComparison.Ordinal) || strVisualValue.Contains(";", StringComparison.Ordinal))
+				{
+					MyResponse(@"""" + strVisualValue.Replace(@"""",@"""""") + @"""" );
+				}
+				else
+				{
+					MyResponse(strVisualValue); 
+				}
+				rsColonne.MoveNext();
+				if(! rsColonne.EOF)
+				{
+					MyResponse(";");
+				}
+			}
+		}
+		//'--CICLO SUI DATI
+		if(rsDati.RecordCount >0)
+		{
+			//'-- vado a capo perstaccare dalla riga delle caption
+			MyResponse(Environment.NewLine);
+
+			rsDati.MoveFirst();
+			while(! rsDati.EOF)
+			{
+				//'--CICLO SULLE COLONNE
+				if(rsColonne.RecordCount >0)
+				{
+					rsColonne.MoveFirst();
+					while(!rsColonne.EOF)
+					{
+						//'--se si tratta di un attributo numerico cambio classe di stile	
+						if(GetValueFromRS(GetValueFromRS(rsColonne.Fields["DZT_Type"])) == TIPOATTRIB_NUMBER )
+						{
+							strVisualValue = "";
+							strTechValue = GetValueFromRS(rsDati.Fields[GetValueFromRS(rsColonne.Fields["DZT_Name"])]) + "";
+
+							strVisualValue = strTechValue.Replace(".", ",");
+						}
+						else
+						{
+							//'--valore visuale della colonna
+							strVisualValue = GetValueFromRS(rsDati.Fields[GetValueFromRS(rsColonne.Fields["DZT_Name"])]) + "";
+						}
+						//'-- se nel valore sono presenti doppi apici, oppure a capo , oppure un punto e virgola si mettono gli apici di inizio e fine e si raddoppiano i doppi apici
+						if(strVisualValue.Contains(@"""", StringComparison.Ordinal) ||  strVisualValue.Contains( Strings.Chr(13), StringComparison.Ordinal ) || strVisualValue.Contains(";", StringComparison.Ordinal) )
+						{
+							MyResponse(@"""" + strVisualValue.Replace(@"""", @"""""") + @"""");
+						}
+						else
+						{
+							MyResponse(strVisualValue); 
+						}
+						rsColonne.MoveNext();
+						//'-- metto il separatore di campo tranne che sull ultima riga
+						if(!rsColonne.EOF)
+						{
+							MyResponse(";");
+						}
+					}
+				}
+				rsDati.MoveNext();
+				if(!rsDati.EOF)
+				{
+					MyResponse(Environment.NewLine);
+				}
+			}
+		}
+		//'--libero la memoria
+		if(OPERATION == "DOWNLOAD")
+		{
+			//fname.Close
+			//set fname=nothing
+			//set fs=nothing
+			//'Response.end
+		}
+	}//'chiusura if XLSX
+		//'--effettua response.write oppure scrive in un file a seconda di OPERATION
+	void MyResponse(string strValue )
+	{
+		if(string.IsNullOrEmpty(OPERATION) || OPERATION =="DISPLAY")
+		{
+			htmlToReturn.Write(strValue);
+		}
+		else
+		{
+			System.IO.File.WriteAllText(strValue,"");
+		}
+	}
+	string invokeURL(string PageEparam )
+	{
+
+		string strToReturn = "";
+
+		string protocol = "";
+		string nomeApp = "";
+		string urlToInvoke = "";
+
+		if(IsEmpty(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) || string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]).Trim()))
+		{
+			nomeApp = CStr(ApplicationCommon.Application["ApplicationName"]);
+		}
+		else
+		{
+			nomeApp = CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]);
+		}
+		if(IsEmpty(ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"]) || string.IsNullOrEmpty( ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"]))
+		{
+			protocol = "http://";
+			if(CInt(HttpContext.GetServerVariable("SERVER_PORT_SECURE")) == 1)
+			{
+				protocol = "https://";
+			}
+			urlToInvoke = protocol + HttpContext.GetServerVariable("LOCAL_ADDR") + "/" + nomeApp + "/" + PageEparam;
+		}
+		else
+		{
+			urlToInvoke = ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"] + "/" + nomeApp + "/" + PageEparam;
+		}
+
+		try
+		{
+			strToReturn = invokeUrl(urlToInvoke);
+		}
+		catch(Exception ex)
+		{
+			strToReturn= "0#" + ex.Message;
+		}
+		
+		return strToReturn;
+	}
+}@Html.Raw(htmlToReturn.Out())

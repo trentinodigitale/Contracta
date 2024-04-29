@@ -1,0 +1,35 @@
+﻿@page "/ciao/ciao.asp"
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject eProcurementNext.Authentication.IEprocNextAuthentication _JWTauth;
+@model eProcurementNext.Razor.Pages.testModel
+@{
+    //TSRecordSet rs = CommonDbFunctions.GetRSReadFromQuery_("select top 2 idpfu,pfunome, pfulogin from profiliutente with(nolock) order by 1", "Password=AFS.user!;User ID=afsuser;Database=AFLink_PA_Dev;Server=172.16.0.103\\afsse103");
+
+    //if ( rs.RecordCount > 0 )
+    //{
+    //    rs.MoveFirst();
+
+    //    //rs.AbsolutePosition = (ADODB.PositionEnum)2;
+
+    //}
+
+}
+@{
+    eProcurementNext.CommonModule.EprocResponse htmlToReturn = new eProcurementNext.CommonModule.EprocResponse();
+    if (true)
+    {
+        htmlToReturn.Write("<h1>ciao a tutti</h1>");
+        throw new Exception("/home/main.asp?redirectcompletato=true");
+    }
+    else
+    {
+        htmlToReturn.Write("not here");
+    }
+
+    htmlToReturn.Write("not here 2");
+    
+}

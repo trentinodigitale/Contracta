@@ -1,0 +1,241 @@
+﻿@page "/Report/CHIARIMENTI_COLLEGATI.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.CHIARIMENTI_COLLEGATIModel;
+@model eProcurementNext.Razor.Pages.Report.CHIARIMENTI_COLLEGATIModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response,Request);//PrintDocument ok
+}
+@{
+
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+	validate( "IDDOC", CStr(GetParamURL(Request.QueryString.ToString(), "IDDOC")) , TIPO_PARAMETRO_NUMERO, CInt(""), "", 0,HttpContext,session);
+	validate("DOCUMENT", GetParamURL(Request.QueryString.ToString(), "DOCUMENT").Replace(".", "_"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("TYPEDOC", GetParamURL(Request.QueryString.ToString(), "TYPEDOC").Replace(".", "_"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	//if ucase(cstr(application("ACCESSIBLE"))) <> "YES" then
+	//
+	//	drawContent()
+	//	
+	//else
+	//drawMasterPage("../", DOC_Field("TESTATA", "TipoBandoGara"));
+
+	
+	void drawContent()
+	{
+
+
+		//if ucase(cstr(application("ACCESSIBLE"))) <> "YES" then
+		//
+		//
+		//		<table align="center" id="logo" style="font-weight:bold; font-size:14pt; font-family:Arial; vertical-align:middle">
+		//			<tr>
+		//				<td style="border:0px; align:right" align="right">
+		//					<img alt="logo" src="<%=Application("strVirtualDirectory")%>/report/logo.jpg"  border="0"/>
+		//				</td>
+		//				<td style="valign:middle; border:0px; align:left">
+		//					<h2><strong>Dipartimento Procedure ad Evidenza Pubblica<br/>Direzione Stazione Unica Appaltante</strong></h2>
+		//				</td>
+		//			</tr>
+		//		</table>
+		//
+		//		<h2 id="titleintest"><strong>Dipartimento Procedure ad Evidenza Pubblica<br/>Direzione Stazione Unica Appaltante</strong></h2>
+		//
+		//		<div id="toolbarpublic" class="paging">
+		//
+		//			<div class="icons1">
+		//				<ul>
+		//					<li style="background:url(/registrazione/images/printer.gif) center left no-repeat; padding:28px;margin-top:35px;margin-bottom:35px; ">
+		//						<a style="cursor:pointer;" onclick="javscript:window.print();">Stampa</a>
+		//					</li> 
+		//				</ul>
+		//			</div>
+		//
+		//			 <ul>
+		//				<li>
+		//					<input id="Collegati" type="button" class="btn" value="<%=cnv("documenti collegati")%>" onclick="Javascript:OpenCollegati('<%=DOC_Field( "TESTATA", "Fascicolo" )%>');"/>
+		//				</li>
+		//				<li>
+		//					<input id="Chiudi" type="button" class="btn" value="<%=cnv("chiudi")%>" onclick="Javascript:try{parent.LoadFolder1();}catch(e){self.close();}"/>
+		//				</li>
+		//			</ul>
+		//
+		//		</div>
+		//
+		//
+		//	else
+		htmlToReturn.Write($@"
+		<div id=""toolbarprivate"" class=""paging comandi"" style=""display: block;"">
+		<div class=""icons1"">
+					<ul>
+						<li class=""img_stampa""><a class=""cursor_pointer"" onclick=""javscript:window.print();"">Stampa</a></li> 
+					</ul>
+				</div>
+		<div class=""comandi_interni"">
+					<ul>
+						<li><input id=""DocCollegati"" type=""button"" class=""btn"" value=""Documenti Collegati"" onclick=""Javascript:OpenCollegati('" + DOC_Field("TESTATA", "Fascicolo") + $@"');""/></li>
+					</ul>
+				</div>
+		</div>");
+		htmlToReturn.Write($@"
+	<table id=""template_doc"" class=""tabella_dettaglio_quesito"">
+
+		<thead>
+			<tr>
+				<th colspan=""2"" align=""left"" nowrap>Quesito - Bando:" + DOC_Field("TESTATA", "ProtocolloBando") + $@"</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<th width=""120px;"">Oggetto</th> 
+				<td>" + DOC_Field("TESTATA", "Oggetto") + $@"</td>
+			</tr>");
+		htmlToReturn.Write($@"
+			<!--
+			<tr>
+			<th>Fornitore</th> 
+			<td> <%=DOC_Field(""TESTATA"",""aziRagioneSociale"") %></td>
+			</tr>
+			--->");
+		htmlToReturn.Write($@"
+			<tr>
+				<th>Protocollo</th> 
+				<td>" + DOC_Field("TESTATA", "Protocol") + $@"</td>
+			</tr>
+			<tr>
+				<th>Data invio quesito</th> 
+				<td> " + DOC_Field("TESTATA", "DataCreazione1") + $@"</td>
+			</tr>
+			<tr>
+				<th>" + DOC_FieldRow_Label("RISPOSTE", "Domanda") + $@"</th> 
+				<td>" + DOC_Field("TESTATA", "Domanda") + $@"</td>
+			</tr>
+		</tbody>
+
+	</table>");
+		htmlToReturn.Write($@"
+	<table id=""template_doc"" class=""tabella_dettaglio_quesito"">
+		<thead>
+			<tr>
+				<th colspan=""2"" align=""left"" nowrap>" + ApplicationCommon.CNV("risposta quesito") + $@"</th>
+			</tr>
+		</thead>");
+
+		htmlToReturn.Write("<tbody>");
+
+		htmlToReturn.Write($@"<!--
+			<tr>
+			<th  width=""120px;"">" + DOC_FieldRow_Label("RISPOSTE", "Domanda") + $@"</th> 
+			<td> </td>
+			</tr>
+		-->");
+		htmlToReturn.Write($@"
+			<tr>
+				<th>Protocollo Risposta</th> 
+				<td>" + DOC_Field("TESTATA", "ProtocolRispostaQuesito") + $@"</td>
+			</tr>
+			<tr>
+				<th>Data Risposta</th> 
+				<td>" + DOC_Field("TESTATA", "DataRisposta") + $@"</td>
+			</tr>
+			<tr>
+				<th>Risposta</th> 
+				<td>" + DOC_Field("TESTATA", "Risposta") + $@"</td>
+			</tr>
+			<tr>
+				<th>Allegato</th> 
+				<td>");
+
+				Fld_Attach objattach = new Fld_Attach();
+				objattach.Path = "/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + "/";
+				objattach.Init(0,"Allegato", DOC_FieldTecnical("TESTATA", "Allegato"),null, null, "IN", true);
+				objattach.Html(htmlToReturn, false);
+				htmlToReturn.Write($@"
+				</td>
+			</tr>
+		</tbody>
+	</table>");
+	
+	<!--ALTRE RISPOSTE-->
+	int i = 0;
+	int nr = 0;
+	nr = DOC_NumRow("RISPOSTE", "");
+	if (nr > 0)
+	{
+		for (i = 0; i < nr - 1; i++)
+		{
+			htmlToReturn.Write($@"
+				<table id=""template_doc_3"" class=""tabella_dettaglio_quesito"">
+					<thead>
+						<tr>
+							<th colspan=""2"" align=""left"" nowrap>" + ApplicationCommon.CNV("risposta quesito") + $@"</th>
+						</tr>
+					</thead>
+					<tbody>");
+			htmlToReturn.Write($@"
+					<tr>
+						<th width=""120px;"">" + DOC_FieldRow_Label("RISPOSTE", "Domanda") + $@" </th> 
+						<td>" + DOC_FieldRow("RISPOSTE", "Domanda", i) + $@"</td>
+					</tr>");
+			htmlToReturn.Write($@"
+					<tr>
+						<th>" + DOC_FieldRow_Label("RISPOSTE", "ProtocolRispostaQuesito") + $@"</th> 
+						<td>" + DOC_FieldRow("RISPOSTE", "ProtocolRispostaQuesito", i) + $@"</td>
+					</tr>
+					<tr>
+						<th>" + DOC_FieldRow_Label("RISPOSTE", "DataRisposta") + $@"</th> 
+						<td>" + DOC_FieldRow("RISPOSTE", "DataRisposta", i) + $@"</td>
+					</tr>
+					<tr>
+						<th>" + DOC_FieldRow_Label("RISPOSTE", "Risposta") + $@"</th> 
+						<td>" + DOC_FieldRow("RISPOSTE", "Risposta", i) + $@"</td>
+					</tr>");
+			htmlToReturn.Write($@"
+					<tr>
+						<th>" + DOC_FieldRow_Label("RISPOSTE", "Allegato") + $@"</th> 
+						<td>");
+			if (!string.IsNullOrEmpty(DOC_FieldRowTecnical("RISPOSTE", "Allegato", i)))
+			{
+				objattach.Init(0,"Allegato", DOC_FieldRowTecnical("RISPOSTE", "Allegato", i), null,null, "IN", true);
+				objattach.Html(htmlToReturn, false);
+			}
+			htmlToReturn.Write($@"
+						</td>
+					</tr>
+
+				</tbody>
+			</table>");
+
+		}
+	}
+	htmlToReturn.Write($@"<input type=""hidden"" id=""TIPODOC"" value=""CHIARIMENTI_COLLEGATI""/>
+	<input type=""hidden"" id=""TITOLODOC"" value=""Dettaglio Quesito""/>");
+		
+}
+drawContent();
+
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+}@Html.Raw(htmlToReturn.Out())

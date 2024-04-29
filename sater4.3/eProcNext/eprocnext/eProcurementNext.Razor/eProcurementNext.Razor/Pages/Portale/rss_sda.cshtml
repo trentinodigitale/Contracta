@@ -1,0 +1,35 @@
+﻿@page "/Portale/rss_sda.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using eProcurementNext.DashBoard
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.DashBoard.Basic;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Portale.rss_sdaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+
+	var sort = GetParamURL(Request.QueryString.ToString(), "sort");
+	if (string.IsNullOrEmpty(sort))
+	{
+		sort = "DtScadenzaBandoTecnical";
+	}
+	var sortOrder = GetParamURL(Request.QueryString.ToString(), "sortorder");
+	if (string.IsNullOrEmpty(sortOrder))
+	{
+		sortOrder = "asc";
+	}
+	var mlKey = GetParamURL(Request.QueryString.ToString(), "ML_KEY");
+	if (string.IsNullOrEmpty(mlKey))
+	{
+		mlKey = "TEMPLATE_RSS_SDA_ML";
+	}
+	
+	HttpContext.Response.Redirect("rss_new.asp?Table=DASHBOARD_VIEW_DOCUMENTI_PUBBLICI_SDA&FilterHide=" + UrlEncode(GetParamURL(Request.QueryString.ToString(), "FilterHide")) + "&Filter=" + UrlEncode(GetParamURL(Request.QueryString.ToString(), "Filter")) + "&ML_KEY=" + mlKey + "&sort=" + sort + "&sortorder=" + sortOrder + "&numRowForPag=" + GetParamURL(Request.QueryString.ToString(), "numRowForPag") + "&nPag=" + GetParamURL(Request.QueryString.ToString(), "nPag"));
+}

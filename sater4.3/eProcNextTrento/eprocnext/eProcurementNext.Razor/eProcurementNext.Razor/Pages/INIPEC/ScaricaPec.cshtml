@@ -1,0 +1,15 @@
+﻿@page "/INIPEC/ScaricaPec.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.Application;
+@using static CommonModule.Basic
+@model eProcurementNext.Razor.Pages.INIPEC.ScaricaPecModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+}
+@{
+    string ID = UCase(CStr(GetParamURL(Request.QueryString.ToString(), "ID")));
+    string OPERATION = UCase(CStr(GetParamURL(Request.QueryString.ToString(), "OPERATION")));
+
+    Response.Redirect("/WebApiFramework/api/ScaricaPec?ID=" + ID + "&OPERATION=" + OPERATION + "");
+}

@@ -1,0 +1,95 @@
+﻿@page "/DASHBOARD/ViewerStartProcess.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using eProcurementNext.DashBoard
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.DASHBOARD.ViewerStartProcessModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'-- la vista passata dovrà ritornare almeno la colonna idHeader ( usata nella condizione di where ) e la colonna idRow ( sfruttata per passare gli ID al viewer process )
+	string view = GetParamURL(Request.QueryString.ToString(), "VIEW");
+	string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	string PROCESS_PARAM = GetParamURL(Request.QueryString.ToString(), "PROCESS_PARAM");
+
+	//'-------------------------------------
+	//'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+	//'-------------------------------------
+
+	validate("IDDOC", IDDOC, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+	validate("VIEW", view, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 1, HttpContext, session);
+	validate("PROCESS_PARAM", PROCESS_PARAM, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 1, HttpContext, session);
+
+	string result = string.Empty;
+	string strCause = "Select sulla vista " + view;
+
+	string strSQL = "select idrow from " + view + " where idHeader = " + CStr(CLng(IDDOC));
+	TSRecordSet? rs = null;
+	try
+	{
+		CommonDbFunctions db = new();
+		rs = db.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+	}
+	catch(Exception e)
+	{
+		exitWithError(strCause + " - " +e.Message);
+	}
+	try
+	{
+		if(rs.RecordCount>0)
+		{
+			strCause = "moveFirst sul recordset";
+			rs.MoveFirst();
+			strCause = "Ciclo sui record ritornati";
+			while(!rs.EOF)
+			{
+				if(!string.IsNullOrEmpty(result))
+				{
+					result = result + "~~~";
+				}
+				strCause = "Composizione della variabile result";
+				result = result + GetValueFromRS(rs.Fields["idrow"]);
+
+				rs.MoveNext();
+			}
+		}
+	}	
+	catch(Exception e)
+	{
+		exitWithError(strCause + " - " + e.Message);
+	}
+	
+	
+	
+	if (string.IsNullOrEmpty(result))
+	{
+		ShowInfo("Non ci sono elementi da elaborare");
+	}
+	else
+	{
+		throw new ResponseRedirectException("../dashboard/ViewerExecProcess.asp?IDLISTA=" + result + "&PROCESS_PARAM=" + PROCESS_PARAM, Response); 	
+	}
+	void ShowInfo(string Information )
+	{
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=yes&MSG=" + URLEncode(TruncateMessage(Information)) + "&CAPTION=Informazione&ICO=1", Response);
+	}
+	void   exitWithError(string msgErr)
+	{
+		if (ApplicationCommon.Application["dettaglio-errori"].toLower() != "yes" )
+		{
+			msgErr = ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO") + DateTime.Now;
+		}
+	
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=no&MSG=" + URLEncode(TruncateMessage(msgErr)) + "&CAPTION=Errore&ICO=2", Response);
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+}@Html.Raw(htmlToReturn.Out())

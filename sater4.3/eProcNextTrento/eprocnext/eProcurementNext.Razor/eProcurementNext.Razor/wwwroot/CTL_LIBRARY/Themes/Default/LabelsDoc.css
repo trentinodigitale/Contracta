@@ -1,0 +1,26 @@
+BODY
+{
+}
+.FontSelectedTab
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.FontNotSelectedTab
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: darkred;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.FontIceTab
+{
+    FONT-SIZE: 8pt;
+    COLOR: #808080;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}

@@ -1,0 +1,102 @@
+﻿@page "/blocked.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Application.IEprocNextApplication application;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.Blocked1Model
+@{
+	HttpContext.Response.StatusCode = 500;
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	TSRecordSet rs = cdf.GetRSReadFromQuery_("select * from lib_dictionary where dzt_name = 'SYS_DISATTIVA_BLACKLIST'", application["ConnectionString"]);
+
+	string blacklistDisattivata = "";
+	if (rs.RecordCount == 0) {
+		blacklistDisattivata = "0"; //'black list attiva di default!
+	} else
+	{
+		blacklistDisattivata = CStr(GetValueFromRS(rs.Fields["DZT_ValueDef"]));
+	}
+
+	string visualizzaIP = "";
+	TSRecordSet rs2 = cdf.GetRSReadFromQuery_("select DZT_ValueDef from lib_dictionary where dzt_name = 'SYS_VISUALIZZA_IP'", application["ConnectionString"]);
+	if (rs2.RecordCount == 0)
+	{
+		visualizzaIP = "1"; //'lo visualizzo
+	}
+	else
+	{
+		visualizzaIP = CStr(GetValueFromRS(rs2.Fields["DZT_ValueDef"]));
+	}
+	
+	blacklistDisattivata = "0";
+	string strVirtualDirectory = application["strVirtualDirectory"];
+
+
+	string REMOTE_HOST = HttpContext.Connection.RemoteIpAddress.ToString();
+	
+}
+
+<html>
+<head>
+    <link media="screen,projection" href="/@application["NOMEAPPPORTALE"]/css/style.css" type="text/css" rel="stylesheet">
+	<title> BLOCKED </title>
+</head>
+	
+<body>
+
+<script language="javascript">
+	try
+	{
+		self.resizeTo(800,600);
+	}
+	catch(e) {}
+</script>
+
+
+<div id="header" style="margin:10px;">
+    <div id="bgheader" style=" width:inherit;">
+        <div id="logo" style="width:inherit;">
+            <h1><a href=""><img alt="Nome Gestore" src="@application["strVirtualDirectory"]/images/I_logo.png"></a></h1>
+        </div>
+    </div>
+    <div style=" background:#fff; padding:10px; overflow:auto;">
+    
+	@if (blacklistDisattivata == "0") {
+
+		if (visualizzaIP == "1")
+		{
+			<p style="font-size:18px; font-weight:bold; color:#666; margin-bottom:15px;">
+				<img alt="Stop" src="images/stop-small.png"> IP @REMOTE_HOST 
+				<span style=" color:#C03;">BLOCKED</span>
+			</p>
+		}
+		else
+		{
+			<p style="font-size:18px; font-weight:bold; color:#666; margin-bottom:15px;">
+				<img alt="Stop" src="images/stop-small.png">
+				<span style=" color:#C03;">BLOCKED</span>
+			</p>
+		}
+
+	} 
+	else
+	{
+
+		<p style="font-size:18px; font-weight:bold; color:#666; margin-bottom:15px;">
+			<img alt="Stop" src="images/stop-small.png">
+			<span style=" color:#C03;"> @ApplicationCommon.CNV("Errore di sistema, accesso alla pagina bloccato - e' stato riscontrato un utilizzo fraudolento all'applicazione")</span>
+		</p>
+	}
+	
+    <p style="font-size:12px; font-weight:bold; color:#666">
+
+</p>
+</div>
+</div>
+
+
+
+</body>
+
+</html>

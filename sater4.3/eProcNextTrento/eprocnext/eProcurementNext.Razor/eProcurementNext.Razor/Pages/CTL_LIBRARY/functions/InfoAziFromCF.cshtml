@@ -1,0 +1,237 @@
+@page "/CTL_LIBRARY/functions/InfoAziFromCF.asp"
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.InfoAziFromCFModel
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.CommonDB.Basic;
+@inject eProcurementNext.Application.IEprocNextApplication _application;
+@inject eProcurementNext.DashBoard.IViewer _viewer;
+@inject IConfiguration configuration;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.ctl_profiler
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@* <!-- #Include File="CTL_Profiler.inc" --> *@
+@* <!-- #Include File="verificabrowser.inc" --> *@
+@* <!-- #Include File="CheckSession.inc" --> *@
+@* <!-- #INCLUDE FILE="security.inc" --> *@
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	dynamic TimeStartPage = DateTime.Now.Ticks;
+	string strSQL = string.Empty;
+	string strCodiceFiscale = GetParamURL(Request.QueryString.ToString(), "CodiceFiscale").Replace("'","''");
+	string Grid = GetParamURL(Request.QueryString.ToString(), "Grid").Replace("'", "''");
+	string strIdAzi = GetParamURL(Request.QueryString.ToString(), "IdAzi");
+	string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC").Trim();
+	string strListaAlbi = GetParamURL(Request.QueryString.ToString(), "ListaAlbi").Trim();
+	string strFilterHide = GetParamURL(Request.QueryString.ToString(), "FilterHide").Replace("'", "''");
+	string AZIPROFILO = GetParamURL(Request.QueryString.ToString(), "AZIPROFILO").Replace("'", "''");
+
+	//'-------------------------------------
+	//'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+	//'-------------------------------------
+
+	validate("IdAzi", strIdAzi, TIPO_PARAMETRO_INT, CInt(""), "", 0, HttpContext, session);
+	validate("IDDOC", IDDOC, TIPO_PARAMETRO_INT, CInt(""), "", 0, HttpContext, session);
+
+	//--commentato perchè dovrebbe bastare la replace del singolo apice. Bloccare l'utente in modo inappropriato perchè ha digitato una combinazione
+	//'--che sembra un tentativo di attacco non ci è sembrato opportuno. In ogni caso l areplace degli apici bloccherà ogni contenuto inopportuno
+	//'call validate( "CodiceFiscale", replace(strCodiceFiscale,"--","  ") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0)
+	validate("Grid", Grid, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("ListaAlbi", strListaAlbi.Replace("#", "").Replace(",", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate("FilterHide", strFilterHide, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+	validate("AZIPROFILO", AZIPROFILO, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	switch(Grid)
+	{
+		case "RTIGRIDGrid":
+			Grid = "RTI";
+			break;
+		case "AUSILIARIEGRIDGrid" :
+			Grid = "AUSILIARIE";
+			break;
+		case  "SUBAPPALTOGRIDGrid":
+
+			Grid = "SUBAPPALTO";
+			break;
+		case "ESECUTRICIGRIDGrid":
+			Grid = "ESECUTRICI";
+			break;
+	}
+
+	//ESTESA LA SELECT PER PRENDERE EVENTUALI RICHIESTE DI DGUE INVIATE ED EVENTUALI DGUE COMPILATI PRIMA ANDAVA SOLO DASHBOARD_VIEW_AZIENDE
+	//'if strCodiceFiscale <> "" then
+	//'	strSQL = "select *,ISNULL(CT.ID,'') as IdDocRicDGUE, " &_
+	//'				" case " &_
+	//'					"when ISNULL(CD.SIGN_ATTACH,'') <> '' then 'Ricevuto' " &_
+	//'					"when CT.Id IS Not NULL then 'InviataRichiesta' " &_
+	//'					"else '' " &_
+	//'				  "end as StatoRichiesta " &_
+	//	'				"from DASHBOARD_VIEW_AZIENDE WITH(NOLOCK) " &_						
+	//'					"left join CTL_DOC CT WITH(NOLOCK) on CT.TipoDoc = 'RICHIESTA_COMPILAZIONE_DGUE' and CT.Deleted = 0 and CT.LinkedDoc=" & IDDOC &  " and CT.JumpCheck='" & Grid & "' and CT.StatoFunzionale <> 'Annullato' and Destinatario_Azi=idazi " &_	
+	//'					"left join CTL_DOC CR WITH(NOLOCK) on CR.LinkedDoc=CT.Id and CR.TipoDoc='RICHIESTA_COMPILAZIONE_DGUE_RISPOSTA' and CR.Deleted=0  and CR.StatoFunzionale='Inviato' " &_	
+	//'					"left join ctl_doc CD WITH(NOLOCK) on CD.LinkedDoc=CR.id and CD.TipoDoc='MODULO_TEMPLATE_REQUEST' " &_	
+	//'				"where (codicefiscale='" & strCodiceFiscale & "' or azipartitaiva='" & strCodiceFiscale & "')"
+	//'end if
+	var sqlParams = new Dictionary<string, object?>();
+	if (!string.IsNullOrEmpty(strCodiceFiscale))
+	{
+		sqlParams.Add("@CodiceFiscale", strCodiceFiscale);
+		sqlParams.Add("@nome", "codicefiscale");
+
+		strSQL = @"	SELECT * 
+				from DASHBOARD_VIEW_AZIENDE WITH(NOLOCK) 
+				where idazi in 
+				(
+				select idazi from aziende WITH(NOLOCK) where azipartitaiva=@CodiceFiscale 
+				union 
+				select lnk from dm_attributi WITH(NOLOCK) where idapp=1 and dztnome=@nome and vatvalore_ft=@CodiceFiscale
+				)";
+	}
+
+	//'response.write strSQL
+	//'response.end
+
+	if (!string.IsNullOrEmpty(strIdAzi))
+	{
+		sqlParams.Add("@idazi", CInt(strIdAzi));
+		strSQL = "select  *, '' as IdDocRicDGUE, '' as StatoRichiesta from DASHBOARD_VIEW_AZIENDE where IdAzi=@idazi";
+	}
+
+	//--se passato applico un filtro
+	if (!string.IsNullOrEmpty(strFilterHide))
+	{
+		sqlParams.Add("@FilterHide", strFilterHide);
+		strSQL = strSQL + " and @FilterHide";
+	}
+	if (!string.IsNullOrEmpty(AZIPROFILO))
+	{
+		strSQL = strSQL  + " and aziprofili like '%S%'";
+	}
+
+	//--recupero info azienda
+	TSRecordSet rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	//'Write_CTL_Profiler "InfoAziFromCF.asp - fine recupero info azienda" , "" , ""
+	if (rs is not null && rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+		//'--se passato parametro strListaAlbi controllo che azienda iscritta almeno ad uno di questi
+
+		if (!string.IsNullOrEmpty(strListaAlbi))
+		{
+			strListaAlbi = strListaAlbi.Replace("###", ",");
+			strListaAlbi = Strings.Mid(strListaAlbi, 2, strListaAlbi.Length - 2);
+			sqlParams.Clear();
+			sqlParams.Add("@ListaAlbi", strListaAlbi);
+			sqlParams.Add("@statoIscrizione", "Iscritto");
+			sqlParams.Add("@idAzi", CInt(rs["IdAzi"]!));
+			strSQL = " select * from CTL_DOC_Destinatari WITH(NOLOCK) where idHeader in (@ListaAlbi) and StatoIscrizione=@statoIscrizione and IdAzi=@idAzi";
+			//on error resume next
+			TSRecordSet? rs1 = null;
+			try
+			{
+				rs1 = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+				//'Write_CTL_Profiler "InfoAziFromCF.asp - fine recupero azienda iscritta albi" , "" , ""
+			}
+			catch(Exception ex)
+			{
+				//'-- gestione errore
+				//if err.number <> 0 then
+
+				traceInLogUtente(0, "InfoAziFromCF.asp", "Descrizione:" + ex.Message + " --- QueryString:" + GetQueryStringFromContext(Request.QueryString),HttpContext,session);
+
+				//-- Se è attiva la modalità debug visualizziamo più informazioni riguardo l'errore, query sql comprese
+				if (string.Equals(CStr(ApplicationCommon.Application["debug-mode"]).ToLower(), "yes") || string.Equals(CStr(ApplicationCommon.Application["debug-mode"]).ToLower(), "si") || string.Equals(CStr(ApplicationCommon.Application["debug-mode"]), "true"))
+				{
+					htmlToReturn.Write("Desc:" + ex.Message);
+				}
+				else
+				{
+					//'-- Se è disattivato il debug-mode ma è attiva ma la SYS di visione degli errori tecnici 
+
+					if (string.Equals(CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower(), "yes") || string.Equals(CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower(), "si"))
+					{
+						htmlToReturn.Write("Desc:" + ex.Message);
+					}
+					else
+					{
+						//
+						// '-- Scriviamo l'errore nell'event viewer
+						TraceErr(ex, ApplicationCommon.Application.ConnectionString);
+						//TraceErr s, d, n, ProgID
+
+						htmlToReturn.Write(" Errore in data : " + DateTime.Now + "<br/> descrizione:" + ex.Message);
+					}
+				}
+				//'-- TRACCIAMO IL TEMPO DI ESECUZIONE DELA PAGINA
+				Write_CTL_Profiler("InfoAziFromCF.asp", "", "", Request, TimeStartPage, configuration, _application);
+			}
+
+			if (rs1 is not null && rs1.RecordCount == 0)
+			{
+				//'-- TRACCIAMO IL TEMPO DI ESECUZIONE DELA PAGINA
+				Write_CTL_Profiler("InfoAziFromCF.asp", "", "", Request, TimeStartPage, configuration, _application);
+				htmlToReturn.Write("operatore non possiede abilitazione necessaria");
+				throw new ResponseEndException(htmlToReturn.Out(), Response,"operatore non possiede abilitazione necessaria");
+			}
+		}
+		string IdDocRicDGUE = string.Empty;
+		string StatoRichiesta = string.Empty;
+		string strDGUESQL = string.Empty;
+
+		//-- verifico se per l'azienda e per il documento collegato esiste la richiesta di DGUE e la relativa risposta
+		//'--aggiunto controllo su IDDOC perchè dal documento OFFERTA_PARTECIPANTI non viene passato IDDOC
+
+		if (!string.IsNullOrEmpty(strCodiceFiscale) && !string.IsNullOrEmpty(IDDOC))
+		{
+			string IDAZI = CStr(rs["IdAzi"]);
+			sqlParams.Clear();
+			sqlParams.Add("@idAzi", IDAZI);
+			sqlParams.Add("@idDoc", IDDOC);
+			sqlParams.Add("@grid", Grid);
+			sqlParams.Add("@tipo", "RICHIESTA_COMPILAZIONE_DGUE");
+			sqlParams.Add("@annullato", "Annullato");
+			strDGUESQL = "select ISNULL(CT.ID,'') as IdDocRicDGUE, " +
+				" case " +
+					"when ISNULL(CD.SIGN_ATTACH,'') <> '' then 'Ricevuto' " +
+					"when CT.Id IS Not NULL then 'InviataRichiesta' " +
+					"else '' " +
+						"end as StatoRichiesta " +
+				"from  " +
+					" CTL_DOC CT WITH(NOLOCK) " +
+					"left join CTL_DOC CR WITH(NOLOCK) on CR.LinkedDoc=CT.Id and CR.TipoDoc='RICHIESTA_COMPILAZIONE_DGUE_RISPOSTA' and CR.Deleted=0  and CR.StatoFunzionale='Inviato' " +
+					"left join ctl_doc CD WITH(NOLOCK) on CD.LinkedDoc=CR.id and CD.TipoDoc='MODULO_TEMPLATE_REQUEST' " +
+				" where  CT.Destinatario_Azi= @idAzi" + 
+				" and CT.TipoDoc = @tipo and CT.Deleted = 0 and CT.LinkedDoc=@idDoc and CT.JumpCheck=@grid and CT.StatoFunzionale <> @annullato ";
+			TSRecordSet? rsDGUE = null;
+			rsDGUE = cdf.GetRSReadFromQuery_(strDGUESQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+			if (rsDGUE.RecordCount >0)
+			{
+				rsDGUE.MoveFirst();
+				IdDocRicDGUE = CStr(rsDGUE["IdDocRicDGUE"]);
+				StatoRichiesta = CStr(rsDGUE["StatoRichiesta"]);
+			}
+		}
+		htmlToReturn.Write($"{CStr(rs["aziragionesociale"])}#{CStr(rs["aziIndirizzoLeg"])}#{CStr(rs["aziLocalitaLeg"])}#{CStr(rs["aziProvinciaLeg"])}#{CStr(rs["codicefiscale"])}#{CStr(rs["idazi"])}#{IdDocRicDGUE}#{StatoRichiesta}");
+	}
+	else
+	{
+		htmlToReturn.Write("");
+	}
+
+	//'-- TRACCIAMO IL TEMPO DI ESECUZIONE DELA PAGINA
+	
+	Write_CTL_Profiler("InfoAziFromCF.asp", "", "", Request, TimeStartPage, configuration, _application);
+	
+}@Html.Raw(htmlToReturn.Out())

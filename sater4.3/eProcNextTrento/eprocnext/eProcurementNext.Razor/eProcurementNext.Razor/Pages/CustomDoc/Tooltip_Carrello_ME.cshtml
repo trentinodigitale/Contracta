@@ -1,0 +1,158 @@
+﻿@page "/CustomDoc/Tooltip_Carrello_ME.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.Tooltip_Carrello_MEModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.Tooltip_Carrello_MEModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	TSRecordSet? rs = null;
+	string CodiceModello = string.Empty;
+	int IdModello = 0;
+	TSRecordSet? rsDoc = null;
+	TSRecordSet? rsColonne = null;
+	string strNomeModello = string.Empty;
+	string ListColumn = string.Empty;
+	var sqlParams = new Dictionary<string, object?>();
+	long lIdPfu = CLng(session[eProcurementNext.Session.SessionProperty.IdPfu]);
+
+	string RIGA = GetParamURL(Request.QueryString.ToString(), "RIGA");
+
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+	validate( "RIGA", RIGA , TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+
+	//'--recupero il catalogo legato all'articolo
+	sqlParams.Clear();
+	sqlParams.Add("@id", CInt(RIGA));
+	string strSql = " select c.IdDoc, d.* from Document_MicroLotti_Dettagli D with(nolock) inner join CTL_DOC C with(nolock) on D.IdHeader=C.ID where D.Id=@id";
+	rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+		IdModello = CInt(rs["idDoc"]!);
+		//'--recupero il  modello legato
+		sqlParams.Clear();
+		sqlParams.Add("@id", IdModello);
+		strSql = "select * from CTL_DOC with(nolock) where Id = @id";
+		rsDoc = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rsDoc.RecordCount > 0)
+		{
+			rsDoc.MoveFirst();
+			CodiceModello = CStr(rsDoc["titolo"]);
+			//'--costruisco il nome del modello da recuperare		 
+			strNomeModello = $"MODELLI_MEA_{CodiceModello}_Mod_Modello";
+
+			//'--dal codice del modello recupero attributo che contiene lista colonna da utilizzare per il tooltip
+			if (rsDoc.RecordCount >0)
+			{
+				rsDoc.MoveFirst();
+				IdModello = CInt(rsDoc["id"]!);
+				sqlParams.Clear();
+				sqlParams.Add("@dse_id", "TOOLTIP_ORDINAMENTO");
+				sqlParams.Add("@id", IdModello);
+				sqlParams.Add("@name", "TOOLTIP_ORDER");
+				strSql = "select Value from CTL_DOC_Value with(nolock) where DSE_ID=@dse_id and IdHeader=@id and DZT_Name=@name";
+
+				rsColonne = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+				if (rsColonne.RecordCount >0)
+				{
+					rsColonne.MoveFirst();
+					ListColumn = CStr(rsColonne["value"]);
+					if(!string.IsNullOrEmpty(ListColumn))
+					{
+						//'--costruisco html per le colonne indicate
+						DrawToolTip(strNomeModello, ListColumn, rs);
+						throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+					}
+				}
+			}
+			else
+			{
+				htmlToReturn.Write("documento del modello non trovato");
+				throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+			}
+		}
+	}
+	else
+	{
+		//'--errore:convenzione non presente legata alla riga	
+		htmlToReturn.Write("Catalogo non presente per la riga");
+		throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+	}
+	void DrawToolTip(string strNomeModello, dynamic ListColumn, TSRecordSet rs)
+	{
+		//'Response.Write cstr(Session("strSuffLing"))
+		//'Response.end
+
+		//'--recupero modello
+		Dictionary<string, Field> mp_Columns = new Dictionary<string, Field>();
+		Dictionary<string, Grid_ColumnsProperty> mp_ColumnsProperty = new Dictionary<string, Grid_ColumnsProperty>(); ;
+		LibDbModelExt mp_objDB = new LibDbModelExt();
+		mp_objDB.GetFilteredFieldsWeb( strNomeModello,ref mp_Columns,ref mp_ColumnsProperty, CStr(session["strSuffLing"]) , 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+
+		int Indice = 0;
+
+		string[] aInfoCol = ListColumn.Split(",");
+		htmlToReturn.Write($@"<div class=""DivTooltipCarrello"">
+		<table>");
+
+		for(int i  = 0;i<aInfoCol.Length-1;i++)
+		{
+			try
+			{
+				//'Response.Write "--" & aInfoCol(i) & "--" 
+				int nExist = CInt(mp_Columns[aInfoCol[i]].Caption!);	
+				//'Response.Write err.Description & "<br>"
+				//'--disegno la riga solo se attributo esiste
+				if(Indice == 1)
+				{
+					Indice = 2;
+				}
+				else
+				{
+					Indice = 1;
+				}
+				htmlToReturn.Write($@"
+				  <tr class=""RowCarrello0""" + Indice + $@""">
+					<th>");
+				//'-- =server.htmlencode(replace(mp_Columns(aInfoCol(i)).Caption,"???",""))
+				htmlToReturn.Write(Replace( mp_Columns[aInfoCol[i]].Caption, "???", ""));
+
+				htmlToReturn.Write("</th>");
+
+
+				//	'--setto il valore
+				 mp_Columns[aInfoCol[i]].Value = GetValueFromRS(rs.Fields[aInfoCol[i]]);
+
+				htmlToReturn.Write("<td>" + HtmlEncode(CStr(mp_Columns[aInfoCol[i]].TxtValue())) + $@"</td>
+
+			  </tr>	");
+
+			}
+			catch
+			{
+				//err.Clear
+			}
+			htmlToReturn.Write($@"
+			</table>
+		</div>");
+
+		}
+	}
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,79 @@
+﻿@page "/NoTIER/associaDDT.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.NoTIER.associaDDTModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.NoTIER.associaDDTModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+}
+@{
+	//'--Versione=1&data=2019-09-10&Attvita=253624&Nominativo=Leone
+
+	//on error resume next
+
+	string doc_collegato = GetParamURL(Request.QueryString.ToString(), "doc_collegato");
+	string doc_selezionato = GetParamURL(Request.QueryString.ToString(), "doc_selezionato");
+
+	validate("doc_collegato", doc_collegato, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("doc_selezionato", doc_selezionato, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+
+	//'response.write "blocco"
+	//'response.end
+
+	eProcurementNext.CtlProcess.ClsElab  objProc;
+	string strDescErrore = "";
+	bool bErrore = false;
+	string strErrore = "";
+	string tipoDocPartenza = "";
+	//'-- l'idDoc è il documento che si sta creando mentre l'idpfu passato al processo ( <ID_USER> ) sarà il documento selezionato dalla griglia dal quale si vogliono prendere le informazioni
+	string nomeProcesso = "ASSOCIA_DDT";
+	if ( CStr(GetParamURL(Request.QueryString.ToString(), "tipodoc")).ToUpper() == "FATTURA")
+	{
+		nomeProcesso = "ASSOCIA_FATTURA";
+	}
+
+	objProc = new eProcurementNext.CtlProcess.ClsElab();
+	//Set objProc = CreateObject("CtlProcess.clsElab")
+
+	try
+	{
+		objProc.Elaborate(nomeProcesso,"NOTIER_INVOICE", CLng(doc_collegato), CLng(doc_selezionato), ref strDescErrore, 1, ApplicationCommon.Application.ConnectionString);
+	}
+	catch(Exception ex)
+	{
+		strErrore = ex.Message + "-" + strErrore;
+	}
+	if (string.IsNullOrEmpty(strDescErrore))
+	{
+		strErrore = strDescErrore;
+		bErrore = true;
+	}
+
+	if(bErrore)
+	{
+		throw new ResponseRedirectException("../ctl_library/erroreApplicativo.asp?msg=" + URLEncode(strErrore), Response);
+	}
+	else
+	{
+		tipoDocPartenza = "NOTIER_INVOICE";
+		if(CStr(GetParamURL(Request.QueryString.ToString(), "tipodoc")).ToUpper() == "FATTURA")
+		{
+			tipoDocPartenza = "NOTIER_CREDIT_NOTE";
+		}
+		string urlDocument = "ctl_library/document/document.asp?MODE=SHOW&lo=base&JScript=" + tipoDocPartenza + "&DOCUMENT=" + tipoDocPartenza + "&COMMAND=RELOAD&IDDOC=" + doc_collegato;
+		string urlFinale = "../ctl_library/path.asp?url=" + URLEncode(urlDocument) + "&KEY=document";
+		throw new ResponseRedirectException(urlFinale, Response);
+	}
+}
+@Html.Raw(htmlToReturn.Out())

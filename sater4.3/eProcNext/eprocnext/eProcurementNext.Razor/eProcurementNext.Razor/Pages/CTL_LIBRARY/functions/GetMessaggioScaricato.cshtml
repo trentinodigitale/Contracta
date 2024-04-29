@@ -1,0 +1,122 @@
+﻿@page "/CTL_LIBRARY/functions/GetMessaggioScaricato.asp" 
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.GetMessaggioScaricatoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+	CommonDbFunctions cdb = new();
+}
+@{
+
+	//IdDoc=Request.QueryString("IDMSGBANDOIA")
+	//'SubType=Request.QueryString("SUBTYPE")
+	//'--idmsg della tab_messaggi
+	var sqlParams = new Dictionary<string, object?>();
+
+	validate("IDMSG", CStr(GetParamURL(Request.QueryString.ToString(), "IDMSG")), TIPO_PARAMETRO_NUMERO, 0, "", 1,HttpContext,session);
+	validate("DOCUMENT", Replace(GetParamURL(Request.QueryString.ToString(), "DOCUMENT"), ".", "_"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	string IDMSG = GetParamURL(Request.QueryString.ToString(), "IDMSG");
+	string DOCUMENT =  GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+	//'Response.Write IDMSG
+	//'Response.end
+	string TipoBando = string.Empty;
+	TSRecordSet? rs1 = null;
+	if (!string.IsNullOrEmpty(DOCUMENT))
+	{
+		//'--controllo se azienda collegata tra i destintari
+		sqlParams.Add("@dest",  CInt(IDMSG));  
+		sqlParams.Add("@azi", CInt(session["IDAZI"]));        
+		string strQuery = "select IdHeader from CTL_DOC_Destinatari with(nolock) where idHeader=@dest and IdAzi=@azi";
+		rs1 = cdb.GetRSReadFromQuery_(strQuery, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rs1.RecordCount >0)
+		{
+			rs1.MoveFirst();
+			htmlToReturn.Write(CStr(rs1["IdHeader"]));
+			//throw new ResponseEndException(htmlToReturn.Out(),"");
+		}
+		else
+		{
+			htmlToReturn.Write("-1");
+		}
+	}
+	else
+	{
+		//'--resupero IdDoc e SubType da IDMSG
+		sqlParams.Add("@IDMSG", CInt(IDMSG));
+		string strQuery = "select TipoBando, IdDoc, ISubType from TAB_MESSAGGI_FIELDS where IdMsg=@IDMSG";
+
+		//'--recupero idmsg associato all'utente se esiste
+		rs1 = cdb.GetRSReadFromQuery_(strQuery, ApplicationCommon.Application.ConnectionString, sqlParams);
+		string IdDoc;
+		string SubType;
+		if (rs1.RecordCount > 0)
+		{
+			rs1.MoveFirst();
+
+			IdDoc = CStr(rs1["IdDoc"]);
+			SubType = CStr(rs1["ISubType"]);
+			TipoBando = CStr(rs1["TipoBando"]);
+		}
+		else
+		{
+			//'--provo a recuperare dalla messagefields
+			strQuery = "select top 1 mfIsubType, mfFieldValue from MessageFields where mfIdMsg=@IDMSG and mfFieldName='IdDoc' order by 1 desc";
+			rs1 = cdb.GetRSReadFromQuery_(strQuery, ApplicationCommon.Application.ConnectionString);
+			if (rs1.RecordCount > 0)
+			{
+				rs1.MoveFirst();
+				IdDoc = CStr(rs1["mfFieldValue"]);
+				SubType = CStr(rs1["mfIsubType"]);
+			}
+			else
+			{
+				htmlToReturn.Write("-1");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+			}
+		}
+		//'--se si tratta di offerte (186 ,38 , 54, 27,22)  esco
+		if (SubType == "186" || SubType == "38" || SubType == "54" || SubType == "27" || SubType == "22" || SubType == "70")
+		{
+			htmlToReturn.Write(IDMSG);
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		}
+
+		//'--se si tratta di un INVITO (167 e TipoBando=3 oppure subtype=48 vecchi flussi) allora controllo se ha un invito in arrivo associato (168 oppure un 49)
+		if (SubType == "48")
+		{
+			SubType = "49";	
+		}
+
+		if (TipoBando == "3" && SubType == "167")
+		{
+			SubType = "168";		
+		}
+
+		string strQueryCheck = "select umidpfu as idpfu,T.idmsg,mffieldvalue as IDDOC from tab_messaggi_fields TMF, tab_messaggi T ,tab_utenti_messaggi,messagefields where TMF.idmsg=T.idmsg and T.idmsg=umidmsg and T.idmsg=mfidmsg and (advancedstate='' or advancedstate='0' or advancedstate='7' or advancedstate='6'  ) and msgisubtype=mfisubtype  and mffieldname='IdDoc' and msgisubtype=" + SubType + " and umidpfu > 0 and umidpfu=" + session["IdPfu"] + " and mffieldvalue='" + IdDoc + "' and umstato=0 order by T.idmsg desc";
+
+		//'--recupero idmsg associato all'utente se esiste
+		TSRecordSet rs = cdb.GetRSReadFromQuery_(strQueryCheck, ApplicationCommon.Application.ConnectionString);
+
+		if (rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+		
+			htmlToReturn.Write(CStr(rs["idmsg"]));
+		}
+		else
+		{
+			htmlToReturn.Write("-1");
+		}
+	}
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,17 @@
+﻿@page "/FASCICOLO_GARA/Esporta_Indice.aspx"
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.Application
+@using eProcurementNext.BizDB
+@using eProcurementNext.CommonModule
+@inject IConfiguration configuration;
+@inject eProcurementNext.Application.IEprocNextApplication application;
+@model eProcurementNext.Razor.Pages.FASCICOLO_GARA.EsportaIndiceModel
+@using static eProcurementNext.Razor.Pages.FASCICOLO_GARA.EsportaIndiceModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	Page_Load(HttpContext, htmlToReturn, session);
+}
+@Html.Raw(htmlToReturn.Out())

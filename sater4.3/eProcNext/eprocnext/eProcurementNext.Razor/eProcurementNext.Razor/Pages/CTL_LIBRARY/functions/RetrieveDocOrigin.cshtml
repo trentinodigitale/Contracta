@@ -1,0 +1,67 @@
+﻿@page "/CTL_LIBRARY/functions/RetrieveDocOrigin.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.RetrieveDocOriginModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.RetrieveDocOriginModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+}
+@{
+
+    string RetrieveDocOrigin(string Fascicolo, string SubType)
+    {
+        string _RetrieveDocOrigin = "";
+        TSRecordSet? rsQueryFilter = null;
+        string strQuerySource = "";
+        string ainfo = "";
+        Dictionary <string,object> dict1 = new Dictionary<string, object>();
+		dict1.Add("@fascicolo",Fascicolo.Replace("'", "''"));
+        dict1.Add("@idpfu",session["IdPfu"]);
+        strQuerySource = " select top 1 idmsg,msgIsubType from MSG_LINKED_ISCRIZIONE_ALBO where msgisubtype<>0 and fascicolo=@fascicolo and idpfu=@idpfu";
+        //'--controllo se c'è un eventuale filtro da aggingere nell CTL_RELATION
+        string strQueryFilter = "";
+        Dictionary <string,object> dict2 = new Dictionary<string, object>();
+		dict2.Add("@reltype","DOC_2_CHIUDI");
+        dict2.Add("@relvalue","55;"+CStr(CLng(SubType)));
+        strQueryFilter = "select rel_valueoutput from ctl_relations where rel_type=@reltype and rel_valueinput=@relvalue ";
+
+        try
+        {   CommonDbFunctions cdb = new CommonDbFunctions();
+            rsQueryFilter = cdb.GetRSReadFromQuery_(strQueryFilter, ApplicationCommon.Application["ConnectionString"],dict2);
+            if (rsQueryFilter != null && rsQueryFilter.RecordCount > 0)
+            {
+                strQuerySource = strQuerySource + " and " + GetValueFromRS(rsQueryFilter.Fields["rel_valueoutput"]);
+            }
+            strQuerySource = strQuerySource + " order by idmsg asc";
+            CommonDbFunctions cd = new CommonDbFunctions();
+            TSRecordSet rsmsgfascicolo = cd.GetRSReadFromQuery_(CStr(strQuerySource), ApplicationCommon.Application["ConnectionString"],dict1);
+                if (rsmsgfascicolo.RecordCount > 0)
+                {
+                    _RetrieveDocOrigin = GetValueFromRS(rsmsgfascicolo.Fields["idmsg"]);
+
+
+                }
+            }
+            catch
+            {
+                //err.Clear
+            }
+
+            return _RetrieveDocOrigin;
+
+    }
+   
+    
+    validate( "Fascicolo", CStr(GetParamURL(Request.QueryString.ToString(), "Fascicolo")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0,HttpContext,session);
+    htmlToReturn.Write(RetrieveDocOrigin(GetParamURL(Request.QueryString.ToString(), "Fascicolo"),GetParamURL(Request.QueryString.ToString(), "SubType")));
+
+}@Html.Raw(htmlToReturn.Out())

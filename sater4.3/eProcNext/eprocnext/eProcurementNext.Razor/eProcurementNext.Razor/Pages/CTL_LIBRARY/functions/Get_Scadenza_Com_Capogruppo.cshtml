@@ -1,0 +1,80 @@
+﻿@page "/CTL_LIBRARY/functions/Get_Scadenza_Com_Capogruppo.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.Get_Scadenza_Com_CapogruppoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'-------------------------------------
+	//'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+	//'-------------------------------------
+
+	string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	
+	validate("IDDOC", IDDOC, TIPO_PARAMETRO_INT, CInt(""), "", 0,HttpContext,session);
+
+	TSRecordSet? rs = null;
+	//'--recupero data utile
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@idDoc", CStr(IDDOC));
+	string strSQL = "select convert ( varchar(19),DataScadenza,126 ) as DataScadenza from CTL_DOC with(nolock) where Id = (select LinkedDoc from CTL_DOC with(nolock) where Id = @idDoc)";
+	//on error resume next
+
+	try
+	{
+		CommonDbFunctions cdb = new();
+		rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rs.RecordCount >0)
+		{
+			rs.MoveFirst();
+			htmlToReturn.Write(CStr(rs["DataScadenza"]));
+		}
+		else
+		{
+			htmlToReturn.Write("");
+		}
+	}
+	catch(Exception ex)
+	{
+		//'-- gestione errore
+		//if err.number <> 0 then
+
+		traceInLogUtente(0, "Get_DataScadenza_Capogruppo.asp", "Descrizione:" + ex.Message + " --- QueryString:" + GetQueryStringFromContext(Request.QueryString),HttpContext,session);
+
+		//'-- Se è attiva la modalità debug visualizziamo più informazioni riguardo l'errore, query sql comprese
+		if (string.Equals((ApplicationCommon.Application["debug-mode"]).ToLower(), "yes") || string.Equals((CStr(ApplicationCommon.Application["debug-mode"]).ToLower()), "si") || string.Equals(CStr(ApplicationCommon.Application["debug-mode"]) , "true"))
+		{
+			htmlToReturn.Write( "Desc:" + ex.Message);
+		}
+		else
+		{
+			//'-- Se è disattivato il debug-mode ma è attiva ma la SYS di visione degli errori tecnici 
+			if ( string.Equals((ApplicationCommon.Application["dettaglio-errori"]).ToLower() , "yes") || string.Equals((ApplicationCommon.Application["dettaglio-errori"].ToLower()), "si" ))
+			{
+				htmlToReturn.Write("Desc:" + ex.Message);
+			}
+			else
+			{
+				TraceErr(ex, ApplicationCommon.Application.ConnectionString);
+				//TraceErr s, d, n, ProgID
+				htmlToReturn.Write(" Errore in data : " +DateTime.Now+" Desc:"+ex.Message);
+			}
+		}
+
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		//return;
+	}
+}@Html.Raw(htmlToReturn.Out())

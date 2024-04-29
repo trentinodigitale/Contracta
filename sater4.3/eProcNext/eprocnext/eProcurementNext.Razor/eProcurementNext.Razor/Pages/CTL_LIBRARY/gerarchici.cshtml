@@ -1,0 +1,847 @@
+﻿@page "/CTL_LIBRARY/gerarchici.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.gerarchiciModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.Extensions.Primitives
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.gerarchiciModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+}
+@{
+
+
+
+	//'-- *********************************************************************
+	//'-- * Versione=1&data=2014-06-23&Attivita=58910&Nominativo=Federico     *
+	//'-- * Versione=2&data=2016-10-14&Attivita=58910&Nominativo=Federico     *
+	//'-- *********************************************************************
+
+	//'--  VERSIONE PER IL PORTALE
+	//'--   Parametri in GET
+	//'--		1. cod ( codice del nodo che si vuole espandere )
+	//'--		2. pathRoot percorso da anteporre ai link di questa pagina
+	//'--		3. portale . yes o no per indicare se proveniamo dal portale
+	//'--		4. CAPTION . key della caption che verrà disegnata in testa alla pagina
+	//'--	  Parametri di output:
+	//'--		4. sel	   ( informazione inviata al chiamante. codice del nodo selezionato )
+	//'--		5. seldesc ( informazione inviata al chiamante. descrizione del nodo selezionato )
+	//'--		6. fieldname
+
+	//'--  VERSIONE PER L'APPLICAZIONE
+	//'--   Parametri in GET
+	//'--		1. cod ( codice del nodo che si vuole espandere )
+	//'--		2. pathroot percorso da anteporre ai link di questa pagina
+	//'--		3. portale . yes o no per indicare se proveniamo dal portale
+	//'--		4. caption . key della caption che verrà disegnata in testa alla pagina
+	//'--		5. help    . key del multilinguismo per l'help di questo gerarchico
+	//'--		6. fieldname   . nome/id del campo da passare come parametro alla funzione javascript contenuta nel parametro jsfunction
+	//'--		7. js 	   . funzione javascript da invocare sull'opener dopo la selezione del nodo.
+	//'--		8. lvl_sel . livelli selezionabili della gerarchia
+	//'--		9. lvl_max . livello massimo selezionabile
+	//'--	   10. path_filtra . filtro da passare alla stored per ritornare i dati. nella forma : 'nome_dominio' and 'codice nodo da aprire'
+	//'--	   11. path_start  . filtro di partenza per il gerarchico.
+	//'--	   12. cod_to_exclude. Valore che viene passato a "a.DMV_Cod not like 'VALORE PARAMETRO'"
+	//'--	   13. sel_all	. se passato ad 1 permette di selezionare anche nodi non foglia
+
+	//'-- parametri in POST
+	//'--		1. text-cerca ( ricerca effettuata dall'utente sul form )
+
+	// modificare i metodi
+
+	//da capire il validate se esiste la funzione
+
+
+
+	validate("cod", CStr(GetParamURL(Request.QueryString.ToString(), "cod")).Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("caption", CStr(GetParamURL(Request.QueryString.ToString(), "caption")).Replace(" ", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("help", CStr(GetParamURL(Request.QueryString.ToString(), "help")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("fieldname", CStr(GetParamURL(Request.QueryString.ToString(), "fieldname")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("js", CStr(GetParamURL(Request.QueryString.ToString(), "js")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("lvl_sel", CStr(GetParamURL(Request.QueryString.ToString(), "lvl_sel")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_LISTANUMERI, "", 0,HttpContext,session);
+	validate("sel_all", CStr(GetParamURL(Request.QueryString.ToString(), "sel_all")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("lvl_max", CStr(GetParamURL(Request.QueryString.ToString(), "lvl_max")), TIPO_PARAMETRO_NUMERO, SOTTO_TIPO_VUOTO, "", 0,HttpContext,session);
+	validate("path_start", CStr(GetParamURL(Request.QueryString.ToString(), "path_start")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0,HttpContext,session);
+	validate("Attrib", CStr(GetParamURL(Request.QueryString.ToString(), "Attrib")), TIPO_PARAMETRO_STRING,  SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("MultiValue", CStr(GetParamURL(Request.QueryString.ToString(), "MultiValue")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0,HttpContext,session);
+	validate("path_filtra", CStr(GetParamURL(Request.QueryString.ToString(), "path_filtra")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0,HttpContext,session);
+	validate("cod_to_exclude", CStr(GetParamURL(Request.QueryString.ToString(), "cod_to_exclude")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0,HttpContext,session);
+
+
+	int mp_indexToDraw = 0;
+	int mp_MaxIndexToDraw = 0;
+	string mp_chiamante = "";//'-- pagina a cui tornare dopo la selezione
+	string mp_livelliSelezionabili = "";
+
+	string pathroot = GetParamURL(Request.QueryString.ToString(), "pathroot");//'-- non + usato?
+	string portale = "";
+
+	TSRecordSet? mp_rs = null;
+	string livelloMassimo = "";
+
+	if (!string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "portale")))) {
+		portale = GetParamURL(Request.QueryString.ToString(), "portale");
+		session["gerarchico_portale"] = portale;
+	} else {
+		portale = CStr(session["gerarchico_portale"]);
+	}
+
+	if (Trim(LCase(portale)) == "no")
+	{
+		livelloMassimo = GetParamURL(Request.QueryString.ToString(), "lvl_max");
+	}
+	else
+	{
+		livelloMassimo = CStr(session["gerarchico_livello_max"]);
+	}
+	StringValues temp = "";
+	string fieldName = "";
+	if(Request.HasFormContentType && Request.Form.TryGetValue("fieldname", out temp))
+	{
+		fieldName = temp.First();
+	}
+
+
+	if (string.IsNullOrEmpty(fieldName))
+	{
+		fieldName = GetParamURL(Request.QueryString.ToString(), "fieldname");
+	}
+
+	string titolo = "Dominio";
+
+	if (!(string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "CAPTION"))))
+	{
+
+		titolo = GetParamURL(Request.QueryString.ToString(), "CAPTION");
+	}
+
+	//drawMasterPage("../", titolo);
+
+	ViewData["Title"] = titolo;//Passare titolo della pagina al Layout (_masterPage.cshtml)
+	ViewData["pathRoot"] = "../";//Passare la pathRoot al Layout (_masterPage.cshtml)
+	drawContent(htmlToReturn);
+
+	void drawContent(eProcurementNext.CommonModule.EprocResponse htmlToReturn)
+	{
+		if (Trim(LCase(portale)) == "no")
+		{
+			htmlToReturn.Write($@"<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Strict//EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">");
+			htmlToReturn.Write($@"<html xmlns=""http://www.w3.org/1999/xhtml"" lang=""it"" xml:lang=""it"" class=""html_gerarchici"">");
+			htmlToReturn.Write("<head>");
+			htmlToReturn.Write("<title>" + titolo + $@"</title>");
+			htmlToReturn.Write($@"<meta http-equiv=""Content-Type"" content=""text/html""; charset=""utf-8""/>");
+			htmlToReturn.Write("</head>");
+			htmlToReturn.Write("<body>");
+		}
+
+		htmlToReturn.Write($@"<input id=""multivalue"" type=""hidden"" value=""" + HtmlEncode(CStr(GetParamURL(Request.QueryString.ToString(), "MultiValue"))) + @""" />"+ System.Environment.NewLine);
+		htmlToReturn.Write($@"<input id=""value"" type=""hidden"" value=""" + HtmlEncode(CStr(GetParamURL(Request.QueryString.ToString(), "Value"))) + @""" />"+ System.Environment.NewLine);
+		htmlToReturn.Write($@"<input id=""editable"" type=""hidden"" value=""" + HtmlEncode(CStr(GetParamURL(Request.QueryString.ToString(), "Editable"))) + @""" />"+ System.Environment.NewLine);
+		htmlToReturn.Write($@"<input id=""nome_campo"" type=""hidden"" value=""" + HtmlEncode(CStr(GetParamURL(Request.QueryString.ToString(), "Attrib"))) + @""" />"+ System.Environment.NewLine);
+		htmlToReturn.Write($@"<input id=""format"" type=""hidden"" value=""" + HtmlEncode(CStr(GetParamURL(Request.QueryString.ToString(), "Format"))) + @""" />"+ System.Environment.NewLine);
+
+		//'call stackUpdateCurrentPosition("Dominio","ctl_library/gerarchici.asp?" & request.querystring , titolo)
+
+		if (portale == "no")
+		{
+			htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/main.css"" type=""text/css"" media=""screen,projection""/>");
+		}
+
+		if (IsMasterPageNew() && portale == "no")
+		{
+			htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../css/vapor/vapor.css?v="" type=""text/css"" media=""screen"" />");
+			htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../css/vapor/customColor.css?v="" type=""text/css"" media=""screen"" />");
+
+		}
+
+		htmlToReturn.Write($@"
+			<script type=""text/javascript"">
+
+				function selezionaNodo(cod,fieldName,js)
+				{{
+					try
+					{{
+		");
+		if (IsMasterPageNew())
+		{
+			htmlToReturn.Write($@" eval( 'window.parent.' + js + '(\'' + cod + '\',\'' + fieldName + '\');');");
+			htmlToReturn.Write($@" window.parent.closeDrawer()");
+		}
+		else
+		{
+			htmlToReturn.Write($@" eval( 'window.opener.' + js + '(\'' + cod + '\',\'' + fieldName + '\');');");
+		}
+		htmlToReturn.Write($@"
+					}}
+					catch(e)
+					{{
+						alert('Errore:' + e.message);
+					}}
+
+					self.close();
+
+				}}
+
+
+					window.addEvent('domready', function() {{
+
+					//alert(1);
+					try
+					{{
+						var elementi = document.getElementsByClassName('focusthis');
+						elementi[0].focus();
+					}}
+					catch(e)
+					{{
+
+					}}
+
+
+				}});
+
+			</script>
+		");
+
+		if (portale == "no" && !string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "CAPTION")) ) ){
+
+			//Dim objCaption 
+			//dim ObjSession
+
+			//ObjSession = session("Session")
+			//set ObjSession(0) = Request.QueryString
+			//set ObjSession(1) = Request.form
+			//set ObjSession(3) = request
+			//set ObjSession(5) = session
+			//set ObjSession(6) = application
+			//ObjSession(9) = application("Server_RDS")
+			//ObjSession(10) = session("Funzionalita")
+			//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+
+			Caption objCaption  = new Caption();
+
+			objCaption.Init(session);
+			objCaption.strPath = "../images/Caption/";
+			objCaption.ShowExit = true;
+			objCaption.OnExit = "self.close();";
+
+			htmlToReturn.Write(objCaption.SetCaption(ApplicationCommon.CNV(CStr(GetParamURL(Request.QueryString.ToString(), "CAPTION")))));
+
+			//Set objCaption = Nothing
+
+
+		}
+
+		disegnaGerarchico();
+
+		if (Trim(LCase(CStr(portale))) == "no" ) 
+		{
+			htmlToReturn.Write("</body>");
+			htmlToReturn.Write("</html>");
+		}
+
+	}
+
+	void disegnaGerarchico()
+	{
+		//on error goto 0
+
+		//'GEO and 114446' -- ' NOME-DOMINIO AND idDomainValues da cui partire '
+		string filtro = "GEO";
+
+		//'-- se provengo dall'applicazione
+		string cod_to_exclude = "";
+		string filtro_base = "";
+		string strFormat = "";
+		var sqlParams = new Dictionary<string, object?>();
+
+		if (Trim(LCase(CStr(portale))) == "no" )
+		{
+			filtro = CStr(GetParamURL(Request.QueryString.ToString(), "path_filtra"));
+			filtro_base = CStr(GetParamURL(Request.QueryString.ToString(), "path_start"));
+			mp_livelliSelezionabili = CStr(GetParamURL(Request.QueryString.ToString(), "lvl_sel"));
+			string jsFunction = CStr(GetParamURL(Request.QueryString.ToString(), "js"));
+
+			cod_to_exclude = CStr(GetParamURL(Request.QueryString.ToString(), "cod_to_exclude"));
+		}
+		else
+		{
+			//'-- se è stato richiesto un filtro di default ( come ad esempio la visualizzazione a partire da un certo livello in poi )
+			if (IsEmpty(session["gerarchico_path_filtra"]) == false)
+			{
+				//'-- ricordarsi di metterlo a vuoto prima di chiamare questa pagina se non si vuole un filtro di default
+
+				filtro = CStr(session["gerarchico_path_filtra"]);
+			}
+			if (IsEmpty(session["gerarchico_path_start"]) == false)
+			{
+				//'-- ricordarsi di metterlo a vuoto prima di chiamare questa pagina se non si vuole un filtro di default
+
+				filtro_base = CStr(session["gerarchico_path_start"]);
+			}
+
+			//'session("gerarchico_livelli_sel") = ",2,3,"
+			if (!string.IsNullOrEmpty(session["gerarchico_livelli_sel"]))
+			{
+				//'-- ricordarsi di metterlo a vuoto prima di chiamare questa pagina se non si vuole un blocco di selezione su determinati
+				//'-- livelli
+
+				mp_livelliSelezionabili = CStr(session["gerarchico_livelli_sel"]);
+			}
+
+			mp_chiamante = CStr(session["gerarchico_chiamante"]);
+
+			if (!string.IsNullOrEmpty(mp_chiamante))
+			{
+
+				if (Strings.InStr(1, mp_chiamante, "?") == 0)
+				{
+					mp_chiamante = mp_chiamante + "?";
+
+				}
+
+				if (Strings.Right(mp_chiamante, 1) != "&" && Strings.Right(mp_chiamante, 1) != "?")
+				{
+					mp_chiamante = mp_chiamante + "&";
+				}
+				session["gerarchico_chiamante"] = mp_chiamante;
+
+			}
+			else
+			{
+				session["gerarchico_chiamante"] = "gerarchici.asp?";
+			}
+		}
+		string idpfu = CStr(session["idpfu"]);
+		if (string.IsNullOrEmpty(idpfu))
+		{
+			idpfu = "-10";
+		}
+
+		string strSql = "";
+		//'-- se l'utente ha effettuato una ricerca
+		string textCerca = GetValueFromForm(Request, "text-cerca");
+		if (!(string.IsNullOrEmpty(CStr(textCerca))))
+		{
+			strSql = "exec DASHBOARD_SP_DOMINI_GERARCHICI " + idpfu + ", 'DMV_DescML' , '''%" + CStr(textCerca.Replace("'", "''''") + "%''' , ' like ' , '" + filtro_base.Replace("'", "''") + "', 'dmv_father asc' , 40, 1");
+
+			if (!(string.IsNullOrEmpty(CStr(livelloMassimo))))
+			{
+				strSql = strSql + "," + livelloMassimo;
+			}
+			else
+			{
+				strSql = strSql + ",NULL";
+			}
+
+			if (!(string.IsNullOrEmpty(CStr(cod_to_exclude))))
+			{
+				strSql = strSql + ",'" + cod_to_exclude.Replace("'", "''") + "'";
+			}
+			else
+			{
+				strSql = strSql + ",NULL";
+			}
+
+		}
+		else
+		{
+			//'--vuoto oppure "-" codice assente
+			if (!string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "cod")) &&  GetParamURL(Request.QueryString.ToString(), "cod") != "-" )
+			{
+				string codice = GetParamURL(Request.QueryString.ToString(), "cod");
+
+				if (!IsNumeric(codice))
+				{
+					CommonDbFunctions cdb = new();
+					sqlParams.Clear();
+					sqlParams.Add("@codice", codice);
+					strSql = "select id from LIB_DomainValues with(nolock) where DMV_DM_ID = 'geo' and DMV_Cod = @codice";
+					TSRecordSet rs =  cdb.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+					if (rs.RecordCount > 0)
+					{
+						rs.MoveFirst();
+						codice = CStr(rs["id"]);
+					}
+				}
+				filtro = $"{filtro_base} and {codice}";
+			}
+			sqlParams.Clear();
+			sqlParams.Add("@idpfu", CInt(idpfu));
+			sqlParams.Add("@filtro", filtro);
+			sqlParams.Add("@livelloMassimo", CInt(livelloMassimo));
+			sqlParams.Add("@cod_to_exclude", cod_to_exclude);
+			strSql = "exec DASHBOARD_SP_DOMINI_GERARCHICI @idpfu , '' , '' , '' , @filtro, 'dmv_father asc' , 40, 1";
+			if (!string.IsNullOrEmpty(livelloMassimo))
+			{
+				strSql = $"{strSql}, @livelloMassimo";
+			}
+			else
+			{
+				strSql = $"{strSql}, NULL";
+			}
+			if (!string.IsNullOrEmpty(cod_to_exclude))
+			{
+				strSql = $"{strSql}, @cod_to_exclude";
+			}
+			else
+			{
+				strSql = $"{strSql}, NULL";
+			}
+		}
+
+		try
+		{
+			CommonDbFunctions cd = new();
+			mp_rs =  cd.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+		}
+		catch(Exception e)
+		{
+			//n = err.number;
+			//s = err.source
+			string d = e.Message;
+			traceInLogUtente(0, "gerarchici.asp", "Descrizione:" + e.Message + " --- QueryString:" + GetQueryStringFromContext(Request.QueryString),HttpContext,session);
+
+			// traceInLogUtente( 0, "gerarchici.asp", "Descrizione:" & d & " --- QueryString:" & request.QueryString );
+
+			//'-- Se è attiva la modalità debug visualizziamo più informazioni riguardo l'errore, query sql comprese
+
+
+			if (string.Equals((CStr(ApplicationCommon.CNV("debug-mode")).ToLower()),"yes") || string.Equals((CStr(ApplicationCommon.CNV("debug-mode")).ToLower()),"si") || string.Equals(CStr(ApplicationCommon.CNV("debug-mode")),"true"))
+			{
+				htmlToReturn.Write(" <br> " + "Desc:" + d + " <br>");
+			}
+			else
+			{
+				//'-- Se è disattivato il debug-mode ma è attiva ma la SYS di visione degli errori tecnici
+				if (string.Equals((ApplicationCommon.CNV("dettaglio-errori")).ToLower(),"yes") || string.Equals((ApplicationCommon.CNV("dettaglio-errori")).ToLower(),"si"))
+				{
+					htmlToReturn.Write("Desc:"+ d + " <br/> ");
+				}
+				else
+				{
+					//'-- Scriviamo l'errore nell'event viewer
+					TraceErr(e, ApplicationCommon.Application.ConnectionString);
+					//TraceErr s, d, n, ProgID;
+
+					htmlToReturn.Write(" Errore in data : "+ DateTime.Now);
+				}
+
+				//return;
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+			}
+
+
+
+		}
+
+		//on error goto 0  
+
+		mp_MaxIndexToDraw = mp_rs.RecordCount;
+		mp_indexToDraw = 1;
+		strFormat = CStr(GetParamURL(Request.QueryString.ToString(), "Format"));
+
+		if (Trim(LCase(CStr(portale))) == "no")
+		{
+			htmlToReturn.Write($@"<div class=""div_geo"" id=""div_geo"">"+ System.Environment.NewLine);
+		}
+
+		htmlToReturn.Write(@"<div class=""div_gerarchici"" id=""div_gerarchici"">" + Environment.NewLine);
+
+
+		if (Trim(LCase(CStr(portale))) == "yes") {
+			htmlToReturn.Write($@"<form method=""post"">" + Environment.NewLine);
+			htmlToReturn.Write($@"<input type=""hidden"" name=""lo"" value=""" + GetParamURL(Request.QueryString.ToString(), "lo") + @""" />");
+		} else {
+			htmlToReturn.Write($@"<form method=""post"" >" + Environment.NewLine);
+		}
+		htmlToReturn.Write($@"<form method=""post"">"+ System.Environment.NewLine);
+		htmlToReturn.Write($@"<fieldset>"+ System.Environment.NewLine);
+
+		htmlToReturn.Write($@"<input type=""hidden"" name=""hidden_page"" value=""ctl_library/gerarchici.asp""/>");
+		htmlToReturn.Write($@"<input type=""hidden"" name=""fieldName"" value=""" + HtmlEncode(fieldName) + @"""/>");
+		htmlToReturn.Write($@"<div class=""help"">"+ System.Environment.NewLine);
+
+		if (Trim(LCase(CStr(portale))) == "no")
+		{
+			htmlToReturn.Write($@"<p class=""suggerimenti_geo"">");
+		}
+		else
+		{
+			htmlToReturn.Write($@"<p class=""suggerimenti_title"">");
+		}
+
+		//'-- se provengo dall'applicazione
+
+		if (Trim(LCase(CStr(portale))) == "no")
+		{
+			if (!(string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "help")))))
+			{
+
+				htmlToReturn.Write(ApplicationCommon.CNV(CStr(GetParamURL(Request.QueryString.ToString(), "help"))));
+
+			}
+			else
+			{
+
+				htmlToReturn.Write(ApplicationCommon.CNV("Suggerimento_gerarchico"));
+			}
+		}
+		else
+		{
+			if (!string.IsNullOrEmpty(CStr(session["suggerimento_gerarchico"])))
+			{
+				htmlToReturn.Write("" + ApplicationCommon.CNV(CStr(session["suggerimento_gerarchico"])) + "");
+			}
+			else
+			{
+				htmlToReturn.Write("" + ApplicationCommon.CNV("Suggerimento_gerarchico") + "");
+			}
+		}
+
+
+
+
+		htmlToReturn.Write("</p>"+ System.Environment.NewLine);
+		htmlToReturn.Write(System.Environment.NewLine+"</div>"+ System.Environment.NewLine);
+
+		// '-- area di ricerca
+		htmlToReturn.Write($@"<div id=""area-ricerca"" class=""area-ricerca"">"+ System.Environment.NewLine);
+		htmlToReturn.Write($@"<input class=""text-grafica"" type=""text"" id=""text-cerca"" name=""text-cerca"" placeholder=""" + ApplicationCommon.CNV("Cerca") + @"""/>"+ System.Environment.NewLine);
+
+		htmlToReturn.Write($@"<input class=""button-grafica"" id=""cerca-button"" type=""submit"" value=""" + ApplicationCommon.CNV("Cerca") + @"""/>"+ System.Environment.NewLine);
+
+		if (Trim(LCase(CStr(portale))) == "no")
+		{
+			htmlToReturn.Write($@"<input class=""button-grafica"" id=""annulla-button"" onclick=""self.close();"" type=""button"" value=""" + ApplicationCommon.CNV("Annulla") + @"""/>"+ System.Environment.NewLine);
+		}
+		else
+		{
+
+			htmlToReturn.Write($@"<a href=" + CStr(session["gerarchico_chiamante"]) + " class=\"button-grafica\">" + ApplicationCommon.CNV("Indietro") + "</a>"+ System.Environment.NewLine);
+		}
+
+		htmlToReturn.Write("</div>"+ System.Environment.NewLine);
+
+		DrawRamoNew("", "", 0);
+
+
+		htmlToReturn.Write("</fieldset>"+ System.Environment.NewLine);
+		htmlToReturn.Write("</form>"+ System.Environment.NewLine);
+
+		htmlToReturn.Write("</div>"+ System.Environment.NewLine);
+
+		if (Trim(LCase(CStr(portale))) == "no")
+		{
+			htmlToReturn.Write("</div>"+ System.Environment.NewLine);
+		}
+		mp_rs = null;
+
+
+	}
+	//'DrawRamoNew(ByVal Path As String, id As String, ByVal lev As Integer)
+
+	void DrawRamoNew(string Path, string id, int lev)
+	{
+		htmlToReturn.Write(System.Environment.NewLine+ $@"<ul class=""ul_gerarchico"">"+ System.Environment.NewLine); //-- Apro il ramo
+		if (mp_rs.RecordCount == 0)
+		{
+			htmlToReturn.Write("" + ApplicationCommon.CNV("Nessun elemento presente") + "");
+		}
+		while (mp_indexToDraw <= mp_MaxIndexToDraw)
+		{
+			if (string.IsNullOrEmpty(Path))
+			{
+				DrawNodoNew(lev);
+			}
+			else
+			{
+				mp_rs.position = mp_indexToDraw - 1;
+				string padre = CStr(mp_rs.Fields["DMV_Father"]);
+				//'-- Se stiamo scendendo di livello rispetto al ramo
+				if (Strings.Left(padre, Path.Length) == Path)
+				{
+					DrawNodoNew(lev);
+				}
+				else
+				{
+					//'-- chiudo il ramo e risalgo
+					htmlToReturn.Write("</li>"+ System.Environment.NewLine);
+					htmlToReturn.Write("</ul>"+ System.Environment.NewLine);
+
+					return;
+
+				}
+			}
+		}
+		htmlToReturn.Write("</li>"+ System.Environment.NewLine);
+		htmlToReturn.Write("</ul>"+ System.Environment.NewLine);
+
+
+	}
+
+
+	void DrawNodoNew(int lev)
+	{
+
+		//'-- se non si è superato il livello massimo
+		if (!(string.IsNullOrEmpty(livelloMassimo)) && CLng(livelloMassimo) < lev)
+		{
+
+			return;
+
+		}
+
+		bool bFigli = false;
+		DomElem curelem;
+		bool bselectable = false;
+		bool bDeleted = false;
+
+		string dataAttrib = "";
+		string desc = "";
+		string strFormat = "";
+		string folderImg = "";
+		mp_rs.position = mp_indexToDraw - 1;
+
+		if (CInt(mp_rs.Fields["dmv_Deleted"]) == 1 && Strings.InStr(1, strFormat, "Y") == 0)
+		{
+			bDeleted = true;
+		}
+		string Path = CStr(GetValueFromRS(mp_rs.Fields["DMV_Father"]));
+
+		//'-- controlla se il nodo ha figli
+		if (mp_indexToDraw < mp_MaxIndexToDraw)
+		{
+			mp_rs.position = mp_indexToDraw;
+
+			if (Strings.Left(CStr(mp_rs.Fields["DMV_Father"]), Path.Length) == Path ){
+				bFigli = true;
+			}
+
+		}
+
+		mp_rs.position = mp_indexToDraw - 1; //'-- Ritorno alla posizione precedente
+
+		desc = CStr(GetValueFromRS(mp_rs.Fields["DMV_DescML"]));
+
+
+		if (Trim(LCase(CStr(portale))) == "no")
+		{
+			folderImg = CStr(GetValueFromRS(mp_rs.Fields["FolderImg2"]));
+		}
+		else
+		{
+			folderImg = CStr(GetValueFromRS(mp_rs.Fields["FolderImg"]));
+		}
+
+
+		string   id = CStr(GetValueFromRS(mp_rs.Fields["id"]));
+		string  cod = CStr(GetValueFromRS(mp_rs.Fields["dmv_cod"]));
+		int  livello = (int)GetValueFromRS(mp_rs.Fields["dmv_level"]);
+		string isLeaf = CStr(GetValueFromRS(mp_rs.Fields["isLeaf"]));
+
+		if (IsMasterPageNew())
+		{
+			if (folderImg.Contains("node", StringComparison.Ordinal))
+			{
+				folderImg = "";
+			}
+			else if (!bFigli)
+			{
+				folderImg = @"<img src=""/" + ApplicationCommon.Application["NOMEAPPLICAZIONE"] + @"/images/add-folder.png"" alt=""""/>";
+			}
+			else
+			{
+				folderImg = @"<img src=""/" + ApplicationCommon.Application["NOMEAPPLICAZIONE"] + @"/images/less-folder.png"" alt=""""/>";
+
+			}
+		}
+
+		//-- apertura della riga per rappresentare un nodo
+
+		if (bDeleted == false)
+		{
+			htmlToReturn.Write($@"<li id=""cod_" + HtmlEncode(id) + @""" title=""" + HtmlEncode(desc) + @""" ");
+		}
+
+		//'-- verifica se il nodo è selezionabile
+		bselectable = false;
+
+		bool SelectOnlyChild = false;
+		if (SelectOnlyChild == true)
+		{
+			if (bFigli == false)
+			{
+				bselectable = true;
+			}
+		}
+		else
+		{
+			bselectable = true;
+		}
+
+		bool SelectNoRoot = false;
+		if (lev == 0 && SelectNoRoot == true)
+		{
+			bselectable = false;
+		}
+		if (bDeleted == false)
+		{
+			//'-- descrittiva
+			if (bselectable == false)
+			{
+				if (!(string.IsNullOrEmpty(dataAttrib)))
+				{
+					dataAttrib = dataAttrib + ", unselectable:true ";
+				}
+				else
+				{
+					dataAttrib = dataAttrib + " unselectable:true ";
+				}
+			}
+		}
+
+		if (bDeleted == false)
+		{
+			string pageTo = "";
+			htmlToReturn.Write(">"+ System.Environment.NewLine);
+
+			if (Trim(LCase(CStr(portale))) == "no")
+			{
+				pageTo = "";
+			}
+			else
+			{
+				pageTo = "gerarchici.asp?";
+
+				if (!(string.IsNullOrEmpty(CStr(session["gerarchico_chiamante"]))))
+				{
+					pageTo = CStr(session["gerarchico_chiamante"]);
+
+					if (Strings.Right(pageTo, 1) != "&" && Strings.Right(pageTo, 1) != "?")
+					{
+						pageTo = pageTo + "&";
+					}
+				}
+			}
+			// '-- disegno il link per aprire il livello chiamando me stesso con i parametri opportunamente passati
+
+			if (!(string.IsNullOrEmpty(livelloMassimo)) && lev < CLng(livelloMassimo))
+			{
+				if (Trim(LCase(CStr(portale))) == "no")
+				{
+					string tmp_querystring = GetQueryStringFromContext(HttpContext.Request.QueryString);
+
+					if (tmp_querystring.Contains("cod=", StringComparison.Ordinal))
+					{
+						string newCod = "cod=" + URLEncode(id);
+						string oldCod = "cod=" + GetParamURL(Request.QueryString.ToString(), "cod");
+						tmp_querystring = Strings.Replace(tmp_querystring, oldCod, newCod);
+					}
+					else
+					{
+						tmp_querystring = tmp_querystring + "&cod=" + URLEncode(id);
+					}
+
+
+					if (CStr(GetParamURL(Request.QueryString.ToString(), "cod")) == CStr(id))
+					{
+
+						htmlToReturn.Write($@"<a class=""focusthis"" href=""?" + HtmlEncode(tmp_querystring) + @""" title=""Espandi il nodo selezionato"">");
+
+					}
+					else
+					{
+
+						htmlToReturn.Write($@"<a href=""?" + HtmlEncode(tmp_querystring) + @""" title=""Espandi il nodo selezionato"">");
+					}
+
+				}else{
+
+					if (CStr(GetParamURL(Request.QueryString.ToString(), "cod")) == CStr(id))
+					{
+
+						htmlToReturn.Write($@"<a class=""focusthis"" href=""" + HtmlEncode(pageTo) + "lo=" + URLEncode(GetParamURL(Request.QueryString.ToString(), "lo")) + "&amp;cod=" + URLEncode(id) + @"&amp;page=ctl%5Flibrary%2Fgerarchici%2Easp&amp;fieldName=" + URLEncode(fieldName) + @""" title=""Espandi il nodo selezionato"">");
+					}
+					else
+					{
+
+						htmlToReturn.Write($@"<a class="""" href=""" + HtmlEncode(pageTo) + "lo=" + URLEncode(GetParamURL(Request.QueryString.ToString(), "lo")) + "&amp;cod=" + URLEncode(id) + @"&amp;page=ctl%5Flibrary%2Fgerarchici%2Easp&amp;fieldName=" + URLEncode(fieldName) + @""" title=""Espandi il nodo selezionato"">");
+					}
+
+
+				}
+			}
+			
+			htmlToReturn.Write(folderImg.ToLower());
+
+			if (!(string.IsNullOrEmpty(livelloMassimo)) && lev < CLng(livelloMassimo))
+			{
+				htmlToReturn.Write("</a>"+System.Environment.NewLine);
+			}
+			string sel_all = CStr(GetParamURL(Request.QueryString.ToString(), "sel_all"));
+
+			//'-- se non si è chiesto un blocco di selezione su determinati livelli oppure ci troviamo in uno di quei livelli chiesti
+
+			if (string.IsNullOrEmpty(mp_livelliSelezionabili) || Strings.InStr(1, mp_livelliSelezionabili, "," + CStr(livello) + ",") > 0)
+			{
+				if (Trim(LCase(CStr(portale))) == "no")
+				{
+					if (CStr(isLeaf) == "1" || sel_all == "1" )
+					{
+						
+						htmlToReturn.Write($@"<a href=""#""0 onclick=""selezionaNodo('" +HtmlEncode(cod) + "','" +HtmlEncode(fieldName) + "','"+ HtmlEncode(GetParamURL(Request.QueryString.ToString(), "js")) + @"')"" title=""Scegli il nodo"">");
+					}
+				}
+				else
+				{
+					//-- disegno il link per selezionare il nodo scelto
+					htmlToReturn.Write($@"<a class=""focusthis"" href=""" + HtmlEncode(session["gerarchico_chiamante"]) + "sel=" + UrlEncode(cod) + "&amp;seldesc=" + UrlEncode(desc) + "&amp;fieldName=" + UrlEncode(fieldName) + @""" title=""Scegli il nodo"">");
+				}
+			}
+			htmlToReturn.Write(HtmlEncode(desc));
+
+			if (string.IsNullOrEmpty(mp_livelliSelezionabili) || Strings.InStr(1, mp_livelliSelezionabili, "," + CStr(lev) + ",") > 0)
+			{
+				
+				if (Trim(LCase(CStr(portale))) == "no")
+				{
+					if (string.Equals(CStr(isLeaf), "1") || string.Equals(sel_all, "1"))
+					{
+						htmlToReturn.Write("</a>" + System.Environment.NewLine);
+					}
+				}
+				else
+				{
+					htmlToReturn.Write("</a>"+ System.Environment.NewLine);
+				}
+			}
+		}
+
+		//'-- incremento i nodi disegnati
+		mp_indexToDraw = mp_indexToDraw + 1;
+		// '-- se il nodo successivo è un ramo figlio disegno il ramo
+
+		if (bFigli == true)
+		{
+			DrawRamoNew(Path, id, lev + 1);
+		}
+
+	}
+}
+@Html.Raw(htmlToReturn.Out())

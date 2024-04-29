@@ -1,0 +1,269 @@
+<style type="text/css">
+BODY
+{
+    FONT-SIZE: 3px;
+    BACKGROUND-REPEAT: repeat;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: underline
+}
+DIV
+{
+	font-family:arial;
+	text-align:left;
+	/*font-weight:bold;*/
+	/*color:#666;*/
+}
+.BodyPositionalModel
+{
+    BACKGROUND-COLOR: white
+}
+.OAPFontLegalPub
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.OAPFontLegalPubBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+TABLE.OAPGridLegalPub
+{
+    BORDER:1px solid #ccc;
+    BACKGROUND-COLOR:#efefef;
+}
+TD.OAPCellGridLegalPub
+{
+    BACKGROUND-COLOR: #efefef;
+}
+.TextFieldCover
+{
+	BORDER:1px solid #ccc;
+    PADDING-LEFT: 3px;
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none;
+	color:#666;
+}
+.SelectFieldCover
+{
+	BORDER:1px solid #ccc;
+    PADDING-LEFT: 3px;
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: white
+}
+.FontLabelCover
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+td.FontTitleCover{ color:#515151; font-weight:normal; color:#cb1d15;}
+.FontTitleCover
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 0.85em;
+    COLOR: #fff;
+    LINE-HEIGHT: 12px;
+    TEXT-DECORATION: none
+}
+.LegendTableStyle
+{
+    BORDER:1px solid #ccc;
+    PADDING-LEFT: 3px;
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    COLOR: black;
+    BACKGROUND-COLOR: white;
+}
+.LegendCellStyle
+{
+    FONT-SIZE: 12px;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none
+}
+.PlugInControlStyle
+{
+    BACKGROUND-COLOR: aqua
+}
+TABLE TD{ padding-left:3px;}
+TABLE.GridLegalPub
+{
+    BORDER:1px solid #ccc;
+	padding:3px;
+	color:#333;
+}
+TD.CellGridLegalPub
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+INPUT.ButtonHierarchiesField
+{
+    BORDER:1px solid #ccc;
+    PADDING-LEFT: 3px;
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #e9edf3;
+    TEXT-DECORATION: none
+}
+.FontLabelObblig
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: arial;
+    TEXT-DECORATION: none;
+	color:#333;
+}
+TD.CellGridCompanyLogo
+{
+    BORDER-RIGHT: lightgrey 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px;
+    BACKGROUND-COLOR: white
+}
+INPUT.TextFieldCoverLocked
+{
+    FONT-SIZE: 10pt;
+    PADDING-left: 3px;
+    MARGIN: 0px;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #EFEFEF;
+    TEXT-DECORATION: none; border:none;
+	padding:0px 3px 0px 3px;
+	border:1px solid #ccc;
+	color:#666;
+}
+
+
+
+INPUT.TextFieldCoverLocked:hover{ border:1px solid #666;}
+
+.FontLegalPub
+{
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    TEXT-DECORATION: none;
+
+}
+.FontLegalPubBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 14px;
+    COLOR: #333;
+    TEXT-DECORATION: none
+}
+TABLE.GridContainer
+{
+    WIDTH: 100%
+}
+TABLE.GridContainer input{ border:1px solid #ccc; background-color:#efefef;}
+TABLE.GridContainer input:hover{ border:1px solid #073d7c;}
+TABLE.GridContainer input:focus{ background:#fff; border-color:#073d7c; color:#2268B3;}
+
+TD.CellGridContainer
+{
+}
+#DivCalendar > table {
+	margin:0 auto;
+}
+.FontLinkLabelCover label{ font-size:1.4em; cursor:pointer; font-weight:bold;}
+#DivCalendar input.fontCommand{ text-align:center;}
+div#divcalendar{ text-align:center;}
+.FontLinkLabelCover
+{
+    FONT-SIZE:0.85em;
+    CURSOR: hand;
+    COLOR: #515151;
+    TEXT-DECORATION: underline;
+	cursor:pointer;
+}
+TEXTAREA.FontTextAreaNotEditable
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: whitesmoke
+}
+TEXTAREA.FontTextAreaEditable
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: arial
+}
+TEXTAREA.LittleTextArea
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: arial
+}
+.sottotitoloBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: #708090;
+    FONT-FAMILY: arial
+}
+.FontLegend1
+{
+    FONT-WEIGHT: bold;
+    COLOR: red
+}
+.FontLegend2
+{
+    COLOR: orange
+}
+.FontLegend3
+{
+    COLOR: black
+}
+.FontLegend4
+{
+    FONT-WEIGHT: bold;
+    COLOR: black
+}
+.FontDescr
+{
+    FONT-WEIGHT: 600;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: arial
+}
+.FontContents
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: arial
+}
+HR
+{
+    BORDER: #666 1px solid;
+    BACKGROUND-COLOR: #666;
+	margin:0px;
+}
+
+#DIV_Cover1 INPUT, #DIV_Cover1 textarea, #DIV_Cover1 select{ padding-left:3px; border:1px solid #ccc;}
+div#DivCalendar table td{ padding-left:0px;}
+
+</style>

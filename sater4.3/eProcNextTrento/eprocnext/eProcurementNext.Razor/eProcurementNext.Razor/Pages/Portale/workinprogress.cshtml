@@ -1,0 +1,45 @@
+﻿@page "/Portale/workinprogress.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.Portale.INC.layoutModel;
+@{
+
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	Layout = "~/Pages/Portale/INC/layout.cshtml";
+}
+@{
+	ViewData["Title"] = "Home";
+	//drawLayout("Home",htmlToReturn,Response,Request);
+
+	htmlToReturn.Write($@"<style>
+			.overlay {{
+			position: fixed;
+			 width: 100%;
+			height: 100%;
+			left: 0;
+			top: 0;
+			background: rgba(51,51,51,0.7);
+			 z-index: 10;
+			text-align: center;
+			padding-top:20px;
+			}}");
+			htmlToReturn.Write("</style>");
+
+			htmlToReturn.Write(ApplicationCommon.CNV("Contenuto html centrale home page di portale"));
+
+			htmlToReturn.Write($@"<div class=''overlay''><img src=""workinprogress.jpg""></div>");
+	
+	
+	
+	
+		
+	
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,19 @@
+TABLE.MessageBox_Tab
+{
+}
+TD.MessageBox_label
+{
+    FONT-SIZE: 10pt;
+    COLOR: black
+}
+TABLE.MessageBox_Caption
+{
+    BORDER-RIGHT: blue thin outset;
+    BORDER-TOP: blue thin outset;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 16pt;
+    BORDER-LEFT: blue thin outset;
+    COLOR: black;
+    BORDER-BOTTOM: blue thin outset;
+    BACKGROUND-COLOR: gold
+}

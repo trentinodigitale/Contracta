@@ -1,0 +1,52 @@
+﻿@page "/CTL_LIBRARY/getAccessCaptcha.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject eProcurementNext.Authentication.IEprocNextAuthentication _JWTauth;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.getAccessCaptchaModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.captcha_accessModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.getAccessCaptchaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@*
+	<!-- #Include File="functions/verificabrowser.inc" -->
+	<!-- #Include File="Functions/captcha_access.inc" -->
+*@
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+
+}
+@{
+    string output = generaCaptchaAccessibile("captcha_access_totale", "captcha_field_name", "captcha_access_tot_formato", session);
+    string cifreOLettere ;
+    if(CInt(session["captcha_access_tot_formato"]) == 1){
+        cifreOLettere = "cifre";
+    }else{
+        cifreOLettere = "lettere";
+    }
+    htmlToReturn.Write($@"
+		<span class=""labelsx"">
+			<span class=""label_captcha_access"" style="""">
+				<strong>Anti-spam. Eseguire la seguente operazione aritmetica<span id=""captcha_access"">" + output + $@"</span></strong>
+			</span>
+		</label>
+		<br/>
+		<input class=""required"" name=""" + session["captcha_field_name"] + $@""" size=""10"" value="""" maxlength=""20""/>
+		<span>
+			( Scrivere il risultato in 
+			" + cifreOLettere + $@"
+			)
+		</span>
+		
+
+	");
+
+
+}
+@Html.Raw(htmlToReturn.Out())

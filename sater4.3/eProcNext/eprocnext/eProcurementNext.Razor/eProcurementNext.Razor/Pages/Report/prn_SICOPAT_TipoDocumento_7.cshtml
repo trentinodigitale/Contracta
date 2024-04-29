@@ -1,0 +1,206 @@
+﻿@page "/Report/prn_SICOPAT_TipoDocumento_7.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.StampaVerbaleGaraModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.prn_SICOPAT_TipoDocumento_7Model
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+
+	EprocResponse htmlToReturn = new();
+	CommonDbFunctions cdf = new();
+	TSRecordSet rs = new();
+	//objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);
+}
+
+@{
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+	validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+	string strSql = string.Empty;
+	string ragioneSociale = string.Empty;
+	string motivazione = string.Empty;
+	string statoFirmaPDA = string.Empty;
+	string protocollo = string.Empty;
+	string dataRicezione = string.Empty;
+	int NumPagCorrente = 0;
+
+	htmlToReturn.Write(@"<html>
+	<head>
+		<title>SICOPAT - Elenco Fornitori Valutazione Amministrativa</title>
+		<meta charset='UTF-8'/>
+	</head>
+
+	<body style='margin-left:50px; margin-right:50px; margin-top:10px; margin-bottom:10px'>");
+
+	htmlToReturn.Write(@"<table height='100%' width='100%' border='0' style='height: 1390px;'>
+
+		<tr>
+			<td align='center'> 
+
+				<table  width='100%' style='margin-top:0px' align='center'>
+					<tr>
+						<td style='border:0px;' align='center'>
+							<table style='font-weight:bold; align:center'>
+								<tr>
+									<td align='center' style='border:0px; align:center; vertical-align=middle;'>
+
+										<img height='50px' src='../report/logo_new.gif' border='0' alt='" + ApplicationCommon.CNV("ALT LOGO") + @"' />
+
+
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+								</tr>
+								<tr>
+									<td style='font-size:18px'>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+
+		</tr>");
+
+	htmlToReturn.Write(@"
+		<td align='center'>
+				<table  width='100%' style='margin-top:0px' align='center'>
+					<tr>
+						<td style='border:0px;' align='center'>
+							<table style='font-weight:bold; align:center'>
+								<tr>
+									<td align='center' style='border:0px; align:center; vertical-align=middle;'>
+
+										<H1>Provvedimento di ammissione / esclusione amministrativa</H1>
+
+
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+								</tr>
+								<tr>
+									<td style='font-size:18px'>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</td>
+	");
+
+	htmlToReturn.Write(@"<tr>
+
+			<td height='100%' align='top' valign='top'>
+
+				<br/><br/>");
+
+	strSql = "select i.Id, isnull(f.aziRagioneSociale, '') as aziRagioneSociale, isnull(f.Motivazione, '') as Motivazione, isnull(f.stato_firma_PDA_AMM, '') as stato_firma_PDA_AMM, isnull(f.protocolloOfferta, '') as protocolloOfferta, isnull(f.ReceivedDataMsg, '') as ReceivedDataMsg ";
+	strSql += "from ctl_doc as i with(nolock) ";
+	strSql += "inner join ctl_doc as b with(nolock) on i.LinkedDoc = b.Id  ";
+	strSql += "inner join ctl_doc as pda with(nolock) on pda.LinkedDoc = b.Id and pda.TipoDoc = 'PDA_MICROLOTTI' and pda.Deleted = 0 ";
+	strSql += "inner join Document_PDA_OFFERTE_VIEW as f with(nolock) on f.IdHeader = pda.Id ";
+	strSql += "where i.tipodoc = 'OCP_ISTANZIA_DOCUMENTAZIONE' and i.id = " + id;
+
+	rs = GetRS(strSql);
+
+	if (rs is not null && rs.RecordCount > 0)
+	{
+		htmlToReturn.Write($@"<table border=1 bordercolor=black width='100%' align='center'>");
+
+		htmlToReturn.Write($@"<tr>");
+
+		htmlToReturn.Write($@"<td class=""CellIntestGrid"" align=""center"">");
+		htmlToReturn.Write($@"Ragione Sociale");
+		htmlToReturn.Write($@"</td>");
+
+		htmlToReturn.Write($@"<td class=""CellIntestGrid"" align=""center"">");
+		htmlToReturn.Write($@"Stato");
+		htmlToReturn.Write($@"</td>");
+
+		htmlToReturn.Write($@"<td class=""CellIntestGrid"" align=""center"">");
+		htmlToReturn.Write($@"Motivazione");
+		htmlToReturn.Write($@"</td>");
+
+		htmlToReturn.Write($@"<td class=""CellIntestGrid"" align=""center"">");
+		htmlToReturn.Write($@"Data Ricezione");
+		htmlToReturn.Write($@"</td>");
+
+		htmlToReturn.Write($@"<td class=""CellIntestGrid"" align=""center"">");
+		htmlToReturn.Write($@"Registro di Sistema Offerta");
+		htmlToReturn.Write($@"</td>");
+
+		htmlToReturn.Write($@"</tr>");
+
+		bool errore = false;
+
+		try
+		{
+			rs.MoveFirst();
+
+		}
+		catch
+		{
+			errore = true;
+		}
+		while (!rs.EOF && !errore)
+		{
+			ragioneSociale = CStr(GetValueFromRS(rs.Fields["aziRagioneSociale"]));
+			motivazione = CStr(GetValueFromRS(rs.Fields["Motivazione"]));
+			statoFirmaPDA = CStr(GetValueFromRS(rs.Fields["stato_firma_PDA_AMM"]));
+			protocollo = CStr(GetValueFromRS(rs.Fields["protocolloOfferta"]));
+			dataRicezione = CStr(GetValueFromRS(rs.Fields["ReceivedDataMsg"]));
+
+			htmlToReturn.Write($@"<tr>");
+
+			htmlToReturn.Write($@"<td>");
+			htmlToReturn.Write(ragioneSociale);
+			htmlToReturn.Write($@"</td>");
+
+			htmlToReturn.Write($@"<td>");
+			htmlToReturn.Write(statoFirmaPDA);
+			htmlToReturn.Write($@"</td>");
+
+			htmlToReturn.Write($@"<td>");
+			htmlToReturn.Write(motivazione);
+			htmlToReturn.Write($@"</td>");
+
+			htmlToReturn.Write($@"<td>");
+			htmlToReturn.Write(dataRicezione);
+			htmlToReturn.Write($@"</td>");
+
+			htmlToReturn.Write($@"<td>");
+			htmlToReturn.Write(protocollo);
+			htmlToReturn.Write($@"</td>");
+
+			htmlToReturn.Write($@"</tr>");
+			rs.MoveNext();
+		}
+		
+	}
+
+	htmlToReturn.Write(@"</td>
+			</tr>
+		</table>
+
+	</body>
+	</html>");
+
+	
+}
+@Html.Raw(htmlToReturn.Out())

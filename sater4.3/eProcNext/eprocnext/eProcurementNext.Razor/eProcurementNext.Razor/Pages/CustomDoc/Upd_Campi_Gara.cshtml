@@ -1,0 +1,48 @@
+﻿@page "/CustomDoc/Upd_Campi_Gara.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@* <!-- #INCLUDE FILE="../ctl_library/functions/accessSQL.asp" --> *@
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.Upd_Campi_GaraModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.Upd_Campi_GaraModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string doc_to_upd = GetParamURL(Request.QueryString.ToString(), "doc_to_upd");
+	string IDAZI = GetParamURL(Request.QueryString.ToString(), "IDAZI");
+
+	//'controllo sicurezza deve essere un numerico ed avvalorato
+	validate("doc_to_upd", CStr(doc_to_upd), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+	validate("IDAZI", CStr(IDAZI), TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+	//'controllo che il documento da aggiornare sia inlavorazione
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@IDAZI", IDAZI);
+	sqlParams.Add("@doc_to_upd", CInt(doc_to_upd));
+	TSRecordSet rs = cdf.GetRSReadFromQuery_("Select Id from CTL_DOC with(nolock) where StatoFunzionale <> 'InLavorazione' and Id=@doc_to_upd", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+	if(rs.RecordCount >0)
+	{
+		htmlToReturn.Write("ERRORE_DOCUMENTO_DA_AGGIORNARE");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+	//'rimpiazza sul documento di partenza il contenuto della riga selezionato
+	sqlParams.Clear();
+	sqlParams.Add("@IDAZI", IDAZI);
+	sqlParams.Add("@doc_to_upd", CInt(doc_to_upd));
+	string strSql = "update CTL_DOC set Azienda=@IDAZI where Id=@doc_to_upd";
+	cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+	htmlToReturn.Write("OK");
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+}
+@Html.Raw(htmlToReturn.Out())

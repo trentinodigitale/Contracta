@@ -1,0 +1,149 @@
+BODY
+{
+}
+.foglie
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.outlineBold
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.FontBoldBig
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.GridLogo
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    LEFT: 0mm;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0mm 0px 0px 0mm;
+    PADDING-TOP: 0px;
+    POSITION: relative;
+    TOP: 0mm
+}
+.GridLegalPub
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    LEFT: 110mm;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 10mm 0px 0px 106mm;
+    WIDTH: 65mm;
+    PADDING-TOP: 0px;
+    TOP: 50mm;
+    HEIGHT: 10mm
+}
+.FontBoldSmall
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.CellDescs
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    WIDTH: 250px;
+    FONT-FAMILY: verdana;
+    HEIGHT: 1px
+}
+.ExternalGrid
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    LEFT: 1mm;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 17mm 0px 0px 1mm;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    TOP: 6cm
+}
+.CellTotalOrder
+{
+    LEFT: 100mm;
+    POSITION: relative
+}
+.FontBig
+{
+    FONT-SIZE: 12pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.FontMedium
+{
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.FontSmall
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.FontLegalPub
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    TEXT-DECORATION: none
+}
+.FontLegalPubBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: verdana;
+    TEXT-DECORATION: none
+}
+TD.CellGridLegalPub
+{
+    WIDTH: 65mm;
+    HEIGHT: 10mm
+}
+TABLE.GridProducts
+{
+    WIDTH: 95%
+}
+.FontBoldMedium
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: verdana
+}
+.Destinatario
+{
+    LEFT: 7pt;
+    POSITION: absolute;
+    TOP: 3cm
+}
+.ExternalGridInternational
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 10mm 0px 0px 1mm;
+    PADDING-TOP: 0px;
+    POSITION: absolute;
+    TOP: 6cm
+}
+.Destinatario1
+{
+    LEFT: 7pt;
+    POSITION: absolute;
+    TOP: 5cm
+}

@@ -1,0 +1,30 @@
+TABLE.PropertySelector_Table
+{
+
+}
+TR.PropertySelector_Caption
+{
+  
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: #0F3D7C;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR: #e9edf3;
+	border:1px solid;
+}
+
+TR.PropertySelector_Caption td{ padding:5px;}
+
+TR.PropertySelector_Row
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: arial;
+	border:1px solid #ccc;
+}
+TD.PropertySelector_td
+{
+    BORDER-BOTTOM: #ccc 1px solid;
+}
+
+select{ border:1px solid #96B0D4; background-color:#fff; margin-left:5px;}

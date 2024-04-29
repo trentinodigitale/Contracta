@@ -1,0 +1,38 @@
+@charset "utf-8";
+html, body, div, span,applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, font, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,dd, dl, dt, li, ol, ul,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td {margin: 0;padding: 0;border: 0;font-weight: inherit;font-style: inherit;font-size: 12px;line-height: 1;font-family: inherit;text-align: left;vertical-align: baseline;}
+a img, :link img, :visited img {border: 0;}
+table{border-collapse: collapse;border-spacing: 0; margin-bottom:3px;/* border:1px solid #ccc;*/}
+ol, ul {list-style: none;}
+q:before, q:after,blockquote:before, blockquote:after {content: "";}
+html,body{font-size:11px; font-family:Arial, Helvetica, sans-serif;
+scrollbar-base-color :#5E5570;
+scrollbar-arrow-color :#fefefe;
+
+scrollbar-3dlight-color :#F3F4F4;
+scrollbar-darkshadow-color :#F3F4F4;
+scrollbar-face-color:#004080;
+scrollbar-highlight-color :#F3F4F4;
+scrollbar-shadow-color :#F3F4F4;
+scrollbar-track-color :#F3F4F4;
+
+}
+
+.maincontent{ width:97%; margin:0 auto; margin-top:10px;}
+table th{border:1px solid #C0BFBF; background:#ccc; color:#333; padding:3px; height:35px; vertical-align:middle; font-weight:bold; font-size:14px;}
+table td{border:1px solid #C0BFBF; padding:3px; vertical-align:middle; height:25px;}
+.maintable{ width:100%;}
+
+.GridPrintProducts{ width:100%; border:#fff; border-collapse:collapse;}
+td.CellIntestGrid{ background:#ccc; color:#333; padding:3px; height:35px; vertical-align:middle; font-weight:bold; font-size:14px;}
+
+.tdint{ font-weight:bold; width:130px;}
+
+ul{ margin-bottom:20px; margin-top:20px;}
+li{ line-height:14px;}
+strong { font-weight:bold;}
+.forn{ font-weight:bold; font-size:16px; line-height:30px;}
+table tr td table tr th{ font-size:11px;}
+.titoloargomento{ font-weight:bold; font-size:14px; background:#666; color:#fff;}
+
+
+

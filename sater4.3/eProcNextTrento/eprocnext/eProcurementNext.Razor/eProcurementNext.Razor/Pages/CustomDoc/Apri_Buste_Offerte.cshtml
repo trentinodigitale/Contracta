@@ -1,0 +1,259 @@
+﻿@page "/CustomDoc/Apri_Buste_Offerte.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.Apri_Buste_Offerte;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.Apri_Buste_Offerte
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdb = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+    var SqlParameters = new Dictionary<string, object?>();
+
+    //'ON ERROR GOTO 0
+
+    //on error resume next
+
+    string result = string.Empty;
+
+    string CONTESTO = GetParamURL(Request.QueryString.ToString(), "CONTESTO");
+    string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+    string PROCESS_PARAM = GetParamURL(Request.QueryString.ToString(), "PROCESS_PARAM");
+
+    //'-------------------------------------
+    //'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+    //'-------------------------------------
+
+    validate("IDDOC", IDDOC, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1,HttpContext,session);
+    validate("CONTESTO", CONTESTO, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 1,HttpContext,session);
+    validate("PROCESS_PARAM", PROCESS_PARAM, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 1,HttpContext,session);
+
+    //'---------------------------------------------------------
+    //'-- PARAMETRO NUMERO MASSIMO DI BUSTE PER ESECUZIONE  ----
+    //'---------------------------------------------------------
+    string? Top_Numero_Offerte_Da_Aprire = Get_Func_Property("Apri_Buste_Offerte.asp", "Top_Numero_Offerte_Da_Aprire", "Numero", "150", -1);
+    //'----------------------------------------
+    //'-- BUSTE VALUTAZIONE AMMINISTRATIVA  ----
+    //'----------------------------------------
+    if (CONTESTO == "BUSTE_VALUTAZIONE_AMMINISTRATIVA")
+    {
+        result = string.Empty;
+        SqlParameters.Add("@id", CInt(IDDOC));
+        string strSQL = "select top " + Top_Numero_Offerte_Da_Aprire + " IdRow from Document_PDA_OFFERTE_VIEW where IdHeader=@id and StatoPDA not in ( '1' , '99' , '999' )  and bReadDocumentazione = '1' ";
+        TSRecordSet rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+        //if (err.number != 0) {
+        //	exitWithError();
+        //}
+
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+
+            while(!rs.EOF)
+            {
+                if (!(string.IsNullOrEmpty(result)))
+                {
+                    result = $"{result}~~~";
+                }
+                try
+                {
+                    result = $"{result}{CStr(rs["idrow"])}";
+                }
+                catch
+                {
+                    exitWithError();
+                }
+                rs.MoveNext();
+            }
+        }
+    }
+
+    //'----------------------------------------
+    //'-- BUSTE ECONOMICA MONOLOTTO  ----
+    //'----------------------------------------
+
+    if (CONTESTO == "BUSTE_ECONOMICA_MONOLOTTO")
+    {
+        result=string.Empty;
+        SqlParameters.Clear();
+        SqlParameters.Add("@id", CInt(IDDOC));
+        string strSQL ="select top " + Top_Numero_Offerte_Da_Aprire + " idmsg from PDA_DRILL_MICROLOTTO_LISTA_VIEW where idPDA = @id and ( statoRiga  <> 'escluso'  or InversioneBuste = '1' ) and bReadEconomica = '1' ";
+        TSRecordSet rs = cdb.GetRSReadFromQuery_( CStr(strSQL)  , ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+        //if (err.number != 0){
+        //	exitWithError();
+        //}
+
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            while(!rs.EOF)
+            {
+                if (!(string.IsNullOrEmpty(result)))
+                {
+                    result = $"{result}~~~";
+                }
+                try
+                {
+                    result = $"{result}{CStr(rs["idmsg"])}";
+                }
+                catch
+                {
+                    exitWithError();
+                }
+                rs.MoveNext();
+            }
+        }
+    }
+
+
+    //'----------------------------------------
+    //'-- BUSTE TECNICA MONOLOTTO  ----
+    //'----------------------------------------
+    if (CONTESTO == "BUSTE_TECNICA_MONOLOTTO")
+    {
+        result = string.Empty;
+        SqlParameters.Clear();
+        SqlParameters.Add("@id", CInt(IDDOC));
+        string strSQL ="select top " + Top_Numero_Offerte_Da_Aprire + "  IdRow from PDA_LST_BUSTE_TEC_OFFERTE_MONOLOTTO_VIEW where idheader = @id and  statoRiga  in ('daValutare' ,'InValutazione') and bReadDocumentazione = '1' ";
+        TSRecordSet rs = cdb.GetRSReadFromQuery_( CStr(strSQL)  , ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+        //if (err.number != 0){
+        //	exitWithError();
+        //}
+
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            while(!rs.EOF)
+            {
+                if (!(string.IsNullOrEmpty(result)))
+                {
+                    result = $"{result}~~~";
+                }
+                try
+                {
+                    result = $"{result}{CStr(rs["idrow"])}";
+                }
+                catch
+                {
+                    exitWithError();
+                }
+
+                rs.MoveNext();
+            }
+        }
+    }
+
+    //'----------------------------------------
+    //'-- BUSTA VALUTAZIONE TECNICA LOTTO  ----
+    //'----------------------------------------
+    if (CONTESTO == "PDA_LST_BUSTE_TEC")
+    {
+        result = string.Empty;
+        SqlParameters.Clear();
+        SqlParameters.Add("@id", CInt(IDDOC));
+        string strSQL ="select top " + Top_Numero_Offerte_Da_Aprire + "  idrow from PDA_LST_BUSTE_TEC_OFFERTE_VIEW where id=@id and StatoRiga in ( 'daValutare' , 'InValutazione'  )  and bReadDocumentazione = '1' ";
+        TSRecordSet rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+        //if (err.number != 0){
+        //	exitWithError();
+        //}
+
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            while(!rs.EOF)
+            {
+                if (!(string.IsNullOrEmpty(result)))
+                {
+                    result = $"{result}~~~";
+                }
+                try
+                {
+                    result = $"{result}{CStr(rs["idrow"])}";
+                }
+                catch
+                {
+                    exitWithError();
+                }
+
+
+                rs.MoveNext();
+            }
+        }
+    }
+
+    //'----------------------------------------
+    //'-- BUSTA RIEPILOGO FINALE LOTTO  ----
+    //'----------------------------------------
+    if (CONTESTO == "PDA_RIEPILOGO_LOTTO") 
+    {
+        result = string.Empty;
+        SqlParameters.Clear();
+        SqlParameters.Add("@id", CInt(IDDOC));
+        string strSQL = "select top " + Top_Numero_Offerte_Da_Aprire + "  id as idrow from PDA_DRILL_MICROLOTTO_LISTA_VIEW where idRowLottoBando=@id and StatoRiga in ( 'Valutato' , 'Conforme'  )  and bReadEconomica = '1' ";
+        TSRecordSet rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+        //if (err.number != 0) {
+        //	exitWithError();
+        //}
+
+        if (rs.RecordCount > 0) 
+        {
+            rs.MoveFirst();
+            while (!rs.EOF) 
+            {
+                if (!(string.IsNullOrEmpty(result))) 
+                {
+                    result = $"{result}~~~";
+                }
+                try
+                {
+                    result = $"{result}{CStr(rs["idrow"])}";
+                }
+                catch
+                {
+                    exitWithError();
+                }
+				rs.MoveNext();
+			}
+		}
+
+		//if (err.number != 0) {
+		//	exitWithError();
+		//}
+	}
+
+	if (string.IsNullOrEmpty(result)) 
+    {
+		ShowInfo("Non ci sono buste da aprire"); 
+	}
+    else
+    {
+		throw new ResponseRedirectException($"../dashboard/ViewerExecProcess.asp?IDLISTA={result}&PROCESS_PARAM={PROCESS_PARAM}", Response);
+	}
+
+
+	void ShowInfo(string Information ) 
+    {
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=yes&MSG=" + URLEncode(TruncateMessage(Information)) + "&CAPTION=Informazione&ICO=1", Response);
+	}
+
+	void exitWithError() 
+    {
+        string msgErr = ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO") + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=no&MSG=" + URLEncode(TruncateMessage(msgErr)) + "&CAPTION=Errore&ICO=2", Response);
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+    }
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,333 @@
+﻿@page "/Report/SCARTO_ISCRIZIONE_INAPPROVE.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.SCARTO_ISCRIZIONE_INAPPROVEModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.SCARTO_ISCRIZIONE_INAPPROVEModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	//objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument non ok
+	var SqlParameters = new Dictionary<string, object?>();
+}
+@{
+
+	htmlToReturn.Write($@"<html>
+	<head>");
+
+	addMetaTag(htmlToReturn);
+
+	htmlToReturn.Write($@"</head>
+
+	<body style=""margin-left:50px; margin-right:50px; margin-top:10px; margin-bottom:10px"">
+
+
+	<table height=""100%"" width=""100%"" border=""0"" style=""height: 1390px;"">
+
+		<tr>
+			<td align=""center""> 
+
+				<table  width=""100%"" style=""margin-top:0px"" align=""center"">
+					<tr>
+						<td style=""border:0px;"" align=""center"">
+							<table style=""font-weight:bold; align:center"">
+								<tr>
+									<td align=""center"" style=""border:0px; align:center; vertical-align=middle;"">");
+
+	string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+	if (Strings.InStr(1,imgHeader,"???" ) > 0){
+		htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + " />");
+
+	}else{
+		htmlToReturn.Write(imgHeader);
+	}
+
+	htmlToReturn.Write($@"</td>
+								</tr>
+								<tr>
+									<td style=""font-size:9px"">"
+		+ ApplicationCommon.CNV("HEADER_DATI_REGISTRAZIONE_FORNITORE") +
+	$@"</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>
+
+		<tr>
+
+			<td height=""100%"" align=""top"" valign=""top"">
+
+				<br/><br/><br/><br/><br/>");
+
+
+	//string tipologia = "Accettazione"
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+	validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session );
+
+	SqlParameters.Clear();
+	SqlParameters.Add("@id", CInt(id));
+	string strSql = $@"select pfu.pfuNomeUtente + ' ' + pfu.pfuCognome as Responsabile, {Environment.NewLine}
+						bando.Titolo, pfu2.pfuNomeUtente + ' ' + pfu2.pfuCognome as Dest, {Environment.NewLine}
+						isnull(pfu2.pfuTitolo,'') as PfuTitolo,  {Environment.NewLine}
+						azidest.aziRagioneSociale,  {Environment.NewLine}
+						azidest.aziE_Mail, {Environment.NewLine}
+						attr1.attValue as UfficioDiAppartenenza, {Environment.NewLine}
+						isnull(d.body,'') as OggettoComunicazione, {Environment.NewLine}
+						isnull(d.note,'') as Comunicazione {Environment.NewLine}
+						FROM CTL_DOC  d with(nolock) {Environment.NewLine}
+						inner join CTL_DOC i with(nolock) on d.LinkedDoc = i.id  {Environment.NewLine}
+						left join CTL_DOC_VIEW bando  ON bando.id = i.LinkedDoc {Environment.NewLine}
+						left join profiliutente pfu with(nolock) ON pfu.idpfu = bando.ResponsabileProcedimento {Environment.NewLine}
+						left join ProfiliUtenteAttrib attr1 with(nolock) ON pfu.idpfu = attr1.IdPfu and attr1.dztNome = 'AreaDiAppartenenza' and isnull(attr1.attValue,'') <> '' {Environment.NewLine}
+						left join profiliutente pfu2 with(nolock) ON pfu2.idpfu = i.idpfu {Environment.NewLine}
+						left join aziende aziDest with(nolock) ON aziDest.idazi = i.Azienda {Environment.NewLine}
+						where d.id = @id";
+
+	//'response.write strSql
+	//'response.end
+
+	TSRecordSet rs = GetRS(strSql, SqlParameters);
+
+	if (rs.RecordCount > 0)
+	{
+		rs.MoveFirst();
+	}
+	else
+	{
+		Response.StatusCode = 500;
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+
+	string nomeBando = Myhtmlencode(CStr(rs["Titolo"]));
+	string nomeResponsabile = Myhtmlencode(CStr(rs["Responsabile"])); //'"Alessia Orsi"
+	string UfficioDiAppartenenza = Myhtmlencode(CStr(rs["UfficioDiAppartenenza"])); // 'Area ICT
+	string utenteDestinatario = Myhtmlencode(CStr(rs["Dest"]));
+	string aziDestRagSoc = Myhtmlencode(CStr(rs["aziRagioneSociale"]));
+	string aziDestEmailPec = Myhtmlencode(CStr(rs["aziE_Mail"]));
+	string pfuTitolo = string.Empty;
+	string oggetto = Myhtmlencode(CStr(rs["OggettoComunicazione"]));
+	string comunicazione = Myhtmlencode(CStr(rs["Comunicazione"]));
+
+	comunicazione = comunicazione.Replace(Environment.NewLine, "<br/>");
+
+	htmlToReturn.Write($@"<table width=""100%"">
+
+					<tr>
+
+						<td colspan=""2"" align=""left"">"
+	+ UfficioDiAppartenenza + $@"<br/>
+							<strong>" + nomeResponsabile + $@"</strong> <br/>
+							<br/>
+
+							<!--
+								Reg.&nbsp;&nbsp;CFR. FILE SEGNATURA.XML<br/> 
+								Del&nbsp;&nbsp;&nbsp;CFR. FILE SEGNATURA.XML<br/> 
+							-->
+						</td>
+
+					</tr>
+
+					<tr>
+
+						<td colspan=""2"" align=""right"">"
+	+ ApplicationCommon.CNV("PRN_CONFERMA_ISCRIZIONE - Spett.le Ditta") + $@"<br/>"
+	+ aziDestRagSoc +
+	$@" <br/>
+							Indirizzo PEC" + aziDestEmailPec +
+	$@" <br/>
+							<strong>NOTIFICATO TRAMITE PEC</strong><br/> 
+						</td>
+
+					</tr>		
+
+				</table>
+
+				<br/><br/>
+
+				<strong>Oggetto:" + oggetto + $@"</strong> <br/>
+
+				<br/><br/>
+
+				Egr." + pfuTitolo + " " + utenteDestinatario +
+
+		$@"<br/><br/>"
+
+	+ comunicazione +
+
+	$@"<br/><br/><br/>");
+
+	if (!string.Equals(CStr(GetParamURL(Request.QueryString.ToString(), "CONFERMA_AUTOMATICA")).ToUpper(), "YES")){
+
+
+		htmlToReturn.Write($@"<table width=""100%"">
+
+					<tr>
+
+						<td align=""right"">");
+
+		string? param_mostra_nome = Get_Func_Property("SCARTO_ISCRIZIONE_INAPPROVE", "nomeResponsabile", "HIDE", "0", -1);
+
+		if ((CStr(param_mostra_nome).ToUpper()) == "0"){
+
+			htmlToReturn.Write(nomeResponsabile + $@" <br/>");
+
+		}
+
+		htmlToReturn.Write($@"Firmato digitalmente
+						</td>
+
+					</tr>		
+
+				</table>");
+
+	}
+
+	htmlToReturn.Write($@"</td>
+		</tr>
+		<tr>
+			<td>
+
+				<table border=""0"" height=""50%"" width=""100%"" style=""vertical-align: text-bottom; margin-bottom: 0px"">
+					<tr>");
+
+	string sLogo = "";
+	bool bShowLogo;
+	sLogo = ApplicationCommon.CNV("footer_stampe_td_custom_logo").Trim();
+	bShowLogo = false;
+
+	if (Strings.InStr(sLogo, "footer_stampe_td_custom_logo") == 0 && !string.IsNullOrEmpty(sLogo))
+	{
+		bShowLogo = true;
+	}
+	if (bShowLogo)
+	{
+		htmlToReturn.Write(sLogo);
+	}
+
+
+	htmlToReturn.Write($@"<td align=""center"" style=""vertical-align: bottom;"">"
+	+ ApplicationCommon.CNV("footer_stampe_custom_1") + $@"<br/>"
+	+ ApplicationCommon.CNV("footer_stampe_custom_2") +
+	$@"</td>
+	</tr>");
+
+	string? nascondiFooterTitolario = Get_Func_Property("PARAMETRI_STAMPE", "Titolario", "HIDE", "0", -1);
+	SqlParameters.Clear();
+	SqlParameters.Add("@tipoDoc", "SCARTO_ISCRIZIONE");
+	
+	strSql = "select indiceTitolario, titolario from Document_protocollo_docER with(nolock) where tipoDoc = @tipoDoc";
+	rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+	if (rs.RecordCount > 0 && CStr(nascondiFooterTitolario) == "0") 
+	{
+		rs.MoveFirst();
+		string indice = CStr(rs["indiceTitolario"]);
+		string titolario = CStr(rs["titolario"]);
+		string lvl1 = CStr(rs["titolario"]);
+		string lvl2 = "";
+		string lvl3 = "";
+		string lvl4 = "";
+		string lvl5 = "";
+
+		try
+		{
+			string[] arr = CStr(rs["titolario"]).Split(".");
+			lvl1 = arr[0];
+			lvl2 = arr[1];
+			lvl3 = arr[2];
+			lvl4 = arr[3];
+			lvl5 = arr[4];
+		}
+		catch
+		{
+
+		}
+		htmlToReturn.Write($@"<tr>
+						<td align=""center"" style=""vertical-align: bottom;font-size:7""");
+
+		if (bShowLogo)
+		{
+			htmlToReturn.Write($@" colspan=""2"" ");
+		}
+
+		htmlToReturn.Write($@">");
+		htmlToReturn.Write($@"<table width=""30%"" style=""font-size:10; padding: 0px;text-align:center; border-spacing: 0; border-collapse: collapse"" align=""center"">
+								<tr>
+									<td>
+									</td>
+									
+									<td>
+										LIV.1
+									</td>
+									<td>
+										LIV.2
+									</td>
+									<td>
+										LIV.3
+									</td>
+									
+								</tr>
+								<tr>
+									<td>
+										Classif.
+									</td>
+
+									
+
+									<td style=""border: 1px solid black;"">"
+										+ lvl1 +
+															$@"</td>
+
+									<td style=""border: 1px solid black;"">"
+										+ lvl2 +
+															$@"</td>
+
+									<td style=""border: 1px solid black;"">"
+										+ lvl3 +
+															$@"</td>
+
+									
+								</tr>
+							</table>
+						</td>
+					</tr>");
+
+
+	}
+
+	htmlToReturn.Write($@"</table>
+
+			</td>
+		</tr>
+	</table>
+	
+	</body>
+	</html>");
+
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+}
+@Html.Raw(htmlToReturn.Out())

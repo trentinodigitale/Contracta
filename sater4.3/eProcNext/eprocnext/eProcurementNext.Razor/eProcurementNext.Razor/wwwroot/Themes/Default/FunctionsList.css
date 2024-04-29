@@ -1,0 +1,171 @@
+BODY.BodyListFunction
+{
+    MARGIN-TOP: 0px;
+    MARGIN-LEFT: 5px;
+    MARGIN-RIGHT: 0px;
+    BACKGROUND-COLOR: gainsboro
+}
+TABLE.GridListFunction
+{
+    WIDTH: 194px;
+    COLOR: #161a74
+}
+TD.CellGridListFunction
+{
+}
+.FontLinkSelectedListFunction
+{
+    FONT-SIZE: 0.85em;
+    CURSOR: pointer;
+    COLOR: #ECECEC;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	background:#CB1D15;
+	padding:5px 0px 5px 5px;
+	border-bottom:1px solid #fff;
+}
+.FontLinkSelectedListFunctionNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #FBE28C;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.FontLinkNotSelectedListFunction
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #161a74;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.FontLinkMessageListFunctions
+{
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #F00;
+}
+
+
+
+
+.FontLinkMessageListFunctionsNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #fceebf;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+   
+}
+.FontLinkNoMessageListFunctions
+{
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+TABLE.GridConteinerListFunction
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-TOP: 0px
+}
+TD.CellGridConteinerListFunction
+{
+}
+TABLE.ContainerGridGroups
+{
+    PADDING-RIGHT: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    HEIGHT: 100%;
+    BACKGROUND-COLOR: palegoldenrod;
+    TEXT-ALIGN: left
+}
+
+
+.FontLinkMessageListFunctionsUnderLine
+{
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: ECECEC;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+.FontLinkMessageListFunctionsUnderLineNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: darkred;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+TABLE.GridGroup
+{
+	background:#515151;
+}
+
+
+TABLE.logo
+{
+    BACKGROUND-COLOR: white
+}
+
+
+
+
+
+TD.FontLinkMessageListFunctions
+{
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #ECECEC;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	padding-left:14px;
+	background:#515151 url(../../images/karo.gif) 0px 7px no-repeat;
+	padding-bottom:5px;
+}
+TD.FontLinkMessageListFunctions:hover{ text-decoration:underline;}
+TD.FontLinkMessageListFunctionsNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #FBE28C;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+   
+}
+
+TD.FontLinkMessageListFunctionsUnderLine
+{
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline;
+	COLOR: #fff;
+	padding-left:14px;
+	background:#515151 url(../../images/karo.gif)  left center no-repeat;
+	padding-bottom:5px;
+}
+TD.FontLinkMessageListFunctionsUnderLineNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 0.8em;
+    CURSOR: pointer;
+    COLOR: #fceebf;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+
+
+table.GridGroup li{
+list-style-type:none;
+}

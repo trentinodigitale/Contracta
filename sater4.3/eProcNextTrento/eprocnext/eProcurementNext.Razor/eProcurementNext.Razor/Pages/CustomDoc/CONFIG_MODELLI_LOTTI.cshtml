@@ -1,0 +1,46 @@
+﻿@page "/CustomDoc/CONFIG_MODELLI_LOTTI.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.initialize_ComponentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.CONFIG_MODELLI_LOTTI;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.CONFIG_MODELLI_LOTTI
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdb = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+
+    string Desc = "EDITABLE";
+    string ID = GetParamURL(Request.QueryString.ToString(), "ID");
+    var SqlParameters = new Dictionary<string, object?>();
+    SqlParameters.Add("@type", "ATTRIBUTI_FISSI_GARE");
+    SqlParameters.Add("@valueInput", ID);
+    TSRecordSet? rs = cdb.GetRSReadFromQuery_("select distinct REL_ValueOutput from CTL_RELATIONS with(nolock) where REL_Type = @type and REL_VALUEINPUT= @valueInput", ApplicationCommon.Application.ConnectionString, SqlParameters);
+    SqlParameters.Clear();
+    SqlParameters.Add("@name", ID);
+    //'-- recupero i dati dell'attributro
+    TSRecordSet? rs2 = cdb.GetRSReadFromQuery_("select ISNULL(ML_Description,DZT_DescML) as Descrizione, isnull(DZT_DM_ID, '') as DZT_DM_ID, case when DZT_Type in (2,7) then  ISNULL(DZT_Dec,0) else 0 end as NumeroDec from LIB_DICTIONARY with(nolock) left join LIB_MULTILINGUISMO with(nolock) on DZT_DescML=ML_KEY and ML_LNG='I' where DZT_Name=@name", ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+    //'-- se l'attributo appartiene a quelli con descrizione bloccata faccio ritornare la sua descrizione, che bloccherà poi a video la possibilità di edit
+    if (rs2 is not null)
+    {
+        if (rs is not null && rs.RecordCount > 0)
+        {
+            if (!string.IsNullOrEmpty(CStr(rs["REL_ValueOutput"]).ToUpper()))
+            {
+                Desc = CStr(rs2["Descrizione"]).ToUpper();
+            }
+        }
+        Desc = $"{Desc}#@#{CStr(rs2["NumeroDec"])}#@#{CStr(rs2["DZT_DM_ID"])}";
+    }
+
+    htmlToReturn.Write(Desc);
+}
+@Html.Raw(htmlToReturn.Out())

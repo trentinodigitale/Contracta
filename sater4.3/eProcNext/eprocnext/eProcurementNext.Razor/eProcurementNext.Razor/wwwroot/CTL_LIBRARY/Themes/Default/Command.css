@@ -1,0 +1,61 @@
+BODY
+{
+}
+TD.ImageCellMiddleButton
+{
+}
+INPUT.fontCommand
+{
+    FONT-SIZE: 12PX;
+    MARGIN: 1px;
+    COLOR:#333;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: goldenrod;
+    TEXT-DECORATION: none;
+	border:1px solid;
+}
+
+
+
+
+
+
+INPUT.congelati
+{
+}
+.fontLinkActive
+{
+    FONT-SIZE: 12px;
+    CURSOR: hand;
+    COLOR: darkred;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+.fontCommandbold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    LINE-HEIGHT: 12px;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.fontcommand
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.TextLink
+{
+    FONT-SIZE: 12px;
+    CURSOR: hand;
+    COLOR: darkred;
+    FONT-FAMILY: Arial
+}
+.FoglieBluSott
+{
+    FONT-SIZE: 12px;
+    COLOR: darkred;
+    FONT-FAMILY: Arial
+}

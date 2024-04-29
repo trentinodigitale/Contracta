@@ -1,0 +1,121 @@
+﻿@page "/logout.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonModule
+@using eProcurementNext.HTML
+@using eProcurementNext.CommonDB
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using eProcurementNext.Razor;
+@inject eProcurementNext.Application.IEprocNextApplication application;
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware;
+@using static eProcurementNext.CommonModule.Basic;
+@model eProcurementNext.Razor.Pages.logoutModel
+@{
+	//'-- pagina invocata via ajax
+
+	LoadSession(HttpContext, session);
+
+	if (!string.IsNullOrEmpty(CStr(application["SSO_URL_LOGOUT"])))
+	{	
+
+
+		//'-- sys che uguale a YES fa effettuare l'abandon asp classic prima di andare in redirect
+		if (CStr(application["SSO_URL_LOGOUT_ABANDON"]).ToUpper() == "YES")
+		{
+			MainGlobalAsa.SessionAbandon(HttpContext, session);
+		}
+
+		//'-- sarà il chiamante a fare la redirect
+		//@Html.Raw(CStr(application["SSO_URL_LOGOUT"]));
+		throw new ResponseEndException(CStr(ApplicationCommon.Application["SSO_URL_LOGOUT"]), Response, "");
+
+		//HttpContext.Response.Redirect(CStr(application["SSO_URL_LOGOUT"]));
+		//return;
+	}
+
+	string idToken = CStr(session["OPEN_ID_TOKEN"]);
+
+	//'-- questa session abandon non verrà chiamata se ha effetto la redirect sopra. questo perchè potrebbe servirgli la sessione. quindi se ne occuperà la pagina chiamata di fare l'abandon
+	try
+	{
+		//LoadSession(HttpContext, session);
+		MainGlobalAsa.SessionAbandon(HttpContext, session);
+
+
+		DeleteAllCookies(HttpContext);
+
+	}
+	catch (Exception ex)
+	{
+		// errore nel caricamento della sessione
+
+		//await HttpContext.SignOutAsync(
+		//CookieAuthenticationDefaults.AuthenticationScheme);
+		//.ContinueWith(data=>{
+		//	Response.Redirect("/");
+		//});
+		DeleteAllCookies(HttpContext);
+
+
+	}
+
+	//'-- GESTIONE PER IAM / SSO
+	if (!string.IsNullOrEmpty(CStr(application["OPENID_URL_LOGOUT"])) && !string.IsNullOrEmpty(CStr(idToken)))
+	{
+		TSRecordSet? rs = null;
+		CommonDbFunctions cdf = new CommonDbFunctions();
+		string urlToInvoke = CStr(application["OPENID_URL_LOGOUT"]);
+		string retUrl = CStr(application["OPENID_REDIRECT_URI"]);
+		string retUrl2 = CStr(application["OPENID_POST_LOGOUT_REDIRECT_URI"]);
+
+		string tipoLogout = "0";
+
+		//se esiste nella ctl_paramentri un record con il contesto il nome della sys SYS_OPENID_URL_LOGOUT
+		rs = cdf.GetRSReadFromQuery_("select dbo.PARAMETRI('SYS_OPENID_URL_LOGOUT','Logout','value','0',-1) as Valore", ApplicationCommon.Application.ConnectionString);
+
+		if (rs is not null && rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+
+			tipoLogout = CStr(rs["Valore"]);
+		}
+
+		//comportamento iniziale
+		if (tipoLogout == "0")
+		{
+			if (!urlToInvoke.Contains("?", StringComparison.Ordinal))
+			{
+				urlToInvoke = urlToInvoke + "?";
+			}
+
+			urlToInvoke = urlToInvoke + "state=xx123321yyy&id_token_hint=" + BasicFunction.UrlEncode(idToken);		
+
+			if (!string.IsNullOrEmpty(retUrl2))
+			{
+				retUrl = retUrl2;
+			}
+
+			if (!string.IsNullOrEmpty(retUrl))
+			{
+				urlToInvoke = urlToInvoke + "&post_logout_redirect_uri=" + BasicFunction.UrlEncode(retUrl);
+			}
+		}
+
+		//popola il campo con solo l'url passato dalla sys
+		if (tipoLogout == "1")
+		{
+			urlToInvoke = CStr(application["OPENID_URL_LOGOUT"]);
+		}
+
+		//'set obj = CreateObject ("Msxml2.ServerXMLHTTP.6.0")
+		//'obj.open "GET", urlToInvoke ,False	
+		//'obj.send
+		//
+		//'-- effettuiamo la redirect alla pagina di logout dello IAM dopo aver fatto l'abandon su di noi. Questa pagina chiamata server to server non sembra funzionare. forse ha bisogno dei cookie lato client
+		//'Response.Redirect urlToInvoke
+
+		//'-- sarà il chiamante a fare la redirect
+		@Html.Raw(urlToInvoke);
+	}
+}

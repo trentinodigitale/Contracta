@@ -1,0 +1,143 @@
+﻿@page "/CTL_LIBRARY/UpdateFieldVisual.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.updateFieldVisualModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.updateFieldVisualModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@* <!-- #Include File="Functions/intest.inc" --> *@
+@{
+	htmlToReturn.Write("<html>");
+	htmlToReturn.Write("<head>");
+
+	if (IsEmpty( ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] ) || ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] == "0" ){
+		htmlToReturn.Write($@"<meta http-equiv=""X-UA-Compatible"" content=""IE=8"">");
+	}
+
+	htmlToReturn.Write($@"    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">");
+	Response.Headers.TryAdd("X-XSS-Protection", "0");
+}
+@{
+	htmlToReturn.Write($@"
+		<link rel=stylesheet href=""Themes/caption.css"" type=""text/css"">
+		<link rel=stylesheet href=""Themes/SinteticHelp.css"" type=""text/css"">
+		<link rel=stylesheet href=""Themes/model.css"" type=""text/css"">
+		<link rel=stylesheet href=""Themes/field.css"" type=""text/css"">
+		<link rel=stylesheet href=""Themes/grid.css"" type=""text/css"">
+	");
+}
+@{
+	if( !string.IsNullOrEmpty(CStr(GetParamURL(Request.QueryString.ToString(), "js_func_after"))))
+	{
+		htmlToReturn.Write($@"<script>window.onload = Func;function Func(){{parent.{HtmlEncode(CStr(GetParamURL(Request.QueryString.ToString(), "js_func_after")))}}}</script>");
+	}
+}
+@{
+	if (CStr(session["HomePageLight"]) == "1"){ 
+		htmlToReturn.Write($@"<script>var BrowseInPage=1;</script>" + Environment.NewLine);
+	}else{
+		htmlToReturn.Write($@"<script>var BrowseInPage=0;</script>" + Environment.NewLine);
+	}
+
+	//'-- avvio pagina
+	string[] v = "CTLDB.UpdateFieldVisual".Split(".");
+
+	//dim ObjSession
+
+	//ObjSession = session("Session")
+	//set ObjSession(0) = Request.QueryString
+	//set ObjSession(1) = Request.form
+
+	//'-- Passiamo di nuovo anche la request all'indice 3 per permettere alla classe ctldb.blacklist di recuperare l'ip
+	//set ObjSession(3) = request
+	//set ObjSession(5) = session
+	//set ObjSession(6) = application
+	//ObjSession(9) = application("Server_RDS")
+	//ObjSession(10) = session("Funzionalita")' permessi utenti
+
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+
+	//dim Objects
+	//dim objDB
+
+	UpdateFieldVisual Objects = new UpdateFieldVisual(context: HttpContext, session);
+	//set Objects = server.createobject(ProgID)
+
+    //dim objAttivaGlobal
+	//set objAttivaGlobal = server.createObject("ctldb.clsTabManage")
+
+	//err.clear 
+	try
+	{
+		Objects.run(htmlToReturn); 
+		if (CStr(GetParamURL(Request.QueryString.ToString(),"ajax")) != "1" ){
+
+            //'-- chiusura pagina
+			htmlToReturn.Write("</body>");
+			htmlToReturn.Write("</html>");
+
+		}
+
+		traceInLogUtente(1, "ServerPage(" + "CTLDB.UpdateFieldVisual" + ")", "TerminatePage. QueryString:" + Request.QueryString.ToString(), HttpContext, session);
+	}
+    catch(Exception ex)
+    {
+        //'-- gestione errore
+
+        
+        //'-- Scriviamo l'errore nell'event viewer
+        eProcurementNext.CommonDB.Basic.TraceErr(new Exception(ex.Message + ex.Source) , "CTLDB.UpdateFieldVisual");
+
+		//call traceInLogUtente( 0, "ServerPage(" & ProgID & ")", "Descrizione:" & d & " --- QueryString:" & request.QueryString )//TODO implementare (da Functions/trace_in_log_utente.inc)
+		htmlToReturn.Clear();
+
+		htmlToReturn.Write("<html>");
+		htmlToReturn.Write("<head>");
+
+		if (IsEmpty( ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] ) || ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] == "0" ){
+			htmlToReturn.Write($@"<meta http-equiv=""X-UA-Compatible"" content=""IE=8"">");
+		}
+
+		htmlToReturn.Write($@"    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">");
+		Response.Headers.TryAdd("X-XSS-Protection", "0");
+
+
+		htmlToReturn.Write("</head><body>");
+
+		//'-- Se � attiva la modalit� debug visualizziamo pi� informazioni riguardo l'errore, query sql comprese
+		if ((CStr(ApplicationCommon.Application["debug-mode"]).ToLower() == "yes") || (CStr(ApplicationCommon.Application["debug-mode"]).ToLower() == "si") || (CStr(ApplicationCommon.Application["debug-mode"]) == "true") ){
+
+			htmlToReturn.Write("object:" + "CTLDB.UpdateFieldVisual" + " <br> " + "Desc:" + ex.ToString() + " <br> " +  "Source:" + ex.Source);
+
+		}else{
+
+			//'-- Se � disattivato il debug-mode ma � attiva ma la SYS di visione degli errori tecnici 
+			if ( CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "yes" || CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "si" ) {
+
+				htmlToReturn.Write("object:" + "CTLDB.UpdateFieldVisual" + " <br> " + "Desc:" + ex.ToString() + " <br> " + "Source:" + ex.Source);
+
+			}else{
+
+				htmlToReturn.Write(ApplicationCommon.Application["INFO_UTENTE_ERRORE_PROCESSO"] + DateAndTime.Now.ToString());
+
+			}
+			
+		}
+
+		htmlToReturn.Write("</body>");
+		htmlToReturn.Write("</html>");
+		
+	}
+
+}
+@Html.Raw(htmlToReturn.Out())

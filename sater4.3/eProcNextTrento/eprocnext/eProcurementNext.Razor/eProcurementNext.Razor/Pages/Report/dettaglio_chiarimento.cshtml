@@ -1,0 +1,134 @@
+﻿@page "/Report/dettaglio_chiarimento.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.dettaglio_chiarimentoModel;
+@model eProcurementNext.Razor.Pages.Report.dettaglio_chiarimentoModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	htmlToReturn.Write("<html>");
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+}
+@{
+	var sqlParams = new Dictionary<string, object?>();
+
+	string idDoc = objDoc.mp_IDDoc;
+	htmlToReturn.Write($@"
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8""/>
+	<META HTTP-EQUIV=""Pragma"" CONTENT=""no-cache""/>
+	<META HTTP-EQUIV=""Expires"" CONTENT=""-1""/>
+
+	<table>
+		<tr>
+			<td>
+				<img src=" + ApplicationCommon.Application["strVirtualDirectory"] + $@"/report/logo.jpg""  border=""0""/>
+			</td>
+			<td>
+				<strong>" + ApplicationCommon.Application["NOMEPORTALE"] + $@"</strong><br/>
+				<strong>" + ApplicationCommon.Application["DESCRIZIONEPORTALE"] + $@"</strong>
+			</td>
+		</tr>
+	</table>
+
+	<br/><br/><br/>");
+	htmlToReturn.Write($@"
+	<strong>" + ApplicationCommon.CNV("ProtocolloBando") + $@":</strong>" + DOC_Field("TESTATA", "ProtocolloBando") + $@"<br/><br/>
+
+
+	<strong>" + ApplicationCommon.CNV("Oggetto") + $@":</strong>" + DOC_Field("TESTATA", "Oggetto") + $@"<br/>
+	" + getCIGeCUP(idDoc) + $@"<br/><br/>
+
+	<strong>" + ApplicationCommon.CNV("QUESITO Prot.") + $@":</strong> " + DOC_Field("TESTATA", "Protocol") + $@"<strong>del</strong> " + DOC_Field("TESTATA", "DataCreazione1") + $@"<br/>
+	" + HtmlEncode(DOC_Field("TESTATA", "Domanda")) + $@"<br/><br/>
+
+	<strong>" + ApplicationCommon.CNV("RISPOSTA Prot.") + $@":</strong> " + DOC_Field("TESTATA", "PROTOCOLRISPOSTAQUESITO") + $@" <strong>del</strong> " + DOC_Field("TESTATA", "DATARISPOSTA") + $@"<br/>
+	" + HtmlEncode(DOC_Field("TESTATA", "Risposta")) + $@"<br/><br/>
+
+	<br/>
+
+	<center>
+	F.to Il Responsabile Unico del Procedimento<br/>
+	" + getUserInfo(DOC_Field("TESTATA", "UTENTERISPOSTA")) + $@"<br/>
+	</center>");
+	string getUserInfo(string idpfu )
+	{
+		string _getUserInfo = "";
+		if(!string.IsNullOrEmpty(CStr(idpfu)))
+		{
+			TSRecordSet rs = null;
+			sqlParams.Clear();
+			sqlParams.Add("@idpfu", CLng(idpfu));
+			rs = cdf.GetRSReadFromQuery_("select pfuTitolo,pfunome from profiliutente where idpfu = @idpfu", ApplicationCommon.Application.ConnectionString, sqlParams);
+			if(rs.RecordCount == 0)
+			{
+				_getUserInfo = "";
+			}
+			else
+			{
+				_getUserInfo = GetValueFromRS(rs.Fields["pfuTitolo"]) + " " + GetValueFromRS(rs.Fields["pfunome"]);
+			}
+		}
+		return _getUserInfo;
+	}
+	string getCIGeCUP(string idDoc )
+	{
+		int idOrigin = 0;
+		//dim document
+		//dim obj
+		TSRecordSet rs1 = null;
+		string _getCIGeCUP = "";
+		sqlParams.Clear();
+		sqlParams.Add("@id", CLng(idDoc));
+		rs1 = cdf.GetRSReadFromQuery_("select id_origin,isnull(document,'') as document from document_chiarimenti where id =@id ", ApplicationCommon.Application.ConnectionString, sqlParams);
+		if(rs1.RecordCount == 0)
+		{
+			_getCIGeCUP = "";
+		}
+		else
+		{
+			idOrigin = GetValueFromRS(rs1.Fields["id_origin"]);
+			string document = CStr(rs1["document"]);
+			/*if document = "" then
+
+				'-- Documento generico
+
+				set rs1 = nothing
+				set rs1 = obj.GetRSReadFromQuery( cstr("select cig,cup from Tab_messaggi_fields where idmsg = " & clng(idOrigin) ) , cstr(session("Session")(8)) )
+
+			else
+			*/
+			sqlParams.Clear();
+			sqlParams.Add("@idOrigin", CLng(idOrigin));
+			rs1 = cdf.GetRSReadFromQuery_("select cig,cup from document_bando where idheader = @idOrigin", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+			if(rs1.RecordCount>0)
+			{
+				_getCIGeCUP = "<strong>" + ApplicationCommon.CNV("CIG") + ":</strong>" + CStr(rs1["cig"]) + "<strong> - " + ApplicationCommon.CNV("CUP") + ":</strong>" + CStr(rs1["cup"]);
+			}
+
+		}
+		return _getCIGeCUP;
+	}
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+
+
+}@Html.Raw(htmlToReturn.Out())

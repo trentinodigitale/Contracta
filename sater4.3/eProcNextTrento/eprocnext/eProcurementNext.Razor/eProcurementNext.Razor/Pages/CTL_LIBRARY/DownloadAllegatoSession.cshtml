@@ -1,0 +1,662 @@
+﻿@page "/CTL_LIBRARY/DownloadAllegatoSession.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;
+@using Microsoft.Extensions.Primitives
+@using Microsoft.VisualBasic;
+@using System.Text
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    string att_hash;
+    dynamic lIdPfu;
+    string TECHVALUE;
+    string TECHVALUE_form;
+    int IdPfuLogin;
+
+    string virtualDirectoryPortale = "";
+    string tsCache = "";
+    string urlPortale = "";
+
+    TECHVALUE_form = "";
+    TECHVALUE_form = CStr(GetValueFromForm(Request, "TECHVALUE")).Trim();
+
+    string portaleCliente;
+    string pathRoot;
+    if (string.IsNullOrEmpty(CStr(ApplicationCommon.Application["SITO_ISTITUZIONALE_CLIENTE"]))) {
+        portaleCliente = "http://www.regione.emilia-romagna.it";
+    } else {
+        portaleCliente = CStr(ApplicationCommon.Application["SITO_ISTITUZIONALE_CLIENTE"]);
+    }
+    pathRoot = "../";
+
+    //' se vengo dalla modalita login
+    if (string.IsNullOrEmpty(TECHVALUE_form)) {
+
+        string IDAZIENDA = CStr(GetValueFromForm(Request, "IDAZIENDA").Trim());
+        string USERNAME = CStr(GetValueFromForm(Request, "USERNAME").Trim());
+        string PASSWORD = CStr(GetValueFromForm(Request, "PASSWORD").Trim());
+        string strMnemonicoMP = CStr(GetValueFromForm(Request, "strMnemonicoMP").Trim());
+
+        validate("TECHVALUE_form", TECHVALUE_form, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+        validate("IDAZIENDA", IDAZIENDA, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        validate("USERNAME", USERNAME, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+        //'''validate("PASSWORD", PASSWORD, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+        //response.write "vengo dal login - " & TECHVALUE_form
+        //response.write "IDAZIENDA=" & IDAZIENDA
+        //response.write "USERNAME=" & USERNAME
+        //response.write "PASSWORD=" & PASSWORD
+        //response.end
+
+        string strSQL = "declare @tipoLogin integer = -1" + Environment.NewLine;
+        strSQL = strSQL + "declare @idAzi integer = -1" + Environment.NewLine;
+        strSQL = strSQL + "declare @pfuFunzionalita varchar(4000)" + Environment.NewLine;
+        strSQL = strSQL + "declare @ragSoc varchar(80)" + Environment.NewLine;
+        strSQL = strSQL + "declare @pfuProfili varchar(20)" + Environment.NewLine;
+        strSQL = strSQL + "declare @idpfu int" + Environment.NewLine;
+        strSQL = strSQL + "declare @sLng varchar(5)" + Environment.NewLine;
+        strSQL = strSQL + "declare @userName varchar(30)" + Environment.NewLine;
+
+        strSQL = strSQL + "exec GetTipoLogin '" + IDAZIENDA.Replace("'", "''") + "', '" + USERNAME.Replace("'", "''") + "', '" + PASSWORD.Replace("'", "''") + "', '" + strMnemonicoMP.Replace("'", "''") + "', @idAzi output,@pfuFunzionalita output,@ragSoc output,@tipoLogin output,@pfuProfili output,@idpfu output,@sLng output,@userName output" + Environment.NewLine;
+        strSQL = strSQL + "select @tipoLogin as tipoLogin, @idAzi as idAzi, @pfuFunzionalita as pfuFunzionalita, @ragSoc as ragSoc, @pfuProfili as pfuProfili, @idpfu as idpfu, @sLng as lng,@userName as username";
+
+
+        TSRecordSet objRS = GetRS(CStr(strSQL));
+
+        int ITypeAzi = -1;
+        IdPfuLogin = 0;
+
+        if (objRS != null) {
+            if (!(objRS.EOF && objRS.BOF)) {
+
+                objRS.MoveFirst();
+                ITypeAzi = CInt(objRS.Fields["tipoLogin"]);
+                IdPfuLogin = CInt(objRS.Fields["IdPfu"]);
+
+            }
+        }
+
+        if (CStr(ITypeAzi) == "-1" || string.IsNullOrEmpty(CStr(ITypeAzi))) {
+            htmlToReturn.Write("Credenziali di accesso errate");
+            throw new ResponseEndException(htmlToReturn.Out(), Response, "Credenziali di accesso errate");
+            //response.write "Credenziali di accesso errate"
+            //response.end
+        } else {
+            //'''' se arriva qui allora le credenziali sono corrette
+            //'response.write "OK Idpfu=" & IdPfuLogin
+            //'response.end
+
+            //' aggiungere quest'altro controllo
+            //' che l'utente sia uno dei destinatari della comunicazione
+
+            string[] aInfo = Strings.Split(TECHVALUE_form, "*");
+
+            att_hash = aInfo[3];
+
+            session["IdPfu"] = IdPfuLogin;
+
+
+        }
+
+    }
+
+    lIdPfu = session["IdPfu"];
+
+    TECHVALUE = CStr(GetParamURL(Request.QueryString.ToString(), "TECHVALUE"));
+
+    if (!string.IsNullOrEmpty(TECHVALUE_form)) {
+        TECHVALUE = TECHVALUE_form;
+    }
+
+    validate("TECHVALUE", TECHVALUE, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+
+    if (!string.IsNullOrEmpty(CStr(lIdPfu))) {
+
+        //' se sono in sessione faccio scaricare l'allegat+
+        string strPage = "functions/FIELD/DisplayAttach.asp?OPERATION=DISPLAY&FIELD=Attach_Grid&FORMAT=INTV&IdPfu=" + CStr(lIdPfu) + "&TECHVALUE=" + TECHVALUE;
+
+
+        string[] aInfo = Strings.Split(TECHVALUE, "*");
+
+        att_hash = aInfo[3];
+        throw new ResponseRedirectException(strPage, Response);
+        //   response.redirect strPage
+
+        //response.end
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+    } else {
+
+        //'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        //' sono fuori sessione allora devo fare il login
+        //'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+        if (CStr(ApplicationCommon.Application["ONLY_SSO_ACCESS"]).Toupper() == "YES") {
+			throw new ResponseRedirectException("./MessageBoxWin.asp?ML=yes&MSG=AvvisoFuoriSessionePerDownloadAllegato&CAPTION=Titolo_AvvisoFuoriSessionePerDownloadAllegato&ICO=1", Response);
+            //Response.Redirect "./MessageBoxWin.asp?ML=yes&MSG=AvvisoFuoriSessionePerDownloadAllegato&CAPTION=Titolo_AvvisoFuoriSessionePerDownloadAllegato&ICO=1"
+
+        } else {
+
+
+
+            drawLayout("Home");
+
+        }
+
+    }     //''''' fine if se sono fuori sessione !!!!!'''''''
+
+    void InsertInTable(dynamic lIdPfu, dynamic att_hash) {
+        throw new NotImplementedException("InsertInTable not translated");
+        //   set rs = getRs("select atr_idrow from CTL_ATTACH_READ with(nolock) where atr_hash='" & cstr(att_hash) & "' and atr_idpfu=" & cstr(lIdPfu))
+        //if rs.recordcount > 0 then
+        // rs.movefirst
+        //else
+        // set rs=getRs("insert into CTL_ATTACH_READ (atr_hash,atr_idpfu) values ('" & cstr(att_hash) & "'," & cstr(lIdPfu) & ")" )
+        //end if
+
+        //set rs=nothing
+
+    }
+
+    TSRecordSet GetRS(string strSql) {
+
+        //'on error resume next
+
+        //dim obj
+        //dim rs
+        //set rs = nothing
+
+        //set obj = server.CreateObject("ctldb.clsTabManage")
+        CommonDbFunctions cdb = new CommonDbFunctions();
+        return cdb.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+
+        //set obj = nothing
+
+        //set GetRS = rs
+
+        //'err.clear
+
+    }
+
+    void drawLayout(string titlePagina) {
+
+        //'-- per far funzionare correttamente il bilanciatore di intercenter :
+        //'if cstr(Session("AFLINKFIXATION")) = "" then
+        //'	AntiFixationInit()
+        //'end if
+
+        drawHtmlHead(titlePagina);
+
+        drawBodyHeader(titlePagina);
+
+        drawHtmlFooter();
+
+    }
+
+    void drawHtmlHead(string titlePagina) {
+
+        //'Response.ContentType = "text/html"
+        Response.Headers.TryAdd("Content-Type", "text/html;charset=UTF-8");
+        //Response.CodePage = 65001
+        Response.Headers.AcceptCharset = "UTF-8";
+
+        virtualDirectoryPortale = CStr(Strings.Split(CStr(HttpContext.GetServerVariable("PATH_INFO")), @"/")[1]);
+
+        urlPortale = CStr(ApplicationCommon.Application["WEBSERVERPORTALE"]) + @"/" + virtualDirectoryPortale + @"/accesso_dossier.asp";
+
+        //'response.write virtualDirectoryPortale
+        //'response.end
+
+        tsCache = DateTime.Now.ToString("yyyyMMddHHmmssffff");
+
+        string versioneAflink = "7654";
+
+        htmlToReturn.Write($@"
+
+
+	    <!DOCTYPE html>
+	    <html lang=""it-it"" dir=""ltr"">
+	    <head>
+		    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"" />
+		    <meta http-equiv=""X-UA-Compatible"" content=""IE=9""/>
+		    <meta charset=""utf-8"" />
+
+		    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"" />
+
+		    <title>" + HtmlEncode(titlePagina) + $@"</title>
+
+		    <link href=""/" + virtualDirectoryPortale + $@"/favicon.ico?nocache=" + tsCache + $@""" rel=""shortcut icon"" type=""image/vnd.microsoft.icon"" />
+
+
+		    <link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/layout.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+		    <link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/template.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+		    <link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/general.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+		    <link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/personal.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+		    <link href=""/" + virtualDirectoryPortale + $@"/accesso_dossier/CSS/modal.css?nocache=" + tsCache + $@""" rel=""stylesheet"" />
+
+
+		    <link href=""//fonts.googleapis.com/css?family=Open+Sans"" rel=""stylesheet"" />
+		    <link href='https://fonts.googleapis.com/css?family=Titillium Web' rel='stylesheet'>
+
+
+
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/jscript/jquery/jquery-ui.css?v=" + versioneAflink + $@""" />
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/jscript/jquery/css/smoothness/jquery-ui-1.10.4.css?v=" + versioneAflink + $@""" />
+
+		    <link rel=""icon"" href=""" + pathRoot + $@"favicon.ico?v=" + versioneAflink + $@"""/>
+
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/themes/bootstrap.css?v=" + versioneAflink + $@""" type=""text/css"">
+
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/chat/chat.css?v=" + versioneAflink + $@""" type=""text/css"" media=""screen,projection""/> 
+
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/Themes/main_base.css?v=" + versioneAflink + $@""" type=""text/css"" media=""screen,projection""/> 
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/Themes/main.css?v=" + versioneAflink + $@""" type=""text/css"" media=""screen,projection""/> 
+		    <link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/Themes/main_stampa.css?v=" + versioneAflink + $@""" type=""text/css"" media=""print""  />
+
+
+
+
+
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/jquery.min.js?nocache=" + tsCache + $@"""></script>
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/jquery-noconflict.js?nocache=" + tsCache + $@"""></script>
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/jquery-migrate.min.js?nocache=" + tsCache + $@"""></script>
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/jui/js/bootstrap.min.js?nocache=" + tsCache + $@"""></script>
+
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/caption.js?nocache=" + tsCache + $@"""></script>
+
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/template.js?nocache=" + tsCache + $@"""></script>
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/core.js?nocache=" + tsCache + $@"""></script>
+
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/mootools-core.js?nocache=" + tsCache + $@"""></script>
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/mootools-more.js?nocache=" + tsCache + $@"""></script>
+		    <script src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/system/modal.js?nocache=" + tsCache + $@"""></script>
+
+		    <!--[if lt IE 9]><script src=""/" + virtualDirectoryPortale + $@"/JS/jui/js/html5.js""></script><![endif]-->
+
+		    <script type=""text/javascript"" src=""/" + virtualDirectoryPortale + $@"/accesso_dossier/js/md_stylechanger.js?nocache=" + tsCache + $@"""></script>
+
+		    <script>
+
+			    jQuery(window).on('load',  function() {{
+					    new JCaption('img.caption');
+				    }});
+
+			    jQuery(function($) {{
+				    SqueezeBox.initialize({{}});
+				    SqueezeBox.assign($('a.modal').get(), {{
+					    parse: 'rel'
+				    }});
+			    }});
+
+			    window.jModalClose = function () {{
+				    SqueezeBox.close();
+			    }};
+
+			    // Add extra modal close functionality for tinyMCE-based editors
+			    document.onreadystatechange = function () {{
+				    if (document.readyState == 'interactive' && typeof tinyMCE != 'undefined' && tinyMCE)
+				    {{
+					    if (typeof window.jModalClose_no_tinyMCE === 'undefined')
+					    {{
+						    window.jModalClose_no_tinyMCE = typeof(jModalClose) == 'function'  ?  jModalClose  :  false;
+
+						    jModalClose = function () {{
+							    if (window.jModalClose_no_tinyMCE) window.jModalClose_no_tinyMCE.apply(this, arguments);
+							    tinyMCE.activeEditor.windowManager.close();
+						    }};
+					    }}
+
+					    if (typeof window.SqueezeBoxClose_no_tinyMCE === 'undefined')
+					    {{
+						    if (typeof(SqueezeBox) == 'undefined')  SqueezeBox = {{}};
+						    window.SqueezeBoxClose_no_tinyMCE = typeof(SqueezeBox.close) == 'function'  ?  SqueezeBox.close  :  false;
+
+						    SqueezeBox.close = function () {{
+							    if (window.SqueezeBoxClose_no_tinyMCE)  window.SqueezeBoxClose_no_tinyMCE.apply(this, arguments);
+							    tinyMCE.activeEditor.windowManager.close();
+						    }};
+					    }}
+				    }}
+			    }};
+
+			    jQuery(function($){{ $("".hasTooltip"").tooltip({{""html"": true,""container"": ""body""}}); }});
+
+		    </script>
+
+	    </head>
+
+
+	    ");
+    }
+
+    void drawBodyHeader(string pagina) {
+        htmlToReturn.Write($@"
+            <body class=""site com_content view-featured no-layout no-task itemid-101"">
+
+	        <!-- link accessibilit? -->
+	        <ul class=""skiplinks"">
+			        <li><a href=""#main"" class=""u2"">Vai ai contenuti</a></li>
+			        <li><a href=""#nav"" class=""u2"">Vai al menu</a></li>
+	        </ul>
+
+	        <!-- Body -->
+	        <div class=""body"">
+		        <div class=""container"">
+			        <!-- Header -->
+
+			        <div class=""ContDiv"">
+
+				        <table class=""TableLayout"">
+					        <tr>
+						        <td class=""TdLeft"">
+							        <div class=""left"" id=""main_top_left_div"">
+								        <a href=""" + portaleCliente + $@""">
+        " +
+        drawLogo(pathRoot) + $@"
+								        </a>					
+							        </div>
+						        </td>
+						        <td class=""TdRight"">
+							        <!--div class=""right"" id=""main_top_right_div"">
+		");
+        drawTitle(session);
+        htmlToReturn.Write($@"
+							        </div-->
+							        <div class=""TopInfo"">
+								        <div class=""TopLeftInfo"">
+									        <h1 id=""portal-logo"">
+										        <a href=""" + CStr(ApplicationCommon.Application["SITO_2_ISTITUZIONALE_CLIENTE"]) + $@""" accesskey=""1"">" + ApplicationCommon.CNV("Descrizione cliente") + $@"</a>
+									        </h1>
+								        </div>
+								        <div class=""TopRightInfo"">
+									        <a href=""" + portaleCliente + $@""">
+										        <img src=""" + pathRoot + $@"images/rer.gif"" alt=""" + ApplicationCommon.CNV("Titolo cliente") + $@"""/>
+									        </a>
+								        </div>
+							        </div>
+						        </td>
+					        </tr>
+				        </table>
+        ");
+
+        htmlToReturn.Write($@"<table width=""100%"" class=""Caption""  border=""0"" cellspacing=""0"" cellpadding=""0"">");
+        htmlToReturn.Write($@"<tr><td >");
+        htmlToReturn.Write(ApplicationCommon.CNV("header_cliente_main"));
+        htmlToReturn.Write($@"</td></tr></table>");
+
+        htmlToReturn.Write($@"</div>");
+
+        drawBreadCrumb(pagina);
+
+        drawMenu();
+
+        htmlToReturn.Write($@"
+            <div id=""main"">
+			<main id=""content"" role=""main"" class=""span9"">
+			<!-- Begin Content -->
+
+				<div id=""system-message-container""></div>
+
+					<div class=""blog-featured"" itemscope itemtype=""https://schema.org/Blog"">
+
+						<div class=""items-leading clearfix"">
+							<div class=""leading-0 clearfix"" itemprop=""blogPost"" itemscope itemtype=""https://schema.org/BlogPosting"">
+        ");
+
+        drawContent();
+
+        htmlToReturn.Write($@"
+            </div>
+						        </div>
+
+
+
+					        </div>
+
+			        <!-- End Content -->
+			        </main>
+
+		        </div>
+
+	        </div>
+
+	        </div>
+        ");
+
+    }
+
+    void drawBodyFooter() { }
+
+    void drawMenu() {
+        htmlToReturn.Write($@"
+
+	    <div class=""row-fluid"" id =""nav"">
+		    <!-- Begin Sidebar -->
+		    <div id=""sidebar"" class=""span3"">
+			    <div class=""sidebar-nav"">
+				    <div class=""moduletable"">
+					    <h3>Area Privata</h3>
+
+
+		    <script type=""text/javascript"">
+			    function vacio(q) {{
+			    for ( i = 0; i < q.length; i++ ) {{   
+					    if ( q.charAt(i) != "" "" ) {{   
+							    return true   
+					    }}   
+			    }}   
+			    return false   
+			    }}   
+
+			    function evidenziaCampo(obj)
+			    {{
+				    obj.setAttribute(""class"",""txt required fieldError"");
+			    }}
+
+
+			    function resetCampo(obj)
+			    {{
+				    obj.style.background="""";
+				    obj.setAttribute(""class"",""txt required"");
+			    }}
+
+			    // Tutto il campi completi.   
+
+		       function valida(form) 
+		       {{  
+				    var totCampiOk = 0;
+
+				    try
+				    {{
+					    document.getElementById('msg-errore-login').style.display = 'none';
+				    }}
+				    catch(e)
+				    {{
+				    }}
+
+				    if( vacio(document.getElementById('login_idazienda').value) == false) 
+				    {{   
+					    evidenziaCampo(document.getElementById('login_idazienda'));
+				    }}
+				    else
+				    {{
+					    totCampiOk++;
+					    resetCampo(document.getElementById('login_idazienda'));
+				    }}
+
+				    if( vacio(document.getElementById('login_username').value) == false) 
+				    {{  
+					    evidenziaCampo(document.getElementById('login_username'));
+				    }} 
+				    else
+				    {{  
+					    resetCampo(document.getElementById('login_username'));
+					    totCampiOk++;
+				    }} 	
+
+				    if( vacio(document.getElementById('login_password').value) == false) 
+				    {{  
+					    evidenziaCampo(document.getElementById('login_password'));
+				    }}
+				    else
+				    {{  
+					    resetCampo(document.getElementById('login_password'));
+					    totCampiOk++;
+				    }} 	
+
+
+
+				    if (totCampiOk == 3)
+				    {{
+					    return true;
+				    }}
+				    else
+				    {{
+					    document.getElementById('messaggio_errore').innerHTML = ""<b>Attenzione</b>: I campi evidenziati non sono stati compilati correttamente!"";
+					    return false;  
+				    }}  	
+			    }}
+
+			    function TomaCampo(obj)
+			    {{
+				    document.write (totCampiOK);
+			    }}
+
+
+		    </script>  
+		");
+		if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+			htmlToReturn.Write($@"
+				<form name=""form"" action=""/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + $@"/CTL_LIBRARY/DownloadAllegatoSession.asp?redirectback=yes&amp;chiamante=" + urlPortale + $@""" method=""post"" id=""login"" autocomplete=""off"" onSubmit=""return valida(this);"" >
+			");
+		}else{
+			htmlToReturn.Write($@"
+				<form name=""form"" action=""/Application/CTL_LIBRARY/DownloadAllegatoSession.asp?redirectback=yes&amp;chiamante=" + urlPortale + $@""" method=""post"" id=""login"" autocomplete=""off"" onSubmit=""return valida(this);"" >
+			");
+		}
+		htmlToReturn.Write($@"
+			    <div>
+
+				    <span id=""messaggio_errore"">
+	    ");
+
+        if (!string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "Errore"))) {
+            htmlToReturn.Write($@"<strong id='msg-errore-login'>" + GetParamURL(Request.QueryString.ToString(), "Errore") + "</strong>");
+        }
+
+
+        htmlToReturn.Write($@"			
+
+				    </span>	
+
+			    </div>
+
+
+
+			    <div>
+
+				    <label for=""login_idazienda"">Codice di accesso</label>
+				    <input type=""text"" name=""IDAZIENDA"" class=""txt required"" id=""login_idazienda"" style=""""/>
+				    <label for=""login_username"">Nome Utente</label>
+				    <input type=""text"" name=""USERNAME"" class=""txt required"" id=""login_username"" style=""""/>
+				    <label for=""login_password"">Password</label>
+				    <input type=""password"" name=""PASSWORD"" class=""txt required"" id=""login_password"" style=""""/>
+
+				    <input type=""submit"" value=""Download"" class=""button"" id=""submit1"" name=""submit1""/>
+
+				    <input type=""hidden"" name=""strMnemonicoMP"" value=""PA""/>
+				    <input type=""hidden"" value=""1"" name=""strCheckIscrizione""/>
+				    <input type=""hidden"" id=""TECHVALUE"" name=""TECHVALUE"" value=""" + TECHVALUE + $@"""/> 
+				    <!-- <input type=""hidden"" name=""SYS_INSERISCIQUESITIDALPORTALE"" id=""SYS_INSERISCIQUESITIDALPORTALE"" value="""" /> -->
+
+			    </div>
+
+		    </form>	
+
+		    <div class=""moduletable_menu"">
+			    <ul class=""nav menu"">
+
+
+
+			    </ul>
+
+		    </div>
+
+	    </div>
+
+		    </div>
+	    </div>
+	    <!-- End Sidebar -->
+
+	    ");
+    }
+
+    void drawBreadCrumb(string pagina) {
+
+        int addItem = 0;
+        string extraHtml = @"class=""active""";
+
+        if (pagina.ToLower() != "home") {
+            addItem = 1;
+            extraHtml = "";
+        }
+
+        //%>	
+
+
+
+
+    //<%	
+    }
+
+    void drawHtmlFooter() {
+
+        htmlToReturn.Write($@"
+
+
+        < !--Footer-- >
+
+        < footer class=""footer"" role=""contentinfo"">
+
+
+			    <div class=""Footer_01"">
+				    <div class=""left"">
+				    </div>
+				    <div class=""right"">
+					      " + ApplicationCommon.CNV("Footer_01") + $@"
+				    </div>
+			    </div>
+
+
+			    <div class=""Footer_02"">
+				    <div class=""left"">
+				    </div>
+				    <div class=""right"">
+					     " + ApplicationCommon.CNV("Footer_02") + $@"
+				    </div>
+
+			    </div>
+
+		    </footer>
+
+	    </body>
+	    </html>
+	    ");
+    }
+
+    void drawContent() { }
+    
+
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,18 @@
+ul.Toolbar_stampa{display:none;}
+html,body{ overflow:visible; display:inline;}
+#container, .middle{ min-height:inherit; height:inherit;}
+
+html, body, div, span,applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, font, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,dd, dl, dt, li, ol, ul,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td, button, select, textarea, input 
+{
+	overflow: visible;
+}
+
+@media print and (color) {
+	* {
+		-webkit-print-color-adjust: exact;
+		color-adjust: exact;
+	  }
+		
+}
+
+

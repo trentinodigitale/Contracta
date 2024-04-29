@@ -1,0 +1,131 @@
+﻿@page "/CTL_LIBRARY/functions/FIELD/savefile.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.HTML.BasicFunction;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.FIELD.savefileModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdb = new();
+    LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    IFormFile ObjFile = null;
+    dynamic Upload;
+    string fileOriginal;
+    string[] fv;
+    string strSize;
+    string percorsoFile = "";
+
+    //'if cstr(request.querystring("test_upload")) = "1" then
+    //'
+    //'	For Each item In request.Form
+    //'		response.write item & " = " & request.Form(item) & "<br/>"
+    //'	Next
+    //'
+    //'end if
+
+    string fileName = GetParamURL(Request.QueryString.ToString(), "nomefile");
+    string[] arrSplit = fileName.Split(".");
+    string estensione = arrSplit[(arrSplit.Length - 1)].ToLower();
+    if(estensione != "exe" && estensione != "asp" && estensione != "php" && estensione != "aspx" && estensione != "inc" )
+    {
+        //'-- salvo il file selezionato nella cartella di appoggio
+        // Set Upload = Server.CreateObject("Persits.Upload.1")
+        //Upload.CodePage = 65001
+        //Upload.OverwriteFiles = False
+        //Upload.Save application("PathFolderAllegati")
+
+
+        if(Request.HasFormContentType && Request.Form.Files.Count > 0){
+            IFormFileCollection files = Request.Form.Files;
+            for (int i = 0; i < files.Count; i++)
+            {
+                IFormFile file = files[i];
+                string filePath = System.IO.Path.Combine(ApplicationCommon.Application["PathFolderAllegati"], file.FileName);
+                using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    file.CopyTo(fileStream);
+                }
+
+            }
+        }
+
+        if (Request.HasFormContentType && Request.Form.Files.Count > 0)
+        {
+            //on error resume next
+            //set ObjFile =  Upload.Files(1)
+            try
+            {
+                ObjFile = Request.Form.Files[0];
+            }
+            catch
+            {
+                
+            }
+
+            //'-- conservo il nome del file pulito dal percorso
+            fv = (ObjFile.FileName).Split(@"\");
+            fileOriginal = fv[fv.Length - 1];
+
+            if(Strings.Right(ApplicationCommon.Application["PathFolderAllegati"],1)==@"\")
+            {
+                percorsoFile = ApplicationCommon.Application["PathFolderAllegati"];
+            }
+            else
+            {
+                percorsoFile=ApplicationCommon.Application["PathFolderAllegati"] + @"\"; 
+            }
+
+            
+            //set fso = Server.CreateObject("Scripting.FileSystemObject") 
+
+            //'fso.MoveFile ObjFile.originalpath, ObjFile.Path & "\" & fileName
+
+            //'-- ripulisco file original, perchè se proviene da linux c'è anche il path con "/" invece che con "\"
+            if (Strings.InStr( 1, fileOriginal, CStr("/") ) > 0)
+            {
+                fv = fileOriginal.Split("/");
+                fileOriginal = fv[fv.Length - 1];		
+            }
+            //'call trace( "ERRORE:" & err.description)
+            //'call trace( "ORIGINAL_PATH:" & ObjFile.originalpath)
+            //'call trace( "NOME_FILE:" & ObjFile.Name)
+            //'call trace( "FILE_ORIGINALE:" & percorsoFile & fileOriginal)
+            //'call trace( "FILE_NUOVO:" & percorsoFile & "federico.pdf")
+            //'call trace( "NOME_FILE:" & fileName)
+
+            System.IO.File.Move(percorsoFile + fileOriginal, percorsoFile + fileName);
+
+            //Set fso = nothing
+            //set ObjFile = nothing
+            if(CStr(GetParamURL(Request.QueryString.ToString(), "test_upload")) == "1" )
+            {
+                htmlToReturn.Write("upload eseguito, campi ricevuti : <br/>");
+                
+                foreach(dynamic item in HttpContext.Request.Form)
+                {
+                    htmlToReturn.Write(item + " = " + GetValueFromForm(Request,item) + "<br/>");
+                }
+            }
+        }
+    }
+    else
+    {
+        trace("blocco per estensione non consentita:" + estensione);
+    }
+    void trace(string messaggio)
+    {
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@messaggio", messaggio);
+        string strSql = "INSERT INTO ctl_trace (contesto, descrizione) VALUES ('SAVEFILE.ASP', @messaggio)";
+
+        cdb.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+    }
+}@Html.Raw(htmlToReturn.Out())

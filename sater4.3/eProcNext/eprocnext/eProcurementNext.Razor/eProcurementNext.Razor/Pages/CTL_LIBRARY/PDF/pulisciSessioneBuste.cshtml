@@ -1,0 +1,52 @@
+﻿@page "/CTL_LIBRARY/PDF/pulisciSessioneBuste.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.IO;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonDB.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@*//TODO: <!-- #Include File="../Functions/sendMailError.inc" -->*@
+@using static eProcurementNext.CommonModule.Basic;
+@using Microsoft.VisualBasic
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.PDF.pulisciSessioneBusteModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	if (!IsEmpty( session["idPfu"] ) && !string.IsNullOrEmpty(CStr(session["idPfu"])))
+	{
+		System.IO.DirectoryInfo folder = new DirectoryInfo(ApplicationCommon.Application["PathFolderAllegati"] + @"\");
+		var FilesFolder = folder.GetFiles();
+
+		//'-- Cancello tutti i file nella direcory allegati contenenti l'idpfu
+		foreach( FileInfo? objFile in FilesFolder)
+		{
+			int posDiesisTilde = Strings.InStrRev(objFile.Name, session["idPfu"]);
+			if (posDiesisTilde > 0)
+			{
+				CommonStorage.DeleteFile(ApplicationCommon.Application["PathFolderAllegati"] + @"\" + objFile.Name);//fso.DeleteFile(Application("PathFolderAllegati") & "\" & objFile.name)
+			}
+		}
+
+		//'-- Cancello tutte le sotto-directory nella direcory allegati contenenti l'idpfu (ed i files in esse contenuti)
+		DirectoryInfo[]? dirs = folder.GetDirectories();
+		foreach (DirectoryInfo dir in dirs)
+		{
+			int posDiesisTilde = Strings.InStrRev(dir.Name, session["idPfu"]);
+			if (posDiesisTilde > 0)
+			{
+				//Set objFolder=fso.GetFolder(Application("PathFolderAllegati") & "\" & dir.name)
+				//objFolder.Delete  
+				CommonStorage.DeleteDirectory(ApplicationCommon.Application["PathFolderAllegati"] + @"\" + dir.Name);
+			}
+		}
+	}
+}
+@Html.Raw(htmlToReturn.Out())

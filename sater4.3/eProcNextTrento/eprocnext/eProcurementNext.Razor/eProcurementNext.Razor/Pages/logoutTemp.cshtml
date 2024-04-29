@@ -1,0 +1,21 @@
+﻿@page "/logoutTemp.asp"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using eProcurementNext.Razor;
+@inject eProcurementNext.Session.ISession session;
+@model eProcurementNext.Razor.Pages.logoutTempModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	
+	LoadSession(HttpContext, session);
+
+	MainGlobalAsa.SessionAbandon(session);
+
+	await HttpContext.SignOutAsync(
+		CookieAuthenticationDefaults.AuthenticationScheme)
+		.ContinueWith(data=>{
+			Response.Redirect("/");
+		});
+
+	//MainGlobalAsa.Session_onEnd(session);
+}

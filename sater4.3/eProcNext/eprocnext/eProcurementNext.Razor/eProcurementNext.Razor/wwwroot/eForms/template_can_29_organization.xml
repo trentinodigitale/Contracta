@@ -1,0 +1,36 @@
+<efac:Organization>
+	@@@ENTE_NO_ENCODE_AWARDINGCPBINDICATOR@@@
+	@@@OE_NO_ENCODE_WINNER@@@
+	<efac:Company>
+		@@@OE_NO_ENCODE_WINNER_SIZE@@@
+		<cac:PartyIdentification>
+			<!-- OPT-200 - ID Org-->
+			<cbc:ID>@@@ENTE_ID@@@</cbc:ID>
+		</cac:PartyIdentification>
+		<cac:PartyName>
+			<!-- BT-500 - Nome ufficiale -->
+			<cbc:Name languageID="ITA">@@@ENTE_RAG_SOC@@@</cbc:Name>
+		</cac:PartyName>
+		<cac:PostalAddress>
+			<!-- BT-513 - Località -->
+			<cbc:CityName>@@@ENTE_LOCAL@@@</cbc:CityName>
+			@@@ENTE_NO_ENCODE_POSTAL_ZONE@@@
+			<cac:Country>
+				<!-- BT-514 - Paese - default ITA-->
+				<cbc:IdentificationCode listName="country">@@@ENTE_PAESE@@@</cbc:IdentificationCode>
+			</cac:Country>
+		</cac:PostalAddress>
+		<!-- BT-501 - Numero di registrazione -->
+		<cac:PartyLegalEntity>
+			<cbc:CompanyID>@@@ENTE_NUMERO_REG@@@</cbc:CompanyID>
+		</cac:PartyLegalEntity>
+		<cac:Contact>
+			<cbc:Name>@@@ENTE_CONTACT_NAME@@@</cbc:Name>
+			<!-- BT-503 - Telefono -->
+			<cbc:Telephone>@@@ENTE_TEL@@@</cbc:Telephone>
+			@@@ENTE_NO_ENCODE_FAX@@@
+			<!-- BT-506 - E-mail -->
+			<cbc:ElectronicMail>@@@ENTE_EMAIL@@@</cbc:ElectronicMail>
+		</cac:Contact>
+	</efac:Company>
+</efac:Organization>

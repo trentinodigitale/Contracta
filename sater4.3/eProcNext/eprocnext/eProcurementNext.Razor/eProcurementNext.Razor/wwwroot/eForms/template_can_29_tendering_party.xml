@@ -1,0 +1,9 @@
+<efac:TenderingParty>
+	<cbc:ID>@@@TENDERING_PARTY_ID@@@</cbc:ID>
+	<cbc:Name>@@@TENDERING_PARTY_NAME@@@</cbc:Name>
+	<efac:Tenderer>
+		<cbc:ID>@@@TENDERING_PARTY_TENDERER_ID@@@</cbc:ID>
+		<efbc:GroupLeadIndicator>@@@TENDERING_PARTY_TENDERER_GROUPLEADINDICATOR@@@</efbc:GroupLeadIndicator>
+	</efac:Tenderer>
+	@@@TENDERING_PARTY_NO_ENCODE_TENDERER_RTI@@@
+</efac:TenderingParty>

@@ -1,0 +1,53 @@
+TABLE.VerticalModel_Tab
+{
+    PADDING-RIGHT: 20px;
+    PADDING-TOP: 3px;
+    FONT-FAMILY: Arial
+}
+TD.VerticalModel_Caption
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: Arial
+}
+TD.VerticalModel_Value
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: Arial
+}
+TD.VerticalModel_UM
+{
+    FONT-SIZE: 10pt;
+    FONT-FAMILY: Arial
+}
+TD.VerticalModel_ObbligCaption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+LABEL.VerticalModel_Help
+{
+    FONT-SIZE: 8pt;
+    COLOR: blue;
+    FONT-STYLE: italic;
+    FONT-FAMILY: Arial
+}
+TD.VerticalModel_StaticCaption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12pt;
+    FONT-STYLE: italic;
+    FONT-FAMILY: Arial
+}
+TABLE.VerticalModel_ReadOnlyField
+{
+    BORDER-RIGHT: 1px inset;
+    BORDER-TOP: 1px inset;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px inset;
+    BORDER-BOTTOM: 1px inset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: #f3f3f3
+}

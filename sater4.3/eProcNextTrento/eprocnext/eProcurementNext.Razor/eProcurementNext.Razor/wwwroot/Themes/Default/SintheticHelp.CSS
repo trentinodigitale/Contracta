@@ -1,0 +1,21 @@
+BODY
+{
+}
+.FontSintheticHelp
+{
+    FONT-SIZE: 12px;
+    COLOR: #515151;
+    FONT-STYLE: oblique;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+.FontSintheticHelp a{ color:#2268B3;}
+
+
+TABLE.GridSintheticHelp
+{
+    WIDTH: 100%
+}
+TD.CellGridSintheticHelp
+{
+}

@@ -1,0 +1,17 @@
+TABLE.Caption
+{
+    FONT-WEIGHT: 600;
+    FONT-SIZE: 13pt;
+    MARGIN-BOTTOM: 2px;
+    COLOR: #256662;
+    BORDER-BOTTOM: #7f7f7f 2px solid;
+    FONT-FAMILY: Arial
+}
+TD.Caption_Exit
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: #256662;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}

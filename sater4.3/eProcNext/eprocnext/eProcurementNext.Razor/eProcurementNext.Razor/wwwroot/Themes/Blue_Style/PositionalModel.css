@@ -1,0 +1,208 @@
+<style type="text/css">
+BODY
+{
+    BACKGROUND-REPEAT: repeat;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 3px;
+    TEXT-DECORATION: underline
+}
+DIV
+{
+    FONT-SIZE: 5px
+}
+.BodyPositionalModel
+{
+    BACKGROUND-COLOR: white
+}
+.TextFieldCover
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: #182782 1px inset;
+    BORDER-LEFT: #182782 1px inset;
+    BORDER-RIGHT: #182782 1px inset;
+    BORDER-TOP: #182782 1px inset;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: none
+}
+.SelectFieldCover
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    BORDER-LEFT: lightgrey 1px inset;
+    BORDER-RIGHT: lightgrey 1px inset;
+    BORDER-TOP: lightgrey 1px inset;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+.FontLabelCover
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+.FontTitleCover
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+.LegendTableStyle
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: 1px outset;
+    BORDER-LEFT: 1px outset;
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    COLOR: black;
+    FONT-SIZE: 13pt;
+    FONT-WEIGHT: lighter;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 5px;
+    PADDING-RIGHT: 5px;
+    PADDING-TOP: 0px
+}
+.LegendCellStyle
+{
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    TEXT-DECORATION: none
+}
+.PlugInControlStyle
+{
+    BACKGROUND-COLOR: aqua
+}
+TABLE.GridLegalPub
+{
+    BORDER-BOTTOM: 1px inset;
+    BORDER-LEFT: 1px inset;
+    BORDER-RIGHT: 1px inset;
+    BORDER-TOP: 1px inset
+}
+TD.CellGridLegalPub
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+INPUT.ButtonHierarchiesField
+{
+    BACKGROUND-COLOR: #066bbd;
+    BORDER-BOTTOM: silver 1px outset;
+    BORDER-LEFT: silver 1px outset;
+    BORDER-RIGHT: silver 1px outset;
+    BORDER-TOP: silver 1px outset;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: none
+}
+.FontLabelObblig
+{
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+TD.CellGridCompanyLogo
+{
+    BACKGROUND-COLOR: white;
+    BORDER-BOTTOM: lightgrey 1px;
+    BORDER-LEFT: lightgrey 1px;
+    BORDER-RIGHT: lightgrey 1px;
+    BORDER-TOP: lightgrey 1px;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px
+}
+INPUT.TextFieldCoverLocked
+{
+    BACKGROUND-COLOR: whitesmoke;
+    BORDER-BOTTOM: #182782 1px inset;
+    BORDER-LEFT: #182782 1px inset;
+    BORDER-RIGHT: #182782 1px inset;
+    BORDER-TOP: #182782 1px inset;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    MARGIN: 0px;
+    PADDING-BOTTOM: 0px;
+    PADDING-LEFT: 0px;
+    PADDING-RIGHT: 0px;
+    PADDING-TOP: 0px;
+    TEXT-DECORATION: none
+}
+.FontLegalPub
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    TEXT-DECORATION: none
+}
+.FontLegalPubBold
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+TABLE.GridContainer
+{
+    WIDTH: 100%
+}
+TD.CellGridContainer
+{
+}
+.FontLinkLabelCover
+{
+    COLOR: blue;
+    CURSOR: hand;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    TEXT-DECORATION: underline
+}
+TEXTAREA.FontTextAreaNotEditable
+{
+    BACKGROUND-COLOR: whitesmoke;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    WIDTH: 100%
+}
+TEXTAREA.FontTextAreaEditable
+{
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt;
+    WIDTH: 100%
+}
+.sottotitoloBold
+{
+    COLOR: #708090;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: bold
+}
+</style>

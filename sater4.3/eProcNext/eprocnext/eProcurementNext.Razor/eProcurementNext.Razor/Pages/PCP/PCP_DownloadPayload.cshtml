@@ -1,0 +1,35 @@
+﻿@page "/PCP/PCP_DownloadPayload.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.PCP.PCP_DownloadPayload
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse response = new();
+
+    var id = GetParamURL(Request.QueryString.ToString(), "ID");               // idRow della Services_Integration_Request
+    var idRic = GetParamURL(Request.QueryString.ToString(), "IDRIC");         // idRichiesta della Services_Integration_Request
+    var req = GetParamURL(Request.QueryString.ToString(), "REQ");             // 1 per ottenere il contenuto della colonna inputWS(la request), 0 per la colonna outputWS ( la response )
+    var tipoScheda = GetParamURL(Request.QueryString.ToString(), "SCHEDA");   // tipo scheda che si sta scaricando
+    var operation = GetParamURL(Request.QueryString.ToString(), "OPERATION"); //operazione richiesta alla Services_Integration_Request
+
+    /* VALIDAZIONE INPUT */
+    validate("ID", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("IDRIC", idRic, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("REQ", req, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+    validate("OPERATION", operation.Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 1, HttpContext, session);
+    validate("SCHEDA", tipoScheda.Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+    var idRow = CInt(id);
+    var idRicInt = CInt(idRic);
+    var reqInt = CInt(req);
+
+    var payload = Model.DownloadPayload(idRow, idRicInt, operation, reqInt, tipoScheda, out var fileName);
+    
+    HttpContext.Response.ContentType = "TEXT/PLAIN";
+    HttpContext.Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}");
+
+    @Html.Raw(payload)
+}

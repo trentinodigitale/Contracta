@@ -1,0 +1,92 @@
+﻿@page "/CTL_LIBRARY/functions/CheckFermoSistema.asp"
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.CheckFermoSistemaModel
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+
+
+	//'-------------------------------------
+	//'-- VALIDAZIONE DELL'INPUT UTENTE  ---
+	//'-------------------------------------
+	//on error goto 0
+	//'--data in input da controllare in formato tecnico AAAAMMGGTHHMMSS
+
+	string DataIn = GetParamURL(Request.QueryString.ToString(), "DataIn");
+
+	//'--recupero il parametro che indica se fare il controllo per il wasrning (si/no)
+	string warning = GetParamURL(Request.QueryString.ToString(), "warning").ToLower();
+
+	if (DataIn.Length == 19)
+	{
+		DataIn = Strings.Left(DataIn,16);
+	}
+
+	//'--recupero le due sys per i minuti primae dopo il fermo sistema
+
+	int MinutiPrimaFermo = CInt(Get_Func_Property("FERMOSISTEMA", "MINUTIPRIMA_FERMOSISTEMA", "MINUTI", "0", -1)!);
+	if(IsEmpty(MinutiPrimaFermo))
+	{
+		MinutiPrimaFermo=0;
+	}
+	else
+	{
+		MinutiPrimaFermo= -1 * MinutiPrimaFermo;
+	}
+
+	//'MinutiDopoFermo=Application("MINUTIDOPO_FERMOSISTEMA")
+
+	int MinutiDopoFermo =  CInt(Get_Func_Property("FERMOSISTEMA", "MINUTIDOPO_FERMOSISTEMA", "MINUTI", "0", -1)!);
+
+	if (IsEmpty(MinutiDopoFermo))
+	{
+		MinutiDopoFermo=0;
+	}
+
+	if (warning == "si")
+	{
+		//--recupero il MinutiWarning ("INTERVALLO_MINUTI_WARNING")
+		int  MinutiWarning = CInt(Get_Func_Property("FERMOSISTEMA", "INTERVALLO_MINUTI_WARNING", "MINUTI", "0", -1)!);
+	}
+
+	//'call validate( "DataIn", replace(replace(replace(DataIn,"-",""),"/",""),"\","") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0)
+	//--controllo che la data non ricade in un fermo sistema
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@tipodoc", "fermosistema");
+	sqlParams.Add("@statofunzionale", "confermato");
+	sqlParams.Add("@DataIn", DataIn);
+	sqlParams.Add("@minutePrima", MinutiPrimaFermo);
+	sqlParams.Add("@minuteDopoFermo", MinutiDopoFermo);
+	string strSQL = " select convert(varchar(1000),Body) as Descrizione , convert (varchar(10),DataInizio,103) +  ' '  + convert (varchar(5),DataInizio,108) as DataInizio, convert (varchar(10),DataFine,103) +  ' '  + convert (varchar(5),DataFine,108) as DataFine from  ctl_doc inner join Document_FermoSistema  on id=idheader where tipodoc=@tipodoc and statofunzionale=@statofunzionale and @DataIn >= convert(varchar(16), dateadd(minute,@minutePrima,DataInizio) , 126 ) and @DataIn <= convert(varchar(16),dateadd(minute,@minuteDopoFermo,dataFine), 126 ) ";
+
+	//'Response.Write strSQL
+	//'Response.End
+	
+	CommonDbFunctions cdb = new();
+	TSRecordSet rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+	if(rs != null && rs.RecordCount > 0)
+	{
+		rs.MoveFirst();
+		htmlToReturn.Write($"{CStr(rs["DataInizio"])}@@@{CStr(rs["DataFine"])}@@@{CStr(rs["Descrizione"])}");
+	}
+	else
+	{
+		htmlToReturn.Write("");
+	}
+	
+	throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+}@Html.Raw(htmlToReturn.Out())

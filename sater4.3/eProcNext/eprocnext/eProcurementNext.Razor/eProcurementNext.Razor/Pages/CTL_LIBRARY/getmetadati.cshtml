@@ -1,0 +1,705 @@
+﻿@page "/CTL_LIBRARY/getmetadati.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.getmetadatiModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	//response.clear;
+
+	htmlToReturn.Clear();
+	//'response.write "VALORE SYS:" & application("ESTRAZIONE_UPDATE")
+	//'response.end
+	if(String.Equals(ApplicationCommon.Application["ESTRAZIONE_UPDATE"].ToUpper(),"SI"))
+	{
+		string Tipo_Obj;
+		string Oggetto;
+		string Cliente;
+		string stringaSQL;
+		dynamic obj;
+		TSRecordSet? rs;
+		string connessione;
+		string stracapo;
+		string LIB_Dictionary;
+		string LIB_DocumentProcess;
+		string LIB_Documents;
+		string LIB_DocumentSections;
+		string LIB_Domain;
+		string LIB_DomainValues;
+		string LIB_Functions;
+		string LIB_Models;
+		string LIB_ModelAttributes;
+		string LIB_ModelAttributeProperties;
+		string LIB_Multilinguismo;
+		string MpCommands;
+		string LIB_Services;
+		string MPGroups;
+		string CTL_Relations;
+		int Y;
+		//dynamic Modulo;//variabile non utilizzata
+
+		connessione = ApplicationCommon.Application.ConnectionString;
+		//'response.write Request.QueryString
+		//'response.end
+		Tipo_Obj = GetParamURL(Request.QueryString.ToString(), "Tipo_Obj");
+		Oggetto = GetParamURL(Request.QueryString.ToString(), "Oggetto");
+		Cliente = GetParamURL(Request.QueryString.ToString(), "Cliente");
+		stracapo = Environment.NewLine; 
+
+		//'-- Tipo obj viene passato con il valore "ASP" per le righe WEB e FILE
+		if (Tipo_Obj == "ASP" )
+		{
+
+			string[] arrfile = null;
+			string nomepag;
+			//StreamReader objFSO = null;
+			arrfile = Oggetto.Replace("/", @"\").Split(@"\");
+			nomepag = arrfile[arrfile.Length - 1];
+			//Response ContentType
+			Response.ContentType = "application/x-AFLink";
+
+			Response.Headers.TryAdd("Content-Disposition", "attachment; filename=" + nomepag);
+			string DiskFile = System.IO.Path.Combine(ConfigurationServices._contentRootPath + @"\..\" + Oggetto.Replace("/", @"\"));
+
+			if(!(eProcurementNext.Core.Storage.CommonStorage.FileExists(DiskFile)))
+			{
+				//	'DiskFile=server.mappath("/Application") &"\..\..\"& Replace(Oggetto,"/","\")
+				DiskFile = ApplicationCommon.Application["PathFolderPortaleGareTelematiche"] + @"\"+ Oggetto.Replace("/",@"\");
+			}
+
+			string strFilePath;
+			strFilePath = DiskFile;
+
+			// if (!(eProcurementNext.Core.Storage.CommonStorage.FileExists(DiskFile)))
+			// {
+			// 	throw new ResponseEndException("file not found", Response, "");
+			// }
+
+			LoadFromFile(strFilePath, htmlToReturn, HttpContext);
+
+
+		}
+		if(Tipo_Obj =="Modulo-Metadati")
+		{
+			LIB_Dictionary = "LIB_Dictionary";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Dictionary---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Dictionary, "DZT_Module", "", connessione, Oggetto, 1, stracapo, "id");
+
+			LIB_DocumentProcess = "LIB_DocumentProcess";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_DocumentProcess---------------------" + stracapo + stracapo); 
+			EstrazioneMDFunction(LIB_DocumentProcess,"DPR_Module", "",connessione,Oggetto,1,stracapo,"DPR_idRow");
+
+			LIB_Documents = "LIB_Documents";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Documents---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Documents, "DOC_Module", "", connessione, Oggetto, 1, stracapo, "DOC_idRow");
+
+			LIB_DocumentSections = "LIB_DocumentSections";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_DocumentSections---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_DocumentSections, "DES_Module", "", connessione, Oggetto, 1, stracapo, "DSE_idRow");
+
+			LIB_Domain = "LIB_Domain";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Domain---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Domain, "DM_Module", "", connessione, Oggetto, 1, stracapo, "id");
+
+			LIB_DomainValues = "LIB_DomainValues";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_DomainValues---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_DomainValues, "DMV_Module", "", connessione, Oggetto, 1, stracapo, "id");
+
+			LIB_Functions = "LIB_Functions";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Functions---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Functions, "LFN_Module", "", connessione, Oggetto, 1, stracapo, "LFN_Identity");
+
+			LIB_Models = "LIB_Models";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Models---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Models, "MOD_Module", "", connessione, Oggetto, 1, stracapo, "id");
+
+			LIB_ModelAttributes = "LIB_ModelAttributes";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_ModelAttributes---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_ModelAttributes, "MA_Module", "", connessione, Oggetto, 1, stracapo, "MA_ID");
+
+			LIB_ModelAttributeProperties = "LIB_ModelAttributeProperties";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_ModelAttributeProperties---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_ModelAttributeProperties, "MAP_Module", "", connessione, Oggetto, 1, stracapo, "MAP_ID");
+
+			LIB_Multilinguismo = "LIB_Multilinguismo";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Multilinguismo---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Multilinguismo, "ML_Module", "", connessione, Oggetto, 1, stracapo, "id");
+
+			MpCommands = "MpCommands";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------MpCommands---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(MpCommands, "mpc_Module", "", connessione, Oggetto, 1, stracapo, "IdMpc");
+
+			LIB_Services = "LIB_Services";
+			htmlToReturn.Write (stracapo  + stracapo  + "---------------------LIB_Services---------------------"  + stracapo + stracapo );
+			EstrazioneMDFunction(LIB_Services, "SRV_Module", "", connessione, Oggetto, 1, stracapo, "SRV_id");
+
+		}
+		if (Tipo_Obj == "MB-Modello" )
+		{
+			LIB_Models = "LIB_Models";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Models---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Models, "MOD_ID", "", connessione, Oggetto, 1, stracapo, "id");
+
+			LIB_ModelAttributes = "LIB_ModelAttributes";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_ModelAttributes---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_ModelAttributes, "MA_MOD_ID", "", connessione, Oggetto, 1, stracapo, "MA_ID");
+
+			LIB_ModelAttributeProperties = "LIB_ModelAttributeProperties";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_ModelAttributeProperties---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_ModelAttributeProperties, "MAP_MA_MOD_ID", "", connessione, Oggetto, 1, stracapo, "MAP_ID");
+
+		}
+		if (Tipo_Obj == "MB-Dizionario" )
+		{
+			LIB_Dictionary = "LIB_Dictionary";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Dictionary---------------------" + stracapo + stracapo); 
+			if(String.Equals(Strings.Left(Oggetto,4),"SYS_"))
+			{
+				htmlToReturn.Write(stracapo + stracapo + "IF NOT EXISTS (select * from LIB_Dictionary where DZT_Name='" + Oggetto + "')" + stracapo + stracapo);
+				htmlToReturn.Write(stracapo + stracapo + "BEGIN" + stracapo + stracapo);
+			}
+			EstrazioneMDFunction(LIB_Dictionary, "DZT_Name", "", connessione, Oggetto, 1, stracapo, "id");
+			if(String.Equals(Strings.Left(Oggetto,4),"SYS_"))
+			{
+				htmlToReturn.Write(stracapo + stracapo + "END" + stracapo + stracapo);
+				htmlToReturn.Write(stracapo + stracapo + "ELSE" + stracapo);
+				htmlToReturn.Write(stracapo + stracapo + "Print 'SYS " + Oggetto + " NON INSERITA GIA'' PRESENTE'" + stracapo); 
+			}
+		}
+		if (Tipo_Obj == "MB-Servizio" )
+		{
+			LIB_Services = "LIB_Services";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Services---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Services, "SRV_KEY", "", connessione, Oggetto, 1, stracapo, "SRV_id");
+		}
+		if (Tipo_Obj == "MB-Multilinguismo" )
+		{
+			LIB_Multilinguismo = "LIB_Multilinguismo";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Multilinguismo---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Multilinguismo, "ML_KEY", "", connessione, Oggetto, 1, stracapo, "id");
+		}
+		if (Tipo_Obj == "MB-Toolbar" )
+		{
+			LIB_Functions = "LIB_Functions";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Functions---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Functions, "LFN_GroupFunction", "", connessione, Oggetto, 1, stracapo, "LFN_Identity");
+		}
+
+		if (Tipo_Obj == "MB-Documento" )
+		{
+			LIB_Documents = "LIB_Documents";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_Documents---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Documents, "DOC_ID", "", connessione, Oggetto, 1, stracapo, "DOC_idRow");
+		}
+		if (Tipo_Obj == "MB-Sezione" )
+		{
+			LIB_DocumentSections = "LIB_DocumentSections";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_DocumentSections---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_DocumentSections, "DSE_DOC_ID", "DSE_ID", connessione, Oggetto, 1, stracapo, "DSE_idRow");
+		}
+		if (Tipo_Obj == "MB-Processo" )
+		{
+			LIB_DocumentProcess = "LIB_DocumentProcess";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_DocumentProcess---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_DocumentProcess, "DPR_DOC_ID", "DPR_ID", connessione, Oggetto, 1, stracapo, "DPR_idRow");
+		}
+		if (Tipo_Obj == "MB-Dominio" )
+		{
+			LIB_Domain = "LIB_Domain";
+			htmlToReturn.Write (stracapo  + stracapo  + "---------------------LIB_Domain---------------------"  + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_Domain, "DM_ID", "", connessione, Oggetto, 1, stracapo, "id");
+
+			LIB_DomainValues = "LIB_DomainValues";
+			htmlToReturn.Write(stracapo + stracapo + "---------------------LIB_DomainValues---------------------" + stracapo + stracapo);
+			EstrazioneMDFunction(LIB_DomainValues, "DMV_DM_ID", "", connessione, Oggetto, 1, stracapo, "id");	
+
+		}
+
+		if (Tipo_Obj == "SQL-Vista" )
+		{
+			string VIEW_OPERATION;
+			VIEW_OPERATION = "if(exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME='OLD2_" + Oggetto + "'))" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "BEGIN" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "	drop view OLD2_" + Oggetto + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "END" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "if (exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME='OLD_" + Oggetto + "'))" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "BEGIN" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "	exec sp_rename 'OLD_" + Oggetto + "','OLD2_" + Oggetto + "'" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "END" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "if(exists(select * from INFORMATION_SCHEMA.TABLES where TABLE_NAME='" + Oggetto + "'))" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "BEGIN" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "	exec sp_rename '" + Oggetto + "','OLD_" + Oggetto + "'" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "END" + Environment.NewLine;
+			VIEW_OPERATION = VIEW_OPERATION + "GO" + Environment.NewLine;
+			stringaSQL = "SELECT b.text   FROM syscomments b      , sysobjects a    WHERE a.id = b.id   AND a.xtype = 'v'   AND a.name ='" + Oggetto + "' ORDER BY colid";
+			CommonDbFunctions cdb = new CommonDbFunctions();
+			rs = cdb.GetRSReadFromQuery_(stringaSQL, connessione);
+
+			if(rs != null && rs.RecordCount >0)
+			{
+				rs.MoveFirst();
+				htmlToReturn.Write(VIEW_OPERATION);
+				while(!rs.EOF)
+				{
+					htmlToReturn.Write(GetValueFromRS(rs["text"]));
+
+					//Response.Flush();
+					rs.MoveNext();
+				}
+				htmlToReturn.Write(Environment.NewLine + "GO");
+
+				//Response.Flush();
+				stringaSQL = "";
+			}
+		}
+		if (Tipo_Obj == "SQL-Stored" )
+		{
+			string STORED_OPERATION;
+			STORED_OPERATION = "if(exists ( select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='OLD2_" + Oggetto + "' and ROUTINE_TYPE='PROCEDURE' ))" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "BEGIN" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "	DROP PROCEDURE OLD2_" + Oggetto + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "END" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "if (exists(select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='OLD_" + Oggetto + "' and ROUTINE_TYPE='PROCEDURE' ))" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "BEGIN" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "	exec sp_rename 'OLD_" + Oggetto + "','OLD2_" + Oggetto + "'" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "END" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "if(exists(select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='" + Oggetto + "' and ROUTINE_TYPE='PROCEDURE' ))" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "BEGIN" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "	exec sp_rename '" + Oggetto + "','OLD_" + Oggetto + "'" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "END" + Environment.NewLine;
+			STORED_OPERATION = STORED_OPERATION + "GO" + Environment.NewLine;
+			stringaSQL = "SELECT b.text  FROM syscomments b     , sysobjects a WHERE a.id = b.id   AND a.xtype = 'p'   AND a.name = '" + Oggetto + "' ORDER BY colid";
+			CommonDbFunctions cdb = new CommonDbFunctions();
+			rs = cdb.GetRSReadFromQuery_(CStr(stringaSQL ), CStr(connessione ) );
+			if(rs != null && rs.RecordCount >0)
+			{
+				rs.MoveFirst();
+				htmlToReturn.Write(STORED_OPERATION);
+				while(!rs.EOF)
+				{
+					htmlToReturn.Write(GetValueFromRS(rs["text"]));
+
+					//Response.Flush();
+					rs.MoveNext();
+				}
+				htmlToReturn.Write(Environment.NewLine + "GO");
+				//Response.Flush ()
+				stringaSQL = "";
+			}
+		}
+		if (Tipo_Obj == "SQL-Function" )
+		{
+			string FUNCTION_OPERATION;
+			FUNCTION_OPERATION = "if(exists ( select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='OLD2_" + Oggetto + "' and ROUTINE_TYPE='FUNCTION' ))" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "BEGIN" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "	DROP FUNCTION OLD2_" + Oggetto + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "END" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "if (exists(select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='OLD_" + Oggetto + "' and ROUTINE_TYPE='FUNCTION' ))" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "BEGIN" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "	exec sp_rename 'OLD_" + Oggetto + "','OLD2_" + Oggetto + "'" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "END" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "if(exists(select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='" + Oggetto + "' and ROUTINE_TYPE='FUNCTION' ))" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "BEGIN" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "	exec sp_rename '" + Oggetto + "','OLD_" + Oggetto + "'" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "END" + Environment.NewLine;
+			FUNCTION_OPERATION = FUNCTION_OPERATION + "GO" + Environment.NewLine;
+			stringaSQL = "SELECT b.text  FROM syscomments b     , sysobjects a WHERE a.id = b.id   AND a.xtype = 'fn'   AND a.name = '" + Oggetto + "' ORDER BY colid";
+			CommonDbFunctions cdb = new CommonDbFunctions();
+			rs = cdb.GetRSReadFromQuery_(CStr(stringaSQL), CStr(connessione));
+			if(rs != null && rs.RecordCount >0)
+			{
+				rs.MoveFirst();
+				htmlToReturn.Write(FUNCTION_OPERATION);
+				while(!rs.EOF)
+				{
+					htmlToReturn.Write(GetValueFromRS(rs["text"]));
+
+					//Response.Flush ()
+					rs.MoveNext();
+				}
+				htmlToReturn.Write(Environment.NewLine + "GO");
+
+				//Response.Flush ()
+				stringaSQL = "";
+			}
+		}
+		if (Tipo_Obj == "SQL-Function-Table" )
+		{
+			string FUNCTION_OPERATION2;
+			FUNCTION_OPERATION2 = "if(exists ( select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='OLD2_" + Oggetto + "' and ROUTINE_TYPE='FUNCTION' ))" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "BEGIN" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "	DROP FUNCTION OLD2_" + Oggetto + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "END" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "if (exists(select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='OLD_" + Oggetto + "' and ROUTINE_TYPE='FUNCTION' ))" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "BEGIN" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "	exec sp_rename 'OLD_" + Oggetto + "','OLD2_" + Oggetto + "'" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "END" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "if(exists(select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_NAME='" + Oggetto + "' and ROUTINE_TYPE='FUNCTION' ))" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "BEGIN" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "	exec sp_rename '" + Oggetto + "','OLD_" + Oggetto + "'" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "END" + Environment.NewLine;
+			FUNCTION_OPERATION2 = FUNCTION_OPERATION2 + "GO" + Environment.NewLine;
+			stringaSQL = "SELECT b.text  FROM syscomments b     , sysobjects a WHERE a.id = b.id   AND a.xtype  in ( 'tf' ,'if' )  AND a.name = '" + Oggetto + "' ORDER BY colid";
+			CommonDbFunctions cdb = new CommonDbFunctions();
+			rs = cdb.GetRSReadFromQuery_(CStr(stringaSQL), CStr(connessione));
+			if(rs != null && rs.RecordCount >0)
+			{
+				rs.MoveFirst();
+				htmlToReturn.Write(FUNCTION_OPERATION2);
+				while(!rs.EOF)
+				{
+					htmlToReturn.Write(GetValueFromRS(rs["text"]));
+
+					//Response.Flush ()
+					rs.MoveNext();
+				}
+				htmlToReturn.Write(Environment.NewLine + "GO");
+				//Response.Flush ()
+				stringaSQL = "";
+			}
+		}
+		if (Tipo_Obj == "SQL-Table" )
+		{
+			string TABLE_OPERATION;
+			string OUT = "";
+			OUT = "";
+			TABLE_OPERATION = "declare @script varchar(8000)" + Environment.NewLine;
+			TABLE_OPERATION = TABLE_OPERATION + "IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES  WHERE TABLE_TYPE='BASE TABLE' AND TABLE_NAME='" + Oggetto + "')" + Environment.NewLine;
+			TABLE_OPERATION = TABLE_OPERATION + "BEGIN" + Environment.NewLine;
+			stringaSQL = " sp_generate_script '" + Oggetto + "'";
+			CommonDbFunctions cdb = new CommonDbFunctions();
+			rs = cdb.GetRSReadFromQuery_(CStr(stringaSQL), CStr(connessione));
+			if(rs != null && rs.RecordCount > 0)
+			{
+				rs.MoveFirst();
+				while(! rs.EOF)
+				{
+					OUT = OUT + CStr(GetValueFromRS(rs["Column1"])).Replace("'", "''");
+					OUT = OUT + Environment.NewLine;
+					//Response.Flush ()
+					rs.MoveNext();
+				}
+				//'TOLTO QUESTO GO PER ERRORE SULLE INSTALLAZIONI AUTMOTICHE IN QUANTO SPLIT SU A CAPO GO A CAPO, QUESTO ROMPEVA LO SCRIPT
+				OUT = OUT.Replace("GO" + Environment.NewLine, Environment.NewLine);
+				if(OUT.Length >8000)
+				{
+					htmlToReturn.Write("ATTENZIONE:Per la tabella " + Oggetto + " generare lo script manualmente.");
+				}
+				else
+				{
+					htmlToReturn.Write(TABLE_OPERATION);
+					htmlToReturn.Write("Set @script='" + OUT + "'" + Environment.NewLine);
+					htmlToReturn.Write("Set @script=REPLACE(@script,'GO'+char(13),'')");
+					htmlToReturn.Write(Environment.NewLine + "exec (@script)");
+					htmlToReturn.Write(Environment.NewLine + "END" + Environment.NewLine);
+					htmlToReturn.Write("ELSE" + Environment.NewLine);
+					htmlToReturn.Write("print 'TABELLA " + Oggetto + " già prensente nel DB'");
+				}
+			}
+		}
+		if (Tipo_Obj == "Multilinguismo" )
+		{
+			Oggetto = Oggetto.Replace("'", "''");
+			stringaSQL = "IF EXISTS (SELECT * FROM Multilinguismo where IdMultiLng='" + Oggetto + "') BEGIN exec usp_Gen_Ins_Mlng_SEL'" + Oggetto + "' END ELSE BEGIN Select * from Aziende where idazi=0 END";
+			CommonDbFunctions cdb = new CommonDbFunctions();
+			rs = cdb.GetRSReadFromQuery_(CStr(stringaSQL), CStr(connessione));
+			if(rs != null && rs.RecordCount >0)
+			{
+				rs.MoveFirst();
+				while(!rs.EOF)
+				{
+					htmlToReturn.Write(GetValueFromRS(rs["script"]));
+					//Response.Flush ()
+					rs.MoveNext();
+				}
+				//Response.Flush ()
+				stringaSQL = "";
+			}
+		}
+		if (Tipo_Obj == "SQL-Index")
+		{
+			Oggetto = Oggetto.Replace("'", "''");
+			//'--TABLE
+			string []arr = Oggetto.Split("-");	
+			//'response.write uBound(arr)
+			if(arr.Length == 2)
+			{
+				string IndexName = arr[0];
+				string TableName = arr[1];
+				stringaSQL = "SELECT * FROM sys.indexes WHERE name='" + IndexName + "' AND object_id = OBJECT_ID('" + TableName + "')";
+				CommonDbFunctions cdb = new CommonDbFunctions();
+				rs = cdb.GetRSReadFromQuery_(CStr(stringaSQL), CStr(connessione));
+				if(rs != null && rs.RecordCount >0)
+				{
+					stringaSQL = "exec EXTRACT_INDEX_TABLE '" + IndexName + "' , '" + TableName + "' ";
+					CommonDbFunctions common = new CommonDbFunctions();
+					rs = common.GetRSReadFromQuery_(CStr(stringaSQL), CStr(connessione));
+					if (rs != null && rs.RecordCount > 0)
+					{
+						rs.MoveFirst();
+						while(! rs.EOF)
+						{
+							htmlToReturn.Write(GetValueFromRS(rs["script"]));
+							//Response.Flush ()
+							rs.MoveNext();
+
+						}
+						//Response.Flush ()
+						stringaSQL = "";
+					}
+				}
+			}
+		}
+
+	}
+
+	void EstrazioneMDFunction(string table, string colonna,string colonna2,string connessione,string Oggetto,int Delete,string stracapo,string colid)
+	{
+		string strsql;
+		dynamic obj;
+		TSRecordSet? rs;
+		int k;
+		dynamic x;
+		string x2="";
+		string x3 ="";
+		string x4;
+		string x5 ="" ;
+		string strdel="";
+		int z;
+		//int tipo;
+		string val="";
+		string[] arr;
+		string Tipo_Obj="";
+		string key_ml_custom = "";
+		string module = "";
+		string idrows = "";
+		string condition = "";
+		strsql = "Select top 0 * from aziende";
+		//'QUANDO SONO OGGETTI DEL LIB_Multilinguismo controllo se sono key per email, in quel caso facciamo il controllo sulla chiave 
+		//'se per caso è stata modificata con l'applicazione
+		Oggetto = Oggetto.Replace("'", "''");
+		if(table == "LIB_Multilinguismo")
+		{
+			strsql = "select * from CTL_Mail_Template where ML_KEY='" + Oggetto + "' or ML_KEY_OGGETTO='" + Oggetto + "'";
+			CommonDbFunctions commondb = new CommonDbFunctions();
+			rs = commondb.GetRSReadFromQuery_(strsql , connessione);
+			if (rs != null && rs.RecordCount > 0)
+			{
+				key_ml_custom = "SI";
+			}
+		}
+		strsql = "Select top 0 * from aziende";
+		if(string.IsNullOrEmpty(colonna2))
+		{
+			strsql = "select * from  " + table + " where  " + colonna + "='" + Oggetto + "'";
+		}
+		if(!string.IsNullOrEmpty(colonna2))
+		{
+			arr = Oggetto.Split("-");
+			if(arr.Length >0)
+			{
+				strsql = "select * from  " + table + " where  " + colonna + "='" + arr[0] + "'and " + colonna2 + "='" + arr[1] + "'";
+			}
+		}
+		if(string.Equals(key_ml_custom,"SI"))
+		{
+			htmlToReturn.Write("IF NOT EXISTS ( select * from CTL_Mail_Template inner join ctl_doc on TipoDoc='MAIL_TEMPLATE' and JumpCheck=ML_KEY and StatoDoc='Sended' where ML_KEY='" + Oggetto + "' or ML_KEY_OGGETTO='" + Oggetto + "' )" + stracapo);
+			htmlToReturn.Write("BEGIN" + stracapo);
+		}
+		if(Delete == 1 && string.IsNullOrEmpty(colonna2))
+		{
+			htmlToReturn.Write("delete  from " + table + " where  " + colonna + "='" + Oggetto + "'" + stracapo);
+		}
+		if(Delete == 1 && !string.IsNullOrEmpty(colonna2))
+		{
+			arr = Oggetto.Split("-");
+			if(arr.Length >0)
+			{
+				htmlToReturn.Write("delete  from " + table + " where  " + colonna + "='" + arr[0] + "'and " + colonna2 + "='" + arr[1] + "'" + stracapo);
+			}
+		}
+		CommonDbFunctions cdb = new CommonDbFunctions();
+		rs = cdb.GetRSReadFromQuery_(strsql, connessione);
+		//err.clear
+		if(!string.Equals(stracapo,"<br>"))
+		{
+			htmlToReturn.Write("SET NOCOUNT ON" + stracapo + stracapo + "PRINT 'Inserting values into " + table + "'" + stracapo) ;
+		}
+		if (rs != null && rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+			for(z=0;z<=rs.RecordCount-1;z++)
+			{
+				//rs.Fields.Count-1
+				for (k = 0; k < rs.Columns.Count ; k++)
+				{
+					x = rs.Columns[k].ColumnName;
+					//tipo da capire typeof// se funziona
+					// tipo = rs.Fields[x].GetType();
+					Type tipo = rs.Columns[k].DataType;
+
+					x = x.Replace("'", "''");
+
+					if (string.IsNullOrEmpty(module) && !string.IsNullOrEmpty(idrows) && string.IsNullOrEmpty(condition) && ( x=="DOC_ID" || x == "DM_ID" || x == "MOD_ID" || x == "DZT_Name" || x =="DPR_DOC_ID" ||  x =="DPR_ID" || x == "DPR_ProgID" || x == "DPR_DescrStep" || x == "DSE_DOC_ID" || x  == "DSE_ID" || x == "DMV_DM_ID" || x == "DMV_Cod"  || x == "LFN_GroupFunction" || x == "LFN_id" || x =="MAP_MA_MOD_ID" || x == "MAP_MA_DZT_Name" || x == "MAP_Propety" || x =="MA_MOD_ID" || x == "MA_DZT_Name" || x == "ML_KEY" || x == "ML_LNG" || x == "mpcIdGroup" || x == "mpcName" || x =="mpcDeleted" || x == "mpgIdGroup" || x == "mpgGroupKey" || x == "SRV_Description" || x == "SRV_DOC_ID" || x == "SRV_DPR_ID" ))
+					{
+						val = GetValueFromRS(rs.Fields[k]).Replace("'", "''");
+						if (tipo == typeof(bool))
+						{
+							if (val == "False")
+							{
+								val = CStr(0);
+							}
+							if (val == "True")
+							{
+								val = CStr(1);
+							}
+							if (val == "Falso")
+							{
+								val = CStr(0);
+							}
+							if (val == "Vero")
+							{
+								val = CStr(1);
+							}
+						}
+						//'if ( x="SRV_Description") then 
+						//'	strdel = strdel & "cast(" & x & " as varchar(4000))" & " = '" & val & "'"  & " and " 
+						//'else
+						//'	strdel = strdel & x & " = '" & val & "'"  & " and " 
+						//'end if
+						if (x == "SRV_Description")
+						{
+							//strdel = strdel;//assegnazione inutile
+						}
+					}
+
+					if (x != "ID" && x != "DPR_idRow" && x != "DOC_idRow" && x != "DSE_idRow" && x != "id" && x != "LFN_Identity" && x != "MA_ID" && x != "MAP_ID" && x != "SRV_id" && x != "IdMpc" && x != "IdMpg" && x != "REL_idRow" && x != "mpcUltimaMod" && x != "mpgUltimaMod")
+					{
+						x3 = x3 + "[" + x + "]" + ",";
+						x5 = CStr(GetValueFromRS(rs.Fields[k]));
+						bool x5isNull = GetValueFromRS(rs.Fields[k]) == null;
+
+						if ((x5 + "[]").Trim() != "[]")
+						{
+							x5 = CStr(x5).Replace("'", "''");
+						}
+
+						if (x == "SRV_LastExec" || x == "DM_LastUpdate")
+						{
+							x5 = "GETDATE()";
+						}
+						if((tipo == typeof(int) || tipo == typeof(bool) || tipo == typeof(Int16) || tipo == typeof(double) || tipo == typeof(decimal)) && CStr(x5) != "" && x != "SRV_LastExec" && x != "DM_LastUpdate")
+						{
+							if (tipo == typeof(bool))
+							{
+								if (x5 == "False")
+								{
+									x5 = CStr(0);
+								}
+								if (x5 == "True")
+								{
+									x5 = CStr(1);
+								}
+								if (x5 == "Falso")
+								{
+									x5 = CStr(0);
+								}
+
+								if (x5 == "Vero")
+								{
+									x5 = CStr(1);
+								}
+
+							}
+							x2 = x2 + x5 + ",";
+						}
+						else
+						{
+							if ((tipo == typeof(int) || tipo == typeof(bool) || tipo == typeof(Int16) || tipo == typeof(double) || tipo == typeof(decimal) && (IsNull(x5) || x5isNull) && x != "SRV_LastExec" && x != "DM_LastUpdate"))
+							{
+								x2 = x2 + "null" + ",";
+							}
+							else
+							{
+								if (x != "SRV_LastExec" && x != "DM_LastUpdate")
+								{
+									x2 = x2 + "N'" + x5 + "'" + ",";
+								}
+								else
+								{
+									x2 = x2 + x5 + ",";
+								}
+							}
+						}
+
+					}
+				}
+				x3 = Strings.Mid(x3, 1, (x3.Length - 1));
+				x2 = Strings.Mid(x2, 1, x2.Length - 1);
+				if(stracapo == "<br>")
+				{
+					htmlToReturn.Write("INSERT INTO [" + table + "] " + "(" + " " + x3 + ") " + "VALUES" + " (" + HtmlEncode(x2) + ")" + stracapo);
+				}
+				else
+				{
+					htmlToReturn.Write("INSERT INTO [" + table + "] " + "(" + " " + x3 + ") " + "VALUES" + " (" + x2 + ")" + stracapo);
+				}
+				//Response.Flush ()
+				rs.MoveNext();
+				//'Response.Write  stracapo  & x3
+				x3 = "";
+				x2 = "";
+
+			}
+
+		}
+		else
+		{
+			if( Tipo_Obj !=  "Modulo-Metadati" && table != "LIB_DomainValues"  && table != "LIB_ModelAttributes" && table != "LIB_ModelAttributeProperties")
+			{
+				htmlToReturn.Write("@@@OGGETTO NON VALIDO###" + stracapo);
+			}
+
+		}
+		if(key_ml_custom == "SI")
+		{
+			htmlToReturn.Write("END" + stracapo);
+			htmlToReturn.Write("ELSE" + stracapo);
+			htmlToReturn.Write("BEGIN" + stracapo);
+			htmlToReturn.Write($@"--select 'AGGIORNAMENTO NON POSSIBILE PER L''OGGETTO """ + Oggetto + $@""" IN QUANTO E'' STATO MODIFICATO CON LA FUNZIONE APPLICATIVA ""Mail Template""' as MESSAGGIO" + stracapo);
+			htmlToReturn.Write("declare @id int" + stracapo);
+			htmlToReturn.Write("INSERT INTO CTL_TRACE( contesto, descrizione)" + stracapo);
+			htmlToReturn.Write("values ( 'INSTALLA_ATTIVITA', 'La key di MLNG " + Oggetto + " e'' custom sul cliente, quindi una modifica fatta non e'' stata installata sul cliente')" + stracapo);
+			htmlToReturn.Write("set @id = SCOPE_IDENTITY()" + stracapo);
+			htmlToReturn.Write("insert into [dbo].[CTL_Schedule_Process]" + stracapo);
+			htmlToReturn.Write("( [IdDoc], [IdUser], [DPR_DOC_ID], [DPR_ID] )" + stracapo);
+			htmlToReturn.Write("values" + stracapo);
+			htmlToReturn.Write("( @id, -1, 'ALERT_AFUPDATE' , 'INVIO_MAIL' )" + stracapo);
+			htmlToReturn.Write("" + stracapo);
+			htmlToReturn.Write("END" + stracapo);
+		}
+
+		if (stracapo != "<br>")
+		{
+			htmlToReturn.Write("PRINT 'Done'" + stracapo + stracapo + "SET NOCOUNT OFF");
+		}
+		
+	 //err.Clear
+	
+
+	}
+
+}@Html.Raw(htmlToReturn.Out())

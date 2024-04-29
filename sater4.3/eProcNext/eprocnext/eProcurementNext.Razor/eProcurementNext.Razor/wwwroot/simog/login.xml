@@ -1,0 +1,9 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xb="xmlbeans.massload.simog.avlp.it">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <xb:login>
+      <login>@@@LOGIN@@@</login>
+      <password>@@@PASSWORD@@@</password>
+    </xb:login>
+  </soapenv:Body>
+</soapenv:Envelope>

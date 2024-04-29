@@ -1,0 +1,116 @@
+TD.CellGridListFunction
+{
+}
+.FontLinkSelectedListFunction
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    FONT-FAMILY: arial
+}
+.FontLinkSelectedListFunctionNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: red;
+    FONT-FAMILY: arial
+}
+.FontLinkNotSelectedListFunction
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.FontLinkMessageListFunctions
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.FontLinkMessageListFunctionsNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.FontLinkNoMessageListFunctions
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.FontLinkMessageListFunctionsUnderLine
+{
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: darkred;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+.FontLinkMessageListFunctionsUnderLineNotRead
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+TABLE.Group
+{
+    BORDER-RIGHT: #161a74 1px solid;
+    BORDER-TOP: #161a74 1px solid;
+    BORDER-LEFT: #161a74 1px solid;
+    BORDER-BOTTOM: #161a74 1px solid
+}
+TD.HeadGridGroup
+{
+    BORDER-RIGHT: #161a74 1px;
+    BORDER-TOP: #161a74 1px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12pt;
+    BORDER-LEFT: #161a74 1px;
+    COLOR: #161a74;
+    BORDER-BOTTOM: #161a74 1px;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: center;
+    TEXT-DECORATION: underline
+}
+TABLE.Window_Tab
+{
+    BORDER-RIGHT: #161a74 1px solid;
+    BORDER-TOP: #161a74 1px solid;
+    BORDER-LEFT: #161a74 1px solid;
+    BORDER-BOTTOM: #161a74 1px solid;
+    BACKGROUND-COLOR: white
+}
+TD.CloseGroup
+{
+    BORDER-RIGHT: #161a74 1px;
+    BORDER-TOP: #161a74 1px;
+    FILTER: progid:DXImageTransform.Microsoft.Gradient(startColorStr='#E9EDF3', endColorStr='#ffffff', gradientType='1');
+    BORDER-LEFT: #161a74 1px;
+    CURSOR: hand;
+    COLOR: #161a74;
+    BORDER-BOTTOM: #161a74 1px;
+    BACKGROUND-COLOR: #E9EDF3
+}
+TD.OpenGroup
+{
+BORDER-RIGHT: #161a74 1px;
+    BORDER-TOP: #161a74 1px;
+    FILTER: progid:DXImageTransform.Microsoft.Gradient(startColorStr='#E9EDF3', endColorStr='#ffffff', gradientType='1');
+    BORDER-LEFT: #161a74 1px;
+    CURSOR: hand;
+    COLOR: #161a74;
+    BORDER-BOTTOM: #161a74 1px;
+    BACKGROUND-COLOR: #E9EDF3
+}

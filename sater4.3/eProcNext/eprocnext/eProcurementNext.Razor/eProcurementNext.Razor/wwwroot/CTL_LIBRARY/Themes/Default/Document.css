@@ -1,0 +1,26 @@
+BODY.bodyDocument
+{
+    MARGIN: 0px;
+    BACKGROUND-COLOR: white
+}
+.foglieBack
+{
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightgoldenrodyellow
+}
+.loading
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: 'Times New Roman'
+}
+.foglie
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}

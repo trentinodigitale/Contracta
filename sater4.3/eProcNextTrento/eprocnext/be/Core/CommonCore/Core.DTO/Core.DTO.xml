@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Core.DTO</name>
+    </assembly>
+    <members>
+        <member name="T:Core.DTO.Common.DecodedUserClaims">
+            <summary>
+            UserClaims
+            </summary>
+        </member>
+        <member name="T:Core.DTO.NoSql.LogException">
+            <summary>
+            Exception class for long time processing
+            </summary>
+        </member>
+        <member name="M:Core.DTO.NoSql.LogException.#ctor">
+            <summary>
+            Deserialization
+            </summary>
+        </member>
+        <member name="M:Core.DTO.NoSql.LogException.#ctor(System.Exception)">
+            <summary>
+            ctor
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="P:Core.DTO.NoSql.LogException.Message">
+            <summary>
+            message
+            </summary>
+        </member>
+        <member name="P:Core.DTO.NoSql.LogException.StackTrace">
+            <summary>
+            Exception stack trace
+            </summary>
+        </member>
+        <member name="P:Core.DTO.NoSql.LogException.Source">
+            <summary>
+            Source
+            </summary>
+        </member>
+        <member name="T:Core.DTO.NoSql.LogException`1">
+            <summary>
+            Added Input property with input type parameter
+            </summary>
+            <typeparam name="TInput"></typeparam>
+        </member>
+        <member name="M:Core.DTO.NoSql.LogException`1.#ctor(System.Exception)">
+            <summary>
+            ctor
+            </summary>
+            <param name="ex"></param>
+        </member>
+        <member name="M:Core.DTO.NoSql.LogException`1.#ctor(System.Exception,`0)">
+            <summary>
+            ctor
+            </summary>
+            <param name="ex"></param>
+            <param name="inputData"></param>
+        </member>
+        <member name="P:Core.DTO.NoSql.LogException`1.InputData">
+            <summary>
+            Input data that generated the exception
+            </summary>
+        </member>
+        <member name="P:Core.DTO.NoSql.LogException`1.TenantId">
+            <summary>
+            Tenant ID 
+            </summary>
+        </member>
+        <member name="T:Core.Common.Constants.Authentication.BaseCustomClaims">
+            <summary>
+            Base custom claims used for system JWT security token
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.Name">
+            <summary>
+            UserName / Login
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.Surname">
+            <summary>
+            User real Name
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.GivenName">
+            <summary>
+            User Surname
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.NameIdentifier">
+            <summary>
+            User ID from Database
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.TenantId">
+            <summary>
+            Primary Tenant ID
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.LoginTenantId">
+            <summary>
+            Actually logged Tenant ID (valid only for user who is administrator of more than one tenant)
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.IsPersonaGiuridica">
+            <summary>
+            Is Persona FISICA / GIURIDICA flag
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.PartitaIva">
+            <summary>
+            Company VAT number
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.CodiceFiscale">
+            <summary>
+            Company TAX code
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.Profile">
+            <summary>
+            User profile (from DATABASE)
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.Role">
+            <summary>
+            User role
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.LegacyTenant">
+            <summary>
+            Flag that is true only for tenant from legacy integration
+            </summary>
+        </member>
+        <member name="P:Core.Common.Constants.Authentication.BaseCustomClaims.TenantLicenseStatus">
+            <summary>
+            Tenant activation license status
+            </summary>
+        </member>
+    </members>
+</doc>

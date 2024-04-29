@@ -1,0 +1,17 @@
+BODY
+{
+}
+.FontSintheticHelp
+{
+    COLOR: blue;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 10pt;
+    FONT-STYLE: oblique
+}
+TABLE.GridSintheticHelp
+{
+    WIDTH: 100%
+}
+TD.CellGridSintheticHelp
+{
+}

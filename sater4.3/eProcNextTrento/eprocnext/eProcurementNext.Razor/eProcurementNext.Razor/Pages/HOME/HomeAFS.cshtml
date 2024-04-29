@@ -1,0 +1,11 @@
+﻿@page "/HOME/HomeAFS.asp"
+@using eProcurementNext.CommonModule
+@model eProcurementNext.Razor.Pages.HOME.HomeAFSModel
+@*
+<!-- #Include File="../Functions/Initialize_Component.asp" -->
+<!-- #Include File="../Functions/CNV.asp" -->
+<!-- #INCLUDE FILE="../CTL_LIBRARY/functions/security.inc" -->
+*@
+@{
+	throw new ResponseRedirectException("../ctl_library/path.asp?url=home%2Fmain.asp%3Flo%3Dbase%26GROUPS_NAME%3D&KEY=main&ROOT=YES", Response);
+}

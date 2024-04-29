@@ -1,0 +1,350 @@
+﻿@page "/Report/prn_Elenco_Sedute.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_Elenco_SeduteModel;
+@model eProcurementNext.Razor.Pages.Report.prn_Elenco_SeduteModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+
+}
+@{
+	var sqlParams = new Dictionary<string, object?>();
+	htmlToReturn.Write($@"
+	<html>
+	<head>");
+
+	addMetaTag(htmlToReturn);
+
+	htmlToReturn.Write($@"
+	</head>
+	<body>
+	<style type=""text/css"">
+
+
+
+	BODY,DIV ,TABLE, TD {{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:9.9pt;
+	 font-style:normal;
+	 font-weight:normal
+
+
+	}}
+	.Input
+	{{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:10pt;
+	 font-style:normal;
+	 font-weight:bold
+
+	}}
+
+	.TITLE{{
+	 font-family:'Arial','Times New Roman',serif;
+	 font-size:12pt;
+	 font-style: bold;
+	 font-weight:bold
+
+
+
+	}}
+
+
+
+	@media print
+	  {{
+	  #Ricevuta {{}}
+	  }}
+
+	  @media screen
+	  {{
+	  #Ricevuta {{}}
+	  }}
+
+	  ul li, table ul li {{ list-style-type:none; text-align:justify;}}
+	  p	{{  text-align:justify;}} 
+	 .disc li {{ list-style-type:disc;}}
+	 .disc li table td{{ vertical-align:bottom;}}
+	  h1{{font-size:1.3em; font-weight:bold; text-align:center;}}
+	 .PaddingLeft{{ padding-left:3em;}}
+	 .nomargin{{margin-top: -13px;}}
+	  ul.ListStyleTypeNone li{{padding-top:0em; }}
+	 .ListStyleTypeNone{{ list-style-type:none; }}
+	 table.list{{ vertical-align:middle; margin-top:1em;}}
+	 table td ul.disc{{padding-top:0em;padding-bottom:0em;margin-top: 0em;margin-bottom: 0em;}}
+
+
+
+	</style>
+  <html>
+  <head>");
+	//'response.write "KAPPA"
+	//'response.end
+	addMetaTag(htmlToReturn);
+
+	double NumPagTot;
+	int NumPag;
+	double NumRow;
+	int NumRowPrint;
+	double NumRow4Pag;
+	double nResiduoLinee;
+
+	//'NumPag = 0
+	//'NumPagTot = 1
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+	validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+	sqlParams.Add("@id", CStr(CLng(id)));
+	
+	string strSql = "select  'N. ' + cast(DMV_DescML as varchar(20)) + ' ' + Descrizione as Descrizione, " + Environment.NewLine;
+	strSql = strSql + " convert(varchar(10),DataInizio,103) + ' ' + replace(convert(varchar(5),DataInizio,114),':','.') as DataInizio,  " + Environment.NewLine;
+	strSql = strSql + " convert(varchar(10),datafine,103) + ' ' + replace(convert(varchar(5),datafine,114),':','.') as datafine  " + Environment.NewLine;
+	strSql = strSql + " from Document_PDA_Sedute_view with (nolock) " + Environment.NewLine;
+	strSql = strSql + " inner join LIB_DomainValues with (nolock) on [DMV_DM_ID]='sedute' and [DMV_Cod]=NumeroSeduta " + Environment.NewLine;
+	strSql = strSql + " where idHeader = @id and StatoFilter <> 'Variato' " + Environment.NewLine;
+	//''''strSql = strSql & " where idHeader > 0 and DMV_DescML <>'' and DataInizio is not null and datafine is not null and NumeroSeduta is not null  and StatoFilter <> 'Variato' " & vbcrlf
+	strSql = strSql + " order by idrow";
+
+	//''response.write strSql
+	//''response.end
+	TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if(rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+	}
+	else
+	{
+		HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+	NumRow = rs.RecordCount;
+	NumRow4Pag = 60;
+
+	if(NumRow <NumRow4Pag)
+	{
+		nResiduoLinee = 0;
+		NumPagTot = 1;
+	}
+	else
+	{
+		nResiduoLinee = NumRow % NumRow4Pag;
+		NumPagTot = Fix(NumRow / NumRow4Pag);
+
+	}
+	//'response.write nNumLineeTotali & "-" & nLineeForPage 
+
+	//'nNumPag = int (nNumLineeTotali / nLineeForPage)
+
+	//'if nResiduoLinee < nLineeForTotali and nResiduoLinee <> 0 then
+	if(nResiduoLinee != 0)
+	{
+		NumPagTot = NumPagTot + 1;
+	}
+	//'response.write NumRow
+	//'response.write "-"
+	//'response.write nResiduoLinee
+	//'response.end
+	htmlToReturn.Write($@"
+	</head>
+
+	 <div style=""text-align: center; "" >
+			<center>");
+
+	//'' ciclo sulle pagine
+	NumPag = 0;
+	NumRowPrint = 0;
+	while(!rs.EOF)
+	{
+		if(NumRowPrint == 0)
+		{
+			NumPag = NumPag + 1;
+			htmlToReturn.Write($@"<table style=""width: 800px; height: 1400px;""");
+			Header();
+			htmlToReturn.Write($@"
+				<tr><td></td></tr><tr><td></td></tr>
+					<tr>
+						<td height=""100%"" valign=""top"" >
+							<table border=""0"" align=""top"" height=""70%"" width=""100%"" style=""font-size:12; padding: 0px;text-align:center; border-spacing: 0; border-collapse: collapse"" align=""center"">
+
+
+
+
+
+
+													<tr>
+
+														<td style=""border: 1px solid black; background-color:grey; font-size:15"">
+															<strong>DESCRIZIONE</strong>
+														</td>
+														<td style=""border: 1px solid black; background-color:grey; font-size:15"">
+															<strong>DATA INIZIO</strong>
+														</td>
+														<td style=""border: 1px solid black; background-color:grey; font-size:15"">
+															<strong>DATA FINE</strong>
+														</td>									
+													</tr>");
+
+		}//'''if NumRowPrint= 0 then
+		htmlToReturn.Write($@"
+		<tr>
+
+
+														<td style=""border: 1px solid black;"">
+															" + GetValueFromRS(rs.Fields["descrizione"]) + $@"
+														</td>
+
+														<td style=""border: 1px solid black;"">
+															" + GetValueFromRS(rs.Fields["DataInizio"]) + $@"
+														</td>
+
+														<td style=""border: 1px solid black;"">
+															" + GetValueFromRS(rs.Fields["Datafine"]) + $@"
+														</td>
+
+
+													</tr>");
+		NumRowPrint = NumRowPrint + 1;
+		rs.MoveNext();
+		if( NumRowPrint == NumRow4Pag)
+		{
+			NumRowPrint = 0;
+			htmlToReturn.Write("</table></td></tr>");
+			footer(NumPag, NumPagTot);
+			htmlToReturn.Write("</table>");
+			if(NumPag <NumPagTot)
+			{
+				PrintPagina();
+			}
+		}
+
+	}
+	//''footer NumPag , NumPagTot
+	//set rs = nothing
+	if(nResiduoLinee != 0 || NumRow < NumRow4Pag)
+	{
+		//'' scrive tante righe vuote fino a riempimento tabella
+		double nFill;
+
+		nFill = NumRow4Pag - nResiduoLinee;
+
+		if(NumRow < NumRow4Pag)
+		{
+			nFill = NumRow4Pag - NumRow;
+		}
+
+		for(int  i = 1;i< nFill;i++)
+		{
+			htmlToReturn.Write($@"
+					<tr>
+						<td >
+									"" ""
+						</td>
+						<td >
+									"" ""
+						</td>
+						<td >
+									"" ""
+						</td>
+					</tr>");
+		}
+
+
+	}
+	htmlToReturn.Write($@"
+		</table>	
+			</td>
+		</tr>");
+	//'''NumPag = NumPag + 1
+	if(nResiduoLinee != 0 || NumRow < NumRow4Pag )
+	{
+			footer(NumPag, NumPagTot);
+	}
+	htmlToReturn.Write("</table>");
+	<!-- fine pagina 1-->
+	//'if NumPag < NumPagTot then
+	//'	PrintPagina 
+	//'end if
+	htmlToReturn.Write($@"
+	</center>
+		</div>
+	</body>
+	</html>");
+	void Header()
+	{
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+		if(imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + @"""/>");
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);
+		}
+
+		htmlToReturn.Write($@"</td></tr>");
+		htmlToReturn.Write($@"						<tr>");
+		htmlToReturn.Write($@"							<td style=""font-size:20px"" align=""justify"">");
+		htmlToReturn.Write($@"" + DOC_FieldTecnical("TESTATA", "Oggetto") + "");
+		htmlToReturn.Write($@"							</td>");
+		htmlToReturn.Write($@"						</tr>");
+
+		htmlToReturn.Write($@"<tr><td><br/><hr size=""1""><br/></td></tr>");
+
+
+		htmlToReturn.Write($@"						<tr>");
+		htmlToReturn.Write($@"							<td style=""font-size:22px"" align=""center"">");
+		htmlToReturn.Write($@"<b>ELENCO VERBALI DELLE SEDUTE DI GARA</b>");
+		htmlToReturn.Write($@"							</td>");
+		htmlToReturn.Write($@"						</tr>");
+	}
+	//'------------------------------------------------------------------------------
+	//'-- funzione per disegnare il pie pagina
+	//'------------------------------------------------------------------------------
+	void footer(double NumPag ,double NumPagTot)
+	{
+		//''NumPag  = NumPag  + 1
+		htmlToReturn.Write($@"<tr><td valign=""bottom"" height=""50px"" >");
+		htmlToReturn.Write($@"<table width=""720px"" height=""10px"" style=""border-collapse: collapse;""> ");
+		htmlToReturn.Write($@"        <tr><td align=""left"" style=""border-collapse: collapse;border-top: 1px solid black;"" ><b>Elenco verbali delle sedute di gara</b></td>");
+		htmlToReturn.Write($@"            <td valign=""bottom"" align=""right"" style=""border-collapse: collapse;border-top: 1px solid black;"" >");
+		htmlToReturn.Write($@"                ");
+		htmlToReturn.Write($@"                " + "Pagina " + NumPag + " di " + NumPagTot);
+		htmlToReturn.Write($@"            </td>");
+		htmlToReturn.Write($@"        </tr>");
+		htmlToReturn.Write($@"    </table>");
+		htmlToReturn.Write($@"    </td></tr>");
+	}
+	void PrintPagina()
+	{
+		htmlToReturn.Write($@"<div style=""page-break-after: always""></div>");
+	}
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+
+}@Html.Raw(htmlToReturn.Out())

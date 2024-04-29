@@ -1,0 +1,105 @@
+﻿@page "/DASHBOARD/ViewerExecProcess.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB
+@using eProcurementNext.DashBoard
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.DASHBOARD.ViewerExecProcessModel
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+    validate("IDLISTA", (CStr(GetParamURL(Request.QueryString.ToString(), "FILTER_USER_PROFILE")).Replace(",", "")).Replace("~", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate("TABLE", CStr(GetParamURL(Request.QueryString.ToString(), "TABLE")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate("KEY", CStr(GetParamURL(Request.QueryString.ToString(), "KEY")), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate("FIELD", CStr(GetParamURL(Request.QueryString.ToString(), "FIELD")).Replace(":", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    StartPage(htmlToReturn);
+
+    htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/caption.css"" type=""text/css"">");
+    htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/griddocument.css"" type=""text/css"">");
+    htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/field.css"" type=""text/css"">");
+    htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/BootStrap.css"" type=""text/css"">");
+    htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../CTL_Library/Themes/main_base.css"" type=""text/css"">");
+
+	if(IsMasterPageNew()){
+		htmlToReturn.Write($@"<link rel=""stylesheet"" href=""../css/vapor/vapor.css"" type=""text/css"">");
+	}
+
+    htmlToReturn.Write($@"<script src=""../CTL_Library/jscript/main.js""></script>");
+    htmlToReturn.Write($@"<script language=""javascript"">");
+
+    if (GetParamURL(Request.QueryString.ToString(), "MODE") == "Execute")
+    {
+        dynamic IndexToProcess = GetParamURL(Request.QueryString.ToString(), "IndexToProcess");
+
+        //recupero riga da processare
+        htmlToReturn.Write($@"
+		IndexToProcess = " + IndexToProcess + $@";
+		//setto la chiamata ritardata della funzione per forzare la scroll verticale
+		parent.setTimeout(parent.SetFocus_On_CurrentRecord(IndexToProcess), 1000 );
+		");
+    }
+    else
+    {
+        htmlToReturn.Write($@"
+		function SetFocus_On_CurrentRecord(IndexToProcess)
+			{{
+
+				try{{
+					//alert(document.body.clientHeight);
+					//topCurent =  getObj( 'GridR' + (IndexToProcess )  ).offsetTop  -  window.innerHeight + 50 ;
+					topCurent =  getObj( 'GridR' + (IndexToProcess )  ).offsetTop  -  document.body.clientHeight + 50 ;
+					//alert(topCurent);
+					if (topCurent > 0){{
+						//forzo la scroll verticale;
+						window.scrollTo(0, topCurent + 40 );
+
+					}}
+				}}catch(e){{
+					//alert(e);
+					window.scrollTo(0, topCurent + 60 );
+				}}
+
+
+				//se presente la progresspage sposto la griglia più in giù e blocco la riga intestazione della griglia dei processi
+
+				objProgress = getObj('Div_ProgressBar');
+
+				//alert(objProgress.innerHTML);
+
+				if ( objProgress != undefined )
+				{{
+					objGRid = getObj('div_Grid');
+					objGRid.style.paddingTop = ""45px"";
+
+
+					//per tutte le celle della prima riga della griglia setto lo stile per bloccare l'intestazione
+					var x = getObj(""Grid"").rows[0].cells.length;
+					for (var a = 0; a < x; a++)
+						{{
+							objCell = getObj(""Grid"").rows[0].cells[a];
+							objCell.style.position  = ""sticky"";
+							objCell.style.top = ""70px"";
+							objCell.style.zIndex = ""10"";
+						}}
+					}}
+
+
+
+
+				}}
+		");
+    }
+    htmlToReturn.Write("</script>");
+
+    ViewerExecProcess view = new ViewerExecProcess(HttpContext, session, htmlToReturn);
+    view.run(htmlToReturn);
+}
+@Html.Raw(htmlToReturn.Out())

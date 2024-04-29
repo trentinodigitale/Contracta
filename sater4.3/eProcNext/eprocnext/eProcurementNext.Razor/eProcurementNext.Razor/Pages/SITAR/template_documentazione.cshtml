@@ -1,0 +1,199 @@
+﻿@page "/SITAR/template_documentazione.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.IO;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.ctl_profiler
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Razor.Pages.SITAR.SITAR_XML_DOCUMENTAZIONEModel;
+@using eProcurementNext.CtlProcess;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.SITAR.template_documentazioneModel
+@{
+	LoadSession(HttpContext, session);
+
+	EprocResponse response = new();
+	CommonDbFunctions cdf = new();
+	TSRecordSet rs = new();
+	TSRecordSet rsLotto = new();
+
+	string strSql = string.Empty;
+	string titolo = string.Empty;
+	string TipoDocum = string.Empty;
+	string NumeroLotto = string.Empty;
+	string StatoLotto = string.Empty;
+	string TitoloGara = string.Empty;
+	string Protocollo = string.Empty;
+	string W3IDGARA = string.Empty;
+	string desclotto = string.Empty;
+	string cig = string.Empty;
+	string DtNow = string.Empty;
+	int NumPagCorrente = 0;
+
+	response.Write(@"<html>
+	<head>
+		<title>OCP - IstanziaPubblicazioneDocumenti</title>
+		<meta charset='UTF-8'/>
+	</head>
+
+	<body style='margin-left:50px; margin-right:50px; margin-top:10px; margin-bottom:10px'>");
+
+	response.Write(@"<table height='100%' width='100%' border='0' style='height: 1390px;'>
+
+		<tr>
+			<td align='center'> 
+
+				<table  width='100%' style='margin-top:0px' align='center'>
+					<tr>
+						<td style='border:0px;' align='center'>
+							<table style='font-weight:bold; align:center'>
+								<tr>
+									<td align='center' style='border:0px; align:center; vertical-align=middle;'>
+
+										<img height='50px' src='../report/logo_new.gif' border='0' alt='" + ApplicationCommon.CNV("ALT LOGO") + @"' />
+
+
+									</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+								</tr>
+								<tr>
+									<td style='font-size:18px'>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+
+			</td>
+		</tr>");
+	response.Write(@"<tr>
+
+			<td height='100%' align='top' valign='top'>
+
+				<br/><br/>");
+
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+	validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+	strSql = "select a.Titolo, a.idDoc as TipoDocum, isnull(a.NumeroDocumento,'') as NumeroLotto, isnull(a.VersioneLinkedDoc,'') as StatoLotto, g.Body as TitoloGara, g.Protocollo, isnull(og.W3IDGARA,'') as W3IDGARA ";
+	strSql += "	, isnull(a.VersioneLinkedDoc,'') as StatoLotto, CONVERT(varchar, getDate(), 103) as DtNow ";
+	strSql += " from ctl_doc a with(nolock) ";
+	strSql += " 	left join Document_OCP_GARA og with(nolock) on og.idHeader = a.id ";
+	strSql += " 	inner join ctl_doc g with(nolock) on g.id = a.LinkedDoc ";
+	strSql += " where a.id = " + CStr(CLng(id)); // <--- se id è una stringa perché convertirla a long e poi di nuovo astring ... 
+
+	rs = GetRS(strSql);
+
+	if(rs.RecordCount > 0) {
+		rs.MoveFirst();
+
+		titolo = CStr(GetValueFromRS(rs.Fields["Titolo"]));
+		TipoDocum = CStr(GetValueFromRS(rs.Fields["TipoDocum"]));
+		NumeroLotto = CStr(GetValueFromRS(rs.Fields["NumeroLotto"]));
+		StatoLotto = CStr(GetValueFromRS(rs.Fields["StatoLotto"]));
+		TitoloGara = CStr(GetValueFromRS(rs.Fields["TitoloGara"]));
+		Protocollo = CStr(GetValueFromRS(rs.Fields["Protocollo"]));
+		W3IDGARA = CStr(GetValueFromRS(rs.Fields["W3IDGARA"]));
+
+		StatoLotto = CStr(GetValueFromRS(rs.Fields["StatoLotto"]));
+
+		DtNow = CStr(GetValueFromRS(rs.Fields["DtNow"]));
+	}
+
+	response.Write(@"<div style='width:100%;text-align:right'>" + DtNow + @"</div>
+					<br/>");
+
+	if(String.IsNullOrEmpty(NumeroLotto)) {
+		// '-- GARA
+		response.Write(@"<strong>Oggetto:</strong> ESITO GARA " +TitoloGara + @"
+
+						<br/><br/>
+
+						La gara con numero gara " + W3IDGARA + @" si &egrave; conclusa con esito '" + StatoLotto + @"'");
+	}
+	else {
+		// '-- LOTTO
+		strSql = "select isnull(W3OGGETTO2,'') as descLotto, isnull(W3CIG'') as cig from Document_OCP_LOTTI with(nolock) where idheader =  " + CStr(CLng(id)) + " and NumeroLotto = " + CStr(CLng(NumeroLotto));
+		rsLotto = GetRS(strSql);
+
+		if(rsLotto.RecordCount > 0) {
+			rsLotto.MoveFirst();
+
+			desclotto = CStr(GetValueFromRS(rsLotto.Fields["desclotto"]));
+			cig = CStr(GetValueFromRS(rsLotto.Fields["cig"]));
+		}
+
+		response.Write(@"<strong>Oggetto:</strong> ESITO LOTTO " + TitoloGara + @"
+
+						<br/><br/>
+
+						Il lotto " + NumeroLotto + @" &nbsp; "" + descLotto + @"" CIG " + cig + @" si &egrave; concluso con esito " + StatoLotto + @"");
+
+	}
+
+				response.Write(@"<!-- VECCHIA VERSIONE :
+	<h2>
+	" + titolo + $@"
+	</h2>
+
+	<br/>
+
+		<ul>
+
+		<li><strong>Oggetto della procedura :</strong> " + TitoloGara + $@" </li>
+		<li><strong>N. Gara Autorit&agrave; :</strong> " + W3IDGARA + $@" </li>
+		<li><strong>Registro Di Sistema Procedura :</strong> " + Protocollo + $@" </li>
+
+					<% if NumeroLotto <> "" then %>
+		<li><strong>Numero Lotto :</strong> " + NumeroLotto + $@" </li>
+		<% end if %>
+
+		<% if StatoLotto <> "" then %>
+			<li><strong>Stato :</strong> " + StatoLotto + $@" </li>
+		<% end if %>
+
+	</ul>
+			-->");
+
+	response.Write(@"</td>
+			</tr>
+		</table>
+
+	</body>
+	</html>");
+
+	/*'------------------------------------------------------------------------------
+	'-- funzione per disegnare il pie pagina
+	'------------------------------------------------------------------------------*/
+
+	void footer() {
+		NumPagCorrente = NumPagCorrente + 1;
+
+		response.Write(@"<tr><td valign='bottom' height='5px' >");
+		response.Write(@"<table id='piedipagina1' width='100%' height='5px' style='vertical-align: bottom; bottom: 0px'> ");
+		response.Write(@"        <tr><td align='left'><b></b></td></tr><tr>");
+		response.Write(@"            <td style='border-bottom: 1px solid black;border-top: 1px solid black;'  valign='bottom' align='right' >");
+		response.Write(@"                ");
+		response.Write(@"                Pagina: " + NumPagCorrente);
+		response.Write(@"            </td>");
+		response.Write(@"        </tr>");
+		response.Write(@"    </table>");
+		response.Write(@"    </td></tr>");
+	}
+
+	void PrintPagina() {
+		response.Write(@"<div style='page-break-after: always'></div>");
+	}
+}
+@Html.Raw(response.Out())

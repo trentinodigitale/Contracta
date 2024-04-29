@@ -1,0 +1,357 @@
+BODYVERTICALMODEL
+{
+}
+.StampaCol
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.StampaCont
+{
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+
+.allegapdf
+{
+    FONT-SIZE: 12px;
+    COLOR:#e52000;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    font-weight:bold;
+    padding-left:45px;
+    background:url(../../images/allegapdf.png) top left no-repeat;
+    display:inline-block;
+    vertical-align:middle;
+    height:36px;
+    line-height:3;
+}
+/*
+span.allegapdf{ width:150px; height:32px; background:url(../../images/General/LabelListFunctions/attachpdf.png) bottom left no-repeat; border:none; color:#990000; font-weight:bold; cursor:pointer; font-size:11px; display:block; line-height:18px; display:none;}
+span.allegapdf:hover{background:url(../../images/General/LabelListFunctions/attachpdf.png) top left no-repeat;}
+*/
+
+
+
+.TextFieldVerticalModel
+{
+
+    MARGIN: 0px;
+	border:1px solid #ccc;
+	background:#fff;
+	color:#2268B3;
+	padding:3px;
+}
+.TextFieldVerticalModel:hover{ border-color:#666}
+.TextFieldVerticalModel:focus{ border-color:#666; background:#fff; color:##666;}
+
+.TextFieldPercVerticalModel
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset
+}
+.MoneyFieldVerticalModel
+{
+    
+    PADDING-RIGHT: 0px;
+    
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    
+    PADDING-TOP: 0px;
+    
+    TEXT-ALIGN: right
+}
+.TextFieldVerticalModelBig
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    WIDTH: 200px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset
+}
+.SelectFieldVerticalModel
+{
+    PADDING-left:3px;
+    FONT-SIZE: 9pt;
+    MARGIN: 0px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	border:1px solid #ccc;
+	color:#666;
+	
+}
+.SelectFieldVerticalModel:hover{ border-color:#696969;}
+.SelectFieldVerticalModel:focus{ border-color:#696969; background-color:#fff; color:#666;}
+
+.SelectFieldLockedVerticalModel
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset
+}
+
+
+.SelectFieldVerticalModel_gerarchialocked
+{
+    background-color:#EFEFEF;
+}
+
+.ButtonVerticalModel
+{
+    BORDER-RIGHT: #161a74 1px outset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: #161a74 1px outset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: #161a74 1px outset;
+    COLOR: #161a74;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: #161a74 1px outset;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #e9edf3
+}
+TABLE.GridBodyVerticalModel
+{
+    WIDTH: 100%;
+	Margin-top: 10px;
+}
+
+
+
+TD.CellDescGridBodyVerticalModel
+{
+}
+TD.CellValueGridBodyVerticalModel
+{
+    WIDTH: 80%
+}
+
+
+input#Button_elemento_DICHIARAZIONE_firma_1307{ width:150px; height:32px; background:url(../../images/General/LabelListFunctions/attachpdf.png) bottom left no-repeat; border:none; color:#990000; font-weight:bold; cursor:pointer; font-size:11px;}
+input#Button_elemento_DICHIARAZIONE_firma_1307:hover{background:url(../../images/General/LabelListFunctions/attachpdf.png) top left no-repeat;}
+
+
+table.GridBodyVerticalModel input, table.GridBodyVerticalModel select{border:1px solid #ccc;  color:#666; margin-top:3px;}
+table.GridBodyVerticalModel input:hover{border-color:666;}
+
+table.GridBodyVerticalModel.CampoLocked{border:1px solid #ccc; background:#EFEFEF; color:#666;}
+table.GridBodyVerticalModel input.CampoLocked{border:1px solid #ccc; background:#EFEFEF; color:#666;}
+table.GridBodyVerticalModel input.TextFieldLocked{border:1px solid #ccc; background:#EFEFEF; color:#666;}
+
+.FontDescTextObblig
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.FontDescText
+{
+    FONT-WEIGHT: normal;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: none
+}
+.FontDescGroups
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 9pt;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+.ButtonHyerarchiesVerticalModel
+{
+    BORDER:1px solid #ccc;
+    FONT-SIZE: 12px;
+    MARGIN: 0px 0px 2px 2px;
+    COLOR: #161a74;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: #e9edf3;
+    TEXT-DECORATION: none
+}
+TABLE.GridInternalVerticalModel
+{
+    BORDER-RIGHT: silver 2px solid;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: silver 2px solid;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: silver 2px solid;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: silver 2px solid
+}
+TD.CellDescGridInternalVerticalModel
+{
+    WIDTH: 20%
+}
+TD.CellValueGridInternalModel
+{
+    WIDTH: 100%
+}
+.TextFieldLocked
+{
+    FONT-SIZE: 12px;
+    MARGIN: 0px;
+    BACKGROUND-COLOR:#EFEFEF;
+    TEXT-DECORATION: none;
+	border:1px solid #ccc;
+	color:#333;
+	padding:0px 3px 0px 3px;
+}
+.TextFieldLocked:hover{ border-color:666;}
+.TextFieldLocked:hover:focus{ background:#fff;}
+
+.MoneyFieldLocked
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 12px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: none
+}
+.FontSubtitle
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+TEXTAREA.FontTextAreaNotesNotEdit
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: whitesmoke
+}
+TEXTAREA.FontTextAreaNotesEditable
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    BACKGROUND-COLOR: white;
+	margin-top:5px;
+}
+TD.CellDescGridSelection1
+{
+    BACKGROUND-COLOR: gainsboro
+}
+TD.CellDescGridSelection2
+{
+    BACKGROUND-COLOR: lightsteelblue
+}
+.evidence
+{
+    FONT-WEIGHT: 800;
+    COLOR: brown;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.evidence_Ok
+{
+    FONT-WEIGHT: 800;
+    COLOR: green;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.evidence_Info
+{
+    FONT-WEIGHT: 800;
+    COLOR: gold;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.SelectList
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 9pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    WIDTH: 100px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+.FontLink
+{
+    FONT-SIZE: 12px;
+    CURSOR: pointer;
+    COLOR: darkred;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    TEXT-DECORATION: underline
+}
+.SelectListBig
+{
+    FONT-SIZE: 9pt;
+    WIDTH: 200px;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+}
+TD.CellValueLocked
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    BORDER-TOP: lightgrey 1px inset;
+    FONT-SIZE: 12px;
+    BORDER-LEFT: lightgrey 1px inset;
+    WIDTH: 100%;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    FONT-FAMILY: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    HEIGHT: 50%;
+    BACKGROUND-COLOR: whitesmoke
+}
+.TextEmail
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    WIDTH: 330px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset
+}
+
+
+.UL_Radio{
+  font-size:12px;
+  padding-top:5px;
+}

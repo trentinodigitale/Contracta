@@ -1,0 +1,213 @@
+﻿@page "/InterCenter/LoginFedera.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using System.Globalization
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.antiFixationModel;
+@model eProcurementNext.Razor.Pages.InterCenter.LoginFederaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+
+	//on error resume next
+
+	////'-- Per impedire il session fixation genero un codice di controllo sessione a meno che non è già presente
+	//if (string.IsNullOrEmpty(cstr(session["AFLINKFIXATION"])){
+	//	AntiFixationInit();
+	//}
+
+	//on error goto 0
+
+	//'-- recupero il Codice Fiscale ed il livello
+	string? TrustLevel = HttpContext.GetServerVariable("HTTP_TrustLevel") is not null ? HttpContext.GetServerVariable("HTTP_TrustLevel") : "";//.ServerVariables("HTTP_TrustLevel");
+	string? CodiceFiscale = HttpContext.GetServerVariable("HTTP_CodiceFiscale") is not null ? HttpContext.GetServerVariable("HTTP_CodiceFiscale") : "";
+	string? LOA = HttpContext.GetServerVariable("HTTP_authenticationMethod") is not null ? HttpContext.GetServerVariable("HTTP_authenticationMethod") : "";
+	string? Canale = "";
+
+	TrustLevel = TrustLevel is not null ? TrustLevel : "";
+	CodiceFiscale = CodiceFiscale is not null ? CodiceFiscale : "";
+	LOA = LOA is not null ? LOA : "";
+	traceInLogUtente(1, "", $"LOGIN FEDERA - CF:{CStr(CodiceFiscale)} - TrustLevel:{TrustLevel} - LOA:{CStr(LOA)}", HttpContext, session);
+
+	//'-- verifico che il parametro non contenga dati pericolosi
+	validate("CodiceFiscale", CodiceFiscale is not null ? CodiceFiscale : "null", TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	void drawContent()
+	{
+		if (LOA == "Secondo Livello SPID")
+		{
+			Canale = "SPID";
+			LOA = "3";
+		}
+
+		if (LOA == "Terzo Livello SPID")
+		{
+			Canale = "CNS";
+			LOA = "4";
+		}
+
+		if (LOA == "smartcard")
+		{
+			Canale = "CIE";
+			LOA = "";
+		}
+
+		//'--se il CF vuoto usciamo con messaggio apposito
+		if (string.IsNullOrEmpty(CStr(CodiceFiscale).Trim()))
+		{
+			throw new ResponseRedirectException($@"{ApplicationCommon.Application["strVirtualDirectory"]}/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=CodiceFiscaleVuoto&LOA=" + URLEncode(LOA) + "&Canale=" + URLEncode(Canale), Response);
+		}
+
+		//'-- nel caso il livello non sia sufficiente
+		if (TrustLevel.ToLower() != "alto")
+		{
+			throw new ResponseRedirectException($@"{ApplicationCommon.Application["strVirtualDirectory"]}/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=Negato&LOA=" + URLEncode(LOA) + "&Canale=" + URLEncode(Canale), Response);
+		}
+
+		//'-- verifico la presenza del CF sul DB
+
+		//'-- Con l'introduzione di SPID dobbiamo far accedere sia enti che OE
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@CodiceFiscale", CodiceFiscale);
+		TSRecordSet rs = cdf.GetRSReadFromQuery_("select pfulogin , pfuidAzi , aziRagioneSociale , NEWID() as ID from profiliutente with(nolock) inner join aziende with(nolock) on pfuidazi = idazi where aziDeleted = 0 and pfuDeleted = 0 and pfuCodiceFiscale = @CodiceFiscale", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+		//'-- nel caso l'utente non è presente nel sistema
+		if (rs.RecordCount == 0)
+		{
+		//''-- verifica se l'utente è un OE
+			//'set rs = GetRS("select pfulogin , pfuidAzi , aziRagioneSociale , NEWID() as ID from profiliutente inner join aziende on pfuidazi = idazi and  aziVenditore > 0 where pfuCodiceFiscale = '" & Replace( CodiceFiscale , "'" , "''" ) & "' ")
+
+			//'if rs.recordcount = 0 then
+			if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"])))
+			{
+				throw new ResponseRedirectException($@"/{CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"])}/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=NonTrovato&CF={URLEncode(CodiceFiscale)}&LOA=" + URLEncode(LOA) + "&Canale=" + URLEncode(Canale), Response);
+			}
+			else
+			{
+				throw new ResponseRedirectException($"/Application/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=NonTrovato&CF={URLEncode(CodiceFiscale)}&LOA=" + URLEncode(LOA) + "&Canale=" + URLEncode(Canale), Response);
+			}
+			//'else
+			//'	response.redirect "/Application/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=OE_NEGATO"
+			//'end if          
+		}
+
+		//'-- nel caso sia ritornato un solo utente si accede direttamente
+		if (rs.RecordCount == 1)
+		{
+			rs.MoveFirst();
+
+			TraceLoginFedera(CStr(rs["ID"]), CStr(rs["pfulogin"]), CStr(CodiceFiscale));
+			InsertLogSpid(CStr(rs["ID"]), CStr(rs["pfulogin"]), CStr(CodiceFiscale), "");
+
+			throw new ResponseRedirectException($"../login.asp?redirectback=yes&chiamante=/portale/index.php&strMnemonicoMP=PA&LOGINFEDERA={URLEncode(CStr(rs["ID"]))}&FEDERA_AZI={CStr(rs["pfuidAzi"])}", Response);
+		}
+        
+        if (rs.RecordCount > 1)
+		{
+			rs.MoveFirst();
+			
+			TraceLoginFedera(CStr(rs["ID"]), CStr(rs["pfulogin"]), CStr(CodiceFiscale));
+			if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"])))
+			{
+				throw new ResponseRedirectException($@"/{CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"])}/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=Multi&CF={CodiceFiscale}&LOGINFEDERA={URLEncode(CStr(rs["ID"]))}&LOA=" + URLEncode(LOA) + "&Canale=" + URLEncode(Canale), Response);
+			}
+			else
+			{
+				throw new ResponseRedirectException($"/Application/Intercenter/FederaOutput.asp?lo=lista_attivita&ACCESSO=Multi&CF={CodiceFiscale}&LOGINFEDERA={URLEncode(CStr(rs["ID"]))}&LOA=" + URLEncode(LOA) + "&Canale=" + URLEncode(Canale), Response);
+			}
+		}
+   }
+    
+	//'--inserisce nella tabella TRACE_MULTILINGUISMO le chiavi del vecchio multilinguismo
+	void TraceLoginFedera(string guid, string login, string codicefiscale)
+	{
+		CommonDbFunctions objDB = new();
+		
+		string strKeyFedera = $@"federa_{guid}";
+		string data = $"{DateAndTime.Year(DateTime.Now)}-{normalizza(DateAndTime.Month(DateTime.Now))}-{normalizza(DateAndTime.Day(DateTime.Now))} {normalizza(DateAndTime.Hour(DateTime.Now))}:{normalizza(DateAndTime.Minute(DateTime.Now))}";
+		string strValueFedera = $"{CStr(data)}@@@{login}@@@{codicefiscale}";
+		
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@strKeyFedera", strKeyFedera);
+		sqlParams.Add("@strValueFedera", strValueFedera);
+		objDB.Execute("INSERT INTO [CTL_LOG_PROC]([DOC_NAME],[parametri]) VALUES (@strKeyFedera, @strValueFedera)", ApplicationCommon.Application["ConnectionString"], parCollection: sqlParams);
+	}
+
+	void InsertLogSpid(string guid, string login, string codicefiscale, string responseFedera)
+    {
+        CommonDbFunctions cdb = new();
+        string strKeyFedera = "";
+
+        if (guid != "")
+        {
+            strKeyFedera = $"federa_{guid}";
+        }
+
+        if (responseFedera == "")
+        {
+            string data = $"{DateAndTime.Year(DateTime.Now)}-{normalizza(DateAndTime.Month(DateTime.Now))}-{normalizza(DateAndTime.Day(DateTime.Now))} {normalizza(DateAndTime.Hour(DateTime.Now))}:{normalizza(DateAndTime.Minute(DateTime.Now))}";
+            responseFedera = $"{data}@@@{login}@@@{codicefiscale}";
+        }
+
+        string userIp = "";
+        string ipServer = "";
+        string sessionFixation = CStr(session["AFLINKFIXATION"]);
+        string shibSessionIndex = "";
+        string authInstant = "";
+        string shibIdentityProvider = "";
+
+        try
+        {
+             var sqlParams = new Dictionary<string, object?>();
+                sqlParams.Add("@fixation", sessionFixation);
+                sqlParams.Add("@ip", ipServer);
+                sqlParams.Add("@ipuser", userIp);
+                sqlParams.Add("@session", CStr(session.SessionID));
+				sqlParams.Add("@ACCESSO", "CONFIRM");
+                sqlParams.Add("@codicefiscale", codicefiscale);
+                sqlParams.Add("@responseFedera", responseFedera);   
+                sqlParams.Add("@LOA", LOA);
+                sqlParams.Add("@Canale", Canale);
+                sqlParams.Add("@shibIdentityProvider", shibIdentityProvider);
+                sqlParams.Add("@shibSessionIndex", shibSessionIndex);
+                sqlParams.Add("@authInstant", authInstant);
+                sqlParams.Add("@errorCode", "");
+
+            cdb.Execute("insert into CTL_LOG_SPID (aflinkFixation, ipServer, ipChiamante, AspSessionID, status, errorCode, HTTP_SHIBIDENTITYPROVIDER, HTTP_SHIBSESSIONINDEX, HTTP_FISCALNUMBER,Response, LOA, Canale) values (@fixation, @ip, @ipuser, @session, @ACCESSO,@errorCode, @shibIdentityProvider, @shibSessionIndex,@codicefiscale, @responseFedera,@LOA,@Canale)", ApplicationCommon.Application["ConnectionString"], parCollection: sqlParams);
+        }
+        catch(Exception ex)
+        {
+
+        }
+       
+    }
+
+	string normalizza(int value)
+	{	
+		string _normalizza = string.Empty;
+		if( (CStr(value).Length) < 2){
+			_normalizza = $"0{CStr(value)}";
+		}
+		else
+		{
+			_normalizza = CStr(value);
+		}
+
+		return _normalizza;
+	}
+
+    drawContent();
+}
+@Html.Raw(htmlToReturn.Out())

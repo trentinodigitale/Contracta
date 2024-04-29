@@ -1,0 +1,80 @@
+﻿@page "/CustomDoc/GetDescrizioneAttiGara.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.GetDescrizioneAttiGaraModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.GetDescrizioneAttiGaraModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdb = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string IDDOC;
+	string ISUBTYPE;
+	string OrderFile;
+	dynamic objPostaread;
+	string strDescAtti;
+
+	IDDOC = CStr(GetParamURL(Request.QueryString.ToString(), "IDDOC"));
+
+	validate("IDDOC", IDDOC, TIPO_PARAMETRO_NUMERO, 0, "", 0, HttpContext, session);
+
+	strDescAtti = "";
+
+	//Commentato, BVEP-5498
+	//TSRecordSet? rs = cdb.GetRSReadFromQuery_("select idmsg,isubtype from tab_messaggi_fields where idmsg=" + Strings.Replace(IDDOC, "'", "''"), ApplicationCommon.Application.ConnectionString);
+
+	//if(rs != null && rs.RecordCount > 0 ){
+
+	//	rs.MoveFirst();
+
+	//	//'Response.Write rs("idmsg").value
+	//	//'Response.End
+
+	//	ISUBTYPE = CStr(rs["isubtype"]);
+
+	//	if (ISUBTYPE == "48" ){
+	//		OrderFile = "4";
+	//	}
+
+	//	if (ISUBTYPE == "68" ){
+	//		OrderFile = "7";
+	//	}
+
+	//	//'--RECUPERO RS CHE CONTIENE LE DESC DEGLI ATTI DI GARA
+	//	//set objPostaread= mycreateobject(BuildProgId("AFLSrv.BOPostaRead"), AppServer)
+	//	//TSRecordSet rsAtti = objPostaread.GetRsFromAttach(clng(IDDOC), cint(OrderFile))
+
+	//	//if (rsAtti.RecordCount > 0){
+
+	//	//	rsAtti.Sort("NUMRIGA ASC");
+	//	//	rsAtti.MoveFirst();
+
+	//	//	while (!rsAtti.EOF){
+
+	//	//		if (string.IsNullOrEmpty(strDescAtti)){
+	//	//			strDescAtti = CStr(rsAtti["DESCRATTACH"]);
+	//	//		}else{
+	//	//			strDescAtti = strDescAtti + "@@@" + CStr(rsAtti["DESCRATTACH"]);
+	//	//		}
+
+
+	//	//		rsAtti.MoveNext();
+	//	//	}
+
+	//	//}
+	//	throw new NotImplementedException("Errore nella pagina /CustomDoc/GetDescrizioneAttiGara.asp");
+	//}
+
+	htmlToReturn.Write(strDescAtti);
+	
+}
+@Html.Raw(htmlToReturn.Out())

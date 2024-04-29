@@ -1,0 +1,150 @@
+html 
+{
+    height: 100%;
+	font-size: 8pt;
+}
+body
+{
+    height: 100%;
+    /*overflow: hidden;*/
+}
+TABLE.MsgBox
+{
+}
+TABLE.MsgBox_Caption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 14pt;
+    BORDER-BOTTOM: thin solid;
+    FONT-FAMILY: Arial
+}
+.MsgBox_ButtonOK
+{
+}
+TD.MsgBox_Message
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 11pt;
+    FONT-FAMILY: Arial
+}
+DIV.OVER_MSG
+{
+    BORDER-RIGHT: 1px solid;
+    PADDING-RIGHT: 10px;
+    BORDER-TOP: 1px solid;
+    PADDING-LEFT: 10px;
+    PADDING-BOTTOM: 5px;
+    BORDER-LEFT: 1px solid;
+    PADDING-TOP: 5px;
+    BORDER-BOTTOM: 1px solid;
+    BACKGROUND-COLOR: white;
+	WIDTH:400;
+	COLOR:black;
+}
+TABLE.OverMsg
+{
+	COLOR:black;
+}
+TABLE.OverMsg_Caption
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    BORDER-BOTTOM: thin solid;
+    FONT-FAMILY: Arial;
+	COLOR:black;
+}
+.OverMsg_ButtonOK
+{
+}
+TD.OverMsg_Message
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 11pt;
+    FONT-FAMILY: Arial;
+	COLOR:black;
+}
+DIV.INFO_BOX
+{
+    BORDER-RIGHT: black 1px solid;
+    BORDER-TOP: black 1px solid;
+    Z-INDEX: 1001;
+    FILTER: alpha(opacity=50);
+    BORDER-LEFT: black 1px solid;
+    WIDTH: 100%;
+    BORDER-BOTTOM: black 1px solid;
+    BACKGROUND-COLOR: silver;
+    opacity: .50;
+    moz-opacity: 0.5
+}
+.INFO_BOX_TB
+{
+}
+TD.INFO_BOX_TD
+{
+    BORDER-RIGHT: #fff 1px solid;
+    BORDER-TOP: #fff 1px solid;
+    BORDER-LEFT: #fff 1px solid;
+    BORDER-BOTTOM: #fff 1px solid;
+    moz-border-radius: 10px
+}
+SELECT
+{
+    Z-INDEX: 1
+}
+TABLE.INFO_BOX_WIN_TB
+{
+    BORDER-RIGHT: 1px solid;
+    BORDER-TOP: 1px solid;
+    BORDER-LEFT: 1px solid;
+    BORDER-BOTTOM: 1px solid;
+    BACKGROUND-COLOR: #b0c4de
+}
+TD.INFO_BOX_WIN_CAPTION
+{
+    FONT-SIZE: 15pt;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    HEIGHT: 30px;
+    BACKGROUND-COLOR: #b0c4de;
+    TEXT-ALIGN: center
+}
+TD.INFO_BOX_WIN_CELL
+{
+    BORDER-RIGHT: 1px solid;
+    PADDING-RIGHT: 10px;
+    BORDER-TOP: 1px solid;
+    PADDING-LEFT: 10px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 5px;
+    BORDER-LEFT: 1px solid;
+    WIDTH: 400px;
+    PADDING-TOP: 5px;
+    BORDER-BOTTOM: 1px solid;
+    FONT-FAMILY: Arial;
+    HEIGHT: 150px;
+    BACKGROUND-COLOR: white;
+    TEXT-ALIGN: center
+}
+TD.caption
+{
+    FONT-SIZE: 15pt;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: #b0c4de
+}
+TD.elaborazione
+{
+    BORDER-RIGHT: #b0c4de 3px solid;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: #b0c4de 3px solid;
+    BORDER-BOTTOM: #b0c4de 3px solid;
+    FONT-FAMILY: Arial
+}
+TABLE.INFO_BOX
+{
+    WIDTH: 100%;
+    HEIGHT: 100%;
+    TEXT-ALIGN: center
+}

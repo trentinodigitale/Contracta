@@ -1,0 +1,1339 @@
+﻿@page "/CTL_LIBRARY/PDF/importabustefirmate.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.IO;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonDB.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.PDF.importa_zip_pdfModel;
+@*//TODO: <!-- #Include File="../Functions/sendMailError.inc" -->*@
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.CtlProcess;
+@using Microsoft.VisualBasic
+@using Chilkat
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.CommonModule.Const;
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	//tipoZip
+	string strSqlBusteEconomiche;
+	string strSqlBusteTecniche;
+	TSRecordSet rsBuste;
+	bool esito;
+	var sqlParams = new Dictionary<string, object?>();
+
+	string idOfferta = CStr(GetParamURL(Request.QueryString.ToString(), "ID_OFFERTA")).Trim();
+
+	//'-- Se l'utente sta richiedendo un nuovo import, ripuliamo e ne iniziamo uno nuovo
+	if (!string.IsNullOrEmpty(idOfferta)) 
+	{
+		session["id_offerta"] = idOfferta;
+		string codOperation = CStr(session["guid_buste_offerta"]);
+		ApplicationCommon.Application[$"buste-{CStr(session["id_offerta"])}"] = string.Empty;
+		pulisci_e_scarica();
+		finishImport(codOperation);
+	}
+
+	//'-- Se � la prima operazione e non si sta passando l'id dell'offerta
+	if (string.IsNullOrEmpty(idOfferta) && string.IsNullOrEmpty(CStr(session["guid_buste_offerta"]))) 
+	{
+		message("Parametro ID_OFFERTA Obbligatorio");
+	} 
+	else 
+	{
+		validate( "ID_OFFERTA", idOfferta , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+		validate("tipoZip", idOfferta, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	}
+
+	idOfferta = CStr(session["id_offerta"]);
+
+	//'-- Verifico se � la prima invocazione
+	if (string.IsNullOrEmpty(CStr(session["guid_buste_offerta"])))
+	{
+		initImport(idOfferta);
+
+		if (CLng(session["tot_record"]) > 0) 
+		{
+			visualizzaPercentuale(0);
+		}
+		else
+		{
+			string codiceOperazione = session.SessionIDMinimal;
+			finishImport(codiceOperazione);
+
+			if (!string.IsNullOrEmpty(CStr(session["zip_error"])) ) 
+			{
+				viewMessage(CStr(session["zip_error"]));
+			}
+			else
+			{
+				viewMessage("File zip vuoto");
+			}
+		}
+	}
+	else
+	{
+		string codOperation = CStr(session["guid_buste_offerta"]);
+		//'start_id = clng( session("id_start") )	
+		int totLotti = CInt(session["tot_record"]);
+		//'end_id = start_id + clng(totLotti/100) + 1
+
+		//'-- Calcolo la percentuale totale di elaborazione
+		int perc = CInt(100 - CLng(100/totLotti * CLng(totLotti-CInt(session["tot_elaborati"]) ) ));
+
+		//'-- Aggiornamento variabili in sessione
+		session["percentuale"] = perc;
+		//'session("id_start") = end_id
+
+		//'response.end
+
+		execStepImport();
+
+		//'response.write "TOT ELABORATI : " & session("tot_elaborati")
+		//'response.write "TOT DA FARE : " & totLotti
+		//'response.end
+
+		//'-- se abbiamo elaborato tutti i lotti usciamo altrimenti ri-iteriamo
+		if (CLng(session["tot_elaborati"]) >= CLng(totLotti) ) 
+		{
+			session["percentuale"] = -100;
+			visualizzaPercentuale(-100);
+
+			codOperation = session.SessionIDMinimal;
+			session["percentuale"] = CLng(0);
+			session["guid_buste_offerta"] = "";
+			ApplicationCommon.Application["buste-" + CStr(session["id_offerta"])] = "";
+			pulisci_e_scarica();
+			finishImport(codOperation);
+			//response.end
+			throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+		}
+		else
+		{
+			visualizzaPercentuale( perc );
+		}
+	}
+
+	throw new ResponseEndException(htmlToReturn.Out(),Response, "");
+
+	void execStepImport()
+	{
+		Dictionary<string,string>.ValueCollection elementi;
+		Dictionary<string,string>.KeyCollection chiavi;
+		string item;
+		string chiave;
+		int i;
+		string numeroLotto;
+		string nomeFile;
+		string esito;
+
+		string idOfferta = CStr(session["id_offerta"]);
+
+		Dictionary<string,string> collezione = session["lista_file"];
+
+		chiavi   = collezione.Keys;
+		elementi = collezione.Values;
+
+		//'-- elaboro 1 file alla volta vedendo il prossimo non ancora elaborato
+		for (i = 0; i <= collezione.Count -1; i++)
+		{ // To collezione.Count - 1
+			chiave = chiavi.ElementAt(i);
+			item = elementi.ElementAt(i);
+
+			//'-- se l'elemento non � gia stato elaborato
+			if ( string.IsNullOrEmpty(CStr(item))) 
+			{
+				esito = "OK";
+				session["tot_elaborati"] = CInt(session["tot_elaborati"]) + 1;
+
+				//'-- recupero il numero lotto e vedo se � una busta tecnica o economica
+
+				//'-- conservo il nome del file pulito dal percorso
+				string[] fv = Strings.Split(chiave, @"\");
+				nomeFile = fv[ fv.Length -1];
+
+				//'-- se � un economica
+				if (Strings.InStr(1, nomeFile, CStr("busta_eco"), CompareMethod.Text ) > 0)
+				{
+					//'-- ripulisco il nomeFile per ottenere il numero lotto
+					//'numeroLotto =  replace(nomeFile, "busta_eco_","") 
+					//'numeroLotto = replace(numeroLotto , ".pdf", "")
+					//'numeroLotto = replace(numeroLotto , ".p7m", "")
+
+					numeroLotto = getLottoFromNomeFile("busta_eco_", nomeFile);
+
+					if (IsNumeric(numeroLotto))
+					{
+						//'-- recuperato il numero lotto verifico se per l'offerta in oggetto e per questo numero lotto
+						//'-- non � gia stato firmato ed allegato il file
+						sqlParams.Clear();
+						sqlParams.Add("@idOfferta", CInt(idOfferta));
+						sqlParams.Add("@numeroLotto", numeroLotto);
+						strSqlBusteEconomiche = "select firme.idHeader from Document_MicroLotti_Dettagli lotti with (nolock) ";
+						strSqlBusteEconomiche = $"{strSqlBusteEconomiche} inner join Document_Microlotto_Firme firme with (nolock) ON lotti.Id = firme.idHeader and firme.F1_SIGN_ATTACH = '' ";
+						strSqlBusteEconomiche = $"{strSqlBusteEconomiche} where lotti.IdHeader = @idOfferta and lotti.TipoDoc = 'OFFERTA' and lotti.NumeroLotto = @numeroLotto";
+
+						//'response.write strSqlBusteEconomiche
+						//'response.end
+
+						TSRecordSet rsBuste = cdf.GetRSReadFromQuery_(strSqlBusteEconomiche, CStr(ApplicationCommon.Application["ConnectionString"]), sqlParams);
+
+						if (rsBuste.RecordCount > 0 )
+						{
+							rsBuste.MoveFirst();
+
+							esito = elaboraFile(chiave, "F1", "IdHeader", "Document_Microlotto_Firme", CInt(rsBuste["idHeader"]!));
+
+							//'-- se esito � vuoto � andato tutto bene altrimenti in esito sar� presente l'errore
+							if (string.IsNullOrEmpty(esito)) 
+							{
+								esito = "OK";
+							}
+						}
+						else
+						{
+							esito = "Firma gia allegata";
+						}
+					}
+					else
+					{
+						esito = "Nome file non corretto";
+					}
+				}
+				else
+				{
+					//'-- ripulisco il nomeFile per ottenere il numero lotto
+					//'numeroLotto =  replace(nomeFile, "busta_tec_","") 
+					//'numeroLotto = replace(numeroLotto , ".pdf", "")
+					//'numeroLotto = replace(numeroLotto , ".p7m", "")
+					numeroLotto = getLottoFromNomeFile("busta_tec_", nomeFile);
+
+					if (IsNumeric(numeroLotto))
+					{
+						//'-- recuperato il numero lotto verifico se per l'offerta in oggetto e per questo numero lotto
+						//'-- non � gia stato firmato ed allegato il file
+						sqlParams.Clear();
+						sqlParams.Add("@idOfferta", CInt(idOfferta));
+						sqlParams.Add("@numeroLotto", numeroLotto);
+						strSqlBusteTecniche = " select firme.idHeader from Document_MicroLotti_Dettagli lotti with (nolock) ";
+						strSqlBusteTecniche = $"{strSqlBusteTecniche} inner join Document_Microlotto_Firme firme with (nolock) ON lotti.Id = firme.idHeader and firme.F2_SIGN_ATTACH = '' ";
+						strSqlBusteTecniche = $"{strSqlBusteTecniche} where lotti.IdHeader = @idOfferta and lotti.TipoDoc = 'OFFERTA' and lotti.NumeroLotto = @numeroLotto";
+
+						rsBuste = cdf.GetRSReadFromQuery_(strSqlBusteTecniche, CStr(ApplicationCommon.Application["ConnectionString"]), sqlParams);
+
+						if (rsBuste.RecordCount > 0)
+						{
+							rsBuste.MoveFirst();
+
+							esito = elaboraFile(chiave, "F2", "IdHeader", "Document_Microlotto_Firme", CInt(rsBuste["idHeader"]!));
+
+							//'-- se esito � vuoto � andato tutto bene altrimenti in esito sar� presente l'errore
+							if ( string.IsNullOrEmpty(esito)) 
+							{
+								esito = "OK";
+							}
+						}
+					}
+					else
+					{
+						esito = "Nome file non corretto";
+					}
+				}
+
+				//'response.write chiave
+				//'response.write "<h1>ESITO : " & esito & "</h1>"
+
+				collezione[chiave] = CStr(esito);
+				//'collezione(i) = esito
+
+				session["lista_file"] = collezione;
+
+				break;
+			}
+		}
+	}
+
+	void pulisci_e_scarica()
+	{
+		pulisciFilesUtente();
+	}
+
+	void initImport(string idOfferta)
+	{
+		string codiceOperazione = session.SessionIDMinimal;
+
+		//on error goto 0
+
+		Dictionary<string, string> collezione = new Dictionary<string, string>();
+
+		//'-- Creo la directory di lavoro
+		string nomeFileTemporaneo = CommonStorage.GetTempName();//= fs.GetTempName
+		string nomeDirectoryTemporanea = CStr(session["idPfu"]) + nomeFileTemporaneo;
+
+		string path = CStr(ApplicationCommon.Application["PathFolderAllegati"]);
+
+		session["dir_lavoro_buste"] = CStr(path + nomeDirectoryTemporanea);
+
+		CommonStorage.CreateDirectory($"{path}{nomeDirectoryTemporanea}");  //fs.CreateFolder(cstr(path & nomeDirectoryTemporanea))
+
+		//'-- scarico il file zip che ho in request nella directory appena creata e mi faccio restituire il nomeFile dello zip
+		string fileZip = saveAttach($"{path}{nomeDirectoryTemporanea}");
+
+		fileZip = $@"{path}{nomeDirectoryTemporanea}\{fileZip}".ToLower();
+
+		//'-- estraggo il contenuto del file zip nella directory di lavoro
+		try
+		{
+			new eProcurementNext.Razor.Zip().UnPack(fileZip, $@"{path}{nomeDirectoryTemporanea}\");
+		}
+		catch(Exception ex)
+		{
+			session["lista_file"] = collezione;
+			session["dir_temp_lavoro"] = $@"{path}{nomeDirectoryTemporanea}\";
+			session["percentuale"] = CLng(0);
+			session["tot_elaborati"] = CLng(0);
+			session["guid_buste_offerta"] = codiceOperazione;
+			session["tot_record"] = CLng(0);
+			session["id_offerta"] = idOfferta;
+			session["id_start"] = CLng(0);
+			session["id_last"] = CLng(0);
+			session["zip_error"] = "Errore estrazione file zip : " + ex.Message;
+			return;
+		}
+
+		int fileCount = 0;
+
+		getAllFiles($@"{path}{nomeDirectoryTemporanea}\", collezione);
+
+		//'-- rimuovo dalla collezione il file zip stesso
+		collezione.Remove(fileZip.Trim());
+
+		fileCount = collezione.Count;
+
+		session["lista_file"] = collezione;
+		session["dir_temp_lavoro"] = $@"{path}{nomeDirectoryTemporanea}\";
+		session["percentuale"] = CLng(0);
+		session["tot_elaborati"] = CLng(0);
+		session["guid_buste_offerta"] = codiceOperazione;
+		session["tot_record"] = CLng(fileCount);
+		session["id_offerta"] = idOfferta;
+		session["id_start"] = CLng(1);
+		session["id_last"] = CLng(fileCount);
+
+		string jumpSign = "NO";
+		string? paramJumpSign = Get_Func_Property("OFFERTA", "jumpsign", "DefaultValue", "NO", -1);
+
+		if (!string.IsNullOrEmpty(paramJumpSign) && paramJumpSign.ToUpper() == "YES" )
+		{
+			jumpSign = "YES";
+		}
+
+		session["buste_jumpsign"] = CStr(jumpSign);
+
+		string jumpCheck = CStr(GetParamURL(Request.QueryString.ToString(), "JUMP_CHECK"));
+		string ControlloOnlyHash = CStr(GetParamURL(Request.QueryString.ToString(), "ControlloOnlyHash"));
+		//'jumpCheck = "YES"
+
+		if (jumpCheck.ToUpper() == "YES")
+		{
+			session["buste_jump_check"] = "YES";
+		}
+		else
+		{
+			session["buste_jump_check"] = "NO";
+		}
+
+		if (ControlloOnlyHash.ToUpper() == "YES")
+		{
+			session["ControlloOnlyHash"] = "YES";
+		}
+		else
+		{
+			session["ControlloOnlyHash"] = "NO";
+		}
+	}
+
+	void getAllFiles(string path, Dictionary<string,string> collezione)
+	{
+		string folder_ = System.IO.Path.GetDirectoryName(path);
+		System.IO.DirectoryInfo folder = new System.IO.DirectoryInfo(folder_);
+
+		//'response.write path
+		//'response.end
+
+		//'Lista delle sotto directory
+		foreach (var item in folder.GetDirectories())
+		{
+			getAllFiles(item.FullName + @"\", collezione);
+		}
+
+		//'Lista dei file
+		foreach (var item in folder.GetFiles())
+		{
+			collezione.Add(CStr(item.FullName).ToLower(), "");
+		}
+	}
+
+	void pulisciFilesUtente()
+	{
+		//on error resume next
+		//dim objFolder
+		//dim fs
+		//set fs = Server.CreateObject("Scripting.FileSystemObject")
+		//Set objFolder = fs.GetFolder(cstr(session("dir_lavoro_buste")))
+		//set fs = nothing
+		//objFolder.Delete
+		//set objFolder = nothing
+		//on error goto 0
+		CommonStorage.DeleteDirectory(CStr(session["dir_lavoro_buste"]));
+	}
+
+	void ritornaFile(string strFilePath)
+	{
+
+	}
+
+	void elaboraBuste(dynamic rsBuste, dynamic TipoDoc, dynamic prefissoFile, dynamic areaSign, dynamic pageOrientation, dynamic path)
+	{
+
+	}
+
+	void ShowError( string ErrText )
+	{
+		throw new ResponseRedirectException("../MessageBoxWin.asp?ML=yes&MSG=" + URLEncode(TruncateMessage(ErrText)) + "&CAPTION=Errore&ICO=2", Response);
+	}
+
+	//'-- ritorna un rs passata la query
+	TSRecordSet GetRS( string strSql)
+	{
+		//'on error resume next
+		//dim obj
+		//dim rs
+
+		//set obj = server.CreateObject("ctldb.clsTabManage")
+		return cdf.GetRSReadFromQuery_(CStr(strSql), ApplicationCommon.Application.ConnectionString);
+		//set rs = obj.GetRSReadFromQuery( cstr(strSql ) , cstr(session("Session")(8)) )
+
+		//set obj = nothing
+
+		//set GetRS = rs
+		//'err.clear
+
+	}
+
+	void visualizzaPercentuale( int x )
+	{
+		htmlToReturn.Write($@"
+			<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Transitional//EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"">
+			<html xmlns=""http://www.w3.org/1999/xhtml"">
+			<head>
+				<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"" />
+				<title>Loading</title>
+
+				<style>
+					body, html{{ background:#fff; font-family:Arial, Helvetica, sans-serif; color:#333;}}
+					.main{{ width:400px; height:200px; /*background:#1B1C1C;*/ margin:0 auto; padding:20px 20px 20px 20px;}}
+					.loadingbox{{ width:300px; height:30px; margin:10px 0px 0px 50px; border:5px solid #ccc; /*#323f4f; background:#323f4f*/ background:#333 url(./LoadingBar.png) no-repeat;}}
+					.loading{{ width:300px; height:30px; background: url(./bg.png) top left no-repeat; margin:auto;}}
+					.end{{ background:#333; height:30px;}}
+					.button_center {{margin:0 auto;}}
+					p{{ text-align:center; color:#333; font-size:12px;}}
+					span{{color:#666; text-align:center; font-size:18px; font-weight:bold;}}
+					h1{{ font-size:16px; font-weight:normal; text-align:center;}}
+					.completata{{color:#ececec; padding:7px; text-align:center}}
+					.riepilogo{{ margin: 0 auto;}}
+					ul{{ list-style-type:none;}}
+					li{{ padding-left:120px;}}
+					.red{{ color:#990000;}}
+
+					.classe_tabella_errori {{ text-align:left; border:1px solid #ccc; border-collapse:collapse;   }}
+					.classe_tabella_errori th {{ background: #ccc; color: #333; padding:7px; text-aglign:center }}
+
+					.classe_tabella_errori td {{ padding: 7px }}
+
+					.tr_dispari {{ background: #ececec; }}
+
+				</style>
+
+				<link rel=""stylesheet"" href=""../Themes/caption.css"" type=""text/css""/>
+				<link rel=""stylesheet"" href=""../Themes/buttonbar.css"" type=""text/css""/>
+
+
+				<script type=""text/javascript"">
+
+						function OnBeforeUnLoad () 
+						{{
+							var xmlhttp;
+							var dateNoCache;
+
+							xmlhttp=new XMLHttpRequest();
+							dateNoCache = new Date().getTime();
+
+							xmlhttp.open(""GET"",""pulisciSessioneBuste.asp?nocache="" + dateNoCache,false);
+							xmlhttp.send(null);
+						}}
+
+						function sleep(milliseconds) {{
+						var start = new Date().getTime();
+						for (var i = 0; i < 1e7; i++) {{
+							if ((new Date().getTime() - start) > milliseconds){{
+							break;
+							}}
+						}}
+						}}
+
+						//window.onbeforeunload = OnBeforeUnLoad;
+
+					</script>
+
+
+			</head>
+			<!-- <body onload=""location.reload(true);"" id=""body""> -->
+				");
+		if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))){
+			htmlToReturn.Write($@"
+				<!-- <body onload="" if (document.getElementById('esito') == 'inCorso') {{ alert(1); window.location = '/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + $@"/ctl_Library/pdf/importaBusteFirmate.asp'; }}"" id=""body""> -->
+				");
+		}else{
+			htmlToReturn.Write($@"
+				<!-- <body onload="" if (document.getElementById('esito') == 'inCorso') {{ alert(1); window.location = '/Application/ctl_Library/pdf/importaBusteFirmate.asp'; }}"" id=""body""> -->
+				");
+		}
+		htmlToReturn.Write($@"
+			<body id=""body""> 
+
+				<table width=""100%"" class=""Caption"" id="""" border=""0"" cellspacing=""0"" cellpadding=""0"">
+					<td width=""100%"">
+						" + ApplicationCommon.CNV("Importazione buste firmate") + $@"
+					</td>
+				</tbody>
+				</table>
+
+				<img style=""display:none"" src=""LoadingBar.png""/>
+				<img style=""display:none"" src=""bg.png""/>
+
+				<div class=""main"" id=""main"">
+
+		");
+		if (x == -100){
+			//'call pulisci_e_scarica()
+			htmlToReturn.Write($@"	
+						<!-- <p><span>100%</span></p>	 -->
+
+						<input type=""hidden"" id=""esito"" value=""fine""/>
+
+						<div class=""loading end"">
+							<p class=""completata"">
+								" + ApplicationCommon.CNV("Elaborazione terminata") + $@"
+							</p>
+						</div>
+						<p style=""color:#333"">
+
+							");
+
+			//'-- tabella degli errori
+			Dictionary<string, string> collezione = session["lista_file"];
+
+			string output;
+			int totErr;
+
+			output = "";
+			totErr = 0;
+
+			Dictionary<string, string>.KeyCollection chiavi   = collezione.Keys;
+			Dictionary<string, string>.ValueCollection elementi = collezione.Values;
+
+			//'-- elaboro 1 file alla volta vedendo il prossimo non ancora elaborato
+			for (int i = 0; i<=collezione.Count -1; i++){ //To collezione.Count - 1
+
+				string chiave = chiavi.ElementAt(i);
+				string item = elementi.ElementAt(i);
+
+				//'-- se l'elemento � in errore
+				if ( !string.IsNullOrEmpty(CStr(item)) && CStr(item) != "OK" ) {
+
+					totErr = totErr + 1;
+
+					string[] fv = Strings.Split(chiave, @"\");
+					string nomeFile = fv[fv.Length -1];
+
+					if (totErr % 2 == 0 ){
+						output = output + "<tr>" ;
+					}else{
+						output = output + @"<tr class=""tr_dispari"">" ;
+					}
+
+
+
+					output = output + "<td>" ;
+					output = output + nomeFile;
+					output = output + "</td>" ;
+
+					output = output + "<td>" ;
+					output = output + item;
+					output = output + "</td>"; 
+
+					output = output + "</tr>";
+				}
+
+			}
+
+			if (!string.IsNullOrEmpty(output)){
+
+				htmlToReturn.Write($@"<table class=""classe_tabella_errori"">");
+
+				htmlToReturn.Write($@"<tr align=""center"">");
+				htmlToReturn.Write($@"<td colspan=""2"">");
+				htmlToReturn.Write($@"<strong>");
+				htmlToReturn.Write(ApplicationCommon.CNV("Riepilogo anomalie"));
+				htmlToReturn.Write($@"</strong>");
+				htmlToReturn.Write($@"</td>");
+				htmlToReturn.Write($@"<tr>");
+
+				htmlToReturn.Write($@"<th>");
+				htmlToReturn.Write($@"<strong>Nome file</strong>");
+				htmlToReturn.Write($@"</th>");
+
+				htmlToReturn.Write($@"<th>");
+				htmlToReturn.Write($@"<strong>Errore</strong>");
+				htmlToReturn.Write($@"</th>");
+
+				htmlToReturn.Write($@"</tr>");
+
+				htmlToReturn.Write(output);
+
+				htmlToReturn.Write($@"</table>");
+
+				traceInLogUtente( 1, "", "3 Click SIGN concluso con anomalie: " + output, HttpContext, session);
+
+			}else{
+
+				traceInLogUtente( 1, "", "3 Click SIGN concluso senza errori", HttpContext, session);
+
+			}
+
+			htmlToReturn.Write($@"
+
+						</p>
+						<script type=""text/javascript"">
+							try {{ opener.RefreshDocument('/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + $@"/ctl_library/document/'); }} catch(e) {{}}
+						</script>
+
+				");
+		}else{
+			htmlToReturn.Write($@"	
+
+					<input type=""hidden"" id=""esito"" value=""inCorso""/>
+
+					<p>
+						<span>Elaborati " + session["tot_elaborati"] + $@" di " + session["tot_record"] + $@"</span>
+					</p>
+
+
+						<script type=""text/javascript"">
+
+							var intervallo;
+							intervallo = window.setInterval( function(){{ricarica()}} ,100);
+
+							function ricarica()
+							{{
+								window.clearInterval(intervallo);
+								window.location = '/" + CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]) + $@"/ctl_Library/pdf/importaBusteFirmate.asp?ID_OFFERTA=';
+							}}
+
+						</script>
+
+
+					<div class=""loadingbox"" style=""background-position: " + (300/100)*CLng(x) + $@"px;"">
+						<div class=""loading"">
+						</div>
+					</div>			
+
+				");
+			htmlToReturn.Write("<p>" + ApplicationCommon.CNV("Elaborazione in corso") + "</p>");	
+
+		}
+
+		htmlToReturn.Write($@"
+
+
+
+			</div>
+
+			");
+		if (x <= 0){
+			htmlToReturn.Write($@"
+
+					</body>
+					</html>
+				");
+
+		}
+
+		//Response.Flush 
+
+	}
+
+	void viewMessage ( string msg )
+	{
+		htmlToReturn.Write($@"<script language=""javascript"">");
+		htmlToReturn.Write($@" //try {{ opener.RefreshContent(); }} catch(e) {{}}");
+		htmlToReturn.Write($@"</script>");
+
+		traceInLogUtente( 1, "", "3 Click SIGN concluso con anomalie: " + msg, HttpContext, session);
+
+		//Response.Flush 
+
+		redirectJS ("../MessageBoxWin.asp?MSG=" + ApplicationCommon.CNV(msg) + "&CAPTION=ESITO");
+
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+
+	void message(string msg )
+	{
+		throw new ResponseRedirectException("../MessageBoxWin.asp?ML=yes&MSG=" + URLEncode(TruncateMessage(msg)) + "&CAPTION=Info&ICO=1", Response);
+	}
+
+	void redirectJS(string page)
+	{
+		htmlToReturn.Write($@"<script language=""javascript"">");
+		htmlToReturn.Write($@"window.location.href = '" + CStr(page).Replace("'", @"\'") + "';");
+		htmlToReturn.Write($@"</script>");
+		//Response.flush
+
+		throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+	}
+
+	//'--attiva l'esecuzione dei processi su un documento nuovo
+	bool ExecuteProcess(string strProcessName, string strDocType, string strDocKey)
+	{
+		ELAB_RET_CODE vRetCode;
+		string strDescrRetCode = string.Empty;
+
+		string mp_strConnectionString = ApplicationCommon.Application.ConnectionString;
+
+		eProcurementNext.CtlProcess.ClsElab obj = new eProcurementNext.CtlProcess.ClsElab();
+
+		try
+		{
+			vRetCode = obj.Elaborate(strProcessName, strDocType, strDocKey, CLng(session["idpfu"]), ref strDescrRetCode, 1, mp_strConnectionString);
+		}
+		catch (Exception ex)
+		{
+			TracciaErrore("genera_buste.asp.ExecuteProcess(" + strProcessName + ")", ex.Message, "err.number", "ExecuteProcess()");
+			return false;
+		}
+		//'Public Function ElaborateWeb(ByVal strProcessName As String, ByVal strDocType As String, ByVal strDocKey As Variant, ByVal lIdPfu As Long, strDescrRetCode As Variant, Optional vIdMp As Variant, Optional vConnectionString As Variant) As Variant
+
+		//'-- se c'� stato un errore gestito
+		if (vRetCode != ELAB_RET_CODE.RET_CODE_OK)
+		{
+			TracciaErrore("genera_buste.asp.ExecuteProcess(" + strProcessName + ")", strDescrRetCode, "0", "ExecuteProcess()");
+			//strOutput= strDescrRetCode
+			return false;
+		}
+		return true;
+	}
+
+
+	void TracciaErrore(string source, string text, string tipo, string oggetto)
+	{
+		//Dim l
+		//set l = CreateObject("AFLLogSrvc.logSrvc")
+
+		//If Not (l Is Nothing) Then
+		//	l.LogNTEvent CStr(text), CStr(oggetto), CStr(source), clng(1), CLng(0)
+		//end if
+
+		//Set l = Nothing
+		TraceErr(new Exception(), ApplicationCommon.Application.ConnectionString, CStr(text) +  CStr(oggetto) +  CStr(source) + CLng(1) + CLng(0));
+	}
+
+	void execSQL(string strSql)
+	{
+
+		//dim obj
+
+		//set obj = server.CreateObject("ctldb.clsTabManage")
+		//call obj.ExecSql( cstr(strSql) , cstr(session("Session")(8)) )
+		cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString);
+		//'if err.number <> 0 then
+		//'	TracciaErrore "genera_buste.asp.execSQL()", err.description, err.number, "execSQL()"
+		//'end if
+
+		//set obj = nothing
+
+	}
+
+	void finishImport(string codiceOperazione)
+	{
+		//on error resume next
+
+		clearOperation(codiceOperazione);
+
+		session["check_warning_lotti"] = "";
+		session["tot_record"] = CLng(-1);
+		session["id_start"] = CLng(-1);
+		session["guid_buste_offerta"] = "";
+		session["lista_file"] = null;
+		//'session("id_offerta") = ""
+		//'session("dir_temp_lavoro") = ""
+		//'session("percentuale") = clng(0)
+
+		//'-- Invoco il processo 'CONTROLLOFIRMABUSTE,OFFERTA' solo per i giri di non verifica firma buste
+		if (CStr(session["ControlloOnlyHash"]).ToUpper() == "YES"){
+			esito = ExecuteProcess("CONTROLLOFIRMABUSTE","OFFERTA", idOfferta);
+		}
+		//on error goto 0
+	}
+
+	void clearOperation(string guidOperazione)
+	{
+		string strSql = "delete from Genera_Buste_Offerta where CodiceOperazione = '" + guidOperazione.Replace("'","''") + "'";
+
+		cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString);
+	}
+
+	//'Busta tecnica :
+	//'	uploadattachsigned.asp?TABLE=Document_Microlotto_Firme&IDDOC=49028&OPERATION=INSERTSIGN&IDENTITY=IdHeader&AREA=F2&DOMAIN=FileExtention&FORMAT=
+	//'
+	//'Busta economica : 
+	//'	uploadattachsigned.asp?TABLE=Document_Microlotto_Firme&IDDOC=49028&OPERATION=INSERTSIGN&IDENTITY=IdHeader&AREA=F1&DOMAIN=FileExtention&FORMAT=
+
+	string elaboraFile(string strPathFile, string area, string strIdentity, string tabellaFirma, dynamic idDoc)
+	{
+		string strToReturn;
+
+		Chilkat.Crypt2 crypt;
+		//'dim strPathFile
+		string strValueHash = "";
+		string strcause;
+		string pdfOrigin;
+		string[] arr;
+		TSRecordSet rsObj;
+		string strImprontaSave;
+		string strColAttachSign;
+
+		//'area = "F1"
+		//'strIdentity = "IdHeader"
+		//'tabellaFirma = "Document_Microlotto_Firme"
+
+		string jumpSign = CStr(session["buste_jumpsign"]);
+		string jumpCheck = CStr(session["buste_jump_check"]);
+		string ControlloOnlyHash = CStr(session["ControlloOnlyHash"]);
+
+		string strColName = $"{area}_SIGN_HASH";
+		strToReturn = string.Empty;
+
+		strColAttachSign = "SIGN_ATTACH";
+		if (!string.IsNullOrEmpty(area)) 
+		{
+			strColAttachSign = $"{area}_{strColAttachSign}";
+		}
+
+		//set fs=Server.CreateObject("Scripting.FileSystemObject") 
+		if (! CommonStorage.ExistsFile(strPathFile))
+		{//fs.FileExists(strPathFile) ) {
+			strToReturn = "il file non esiste";
+			return strToReturn;
+		}
+		//on error goto 0
+		//'response.write jumpSign
+		//'response.write jumpCheck
+
+		//'-- se non � stato richiesto il bypass dei controlli di firma o di tutti i controlli sul file
+		if (jumpSign != "YES" && jumpCheck != "YES")
+		{
+			crypt = new Chilkat.Crypt2(); //= Server.CreateObject("Chilkat.Crypt2")
+			string licenza = ConfigurationServices.GetKey("Chilkat:UNLOCK_KEY", "");
+			bool ChilkatActivated = crypt.UnlockComponent(licenza); //'licenza
+			if (!ChilkatActivated)
+			{
+				throw new Exception("Chilkat Library not activated");
+			}
+
+			//'se il file � un pdf
+			if (Strings.LCase(Strings.Right(strPathFile, 3)) == "pdf")  
+			{
+				if (ControlloOnlyHash == "YES" ) 
+				{
+					strcause = invokeLibrary("SIGN", strPathFile, "","", "false");
+				}
+				else 
+				{
+					strcause = invokeLibrary("SIGN", strPathFile, "","", "true");
+				}
+
+				if (Strings.Split(strcause, "#")[0] != "1" ) 
+				{
+					//' --- ERRORE SERVER
+					strToReturn = Strings.Split(strcause, "#")[1];
+					return strToReturn;
+				} 
+				else 
+				{
+					//'--recupero hash
+					strValueHash = Strings.Split(strcause, "#")[1];
+				}
+			} 
+			else 
+			{ //'se il file � un p7m
+				arr = Strings.Split(strPathFile, @"\");
+				pdfOrigin = arr[arr.Length - 1];
+				pdfOrigin = Strings.Left(strPathFile, strPathFile.Length - pdfOrigin.Length) + "senzaLaFirma.pdf";
+
+				//'Estraggo il file originale dal p7m e verifico se � corrotto
+				if (crypt.VerifyP7M(strPathFile, pdfOrigin) == true)  
+				{
+					//'Creiamo il txt a partire dal pdf estratto dal p7m e ne calcoliamo l'hash
+					strcause = invokeLibrary("SIGN", pdfOrigin, "","", "false");
+
+					if (Strings.Split(strcause, "#")[0] != "1" ) 
+					{
+						//' --- ERRORE SERVER
+						strToReturn = Strings.Split(strcause, "#")[1];
+						return strToReturn;
+					} 
+					else 
+					{
+						//'-- HASH DEL FILE
+						strValueHash = Strings.Split(strcause, "#")[1];
+					}
+				}
+				else 
+				{
+					string error = crypt.LastErrorText;
+					//'-- BUSTA P7M NON VALIDA
+					strToReturn = "Busta P7M non valida";
+					return strToReturn;
+				}	
+			}
+		} //'-- if jumpSign <> "YES" ) {
+
+		//'--recupero hash del pdf salvato sul documento   
+		rsObj = GetRS(CStr("Select " + strColName.Replace(" ", "") + "  From " + tabellaFirma.Replace(" ", "") + " Where " + strIdentity.Replace(" ", "") + " = " + CLng(idDoc)));
+		strImprontaSave = CStr(rsObj[strColName]);
+
+		//'--se il file coincide allora salvo il file come allegato e la sua codifica tecnica sul documento
+		if (strValueHash == strImprontaSave || jumpSign == "YES" || jumpCheck == "YES") 
+		{
+			//'--salvo il file in base dati
+			strcause = "salvo il file in base dati";
+			string[] aInfo;
+			string techValue;
+
+			//on error resume next
+			try
+			{
+				techValue = InsertCTL_Attach(strPathFile, idDoc);
+			}
+			catch(Exception ex)
+			{
+				//'-- Scriviamo l'errore nell'event viewer
+				//n = err.number
+				string s = ex.Source;
+				string d = ex.Message;
+
+				TraceErr(ex, ApplicationCommon.Application.ConnectionString, s + d + "importaBusteFirmate.asp");
+
+				strToReturn = "Errore nel caricamento del file in base dati";
+
+				if (CStr(ApplicationCommon.Application["dettaglio-errori"]).ToUpper() == "YES")
+				{
+					strToReturn = strToReturn + " : " + d;
+				}
+
+				return strToReturn;
+			}
+
+			//on error goto 0
+
+			aInfo = Strings.Split(techValue, "*");
+
+			string strFileName = aInfo[0];
+
+			//'--recupero type file
+			string strType = aInfo[1];
+
+			//'--recupero guid
+			string strHash = aInfo[3];
+			string strInfoTechAttach = techValue;
+			int idPfu = CInt(session["idPfu"]!);
+
+			//'-- recupero dell'idAzi dell'utente loggato
+			sqlParams.Clear();
+			sqlParams.Add("@idPfu", idPfu);
+			TSRecordSet tempRs = cdf.GetRSReadFromQuery_("select pfuIdAzi from ProfiliUtente with(nolock) where IdPfu = @idPfu", CStr(ApplicationCommon.Application["ConnectionString"]), sqlParams);
+			string idAzi = string.Empty;
+			if (tempRs.RecordCount > 0) 
+			{
+				tempRs.MoveFirst();
+				idAzi = CStr(tempRs["pfuIdAzi"]);
+			}
+
+			if (jumpSign != "YES" && jumpCheck != "YES") 
+			{
+				string mode;
+				if (Strings.Right(strPathFile, 3).ToUpper() == "P7M") 
+				{
+					mode = "VERIFICA_P7M";
+				} 
+				else 
+				{
+					mode = "VERIFICA_PDF";
+				}
+				string esito;
+				//'-- verifica estesa di firma digitale
+				if (ControlloOnlyHash == "YES") 
+				{
+					esito = invokeLibrary(mode, strPathFile, strHash, idAzi, "false");
+				} 
+				else 
+				{				
+					esito = invokeLibrary(mode, strPathFile, strHash, idAzi,"true");
+				}
+
+				if (esito != "" && Strings.Split(esito, "#")[0] != "1") 
+				{
+					//' --- ERRORE 
+					strToReturn = Strings.Split(esito, "#")[1];
+					return strToReturn;
+				} 
+				else 
+				{
+					//'-- se la verifica di firma � andata a buon fine andiam oa controllare ( se la sys lo prevede ) se il file � firmato da una CA autorizzata. se cos� non fosse blocchiamo.
+					strToReturn= isValidCertificatore(strHash);
+
+					//'--QUANDO non richiedo la firma delle buste sulla procedura svuota elabora file								
+					if (ControlloOnlyHash == "YES") 
+					{
+						strToReturn = string.Empty;
+					}				
+
+					if (!string.IsNullOrEmpty(strToReturn)) 
+					{
+						strToReturn = ApplicationCommon.CNV(strToReturn);
+					}
+				}
+			} //'--if jumpSign <> "YES" ) {
+			if (string.IsNullOrEmpty(strToReturn)) 
+			{
+				//'--aggiorno sul documento la codifca tecnica dell 'allegato di firma
+				string strSql = "update " + tabellaFirma.Replace(" ", "") + " set " + strColAttachSign.Replace(" ", "") + "='" + strInfoTechAttach.Replace("'", "''") + "' Where " + strIdentity.Replace(" ", "") + " = " + CLng(idDoc);
+
+				//'response.write strSql
+				//'response.flush
+
+				execSQL(strSql);
+			}
+			if (jumpCheck == "YES")
+			{
+				string strSQL = "INSERT INTO CTL_SIGN_ATTACH_INFO ( ATT_Hash, nomeFile, statoFirma, idazi, HASH_PDF_FIRMA ) values ( '" + strHash.Replace("'", "''") + "', '" + strFileName.Replace("'", "''") + "', 'SIGN_PENDING', " + CStr(idAzi) + ", '" + strImprontaSave.Replace("'", "''") + "' )";
+				execSQL(strSQL);
+			}
+		}
+		else 
+		{
+			//'-- ALLEGATO NON CORRISPONDENTE AL PDF GENERATO
+			strToReturn = "Allegato non corrispondente al pdf generato";
+		}
+
+		return strToReturn;
+	}
+
+	string invokeLibrary(string mode, string strPathFile, string strHashName, string idAzi, string issigned) 
+	{
+		//on error resume next
+
+		//dim obj
+		//'Set obj = server.CreateObject("Html2Pdf.COMVerificaEstesaFirma.AFLinkSign")
+		//Set obj = server.CreateObject("COMVerificaEstesaFirma.AFLinkSign")
+
+		//'firmaEstesaCOM(mode As String, pdf As String, isSigned As String, signedfile As String, att_hash As String, attIdMsg As String, attOrderFile As String, attIdObj As String, idAzi As String) As String
+
+		//invokeLibrary = ""
+		string accessGuid = insertAccessBarrier(session, HttpContext);
+		return newfirmaEstesaCOM(mode, strPathFile, strHashName, idAzi, issigned, HttpContext, accessGuid);
+
+		//if err.number <> 0 then
+
+		//end if
+
+		//on error goto 0
+	}
+
+	//'--inserisce un file allegato nella tabella CTL_ATTACH
+	dynamic InsertCTL_Attach(string strObjFile, dynamic idDoc)
+	{
+		LibDbAttach objDB = new LibDbAttach();
+
+		if (CStr(session["buste_jump_check"]) == "YES") 
+		{
+			//'-- attiviamo il jumpcheck su file allegato. la generazione hash non � pi� bloccante ed i controlli di firma sono posticipati
+			objDB.attivaByPassControlli();
+		}
+
+		//'-- inserisco gli allegati e richiedo la cifratura
+		return objDB.InsertCTL_Attach_FromFile(strObjFile, ApplicationCommon.Application.ConnectionString, "", "1~OFFERTA_FROM_PRODOTTI", CStr(idDoc));
+	}
+
+	string saveAttach(string directoryDest)
+	{
+		try
+		{
+			if(Request.HasFormContentType && Request.Form.Files.Count > 0)
+			{
+				IFormFileCollection files = Request.Form.Files;
+				for (int i = 0; i < files.Count; i++)
+				{
+					IFormFile file = files[i];
+					string filePath = System.IO.Path.Combine(directoryDest, file.FileName);
+					using (System.IO.Stream fileStream = new FileStream(filePath, FileMode.Create))
+					{
+						file.CopyTo(fileStream);
+					}
+				}
+			}
+		}
+		catch(Exception ex)
+		{
+			//n = err.number
+			string s = ex.Source;
+			string d = ex.Message;
+
+			TraceErr(ex, ApplicationCommon.Application.ConnectionString, s + d + "n" + "importaBusteFirmate.asp");
+
+			if (ApplicationCommon.Application["dettaglio-errori"].ToLower() == "yes" )
+			{
+				htmlToReturn.Write(ex.Message);
+			}
+			else
+			{
+				htmlToReturn.Write(ApplicationCommon.CNV("INFO_UTENTE_ERRORE_PROCESSO") + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+			}
+
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "INFO_UTENTE_ERRORE_PROCESSO");
+
+			//return ""
+		}
+
+		//on error goto 0
+
+		if(Request.HasFormContentType && Request.Form.Files.Count > 0)
+		{
+			//set ObjFile =  Upload.Files(1)
+			IFormFile ObjFile = Request.Form.Files[0];
+
+			//'-- controllo del file a taglia 0
+			//if ObjFile.Size = 0 then
+
+			//	on error resume next
+
+			//	ObjFile.Delete
+			//	Response.Write "<p><strong>File inviato corrotto o vuoto</strong></p>"
+
+			//	err.Clear
+
+			//	Response.end
+
+			//}
+
+			if(ObjFile.Length == 0)
+			{
+				//ObjFile.Delete
+				htmlToReturn.Write($@"<p><strong>File inviato corrotto o vuoto</strong></p>");
+
+				DisableBloccoOpener();
+
+				traceInLogUtente(1, "", "3 Click SIGN concluso con anomalie: File inviato corrotto o vuoto", HttpContext, session);
+
+				//err.Clear
+
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "<p><strong>File inviato corrotto o vuoto</strong></p>");
+			}
+
+			//'-- conservo il nome del file pulito dal percorso
+			string[] fv = Strings.Split(ObjFile.FileName, @"\");
+			string fileOriginal = fv[fv.Length - 1];
+
+			//'Se siamo non siamo in modalit� DEBUG (sviluppo) non validiamo il parametro
+			if (UCase(ApplicationCommon.Application["debug-mode"]) != "SI" && UCase(ApplicationCommon.Application["debug-mode"]) != "TRUE" && UCase(ApplicationCommon.Application["debug-mode"]) != "YES") 
+			{
+				if (Strings.InStr( 1, fileOriginal, CStr(@"/") ) > 0 )
+				{
+					//on error resume next
+
+					eProcurementNext.BizDB.BlackList mp_objDB = new BlackList();
+
+					//ObjSession = session("Session")
+					//set ObjSession(0) = Request.QueryString
+					//set ObjSession(1) = Request.form
+					//set ObjSession(3) = request
+					//set ObjSession(5) = session
+					//set ObjSession(6) = application
+
+					//'Aggiungo l'ip in blacklist collezionando le informazioni sull'attacco (a meno che non � attiva la sys di disattivablacklist)
+					mp_objDB.addIp(mp_objDB.getAttackInfo(HttpContext, CStr(session["IdPfu"]), CStr("Tentativo di pathInjection")), session, CStr(ApplicationCommon.Application.ConnectionString));
+
+					//set mp_objDB = nothing
+
+					//'Se � presente NOMEAPPLICAZIONE nell'application
+					if (!string.IsNullOrEmpty(CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE"]))) 
+					{
+						throw new ResponseRedirectException("/" + ApplicationCommon.Application["NOMEAPPLICAZIONE"] + "/blocked.asp", Response);
+					}
+					else
+					{
+						throw new ResponseRedirectException("/Application/blocked.asp", Response);
+					}
+
+					throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+				}
+			}
+
+			//err.Clear
+
+			string[] arrSplit = Strings.Split(fileOriginal, ".");
+			string estensione = arrSplit[arrSplit.Length - 1];
+
+			if (estensione.ToUpper() != "ZIP")
+			{
+				htmlToReturn.Clear();
+
+				//ObjFile.Delete
+				htmlToReturn.Write("Estensione '" + estensione + "' non consentita per il caricamento ZIP Buste Firmate");
+
+				traceInLogUtente(1, "", "3 Click SIGN concluso con anomalie: Estensione '" + estensione + "' non consentita per il caricamento ZIP Buste Firmate", HttpContext, session);
+				DisableBloccoOpener();
+
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+			}
+
+			return fileOriginal;
+		}
+
+		return "";
+	}
+
+	void DisableBloccoOpener(){
+		htmlToReturn.Write($@"
+			<script type=""text/javascript"">
+							try {{ opener.ShowWorkInProgress(false); }} catch(e) {{}}
+			</script>
+		");
+	}
+
+	string  getLottoFromNomeFile(string prefissoNoto, string nomeFile)
+	{
+		string strNumeroLotto = "";
+
+		//'-- togliamo il prefisso noto al nome del file, es. 'busta_eco_'
+		string strNomeFile = nomeFile.ToUpper().Replace(prefissoNoto.ToUpper(), "");
+
+		int totChar = strNomeFile.Length;
+
+		for (int i = 1; i <= totChar; i++)
+		{ //to totChar
+			string checkChar = Strings.Mid(strNomeFile, i, 1);
+
+			//'response.write checkChar
+
+			//'-- iteriamo su tutti i caratteri dopo aver tolto il prefisso noto. tutti i caratteri numerici li consideriamo il numero lotto e ci fermiamo al primo carattere non numerico
+			if (IsNumeric(checkChar))
+			{
+				strNumeroLotto = strNumeroLotto + checkChar;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return strNumeroLotto;
+	}
+
+	string isValidCertificatore(string hash)
+	{
+		//'2 : Da settare sulla sys come default. aggiungo blocco certificatore su giro firma ( con o senza verifica hash, quindi anche se giroFirma = false )
+		//'1 : Default per assenza della sys. Dove controlliamo l'hash ( giroFirma = true) , aggiungo blocco su certificatore
+		//'0 : Comportamento attuale, senza blocco del certificatore
+
+		string sysVerifica;
+		string res;
+
+		bool giroFirma;
+		giroFirma = true;
+		//'-- Il default � un OK
+		res = "";
+		sysVerifica = CStr(ApplicationCommon.Application["VERIFICA_CERTIFICATORE"]);
+
+		if (sysVerifica == "") 
+		{
+			sysVerifica = "1";
+		}
+
+		if (sysVerifica == "0")
+		{
+			res = "";
+		}
+		else
+		{
+			if ((giroFirma == true && sysVerifica == "1") || (sysVerifica == "2")) 
+			{
+				sqlParams.Clear();
+				sqlParams.Add("@hash", hash);
+				TSRecordSet rsCheck = cdf.GetRSReadFromQuery_("select top 1 isnull(isTrustedCA,1) as isTrustedCA, isnull(isCertificatoSottoscrizione,0) as isCertificatoSottoscrizione from CTL_SIGN_ATTACH_INFO with (nolock) where att_hash=@hash and isnull(isvalidsign,0) = 1", CStr(ApplicationCommon.Application["ConnectionString"]), sqlParams);
+
+				//'-- se il file non � firmato rispondo true non avendo a disposizione il certificatore
+				if (rsCheck.RecordCount == 0)
+				{
+					res = string.Empty;
+				}
+				else
+				{
+					rsCheck.MoveFirst();
+
+					//'-- se il file � firmato e i flag per trustedCA e certificatoSottoscrizione sono a true
+					if (CInt(rsCheck["isTrustedCA"]!) == 1 && CInt(rsCheck["isCertificatoSottoscrizione"]!) == 1)
+					{
+						res = string.Empty;
+					}
+					else
+					{
+						//'-- Specializzo l'output in 3 possibili messaggi di blocco.
+						if (CInt(rsCheck["isTrustedCA"]!) == 0 && CInt(rsCheck["isCertificatoSottoscrizione"]!) == 0)
+						{
+							res = "errore_isTrustedCA_e_isCertificatoSottoscrizione"; //'-- Non � una CA valida E non � un certificato di sottoscrizione
+						}
+						else if (CInt(rsCheck["isTrustedCA"]!) == 0 )
+						{
+							res = "errore_isTrustedCA"; //'-- Non � una CA valida
+						}
+						else if (CInt(rsCheck["isCertificatoSottoscrizione"]!) == 0 )
+						{
+							res = "errore_isCertificatoSottoscrizione"; //'-- Non � un certificato di sottoscrizione
+						}
+					}
+				}
+			}
+			else
+			{
+				res = string.Empty;
+			}
+		}
+
+		return res;
+	}
+}
+@Html.Raw(htmlToReturn.Out())

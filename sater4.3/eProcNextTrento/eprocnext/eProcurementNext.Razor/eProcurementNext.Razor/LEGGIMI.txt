@@ -1,0 +1,4 @@
+﻿Per portare eProcNext su un cliente seguire i seguenti step :
+
+1. scaricare ed installare sul server windows ""ASP.NET Core Runtime 6.0.16", pacchetto "windows  - hosting bundle"
+2. 

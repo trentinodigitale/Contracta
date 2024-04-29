@@ -1,0 +1,144 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <AssemblyVersion>1.0.0.63</AssemblyVersion>
+    <FileVersion>1.0.0.63</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Application\obj\**" />
+    <Compile Remove="EprocNext.Cache\obj\**" />
+    <Compile Remove="Security\obj\**" />
+    <Compile Remove="Tests\EprocNext.BaseTest\obj\**" />
+    <Compile Remove="Tests\EprocNext.BizDB.Test\obj\**" />
+    <Compile Remove="Tests\EprocNext.Cache.Test\obj\**" />
+    <Compile Remove="Tests\EprocNext.CommonModule.Test\obj\**" />
+    <Compile Remove="Tests\EprocNext.CtlProcess.Test\obj\**" />
+    <Compile Remove="Tests\EprocNext.Email.Test\obj\**" />
+    <Compile Remove="Tests\EprocNext.Session.Test\obj\**" />
+    <Compile Remove="Tests\eProcurementNext.Core.Test\obj\**" />
+    <Compile Remove="Tests\eProcurementNext.CtlProcess.Test\**" />
+    <Compile Remove="Tests\eProcurementNext.Razor.Test\obj\**" />
+    <EmbeddedResource Remove="Application\obj\**" />
+    <EmbeddedResource Remove="EprocNext.Cache\obj\**" />
+    <EmbeddedResource Remove="Security\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.BaseTest\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.BizDB.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.Cache.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.CommonModule.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.CtlProcess.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.Email.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\EprocNext.Session.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\eProcurementNext.Core.Test\obj\**" />
+    <EmbeddedResource Remove="Tests\eProcurementNext.CtlProcess.Test\**" />
+    <EmbeddedResource Remove="Tests\eProcurementNext.Razor.Test\obj\**" />
+    <None Remove="Application\obj\**" />
+    <None Remove="EprocNext.Cache\obj\**" />
+    <None Remove="Security\obj\**" />
+    <None Remove="Tests\EprocNext.BaseTest\obj\**" />
+    <None Remove="Tests\EprocNext.BizDB.Test\obj\**" />
+    <None Remove="Tests\EprocNext.Cache.Test\obj\**" />
+    <None Remove="Tests\EprocNext.CommonModule.Test\obj\**" />
+    <None Remove="Tests\EprocNext.CtlProcess.Test\obj\**" />
+    <None Remove="Tests\EprocNext.Email.Test\obj\**" />
+    <None Remove="Tests\EprocNext.Session.Test\obj\**" />
+    <None Remove="Tests\eProcurementNext.Core.Test\obj\**" />
+    <None Remove="Tests\eProcurementNext.CtlProcess.Test\**" />
+    <None Remove="Tests\eProcurementNext.Razor.Test\obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="BizDB\Utils\CommonDbFunction.cs" />
+    <Compile Remove="CommonDB\DebugTrace.cs" />
+    <Compile Remove="CommonDB\DebugTrace_.cs" />
+    <Compile Remove="CtlProcess\Interfaces\IDbProfiler.cs" />
+    <Compile Remove="CtlProcess\Lib\DbProfiler.cs" />
+    <Compile Remove="Email\Lib\RecoverMail.cs" />
+    <Compile Remove="HTML\MultiDimensionalGrid.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.96.0" />
+    <PackageReference Include="ChilkatDnCore" Version="9.5.0.82" />
+    <PackageReference Include="coverlet.collector" Version="3.1.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.RazorPages" Version="2.2.5" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Redis" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.22.0" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.22.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="6.0.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Authentication\eProcurementNext.Authentication.csproj" />
+    <ProjectReference Include="..\EprocNext.CommonModule\eProcurementNext.CommonModule.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BizDB\Utils\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="XMLValidation\XSD\schemas\common\BDNDR-CCTS_CCT_SchemaModule-1.1.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\BDNDR-UnqualifiedDataTypes-1.1.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\EFORMS-ExtensionAggregateComponents-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\EFORMS-ExtensionApex-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\EFORMS-ExtensionBasicComponents-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\UBL-CommonAggregateComponents-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\UBL-CommonBasicComponents-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\UBL-CommonExtensionComponents-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\UBL-ExtensionContentDataType-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\common\UBL-QualifiedDataTypes-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\maindoc\EFORMS-BusinessRegistrationInformationNotice.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\maindoc\UBL-ContractAwardNotice-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\maindoc\UBL-ContractNotice-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="XMLValidation\XSD\schemas\maindoc\UBL-PriorInformationNotice-2.3.xsd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

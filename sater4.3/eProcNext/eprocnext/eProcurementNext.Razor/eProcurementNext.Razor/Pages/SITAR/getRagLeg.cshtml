@@ -1,0 +1,113 @@
+﻿@page "/SITAR/getRapLeg.asp"
+@inject eProcurementNext.Session.ISession session;
+@using System.IO;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.ctl_profiler
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.Azienda_info_extModel;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.CtlProcess;
+@model eProcurementNext.Razor.Pages.SITAR.getRagLegModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    //'-- Il processo chiamante di questa pagina ciclerà su tutti i record della Document_OCP_LEGALI_RAPPRESENTANTI legati ai documenti "OCP_IMPRESE_AGGIUDICATARIE" da completare
+    //'--		entrando con ID_DOC pari all'idrow della Document_OCP_LEGALI_RAPPRESENTANTI.
+    //'--		questa pagina essendo fuori transazione non potrà scrivere direttamente nella Document_OCP_LEGALI_RAPPRESENTANTI quindi darà l'output che il processo recupererà
+    //'--		e con la query update andrà sulla parix_dati entrando con la chiave utilizzata ( docKey ) e recupererà i dati del RapLeg per poi salvarli sulla Document_OCP_LEGALI_RAPPRESENTANTI
+
+    LoadSession(HttpContext, session);
+    EprocResponse HtmlToReturn = new();
+
+    string ID_DOC = GetParamURL(Request.QueryString.ToString(), "ID_DOC");
+    validate("ID_DOC", ID_DOC, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+    //TabManage obj = new TabManage(ApplicationCommon.Configuration);
+    CommonDbFunctions cdf = new();
+    TSRecordSet rs = new TSRecordSet();
+
+    string cf = string.Empty;
+    string msgEsito = string.Empty;
+    string keyDoc = string.Empty;
+    string esito_chiamata = string.Empty;
+
+    //	'strSQL = "select d.idRow, c.CFIMP, b.[GUID] docKey "
+    //  'strSQL = strSQL & "	from Document_OCP_LOTTI_AGGIUDICATI a with(nolock) "
+    //  'strSQL = strSQL & "			inner join ctl_doc b with(nolock) on b.LinkedDoc = a.idRow and b.TipoDoc = 'OCP_IMPRESE_AGGIUDICATARIE' "
+    //  'strSQL = strSQL & "			inner join Document_OCP_IMPRESE_AGGIUDICATARIE c with(nolock) on c.idHeader = b.Id "
+    //  'strSQL = strSQL & "			inner join Document_OCP_LEGALI_RAPPRESENTANTI d with(nolock) on d.idHeader = c.idRow and d.datiOK = 0 "
+    //  'strSQL = strSQL & "	where a.idHeader = " & cstr(clng(ID_DOC))
+
+    var sqlParams = new Dictionary<string, object?>();
+    sqlParams.Add("@p0", CInt(ID_DOC));
+    string strSQL = @"select b.CFIMP, cast(a.idrow as varchar) + '-' + cast(c.[GUID] as varchar(100)) docKey 
+                                from Document_OCP_LEGALI_RAPPRESENTANTI a with(nolock) 
+                                inner join Document_OCP_IMPRESE_AGGIUDICATARIE b with(nolock) on b.idrow = a.idHeader 
+                                inner join ctl_doc c with(nolock) on c.id = b.idHeader and c.TipoDoc = 'OCP_IMPRESE_AGGIUDICATARIE' 
+                                where a.idRow = @p0";
+
+    //'response.write strsql
+    try
+    {
+        rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rs.RecordCount > 0)
+        {
+            rs.MoveFirst();
+            //'-- il ciclo era fatto per la gestione precedente, ora entriamo per IDROW e ci sarà sempre un unico record
+            while (!rs.EOF)
+            {
+                cf = CStr(rs["CFIMP"]);
+                keyDoc = CStr(rs["docKey"]);
+
+                try
+                {
+                    if (!string.IsNullOrEmpty(cf))
+                    {
+                        //'-- chiave utilizzata dal metodo Get_Dati_Azienda_Ext
+                        session["SESSION_WORK_KEY"] = keyDoc;
+
+                        esito_chiamata = "";
+                        esito_chiamata = Get_Dati_Azienda_Ext(cf, session, HtmlToReturn);
+
+                        if (String.IsNullOrEmpty(CStr(esito_chiamata)))
+                        {
+                            msgEsito = "Recupero RI OK";
+                        }
+                        else
+                        {
+                            msgEsito = "Recupero RI in errore : " + esito_chiamata;
+                        }
+                    }
+                    else
+                    {
+                        msgEsito = "CODICE FISCALE NON TROVATO";
+                    }
+                    rs.MoveNext();
+                }
+                catch
+                {
+                }
+
+            }
+        }
+        else
+        {
+
+        }
+    }
+    catch
+    {
+        msgEsito = "Errore nel recupero dei dati per invocare il RI : "; // + err.description  TODO verificare con Federico
+    }
+
+    
+    HtmlToReturn.Write("1#" + msgEsito);
+    
+}
+@Html.Raw(HtmlToReturn.Out())

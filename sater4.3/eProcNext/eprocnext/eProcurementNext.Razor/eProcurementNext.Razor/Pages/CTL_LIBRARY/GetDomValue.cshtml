@@ -1,0 +1,451 @@
+@page "/CTL_LIBRARY/GetDomValue.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.getDomValueModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.getDomValueModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+}
+@{
+
+	string escapeJson( string str ){
+		string strToReturn;
+		//'--ripulisco i caratteri non ammessi
+		strToReturn = NormString(str);
+
+		string acapo = Strings.Chr(13).ToString() + Strings.Chr(10).ToString();
+
+		strToReturn = strToReturn.Replace($@"\", $@"\\");
+		strToReturn = strToReturn.Replace($@"""", $@"\""");
+		strToReturn = strToReturn.Replace(acapo, $@" ");
+
+		return strToReturn;
+
+	}
+
+	TSRecordSet getRsSearch(string cerca, string decodifica, string strFormat, string param_dominio, string param_filter, string suffix, string param_debug){
+
+		string idDom = param_dominio;
+		string Filtro = string.Empty;
+		Filtro = param_filter;
+		string idpfu = CStr(session[eProcurementNext.Session.SessionProperty.IdPfu]);
+
+		string strQuery = "";
+		string strSql = $@"select * from lib_domain where DM_ID = '" + idDom.Replace("'", "''") + $@"'";
+
+		TSRecordSet rs = GetRS(strSql);
+
+		if (rs.RecordCount == 0){
+			return rs;
+		}
+
+		if (!string.IsNullOrEmpty(CStr(rs["DM_Query"])))
+		{
+			strQuery = CStr(rs["DM_Query"]).Trim();
+		}
+
+		if (string.IsNullOrEmpty(suffix))
+			suffix = "I";
+
+		string sql = string.Empty;
+
+		if (string.IsNullOrEmpty(strQuery))
+		{
+			sql = $@"select a.id, a.DMV_DM_ID,a.DMV_Cod,a.DMV_Father,a.DMV_Level,ISNULL( cast(ML_Description as nvarchar(max)),  a.DMV_DescML  ) as DMV_DescML,a.DMV_Image,a.DMV_Sort,a.DMV_CodExt,a.DMV_Module , a.DMV_Deleted  " + $@" from LIB_DomainValues a WITH (NOLOCK) " + $@" left  join LIB_Multilinguismo WITH (NOLOCK) on   a.DMV_DescML = ML_KEY and ML_LNG = '" + suffix + "' " + $@" where DMV_DM_ID = '" + idDom.Replace("'", "''") + "' ";		
+
+			if (!string.IsNullOrEmpty(Filtro))
+			{
+				//'-- verifico se il filtro � una restrizione del tipo IN
+				if ( UCase(Strings.Left(Filtro, 10)) == "SQL_WHERE=" ) {
+					sql = sql + " and ( " + MidVb6(Filtro, 11) + " ) ";
+				}
+			}
+		}
+		else
+		{
+			string oldSql = strQuery;
+			int ind = InStrVb6(1, UCase(oldSql), "ORDER BY");
+
+			//'-- tolgo la order by
+			if (ind > 0)
+			{ 
+				oldSql = Strings.Left(oldSql, ind - 1);
+			}
+
+			sql = oldSql;
+
+			if (!string.IsNullOrEmpty(Filtro)) 
+			{
+				//'-- verifico se il filtro � una restrizione del tipo IN
+				if ( UCase(Left(Filtro, 10)) == "SQL_WHERE=" ){
+
+					sql = oldSql + " and ( " + MidVb6(Filtro, 11) + " ) ";
+
+				}else{
+
+					if ( Filtro.ToUpper() == "IDPFU" ) {
+						sql = oldSql + " and  idpfu = " + idpfu;
+					}
+
+				}
+
+			}
+
+		}
+
+		sql = sql.Replace("<ID_USER>", idpfu);
+		sql = sql.Replace("#LNG#", suffix);
+
+		//'-- aggiungo la condizione di ricerca
+
+		string queryFinale = $@"select * from ({sql}) a ";
+
+		string filterEsclusiRoot = string.Empty;
+		string filterSelezionaFoglie = string.Empty;
+
+		//'----------------------------------------------------------------------------------------------------------------------
+		//'-- SE VIENE PASSATO IL PARAMETRO FORMAT VOL DIRE CHE SONO IN UN GERARCHICO LAZY E CHE STO FACENDO UNA RICERCA SERVER.-
+		//'-- DEVO QUINDI GESTIRE LA POSSIBILITA' DI CERCARE SOLO I NODI FOGLIA  ------------------------------------------------
+		//'-- E SE AGGIUNGERE LA POSSIBILITA' DI INCLUDERE LA ROOT --------------------------------------------------------------
+		//'----------------------------------------------------------------------------------------------------------------------
+		if (!string.IsNullOrEmpty(strFormat))
+		{
+			//'-- il default � che dalla ricerca escludo la root perch� di default � un nodo non selezionabile in un gerarchico
+			filterEsclusiRoot = " and DMV_Level <> 0";
+
+			strFormat = strFormat.ToUpper();
+
+			bool SelectOnlyChild = true;
+
+			if (strFormat.Contains("A", StringComparison.Ordinal)) {
+				SelectOnlyChild = false;
+			}
+			if (strFormat.Contains("R", StringComparison.Ordinal) ){
+				filterEsclusiRoot = "";
+			}
+
+			if (SelectOnlyChild) 
+			{
+				filterSelezionaFoglie = " and foglia = 1";
+
+				string tmpQueryFinale = "SELECT DISTINCT * FROM ( " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "			SELECT a.*, case when b.DMV_Cod is null then '1' else '0' end as foglia FROM " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "			(   " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "				" + queryFinale + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "			) A " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "	  LEFT JOIN " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "			(   " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "				" + queryFinale + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "			) B ON B.DMV_Level = ( A.DMV_Level  + 1 ) AND Left(B.DMV_Father, Len(A.DMV_Father)) = A.DMV_Father " + Environment.NewLine;
+				tmpQueryFinale = tmpQueryFinale + "		) DOMINIO " + Environment.NewLine;
+
+				queryFinale = tmpQueryFinale;
+			}
+		}
+
+		if ( string.IsNullOrEmpty(decodifica) ){
+
+			if (strFormat.Contains("CD", StringComparison.Ordinal)) {
+				queryFinale = queryFinale + " where ( DMV_CodExt + '-' + DMV_DescML ) like '%" + cerca.Replace("'", "''") + "%'" + filterEsclusiRoot + filterSelezionaFoglie;
+			}
+			else
+			{
+				queryFinale = queryFinale + " where DMV_DescML like '%" + cerca.Replace("'","''") + "%'" + filterEsclusiRoot + filterSelezionaFoglie;
+			}
+		}
+		else
+		{
+			queryFinale = queryFinale + " where " + decodifica;
+		}
+
+		queryFinale = queryFinale + " order by DMV_Father, dmv_sort ";
+
+		if (param_debug == "YES")
+		{
+			//Response.Write queryFinale
+			//Response.end
+		}
+
+		//'http://erpriv.afsoluzioni.com/application/CTL_LIBRARY/getdomvalue.asp?SEARCH_EXT=YES&dominio=ClasseIscriz&DESC=prodotti&Filter=SQL_WHERE%3D%20dmv_cod%20in%20(%20%20select%20B.dmv_cod%20%20from%20ClasseIscriz%20a%20%20INNER%20JOIN%20ClasseIscriz%20B%20ON%20a.dmv_father%20%3D%20left(%20b.dmv_father%20%2C%20len%20(%20a.dmv_father%20)%20)%20%20or%20%20b.dmv_father%20%3D%20%27000.%27%20%20or%20b.dmv_father%20%3D%20left(%20a.dmv_father%20%2C%20len%20(%20b.dmv_father%20)%20)%20%20%20%20%20where%20%20%27%23%23%231%23%23%23%27%20like%20%27%25%23%23%23%27%20%2B%20A.DMV_COD%20%2B%20%27%23%23%23%25%27%20%20%20%20)
+
+		return GetRS( queryFinale );
+	}
+
+	TSRecordSet GetRS( string strSql){
+
+		//dim obj
+		//dim rs
+
+		//on error goto 0
+		CommonDbFunctions cdf = new CommonDbFunctions();
+		return cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+	
+		//on error resume next
+	}
+
+	string NormString(string str)
+	{
+		string strOk = @" ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.:,;''|!""$%&/()=?^+*\#";
+	
+		string Tmp = str;
+	
+		string ValueOut = string.Empty;
+
+		while (!string.IsNullOrEmpty(Tmp)){
+	
+	
+			string NCH = Strings.Left(Tmp, 1);
+        
+			if(strOk.Contains((NCH).ToUpper(), StringComparison.Ordinal )){
+    
+				ValueOut = ValueOut + NCH;
+			}
+        
+			Tmp = Strings.Right(Tmp, Tmp.Length - 1 );
+		}
+
+		return ValueOut;
+	}
+
+	//'--Versione=1&data=2013-07-10&Attvita=42134&Nominativo=Leone
+	//'--Versione=2&data=2015-01-16&Attvita=68366&Nominativo=Leone
+	//'--Versione=3&data=2015-11-20&Attvita=91548&Nominativo=Leone
+	//'--Versione=4&data=2017-03-14&Attvita=143466&Nominativo=Leone
+
+	//'-- validazione dell'input utente
+	validate( "FIELD", CStr(GetParamURL(Request.QueryString.ToString(), "FIELD")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session); 
+	validate( "FILTER", CStr(GetParamURL(Request.QueryString.ToString(), "FILTER")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+	validate( "DOMAIN", CStr(GetParamURL(Request.QueryString.ToString(), "DOMAIN")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate( "FORMAT", CStr(GetParamURL(Request.QueryString.ToString(), "FORMAT")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	validate( "FIELD", CStr(GetValueFromForm(Request, "FIELD")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate( "FILTER", CStr(GetValueFromForm(Request, "FILTER")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+	validate( "DOMAIN", CStr(GetValueFromForm(Request, "DOMAIN")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+	validate( "FORMAT", CStr(GetValueFromForm(Request, "FORMAT")) , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	//on error resume next
+
+	string suffix=CStr(session["strSuffLing"]);
+
+	if (string.IsNullOrEmpty(suffix))
+                suffix = "I";
+
+	string ricerca = string.Empty;
+
+	string get_descs = GetParamURL(Request.QueryString.ToString(), "GET_DESCS");
+	if (string.IsNullOrEmpty(get_descs)) 
+	{
+		get_descs = GetValueFromForm(Request, "GET_DESCS");
+	}
+
+	string values = GetParamURL(Request.QueryString.ToString(), "VALUES");
+	if ( string.IsNullOrEmpty(values) ) 
+	{
+		values = GetValueFromForm(Request, "VALUES");
+	}
+
+	string search_ext = GetParamURL(Request.QueryString.ToString(), "SEARCH_EXT");
+	if ( string.IsNullOrEmpty(search_ext) ) 
+	{
+		search_ext = GetValueFromForm(Request, "SEARCH_EXT");
+	}
+
+	string param_domain = GetParamURL(Request.QueryString.ToString(), "DOMAIN");
+	if ( string.IsNullOrEmpty(param_domain) ) 
+	{
+		param_domain = GetValueFromForm(Request, "DOMAIN");
+	}
+
+	string param_filter = GetParamURL(Request.QueryString.ToString(), "FILTER");
+	if (string.IsNullOrEmpty(param_filter)) 
+	{
+		param_filter = GetValueFromForm(Request, "FILTER");
+	}
+
+	string param_find_desc = CStr(GetParamURL(Request.QueryString.ToString(), "FIND_DESC"));
+	if ( string.IsNullOrEmpty(param_find_desc) ) {
+		param_find_desc = GetValueFromForm(Request, "FIND_DESC");
+	}
+
+	string param_desc = GetParamURL(Request.QueryString.ToString(), "DESC");
+	if ( string.IsNullOrEmpty(param_desc) ) 
+	{
+		param_desc = GetValueFromForm(Request, "DESC");
+	}
+
+	string param_format = GetParamURL(Request.QueryString.ToString(), "format");
+	if ( string.IsNullOrEmpty(param_format) ) 
+	{
+		param_format = GetValueFromForm(Request, "format");
+	}
+
+	string param_dominio = GetParamURL(Request.QueryString.ToString(), "dominio");
+	if ( string.IsNullOrEmpty(param_dominio) ) 
+	{
+		param_dominio = GetValueFromForm(Request, "dominio");
+	}
+
+	string param_debug = GetParamURL(Request.QueryString.ToString(), "debug");
+	if ( string.IsNullOrEmpty(param_debug) ) 
+	{
+		param_debug = GetValueFromForm(Request, "debug");
+	}
+
+	if ( get_descs.ToUpper() == "YES"){
+
+		if (!string.IsNullOrEmpty(values) ) {
+
+			if ( values.Contains("###", StringComparison.Ordinal) ) {
+
+				//'--###1213000###103141000###185146100###1900000###1300000###
+				string[] aInfo = values.Split("###");
+				string lista = $@"'TEST-AA-BB-TEST'";
+
+				int n = aInfo.Length -1;
+
+				for (int i = 1; i <= n-1; i++){
+
+					string val = CStr(aInfo[i]);
+
+					if (!string.IsNullOrEmpty(val.Trim()) ) 
+					{
+						lista	= lista + ",'" + val.Replace("'","''") + "'";
+					}
+				}
+
+				ricerca = $@" DMV_Cod IN ("  + lista + ")";
+			}
+			else
+			{
+				ricerca = $@" DMV_Cod = '"  + values.Replace("'","''") + "'";
+			}
+		}
+	}
+
+	//'-- se non � stata richiesta la ricerca estesa
+	if (search_ext != "YES") 
+	{
+		LibDBDomains objLib = new();
+
+		ClsDomain objdom = objLib.GetFilteredDomExt(CStr(param_domain), CStr(session[eProcurementNext.Session.SessionProperty.SESSION_SUFFIX]), CLng( session[eProcurementNext.Session.SessionProperty.IdPfu] ), CStr(param_filter), CInt(0), CStr( ApplicationCommon.Application["ConnectionString"] ), session);
+
+		//If err.number = 0 Then
+
+		//'-- Se si vuole verificare l'esistenza di una descrizione uguale a quella ricercata
+		if (!string.IsNullOrEmpty(param_find_desc) )
+		{
+			htmlToReturn.Write(objdom.FindDescOrFirstOccurencyExt( CStr(param_desc), CStr(param_format) ));
+		}
+		else
+		{
+			htmlToReturn.Write(objdom.FindDescLeft(CStr(param_desc)));
+		}
+	}
+	else
+	{
+		//'-- parametri di input:
+		//'--		1. dominio
+		//'--		2. DESC
+		//'--		3. filter
+		//'--		4. SEARCH_EXT
+		//'--		5. format  ( se passato il parametro format vuol dire che voglio far ritornare solo i nodi selezionabili (stiamo quindi facendo una ricerca server da un dominio gerarchico lazy)
+
+		string cerca = param_desc.Trim(); //'faccio o no la trim ?
+		string format = param_format.Trim();
+		//string PathImage = "../../CTL_Library/images/Domain/"
+
+		string res = "[]";
+		int k = 0;
+		if (!string.IsNullOrEmpty(cerca) || !string.IsNullOrEmpty(ricerca))
+		{
+			TSRecordSet rs = getRsSearch(cerca,ricerca,format,param_dominio,param_filter,suffix, param_debug);
+			rs.MoveFirst();
+
+			if (rs.RecordCount > 0)
+			{
+				res = "[";
+				k = 1;
+			}
+
+			//on error resume next
+
+			while (!rs.EOF)
+			{
+				//err.Clear 
+
+				string id    =  CStr(rs["DMV_Cod"]);
+				string Path  =  CStr(rs["DMV_Father"]);
+				string Desc  =  CStr(rs["DMV_DescML"]);
+				int level =  CInt(rs["DMV_Level"]!);
+				string icon  =  CStr(rs["DMV_Image"]);
+				string codExt = CStr(rs["DMV_CodExt"]);
+
+				int? deleted = 0;
+
+			    if (rs.ColumnExists("DMV_Deleted"))
+			    {
+			        deleted = CInt(rs["DMV_Deleted"]);
+			    }
+
+				//'-- se non è cancellato logicamente oppure se si � passata la format Y, aggiungo l'elemento
+				if ( deleted == null || deleted == 0 || format.Contains('Y', StringComparison.Ordinal) ){
+
+					string visValue = "";
+
+					//'-- Se nella format non c'� ne la C ne la D, lascio il default che visualizza la descrizione e basta
+					if ( !format.Contains("C", StringComparison.Ordinal) && !format.Contains("D", StringComparison.Ordinal) ){
+						visValue = CStr(Desc);
+					}
+
+					if( format.Contains("C", StringComparison.Ordinal) ) {
+						visValue = CStr(codExt);
+					}
+
+					if ( format.Contains("D", StringComparison.Ordinal) ){
+						visValue = $"{visValue} - {Desc}";
+					}
+
+					res = res + $@"{{ ""title"": """ + escapeJson(visValue) + $@""", ""key"": ""{escapeJson(CStr(id))}"",";
+
+					res = res + $@"""father"": """ + escapeJson(CStr(Path)) + $@""" , ""level"": ""{CStr(level)}""";
+
+					res = res + $@",""isLazy"": false";
+
+					res = res + $@"}}";
+
+					if (k < rs.RecordCount )
+					{
+						res = $"{res},";
+					}
+				}
+
+				k = k + 1;
+				rs.MoveNext();
+			}
+
+			if (rs.RecordCount > 0)
+			{
+				if (Strings.Right(res,1) == ",")
+				{
+					res = Strings.Left(res, res.Length - 1);
+				}
+
+				res = res +  "]";
+			}
+		}
+
+		//' imposto il content type di output come json
+		Response.ContentType = "application/json";
+		htmlToReturn.Write(res);
+	}
+}
+@Html.Raw(htmlToReturn.Out())

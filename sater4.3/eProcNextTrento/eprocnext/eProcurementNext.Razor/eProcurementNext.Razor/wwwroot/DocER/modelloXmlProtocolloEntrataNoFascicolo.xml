@@ -1,0 +1,35 @@
+<Segnatura xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Intestazione>
+
+		<Oggetto>@@@Oggetto@@@</Oggetto>
+
+		<Flusso>
+			<TipoRichiesta>E</TipoRichiesta>
+			<Firma>NF</Firma>
+			<ForzaRegistrazione>1</ForzaRegistrazione>
+		</Flusso>
+
+		<Mittenti>
+      @@@xml-azienda@@@
+    </Mittenti>
+
+		<Destinatari>
+			<Destinatario>
+				<Amministrazione>
+					<Denominazione>@@@Denominazione-Amministrazione@@@</Denominazione>
+					<CodiceAmministrazione>@@@Codice-Amministrazione@@@</CodiceAmministrazione>
+
+					<UnitaOrganizzativa tipo="temporanea">
+						<Denominazione>@@@denominazione-UO@@@</Denominazione>
+						<Identificativo>@@@codice-UO@@@</Identificativo>
+					</UnitaOrganizzativa>
+				</Amministrazione>
+				<AOO>
+					<Denominazione>@@@denominazione-AOO@@@</Denominazione>
+					<CodiceAOO>@@@codice-AOO@@@</CodiceAOO>
+				</AOO>
+			</Destinatario>
+		</Destinatari>
+
+	</Intestazione>
+</Segnatura>

@@ -1,0 +1,228 @@
+﻿@page "/DASHBOARD/ViewFolder.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.BizDB
+@using eProcurementNext.CommonDB
+@using eProcurementNext.DashBoard
+@using eProcurementNext.HTML
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@* <!-- #Include File="../CTL_Library/Functions/AccessSQL.asp" --> *@
+@using static eProcurementNext.Session.SessionMiddleware
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@inject IConfiguration configuration;
+@model eProcurementNext.Razor.Pages.DASHBOARD.ViewFolderModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	string iif(bool c ,string t ,string f )
+	{
+		if(c ==  true)
+		{
+			return t;
+		}
+		else
+		{
+			return f;
+		}
+	}
+
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/body.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/griddocument.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/toolbarDocument.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/folder.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<script src=""../CTL_Library/jscript/ExecFunction.js"" ></script>");
+
+	//stop
+
+	string mp_Suffix = session["strSuffLing"];
+	if(string.IsNullOrEmpty(mp_Suffix))
+	{
+		mp_Suffix = "I";
+	}
+
+	string mp_strConnectionString =ApplicationCommon.Application["ConnectionString"];
+	string mp_strStoredSQL = GetParamURL(Request.QueryString.ToString(), "STORED_SQL");
+	string strTable = GetParamURL(Request.QueryString.ToString(), "Table");
+	string FilterHide = GetParamURL(Request.QueryString.ToString(), "FilterHide");
+	string strFilter = "";
+	string idPfu = "";
+
+
+	string mp_ModFiltro = "";
+	string mp_strTable = "";
+	//'-- recupero il filtro 
+	if(!string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "ModelloFiltro")))
+	{
+		mp_ModFiltro = GetParamURL(Request.QueryString.ToString(), "ModelloFiltro");
+	}
+	else
+	{
+		mp_ModFiltro = mp_strTable + "Filtro";
+	}
+	//lib_dbmodelext
+	LibDbModelExt mp_objDB = new LibDbModelExt(configuration);
+	Model objModel = mp_objDB.GetFilteredModel(mp_ModFiltro, mp_Suffix, 0, 0,mp_strConnectionString,true,session);
+
+	//'-- avvalora i campi del modello
+	
+	objModel.SetFieldsValue(Request.HasFormContentType ? Request.Form : null);
+
+	//'-- recupera la condizione di ricerca
+	if(mp_strStoredSQL != "yes")
+	{
+		strFilter = objModel.GetSqlWhere();
+	}
+	else
+	{
+		strFilter = objModel.GetSqlWhereList();
+	}
+
+	if( GetParamURL(Request.QueryString.ToString(), "FilteredOnly") == "yes" && string.IsNullOrEmpty(strFilter))
+	{
+		htmlToReturn.Write($@"</head><body ><table width=""100%"" height=""100%"" >");
+		htmlToReturn.Write($@"<tr><td width=""100%"" height=""100%"" >");
+
+		htmlToReturn.Write(ApplicationCommon.CNV("E' necessario inserire un parametro di ricerca nei campi di filtro"));
+
+		htmlToReturn.Write("</td></tr></table></body></html>");
+	}
+	else
+	{
+		//'-- recupero i dati per la costruzione delle label
+		dynamic vl;
+		string strSql = "";
+		vl = strFilter.Split("#~#");
+		if(vl.Lenght-1 > 1 )
+		{
+			strSql = "exec " + strTable + "_Folder  " + idPfu + " , '" + vl[0] + "' , '" + vl[1].Replace("'", "''") + "' , '" + vl[2] + "' ";
+		}
+		else
+		{
+			strSql = "exec " + strTable + "_Folder  " + idPfu + " , '' , '' , ''";
+		}
+
+		strSql = strSql + " , '" + FilterHide.Replace("'", "''") + "' , '" + GetParamURL(Request.QueryString.ToString(), "SortFolder") + "' , 1,  '" + mp_Suffix + "'";
+		CommonDbFunctions cdb = new CommonDbFunctions();
+		TSRecordSet rs = cdb.GetRSReadFromQuery_(strSql, ApplicationCommon.Application["ConnectionString"]);
+
+		// '-- inizializzo i folder con le descrittive 
+		Folder mp_objFolder;
+		mp_objFolder = new Folder();
+		ToolbarButton lab = null;
+		int cur;
+		int count;
+		int i;
+		string filter;
+		string Folder;
+		filter = "";
+
+		mp_objFolder.strPath = "../images/general/LabelTabDocument/";
+
+		cur = -1;
+
+		count = 0;
+		filter = GetParamURL(Request.QueryString.ToString(), "FilterHide");
+		Folder = GetParamURL(Request.QueryString.ToString(), "Folder");
+		string url = CStr( GetQueryStringFromContext(Request.QueryString));
+		string FirstFolder = "";
+		url = url.Replace("&FilterHide=" + filter, "");
+		url = url.Replace("&Folder=" + Folder, "");
+
+		if(rs.RecordCount >0)
+		{
+			rs.MoveFirst();
+			FirstFolder = GetValueFromRS(rs.Fields[1]);
+			i = 0;
+			//'-- aggiunta label 
+			while(!rs.EOF)
+			{
+				lab = new ToolbarButton();
+				//'lab.OnClick = "AgingGrid_ChangeValuta( '" & rsDivise.Fields("AGDE_CodiceDivisa") & "' );"
+				lab.URL = "ViewerFolder.asp?" + url + "&Folder=" + URLEncode(GetValueFromRS(rs.Fields[1]));
+
+				//'lab.Target = "AgingGrid"
+				lab.Target = "self";
+
+				lab.Text = GetValueFromRS(rs.Fields[2]);
+				mp_objFolder.Buttons.Add(lab.Text, lab);
+
+				if(GetValueFromRS(rs.Fields[1]) == Folder)
+				{
+					cur = i;
+				}
+				rs.MoveNext();
+				i = i + 1;
+			}
+			lab = new ToolbarButton();
+
+			if(!string.IsNullOrEmpty(GetParamURL(Request.QueryString.ToString(), "FolderAll")))
+			{
+				lab.URL = "ViewerFolder.asp?" + url + "&Folder=" + "All";
+
+				//'lab.Target = "AgingGrid"
+				lab.Target = "self";
+
+				lab.Text = "All";
+				mp_objFolder.Buttons.Add(lab.Text, lab);
+				if("All" == Folder)
+				{
+					cur = i;
+					Folder = "";
+				}
+			}
+			if(cur == -1)
+			{
+				Folder = FirstFolder;
+				cur = 0;
+			}
+			mp_objFolder.LabelSelected = cur + 1;
+			htmlToReturn.Write("</head><body >");
+			htmlToReturn.Write($@"<table class=""Window_Tab""  width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0""  height=""100%""  >");
+			htmlToReturn.Write($@"<tr><td width=""100%"">");
+
+			mp_objFolder.Init(session);
+			mp_objFolder.Html(htmlToReturn);
+
+			htmlToReturn.Write("</td></tr>");
+
+			htmlToReturn.Write($@"<tr><td width=""100%""  height=""100%"" >");
+
+			htmlToReturn.Write($@"<div id=""DivViewerFiltro"" style=""height:100%"" width=""100%"" >");
+			htmlToReturn.Write($@"<iframe border=""0"" frameborder=""0"" width=""100%"" height=""100%"" id=""ViewerGriglia"" name=""ViewerGriglia"" src=""ViewerGriglia.asp?");
+
+			if (!string.IsNullOrEmpty(Folder) || !string.IsNullOrEmpty(FilterHide))
+			{
+				htmlToReturn.Write(url + "&Filter=" + URLEncode(strFilter) + "&FilterHide= " + FilterHide + iif(FilterHide != "" && Folder != "", " and ", " ") + iif(Folder == "", "", GetParamURL(Request.QueryString.ToString(), "FolderField") + " = '" + Folder +$@"'"));
+			}
+			else
+			{
+				htmlToReturn.Write ( url + "&Filter=" + URLEncode( strFilter )  + $@""" ");
+			}
+			htmlToReturn.Write($@"marginheight=""0"" marginwidth=""0""  > </iframe>");
+			htmlToReturn.Write("</div>");
+
+			htmlToReturn.Write("</td></tr>");
+			htmlToReturn.Write("</table></body></html>");
+		}
+		else
+		{
+			htmlToReturn.Write("</head><body >");
+			htmlToReturn.Write($@"<table class=""Window_Tab""  width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0""  height=""100%""  >");
+			htmlToReturn.Write($@"<tr><td width=""100%"" valign=""middle"" align=""center"" class=""VIEWER_NULL"" >");
+
+			ApplicationCommon.CNV("Il risultato dell'analisi è nullo, provare con altri parametri");
+
+			htmlToReturn.Write("</td></tr>");
+			htmlToReturn.Write("</table></body></html>");
+		}
+
+	
+	
+	}
+
+
+}@Html.Raw(htmlToReturn.Out())

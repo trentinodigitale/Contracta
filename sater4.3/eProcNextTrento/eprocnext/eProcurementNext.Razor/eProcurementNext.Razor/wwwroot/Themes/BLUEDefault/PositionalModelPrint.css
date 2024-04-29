@@ -1,0 +1,248 @@
+<style type="text/css">
+BODY
+{
+    FONT-SIZE: 3px;
+    BACKGROUND-REPEAT: repeat;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+DIV
+{
+    FONT-SIZE: 5px
+}
+.BodyPositionalModel
+{
+    BACKGROUND-COLOR: white
+}
+.TextFieldCover
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none
+}
+.SelectFieldCover
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: white
+}
+.FontLabelCover
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.FontTitleCover
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.LegendTableStyle
+{
+    BORDER-RIGHT: 1px outset;
+    PADDING-RIGHT: 5px;
+    BORDER-TOP: 1px outset;
+    PADDING-LEFT: 5px;
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 13pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: 1px outset;
+    COLOR: black;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: white
+}
+.LegendCellStyle
+{
+    FONT-SIZE: 8pt;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.PlugInControlStyle
+{
+    BACKGROUND-COLOR: aqua
+}
+TABLE.GridLegalPub
+{
+    BORDER-RIGHT: 1px inset;
+    BORDER-TOP: 1px inset;
+    BORDER-LEFT: 1px inset;
+    BORDER-BOTTOM: 1px inset
+}
+TD.CellGridLegalPub
+{
+    BACKGROUND-COLOR: whitesmoke
+}
+INPUT.ButtonHierarchiesField
+{
+    BORDER-RIGHT: silver 1px outset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: silver 1px outset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 8pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: silver 1px outset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: silver 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: silver;
+    TEXT-DECORATION: none
+}
+.FontLabelObblig
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+TD.CellGridCompanyLogo
+{
+    BORDER-RIGHT: lightgrey 1px;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px;
+    BACKGROUND-COLOR: white
+}
+INPUT.TextFieldCoverLocked
+{
+    BORDER-RIGHT: lightgrey 1px inset;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: lightgrey 1px inset;
+    PADDING-LEFT: 0px;
+    FONT-SIZE: 10pt;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: lightgrey 1px inset;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: lightgrey 1px inset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: whitesmoke;
+    TEXT-DECORATION: none
+}
+.FontLegalPub
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.FontLegalPubBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+TABLE.GridContainer
+{
+    WIDTH: 100%
+}
+TD.CellGridContainer
+{
+}
+.FontLinkLabelCover
+{
+    FONT-SIZE: 8pt;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+TEXTAREA.FontTextAreaNotEditable
+{
+    FONT-SIZE: 8pt;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: whitesmoke
+}
+TEXTAREA.FontTextAreaEditable
+{
+    FONT-SIZE: 8pt;
+    WIDTH: 100%;
+    COLOR: black;
+    FONT-FAMILY: Arial
+}
+.sottotitoloBold
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    COLOR: #708090;
+    FONT-FAMILY: Arial
+}
+.CellIntestGridProductsDoc
+{
+    BORDER-RIGHT: 1px;
+    PADDING-RIGHT: 1px;
+    BORDER-TOP: 1px;
+    PADDING-LEFT: 1px;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 11pt;
+    PADDING-BOTTOM: 1px;
+    MARGIN: 1px;
+    BORDER-LEFT: 1px;
+    PADDING-TOP: 1px;
+    BORDER-BOTTOM: 1px;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: white;
+    TEXT-DECORATION: none
+}
+.Foglie
+{
+    FONT-SIZE: 9pt;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.FontLabelCoverLight
+{
+    FONT-SIZE: 10pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+.FontLabelCoverHight
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 13pt;
+    COLOR: black;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: none
+}
+</style>

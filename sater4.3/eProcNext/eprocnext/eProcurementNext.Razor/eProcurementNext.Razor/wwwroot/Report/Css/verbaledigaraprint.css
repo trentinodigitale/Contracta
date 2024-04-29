@@ -1,0 +1,53 @@
+<STYLE>
+
+@charset "utf-8";
+html, body, span,applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, font, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,dd, dl, dt, li, ol, ul,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td {margin: 0 auto;padding: 0;border: 0;font-weight: inherit;font-style: inherit; line-height:1; font-family: inherit;text-align: left;vertical-align: baseline;}
+a img, :link img, :visited img {border: 0;}
+table{border-collapse:collapse; border-spacing: 0;}
+ol, ul {list-style: none;}
+q:before, q:after,blockquote:before, blockquote:after {content: "";}
+html,body{font-size:12pt; font-family:Arial, Helvetica, sans-serif; color:#333;}
+
+
+
+table#TABLE_CONTENTITORE{/*height:210mm;*/  margin-left:1cm; margin-right:1cm; font-size:12pt;}
+#TR_TESTATA{height:/*165px*/4.40cm; }
+
+
+#TR_PIEPAGINA, #TD_PIEPAGINA{height:/*70px*/1.90cm; }
+#TR_TESTATA_SUCCESSIVA, #TD_TESTATA_SUCCESSIVA {height:/*70px*/1.00cm; }
+
+#TABLE_CONTENTITORE TR TD {margin:0px; padding:0px;}
+#TABLE_CONTENTITORE {margin:0px; padding:0px;}
+
+.logo{ width:95px; height:165px; float:left; }
+.titolo{  float:left; margin-top:53px; }
+.titolo h1{ border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:5px;}
+h1{ font-weight:bold; font-size:24px;}
+h2{ font-weight:bold; font-size:19px;}
+
+#TR_CORPO h2{ text-align:center; font-style:italic;} 
+
+p{ margin-top:10px; text-align:justify;}
+p.oggetto{ padding:10px; background:#ccc; margin-top:20px; font-weight:bold; font-size:12pt; margin-bottom:10px;}
+p.underline{ font-weight:bold; text-decoration:underline; font-style:italic;}
+table.GridPrintProducts{ width:100%; margin-top:20px; border:1px solid #ccc; font-size:12pt;}
+table.GridPrintProducts tr{ height:20px;}
+table.GridPrintProducts td{ border:1px solid #ccc; padding:3px;}
+ul{list-style-type:disc; margin-top:15px; margin-left:40px;  font-size:12pt;}
+ul.LISTGridPrintProducts{list-style-type:disc; margin-top:15px; margin-left:40px;  font-size:12pt;}
+ul.LISTGridPrintProducts li{ padding-bottom:3px;}
+
+
+#TR_CORPO table td{ font-size:12pt;}
+#TR_CORPO table td.CellIntestGrid{ font-weight:bold; background-color:#ffff00}
+
+.LetterList{list-style-type:lower-alpha}
+.SquareList{list-style-type:square}
+
+
+#TR_PIEPAGINA p {font-size:11px;}
+#TR_PIEPAGINA p span.mail{text-decoration:underline; color:#0099ff}
+
+
+</STYLE>

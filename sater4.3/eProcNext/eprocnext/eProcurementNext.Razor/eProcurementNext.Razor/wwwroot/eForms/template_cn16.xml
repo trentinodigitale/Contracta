@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContractNotice xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2"
+                 xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+                 xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+                 xmlns:efac="http://data.europa.eu/p27/eforms-ubl-extension-aggregate-components/1"
+                 xmlns:efbc="http://data.europa.eu/p27/eforms-ubl-extension-basic-components/1"
+                 xmlns:efext="http://data.europa.eu/p27/eforms-ubl-extensions/1"
+                 xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+	<ext:UBLExtensions>
+		<ext:UBLExtension>
+			<ext:ExtensionContent>
+				<efext:EformsExtension>
+					@@@CONTRACT_NOTICE_CHANGES@@@
+					<efac:NoticeSubType>
+						<cbc:SubTypeCode listName="notice-subtype">@@@CONTRACT_NOTICE_SUBTYPE@@@</cbc:SubTypeCode>
+					</efac:NoticeSubType>
+					<efac:Organizations>
+						@@@CONTRACT_NOTICE_ORGANIZATIONS@@@
+					</efac:Organizations>
+				</efext:EformsExtension>
+			</ext:ExtensionContent>
+		</ext:UBLExtension>
+	</ext:UBLExtensions>
+	<cbc:UBLVersionID>2.3</cbc:UBLVersionID> <!-- costante -->
+	<cbc:CustomizationID>@@@CUSTOMIZATION_ID@@@</cbc:CustomizationID>
+	<cbc:ID schemeName="notice-id">@@@CONTRACT_FOLDER_ID@@@</cbc:ID>
+	<!-- BT-04 - Procedure Identifier - Codice Appalto -->
+	<cbc:ContractFolderID>@@@CONTRACT_FOLDER_ID@@@</cbc:ContractFolderID>
+	<cbc:IssueDate>@@@ISSUE_DATE@@@</cbc:IssueDate> <!-- Notice Dispatch Date - generato a runtime -->
+	<cbc:IssueTime>@@@ISSUE_TIME@@@</cbc:IssueTime>   <!-- Notice Dispatch Date - generato a runtime -->
+	<cbc:VersionID>01</cbc:VersionID> <!-- Costante Notice Version -->
+
+	<!-- BT-01-notice - Base giuridica della procedura -->
+	<cbc:RegulatoryDomain>@@@GARA_BASE_GIURIDICA@@@</cbc:RegulatoryDomain>
+
+	<cbc:NoticeTypeCode listName="competition">cn-standard</cbc:NoticeTypeCode> <!-- costante -->
+	<cbc:NoticeLanguageCode listName="language">ITA</cbc:NoticeLanguageCode> <!-- costante -->
+	<cac:ContractingParty>
+		@@@GARA_NO_ENCODE_BUYERPROFILEURI@@@
+		<cac:ContractingPartyType>
+			<!-- Forma giuridica del committente (BT-11-Procedure-Buyer) -->
+			<cbc:PartyTypeCode listName="buyer-legal-type">@@@GARA_ENTE_FORM_GIUR@@@</cbc:PartyTypeCode>
+		</cac:ContractingPartyType>
+		@@@GARA_NO_ENCODE_BUYER_CONTRACTING_TYPE@@@
+		<cac:ContractingActivity>
+			<!-- Attività dell'amministrazione aggiudicatrice (BT-10-Procedure-Buyer) -->
+			<cbc:ActivityTypeCode listName="authority-activity">@@@GARA_ENTE_ATT_AMM@@@</cbc:ActivityTypeCode>
+		</cac:ContractingActivity>
+		<cac:Party>
+			<cac:PartyIdentification>
+				<!-- ID — Acquirente -->
+				<cbc:ID>@@@GARA_ENTE_ID@@@</cbc:ID>
+			</cac:PartyIdentification>
+		</cac:Party>
+	</cac:ContractingParty>
+	<cac:TenderingTerms>
+		<cac:TendererQualificationRequest>
+
+			<!-- 1..N -->
+			@@@SPECIFIC_TENDERER_REQUIREMENT@@@
+
+		</cac:TendererQualificationRequest>
+
+		@@@GARA_NO_ENCODE_LOT_DISTRIBUTION@@@
+
+	</cac:TenderingTerms>
+
+	<cac:TenderingProcess>
+		<ext:UBLExtensions>
+			<ext:UBLExtension>
+				<ext:ExtensionContent>
+					<efext:EformsExtension>
+						<!-- BT-634 - costante -->
+						<efbc:ProcedureRelaunchIndicator>false</efbc:ProcedureRelaunchIndicator>
+					</efext:EformsExtension>
+				</ext:ExtensionContent>
+			</ext:UBLExtension>
+		</ext:UBLExtensions>
+		<!-- BT-105 - Tipo di procedura -->
+		<cbc:ProcedureCode listName="procurement-procedure-type">@@@GARA_TIPO_PROC@@@</cbc:ProcedureCode>
+		@@@GARA_NO_ENCODE_ACCELERATED_PROCEDURE@@@
+	</cac:TenderingProcess>
+
+	<cac:ProcurementProject>
+		@@@GARA_PROCUREMENT_PROJECT_NO_ENCODE_ID@@@
+		<!-- BT-21 - Titolo procedura -->
+		<cbc:Name languageID="ITA">@@@GARA_TITOLO@@@</cbc:Name>
+		<!-- BT-24 - Descrizione procedura -->
+		<cbc:Description languageID="ITA">@@@GARA_DESCRIZIONE@@@</cbc:Description>
+		<!-- BT-23 - Natura dell'appalto / Tipo di appalto -->
+		<cbc:ProcurementTypeCode listName="contract-nature">@@@GARA_NATURA_APPALTO@@@</cbc:ProcurementTypeCode>
+
+		<cac:RequestedTenderTotal>
+			@@@GARA_NO_ENCODE_FRAMEWORK_MAXIMUM_VALUE@@@
+			<!-- BT-27 - Valore stimato -->
+			<cbc:EstimatedOverallContractAmount currencyID="EUR">@@@GARA_IMPORTO_APPALTO@@@</cbc:EstimatedOverallContractAmount>
+		</cac:RequestedTenderTotal>
+
+		<cac:MainCommodityClassification>
+			<!-- BT-26 + BT-262 - Tipo di Classificatore/ Classificazione principale -->
+			<cbc:ItemClassificationCode listName="cpv">@@@GARA_CLASSIFICAZIONE@@@</cbc:ItemClassificationCode>
+		</cac:MainCommodityClassification>
+	</cac:ProcurementProject>
+
+	<!-- lista lotti - 1..N -->
+	@@@LISTA_LOTTI@@@
+
+</ContractNotice>

@@ -1,0 +1,30 @@
+BODY
+{
+}
+TABLE.GridPag
+{
+    WIDTH: 100%
+}
+TABLE.GridPag input{ border:1px solid #96B0D4; background-color:#EFEFEF; color:#0F3D7C; padding-left:3px;}
+TABLE.GridPag input:hover{ border:1px solid #0F3D7C;}
+TABLE.GridPag input:focus{border:1px solid #0F3D7C; background:#fff; color:#2268B3;}
+
+TABLE.GridPag INPUT.ButtonPag
+{
+    FONT-SIZE: 12px;
+    COLOR: #fff;
+    BORDER:none;
+    FONT-FAMILY: arial;
+    BACKGROUND-COLOR:#373739;
+	text-transform:uppercase;
+	margin-right:5px;
+}
+TD.CellGridPag
+{
+    WIDTH: 25%
+}
+.FontInfoPag
+{
+    FONT-SIZE:12px;
+    FONT-FAMILY: arial;
+}

@@ -1,0 +1,27 @@
+BODY
+{
+}
+TABLE.GridPag
+{
+    WIDTH: 100%
+}
+INPUT.ButtonPag
+{
+    BACKGROUND-COLOR: #066bbd;
+    BORDER-BOTTOM: #339999 1px outset;
+    BORDER-LEFT: #339999 1px outset;
+    BORDER-RIGHT: #339999 1px outset;
+    BORDER-TOP: #339999 1px outset;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt
+}
+TD.CellGridPag
+{
+    WIDTH: 25%
+}
+.FontInfoPag
+{
+    FONT-FAMILY: Arial;
+    FONT-SIZE: 8pt
+}

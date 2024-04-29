@@ -1,0 +1,841 @@
+﻿@page "/Report/prn_ODA.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_ODAModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.Report.prn_ODAModel
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+	string idDoc = objDoc.mp_IDDoc;
+	htmlToReturn.Write($@"
+	<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Strict//EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">
+	<html>
+	<head>
+
+	<link rel=""stylesheet"" type=""text/css"" href=""css/odc.css"" media=""all"" />");
+
+	addMetaTag(htmlToReturn);
+	int NumPagCorrente = 0;
+	//'--recupero info fornitore
+	TSRecordSet rsForn = cdf.GetRSReadFromQuery_("select Aziragionesociale,Azipartitaiva,isnull(Aziindirizzoleg,'') as Aziindirizzoleg,isnull(AziCapleg,'') as AziCapleg ,isnull(Azilocalitaleg,'') as Azilocalitaleg, isnull(AziProvincialeg,'') as AziProvincialeg,isnull(AziFax,'') as AziFax,isnull(aziE_Mail,'') as aziE_Mail  from  aziende where idazi='" + Replace(DOC_FieldTecnical("TESTATA", "Destinatario_Azi"), "'", "''") + "'", ApplicationCommon.Application.ConnectionString);
+	rsForn.MoveFirst();
+
+	//'--recupero info ente
+	TSRecordSet rsEnte = cdf.GetRSReadFromQuery_("select * from  aziende with(nolock) inner join dm_attributi with(nolock) on lnk=idazi and idapp=1 and dztNome='codicefiscale' where  idazi='" + Replace(DOC_FieldTecnical("TESTATA", "Azienda"), "'", "''") + "'", ApplicationCommon.Application.ConnectionString);
+	rsEnte.MoveFirst();
+
+	//'--recupero info punto ordinante
+	TSRecordSet rsPO = cdf.GetRSReadFromQuery_("select * from  profiliutente where idpfu='" + Replace(DOC_FieldTecnical("TESTATA", "UserRup"), "'", "''") + "'", ApplicationCommon.Application.ConnectionString);
+	if (rsPO.RecordCount > 0) {
+		rsPO.MoveFirst();
+	} else {
+		//'--blocco selezione rup obbligatorio ???
+	}
+
+
+
+	//'--recupero AOO e AreaDiAppartenenza dal documento CAMBIO_RUOLO_UTENTE inviato
+	string Aoo = "";
+	TSRecordSet rsAooUtente = cdf.GetRSReadFromQuery_("select dbo.GetCodDom2DescML('aoo',attvalue,'I') as Aoo from ProfiliUtenteAttrib where dztnome='aoo' and idpfu=" + Replace(DOC_FieldTecnical("TESTATA", "UserRup"), "'", "''"), ApplicationCommon.Application.ConnectionString);
+	if(rsAooUtente.RecordCount >0)
+	{
+		rsAooUtente.MoveFirst();
+		Aoo = CStr(rsAooUtente["Aoo"]);
+	}
+	string AreaDiAppartenenza = "";
+	TSRecordSet rsAreaUtente = cdf.GetRSReadFromQuery_("select isnull(attvalue,'') as AreaDiAppartenenza from ProfiliUtenteAttrib where dztnome='AreaDiAppartenenza' and idpfu=" + Replace(DOC_FieldTecnical("TESTATA", "UserRup"), "'", "''"), ApplicationCommon.Application.ConnectionString);
+	if(rsAreaUtente.RecordCount >0)
+	{
+		rsAreaUtente.MoveFirst();
+		AreaDiAppartenenza = CStr(rsAreaUtente["AreaDiAppartenenza"]).Trim();
+	}
+
+	//'--determino le info per le pagine da stampare
+	int nNumProduct = 0;
+	dynamic NumCol = null;
+	dynamic NumColAllegati = null;
+	int nLineeForPage = 0;
+	int nNumLineeFirstPage = 0;
+	int NumLineeStampate = 0;
+	int NumLineeStampatePagina = 0;
+	int NumLineeParteFissa = 0;
+	int LastRowDiplayed = 0;
+	bool bDrawIntestAllegati = false;
+	int LastColDisplayed = 0;
+	int LastRowDiplayed1 = 0;
+
+	bDrawIntestAllegati = false;
+
+	LastRowDiplayed1 = 0;
+	LastRowDiplayed = 0;
+	LastColDisplayed = 0;
+
+	NumLineeParteFissa = 35;
+
+	//if(!string.IsNullOrEmpty(RegstroODFIntegrato))
+	//{
+	//	NumLineeParteFissa = NumLineeParteFissa + 2;
+	//}
+
+	//if(!string.IsNullOrEmpty(Aoo))
+	//{
+	//	NumLineeParteFissa = NumLineeParteFissa + 1;
+	//}
+
+	//if(!string.IsNullOrEmpty(AreaDiAppartenenza))
+	//{
+	//	NumLineeParteFissa = NumLineeParteFissa + 1;
+	//}
+
+	NumLineeStampate = 0;
+
+	NumCol = objDoc.Sections["PRODOTTI"].mp_Columns.Count;
+
+	NumColAllegati = objDoc.Sections["DOCUMENTAZIONE"].mp_Columns.Count;
+
+	//'--numero di linee per pagina
+	nLineeForPage = 65;
+
+	//'--numero di linee prodotti a disposizione della prima pagina	
+	nNumLineeFirstPage = 22;
+
+	//if(!string.IsNullOrEmpty(RegstroODFIntegrato))
+	//{
+	//	NumLineeParteFissa = 30;
+	//}
+
+	//'--numero di linee vuote tra un prodotto ed il successivo
+	//nLineeSpazioProdotti = 2;
+
+	//'--numero di linee per i totali
+	//'nLineeForTotali = 10
+	int nLineeForTotali = 6;
+
+	//'--determino le colonne da nascondere per i dettagli prodottiselect MA_DZT_Name from CTL_models
+	//'--recupero codice dalla convenzione
+	string CodiceModelloConvenzione = "";
+	string CodiceModelloStampaOrdinativo = "";
+	string strSQL = "";
+
+	CodiceModelloStampaOrdinativo = "MODELLO_BASE_CONVENZIONI_" + CodiceModelloConvenzione + "_MOD_StampaOrdinativo";
+	CodiceModelloStampaOrdinativo = "ODA_PRODOTTI";
+	//'--recupero ente della convenzione
+	//'--recupero info ente
+	TSRecordSet rsEnteConvenzione = cdf.GetRSReadFromQuery_("select aziragionesociale from CTL_DOC c with(nolock) inner join aziende a with(nolock)  on a.idazi = c.azienda where c.id=" + idDoc, ApplicationCommon.Application.ConnectionString) ;
+	rsEnteConvenzione.MoveFirst();
+
+	string strListColumn = ",";
+
+	strSQL = "select MA_DZT_Name from CTL_models ,CTL_modelattributes where MOD_Name = '" + Replace(CodiceModelloStampaOrdinativo, "'", "''") + "'  and MOD_ID = MA_MOD_ID order by ma_order";
+	strSQL = "select MA_DZT_Name from lib_models ,lib_modelattributes where MOD_Name = '" + Replace(CodiceModelloStampaOrdinativo,"'","''") + "'  and MOD_ID = MA_MOD_ID order by ma_order";
+	TSRecordSet  rsColumnStampa = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+	if(rsColumnStampa.RecordCount >0)
+	{
+		rsColumnStampa.MoveFirst();
+		while(!rsColumnStampa.EOF)
+		{
+			strListColumn = strListColumn + (CStr(rsColumnStampa["MA_DZT_Name"]).ToLower() + ",");
+			rsColumnStampa.MoveNext();
+		}
+	}
+
+	//'--recupero info FondiFinanziamento dalla convenzione
+	string strFondiFinanziamento = "";
+	//'--recupero colonne del modello dei prodotti
+	Dictionary<string, Field> ColumnProdotti  = objDoc.Sections["PRODOTTI"].mp_Columns;
+
+	string strHideCol = ",EsitoRiga,NonEditabili,Id_Product,ToDelete,Evidenzia,ClasseIscriz";
+	//for(int i = 1;i<ColumnProdotti.Count;i++)
+	//{
+	//	if(strListColumn.Contains("," + (CStr(ColumnProdotti.ElementAt(i).Value.Name)).ToUpper() +","))
+	//	{
+	//		strHideCol = strHideCol + CStr(ColumnProdotti.ElementAt(i).Value.Name) + ",";
+	//		NumCol = NumCol - 1;
+	//	}
+	//}
+	//'--recupero il numero di allegati da stampare
+	int nNumAllegati = DOC_NumRow("DOCUMENTAZIONE", "");
+	string strHideColAllegati = ",FNZ_DEL,TipoFile,AnagDoc,Obbligatorio,RichiediFirma,NotEditable,";
+
+	nNumProduct = DOC_NumRow("PRODOTTI", "");
+
+	//'--determino numero linee vuote tra un prodotto e l'altro che serviranno nella prima pagina
+	//'nLineeSpazioProdotti =  fix ( (nNumProduct*NumCol)/nLineeForPage)  
+
+
+
+	//'nNumLineeTotali = (NumCol + nLineeSpazioProdotti) * nNumProduct + NumLineeParteFissa + nLineeForTotali + NumPagAllegati
+
+	//'int nNumLineeTotali = (NumCol + nLineeSpazioProdotti) * nNumProduct + NumLineeParteFissa  + nLineeForTotali + nNumAllegati 
+	int nNumLineeTotali = nNumProduct + NumLineeParteFissa + nLineeForTotali + nNumAllegati;
+	//'nNumLineeTotali = (NumCol * nNumProduct) + nLineeSpazioProdotti + (nLineeForPage-nNumLineeFirstPage) + nLineeForTotali 
+	//'nNumLineeTotali = (NumCol + nLineeSpazioProdotti) * nNumProduct + nNumLineeFirstPage + nLineeForTotali
+	//'nResiduoLinee =  nLineeForPage - (nNumLineeTotali mod nLineeForPage)
+
+	int nResiduoLinee =  0;
+	double nNumPag = 0;
+	if(nNumLineeTotali <nLineeForPage)
+	{
+		nResiduoLinee = 0;
+		nNumPag = 1;
+	}
+	else
+	{
+		nResiduoLinee = nNumLineeTotali % nLineeForPage;
+		nNumPag = eProcurementNext.CommonModule.Basic.Fix(CDbl(nNumLineeTotali / nLineeForPage));
+	}
+	if(nResiduoLinee != 0)
+	{
+		nNumPag = nNumPag + 1;
+	}
+	//'Response.Write "nNumPag1=" & nNumPag & "<br>"
+	//'-- controlla se le righe rimaste sull'ultima pagina sono sufficienti a rappresentare i totali.
+	//'-- nel caso in cui non bastano si aggiunge una pagina
+	if(( nLineeForPage - nResiduoLinee ) < nLineeForTotali )
+	{
+		nNumPag = nNumPag + 1;
+	}
+	double idx_NumPagTotali = nNumPag;
+
+	int righeUP =  nLineeForPage - ( nResiduoLinee + nLineeForTotali );
+
+	double startRowAllegati = nNumPag;
+	string filigrana = CStr(GetParamURL(Request.QueryString.ToString(), "filigrana"));
+
+	if(!string.IsNullOrEmpty(filigrana))
+	{
+		filigrana = "background-image:url(../images/" + HtmlEncode(Replace(filigrana, "..", "")) + ".png)";
+
+	}
+	htmlToReturn.Write($@"
+	</head>
+
+	<body style=""" + filigrana + $@""">
+
+
+		 <div style=""text-align: center;"">
+			<center>");
+	bool bDrawTotali = false;
+	//'--response.write nNumPag
+	//'--response.end
+	for(int k  =1;k<nNumPag;k++)
+	{
+		htmlToReturn.Write($@"<table border=0 style=""height:1400px;"" >");
+		Header();
+		//'--se si tratta della prima pagina disegno le parti fisse
+		if(k == 1)
+		{
+			DisplayParteFissa();
+			nLineeForPage = 17;
+		}
+		else
+		{
+			nLineeForPage = 60;
+		}
+		if(!bDrawTotali)
+		{
+			htmlToReturn.Write($@"
+			<tr>
+				<td valign=""top"" >
+					<div style=""margin-top: 5px; text-align: left; width:800px; vertical-align:top;"">	
+
+					" + GetHtmlData_Dettagli_TABLE_PERPAGINA(k, "PRODOTTI", "", "", "", strHideCol, "", nLineeForPage, "", "", "", ref NumLineeStampate, ref NumLineeStampatePagina, NumCol, ref LastRowDiplayed1, ref LastColDisplayed) + $@"
+
+					</div>
+				</td>
+			</tr>");
+
+		}
+		//'--se sono sulla pagina dei totali vedo se entrano nella stessa pagina o in una nuova
+		if(k == idx_NumPagTotali)
+		{
+			NumLineeStampate = NumLineeStampate + nLineeForTotali;
+			bDrawTotali = true;
+
+			if(NumLineeStampatePagina + nLineeForTotali < 65)
+			{
+				DisegnoTotali();
+				nLineeForPage = 65 - NumLineeStampatePagina - nLineeForTotali;
+			}
+			else
+			{
+				//'--SALTO PAGINA
+				PrintPagina();
+				htmlToReturn.Write($@"<table border=0 style=""height:1400px;"" >");
+				Header();
+
+				DisegnoTotali();
+				nLineeForPage = 65 - nLineeForTotali;
+			}
+
+		}
+		else
+		{
+			nLineeForPage = 65 - NumLineeStampatePagina;
+		}
+		if(bDrawTotali)
+		{
+			if(nNumAllegati >=1)
+			{
+				//'--per la prim apagina degli allegati il numero di linee per pagine e quello rimanente
+				if(!bDrawIntestAllegati)
+				{
+					htmlToReturn.Write($@"
+						<tr>
+									<td valign=""top"" >
+									<div style=""margin-left:3px; margin-top: 5px; text-align: left; width: 800px; font-weight:bold;"">
+									ALLEGATI
+									</div>
+									</td>
+								</tr>
+					");
+					bDrawIntestAllegati = true;
+				}
+				//'stampo la griglia degli allegati
+				htmlToReturn.Write($@"<tr>
+						<td valign=""top"" >
+							<div style=""margin-top: 5px; text-align: left; width:800px; vertical-align:top;"">	
+
+							" + GetHtmlData_Dettagli_TABLE_PERPAGINA(k, "DOCUMENTAZIONE", "", "", "Allegato;Nome file,Descrizione;Descrizione", strHideColAllegati, "",  nLineeForPage, "", "", "", ref NumLineeStampate,ref NumLineeStampatePagina,  NumColAllegati, ref LastRowDiplayed,  ref LastColDisplayed) + $@"
+
+							</div>
+						</td>
+						</tr>");
+			}
+		}
+		if(k == nNumPag)
+		{
+			DisegnoFraseFinale();
+
+		}
+		//'--PIE DI PAGINA
+		footer();
+		htmlToReturn.Write("</table>");
+		//'--SALTO PAGINA
+		if(k<nNumPag)
+		{
+			PrintPagina();
+		}
+	}
+	htmlToReturn.Write($@"
+	 </center>
+		</div>
+	</body>
+	</html>");
+	void PrintPagina()
+	{
+		htmlToReturn.Write($@"<div style=""page-break-after: always""></div>");
+	}
+	void Header()
+	{
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+		if(imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" + ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);
+		}
+		htmlToReturn.Write("</td></tr>");
+	}
+	void footer()
+	{
+		NumPagCorrente = NumPagCorrente + 1;
+		if(NumPagCorrente == nNumPag)
+		{
+			if(!string.IsNullOrEmpty(strFondiFinanziamento))
+			{
+				htmlToReturn.Write($@"<tr><td valign=""top""  width=""740px"">");
+				htmlToReturn.Write($@"<img  width=""740px"" src = ""IMG/FondiFinanziamento/""" + strFondiFinanziamento + $@""".png"">");
+				htmlToReturn.Write($@"</td></tr>");
+			}
+		}
+		htmlToReturn.Write($@"<tr><td valign=""top"" height=""5px"" >");
+		htmlToReturn.Write($@"<table id=""piedipagina1"" width=""800px"" height=""5px"" style=""vertical-align: bottom; bottom: 0px""> ");
+		htmlToReturn.Write($@"        <tr><td align=""left"" ><b></b></td></tr><tr>");
+		htmlToReturn.Write($@"            <td style=""border-bottom: 1px solid black;border-top: 1px solid black;""  valign=""bottom"" align=""right"" >");
+		htmlToReturn.Write($@"                ");
+		htmlToReturn.Write($@"                Pagina: " + NumPagCorrente);
+		htmlToReturn.Write($@"            </td>");
+		htmlToReturn.Write($@"        </tr>");
+		htmlToReturn.Write($@"    </table>");
+		htmlToReturn.Write($@"    </td></tr>");
+	}
+	//'--DISEGNA INFO SUI TOTALI E DESCRIZIONE FINALE  
+	void DisegnoTotali()
+	{
+		htmlToReturn.Write($@"
+		<tr>
+				<td valign=""top"">
+				<div style=""text-align: left; width:100%; vertical-align:top;  margin-top: 5px;"">
+					<table align=""left"" border=0>");
+		if(DOC_FieldTecnical( "TESTATA", "Tipoimporto") == "ivaesclusa"  ||DOC_FieldTecnical( "TESTATA", "Tipoimporto")=="IvaIPTescluse" || DOC_FieldTecnical( "TESTATA", "Tipoimporto") == "ivainclusa" )
+		{
+			htmlToReturn.Write($@"<tr>
+		                    <td nowrap class=""Input"">
+
+		                       TOTALE ORDINE DI ACQUISTO(IVA ESCLUSA)
+		                    </td>
+		                    <td class=""Input"" align=right>
+		                        <font >
+		                            " + DOC_FieldHTML("TESTATA", "RDA_Total") + $@"
+		                        </font>
+		                    </td>
+		                </tr>
+
+						 <tr>
+		                    <td nowrap class=""Input"">
+		                        IVA
+		                    </td>
+		                    <td class=""Input"" align=right>
+		                        <font >
+		                            " + DOC_FieldHTML("TESTATA", "ValoreIva") + $@"
+		                        </font>
+		                    </td>
+		                </tr>");
+
+		}
+		htmlToReturn.Write($@"<tr>
+		                    <td nowrap class=""Input"">");
+		if( DOC_FieldTecnical( "TESTATA", "Tipoimporto")  != "esente" )
+		{
+			htmlToReturn.Write("TOTALE ORDINE DI ACQUISTO(IVA INCLUSA)");
+		}
+		else
+		{
+			htmlToReturn.Write("TOTALE ORDINE DI ACQUISTO(IVA INCLUSA)");
+		}
+		htmlToReturn.Write($@"
+		     </td>
+		                    <td class=""Input"" align=right>
+		                        <font >
+		                            " + DOC_FieldHTML("TESTATA", "TotalIva") + $@"
+		                        </font>
+		                    </td>
+		                </tr>
+
+		            </table>
+				</div>
+				</td>
+			</tr>
+			<tr>
+				<td valign=""top"" >
+					&nbsp;
+				</td>	
+			</tr>
+			<tr>
+				<td valign=""top"" >
+					" + DOC_FieldHTML("NOTECONTRATTO", "NoteContratto") + $@"
+				</td>	
+			</tr>			
+			<tr>
+				<td valign=""top"" >
+					" + DOC_FieldHTML("NOTECONTRATTO", "NoteConvenzione") + $@"
+				</td>	
+			</tr>");
+		if(DOC_FieldTecnical( "TESTATA", "Tipoimporto") == "ivaesclusa" || DOC_FieldTecnical( "TESTATA", "Tipoimporto")=="IvaIPTescluse" )
+		{
+			ApplicationCommon.CNV("frase finale stampa ordinativo");
+		}
+	}
+	//	'--disegna la parte fissa della prima pagina
+	void DisplayParteFissa()
+	{
+		htmlToReturn.Write($@"
+		<tr>
+			<td valign=""top"">
+
+
+			<div style=""font-size:16px; text-align: left; width: 800px; align: center;font-weight:bold;"">
+				ORDINE DI ACQUISTO ");
+		htmlToReturn.Write($@"
+				<br> [num. Registro <font> " + DOC_FieldHTML("DOCUMENT", "Protocollo") + $@"] </font>
+				<br> [num. Ordine 	<font> " + DOC_FieldHTML("DOCUMENT", "NumeroDocumento") + $@"] </font>
+				<br> [data Ordine 	<font> " + DOC_FieldHTML("DOCUMENT", "DataDocumento") + $@"] </font>
+			<div>
+		
+		");
+
+		htmlToReturn.Write($@"
+			</td>
+		</tr>");
+		string statoFunzionale = "";
+		if(statoFunzionale == "Accettato" || statoFunzionale == "Rifiutato" )
+		{
+			htmlToReturn.Write($@"
+			<tr>
+				<td valign=""top"">
+				<br/>
+				<div style=""text-align: center; width: 800px; align: center;border: 1px solid;padding: 2px"">");
+
+			statoFunzionale = DOC_FieldHTML("DOCUMENT", "StatoFunzionale");
+			if( statoFunzionale == "Accettato" )
+			{
+				htmlToReturn.Write("<strong>Conferma ordine di Acquisto</strong><br/><strong>NOTE:</strong>");
+				htmlToReturn.Write(DOC_FieldHTML("NOTE", "Note"));
+			}
+			if(statoFunzionale == "Rifiutato")
+			{
+				htmlToReturn.Write("<br/><strong>Rifiuto ordine di Acquisto</strong><br/><strong>NOTE:</strong>");
+				htmlToReturn.Write(DOC_FieldHTML("NOTE", "Note"));
+			}
+			htmlToReturn.Write($@"
+				<div>
+
+				</td>
+			</tr>");
+		}
+		htmlToReturn.Write($@"
+			<tr>
+			<td valign=""top"" >	
+				<div style=""width: 800px; margin-top: 5px; text-align: left"">
+					<table align=""left"" border=""0"">
+						<tr>
+							<td nowrap class=""Input"">
+								Descrizione:
+							</td>
+							<td>
+								<font>
+									"+DOC_FieldHTML( "DOCUMENT", "Note")+$@"
+								</font>
+							</td>
+						</tr>
+						<tr>
+							<td nowrap class=""Input"">
+								CIG:
+							</td>
+							<td>
+								<font>
+									"+DOC_FieldHTML( "DOCUMENT", "CIG")+$@"
+								</font>
+
+									");
+		
+		
+
+			
+				htmlToReturn.Write($@"
+							</td>
+						</tr>");
+				htmlToReturn.Write($@"
+						<tr>
+							<td nowrap class=""Input"">
+								CUP:
+							</td>
+							<td>
+								<font>
+									" + DOC_FieldHTML( "DOCUMENT", "CUP") + $@"
+								</font>
+							</td>
+						</tr>
+				");
+
+				htmlToReturn.Write($@"
+					</table>
+				</div>   ");
+
+		
+		
+		
+		htmlToReturn.Write($@"
+		 
+		    </td>
+		 </tr>
+		 <tr> 
+			<td valign=""top"" >	
+			<div style=""width: 800px; margin-top: 5px; text-align: right"">	      
+		    	<table align=""right"" border=0>
+		        <tr>
+		            <td nowrap=""nowrap"" class=""Input"">
+		                Fornitore
+		            </td>
+		            <td>
+				" + HtmlEncode(CStr(rsForn["Aziragionesociale"])) + $@"
+				</td>
+		         </tr>
+		        <tr>
+		            <td nowrap=""nowrap"" class=""Input"">
+		                Partita IVA
+		            </td>
+		            <td>
+
+		               " + CStr(rsForn["Azipartitaiva"]) + $@"
+
+		            </td>
+		         </tr>
+		         <tr>
+		            <td nowrap=""nowrap"" class=""Input"">
+		                Indirizzo
+		            </td>
+		            <td>
+
+		               " + HtmlEncode(CStr(rsForn["Aziindirizzoleg"])) + $@"
+		               <br>
+		               " + HtmlEncode(CStr(rsForn["AziCapleg"])) + "&nbsp;" + HtmlEncode(CStr(rsForn["Azilocalitaleg"])) + "(" + HtmlEncode(CStr(rsForn["AziProvincialeg"])) + $@")
+		            </td>
+		         </tr>
+				<!-- FG101122 -->
+		         <tr>
+		            <td nowrap=""nowrap"" class=""Input"">
+		                PEC
+		            </td>
+		            <td>
+
+		               " + HtmlEncode(CStr(rsForn["aziE_Mail"])) + $@"
+					 
+		            </td>
+		         </tr> 
+
+		      </table>
+
+			</div>				
+			</td>
+		</tr>
+		<tr>	
+		<td valign=""top"">
+		//'--info punto ordinante	
+		<div style=""width: 800px; margin-top: 5px; text-align: left"">
+
+			<table align=""left"" border=0>
+		           <tr>
+		               <td nowrap=""nowrap"" class=""Input"">
+		                   Il sottoscritto
+		               </td>
+		               <td>
+
+						" + HtmlEncode(CStr(rsPO["pfunome"])) + $@"
+	
+		                   </td>
+		             </tr>
+		             <tr>
+		                 <td nowrap=""nowrap"" class=""Input"">
+		                    Codice Fiscale
+		                 </td>
+		                 <td>
+
+		                    " + HtmlEncode(CStr(rsPO["pfucodicefiscale"])) + $@"
+
+		                 </td>
+		              </tr>
+		              <tr>
+		                 <td nowrap=""nowrap"" class=""Input"">
+		                     in qualita' di
+		                 </td>
+		                 <td>
+
+		                    " + CStr(rsPO["pfuruoloaziendale"]) + $@"
+
+		                 </td>
+		              </tr>
+		               <tr>
+		                  <td nowrap=""nowrap"" class=""Input"">
+		                      Per l'Amministrazione
+		                  </td>
+		                  <td>
+
+		                     "+HtmlEncode(CStr(rsEnte["AziRagioneSociale"]))+$@" 
+
+		                  </td>
+		               </tr>");
+					if(Aoo!="")
+					{
+						htmlToReturn.Write($@"
+						<tr>
+						    <td nowrap=""nowrap"" class=""Input"">
+						        AOO
+						    </td>
+						    <td>
+
+						      " + HtmlEncode(Aoo) + $@"
+
+						    </td>
+						 </tr> ");
+					}
+
+
+					if (AreaDiAppartenenza!="" )
+					{
+						htmlToReturn.Write($@"
+						<tr>
+						    <td nowrap=""nowrap"" class=""Input"">
+						        " + ApplicationCommon.CNV("Ufficio di Appartenenza") + $@"
+						    </td>
+						    <td>
+
+						       " + HtmlEncode(AreaDiAppartenenza) + $@"
+
+						    </td>
+						 </tr> ");
+					}
+
+					htmlToReturn.Write($@"    
+		                <tr>
+		                   <td nowrap=""nowrap"" class=""Input"">
+		                      Codice Fiscale
+		                   </td>
+		                   <td>
+
+		                      " + CStr(rsEnte["vatValore_FT"]) + $@"
+
+		                   </td>
+		                </tr>
+		                <tr>
+		                   <td nowrap=""nowrap"" class=""Input"">
+		                       Telefono
+		                   </td>
+		                   <td>
+
+		                      " + CStr(rsPO["pfutel"]) + $@"
+
+		                   </td>
+		                </tr> 
+
+		                <tr>
+		                   <td nowrap=""nowrap"" class=""Input"">
+		                       Email
+		                   </td>
+		                   <td>
+
+		                     " + CStr(rsPO["pfue_mail"]) + $@"
+
+		                   </td>
+		                </tr> ");
+						if (!string.IsNullOrEmpty(DOC_FieldHTML( "TESTATA", "CodiceIPA")))
+						{
+							htmlToReturn.Write($@"
+							<tr>
+							<td nowrap=""nowrap"" class=""Input"">
+								   " + ApplicationCommon.CNV("CodiceIPA") + $@"
+							   </td>
+							   <td>
+								  " + DOC_FieldHTML("TESTATA", "CodiceIPA") + $@"              
+							   </td>
+							</tr> ");
+						}
+						htmlToReturn.Write($@"
+						<tr>
+
+
+							 <td nowrap=""nowrap"" class=""Input"">
+							     Indirizzo di fatturazione
+							 </td>
+							 <td>
+
+							 """ + DOC_FieldHTML("TESTATA", "IndirizzoRitiro") + $@""" -&nbsp; 
+							 """ + DOC_FieldHTML("TESTATA", "FatturazioneCap") + $@""" -&nbsp;
+							 """ + DOC_FieldHTML("TESTATA", "FatturazioneLocalita") + $@""" &nbsp;(
+							 """ + DOC_FieldHTML("TESTATA", "FatturazioneProvincia") + $@"""&nbsp;) - 
+							  """ + DOC_FieldHTML("TESTATA", "FatturazioneStato") + $@""" &nbsp;
+
+
+
+							 </td>
+		                </tr> 
+						<tr>
+		                   <td nowrap=""nowrap"" class=""Input"">
+		                       Indirizzo di consegna
+		                   </td>
+		                   <td>
+
+		                      """ + DOC_FieldHTML("TESTATA", "ReferenteIndirizzo") + $@""" -&nbsp; 
+							  """ + DOC_FieldHTML("TESTATA", "ReferenteCap") + $@""" -&nbsp;
+							  """ + DOC_FieldHTML("TESTATA", "ReferenteLocalita") + $@""" &nbsp;(
+							  """ + DOC_FieldHTML("TESTATA", "ReferenteProvincia") + $@"""&nbsp;) - 
+		                      """ + DOC_FieldHTML("TESTATA", "ReferenteStato") + $@""" &nbsp;
+
+
+
+		                   </td>
+		                </tr> ");
+						if(!string.IsNullOrEmpty(DOC_Field( "TESTATA", "Allegato")))
+						{
+							htmlToReturn.Write($@"
+							<tr>
+							   <td nowrap=""nowrap"" class=""Input"">
+								   Altri Indirizzi di consegna
+							   </td>
+							   <td>
+									Vedi allegato: " + DOC_Field("TESTATA", "Allegato") + $@"
+							   </td>
+							</tr> ");
+						}
+
+	htmlToReturn.Write($@"			
+
+		           </table>
+
+			</div>
+			</td>
+		</tr>
+		<tr>
+			<td valign=""top"">
+			<div style=""margin-top: 5px; text-align: center; width: 800px; align: center;font-weight:bold;"">
+            " + ApplicationCommon.CNV("EFFETTUA ORDINE DI ACQUISTO PER") + $@"
+			</div>
+			</td>
+		</tr>");
+
+
+
+	}
+	void DisegnoFraseFinale()
+	{
+	htmlToReturn.Write($@"
+		<tr>
+			<td valign=""top"" >");
+
+		if(DOC_FieldTecnical( "TESTATA", "Tipoimporto") == "ivaesclusa" || DOC_FieldTecnical( "TESTATA", "Tipoimporto")=="IvaIPTescluse" )
+		{
+			htmlToReturn.Write($@"
+				<div style=""width: 800px; margin-top: 5px; text-align: left; font-weight:bold; font-size:8pt;"">
+						" + ApplicationCommon.CNV("frase finale stampa ordinativo") + $@"
+
+						</div>");
+		}
+		if(string.IsNullOrEmpty(filigrana))
+		{
+			htmlToReturn.Write($@"
+			<tr>
+				<td valign=""top"" >
+					<span class=""firmatodigitalmente"" >
+					 " + HtmlEncode(CStr(rsPO["pfunome"])) + $@"
+					 <br>(firmato digitalmente)
+					 </span>
+				</td>
+			</tr>
+
+			<tr>
+				<td height=""100%"" >
+					&nbsp;				
+				</td>
+			</tr>");
+		}
+
+	}
+	try
+	{
+	FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+}@Html.Raw(htmlToReturn.Out())

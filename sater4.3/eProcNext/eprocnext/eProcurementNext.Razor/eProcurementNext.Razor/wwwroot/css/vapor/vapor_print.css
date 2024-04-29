@@ -1,0 +1,80 @@
+tr.row.no-gutters {
+    display: block;
+}
+
+tr.row.gx-0 {
+    display: block;
+}
+
+    tr.row.no-gutters td.col-xxl-3 {
+        margin-right: 10px;
+    }
+
+tr.row.gx-0 td.col-xxl-3 {
+    margin-right: 10px;
+}
+
+.col-12,
+.col-md-6,
+.col-lg-6,
+.col-xl-4 {
+    width: 150px;
+}
+
+@media (min-width: 1500px) {
+    .col-xxl-3 {
+        margin-right: 0 !important;
+    }
+}
+
+
+hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,.1);
+}
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, font, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, dd, dl, dt, li, ol, ul, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, button, select, textarea, input{
+    font-size:16px!important;
+}
+
+.right table.VerticalModel_ReadOnlyField td, .right table.VerticalModel_ReadOnlyField {
+    min-width: 100px;
+    padding:8px;
+}
+
+table.VerticalModel_ReadOnlyField {
+    height: 0;
+    background: #efefef;
+    color: #000;
+}
+
+table.Grid{
+    width:500px;
+}
+
+table.Grid span,
+table.Grid,
+table.Grid td,
+table.Grid tr,
+table.Grid th,
+table.Grid div {
+    font-size: 10px;
+}
+
+td.VerticalModel_StaticCaption,
+th,
+ul.Toolbar_stampa li a {
+    background: #515151;
+}
+
+.Folder {
+    background: #d0d0d0;
+}
+
+ul.Toolbar_stampa {
+    border-top: 5px solid #d0d0d0;
+    border-bottom: 5px solid #d0d0d0;
+    background: #f3f3f3;
+}

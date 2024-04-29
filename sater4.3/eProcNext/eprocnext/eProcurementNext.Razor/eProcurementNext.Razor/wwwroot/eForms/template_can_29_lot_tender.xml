@@ -1,0 +1,17 @@
+<efac:LotTender>
+	<cbc:ID>@@@LOT_TENDER_ID@@@</cbc:ID>
+	<cbc:RankCode>1</cbc:RankCode>
+	<efbc:TenderRankedIndicator>true</efbc:TenderRankedIndicator>
+	<cac:LegalMonetaryTotal>
+		<cbc:PayableAmount currencyID="EUR">@@@LOT_TENDER_PAYABLE_AMOUNT@@@</cbc:PayableAmount>
+	</cac:LegalMonetaryTotal>
+	<efac:TenderingParty>
+		<cbc:ID>@@@LOT_TENDER_TENDERING_PARTY_ID@@@</cbc:ID>
+	</efac:TenderingParty>
+	<efac:TenderLot>
+		<cbc:ID>@@@LOT_TENDER_TENDER_LOT_ID@@@</cbc:ID>
+	</efac:TenderLot>
+	<efac:TenderReference>
+		<cbc:ID>@@@LOT_TENDER_TENDER_REF_ID@@@</cbc:ID>
+	</efac:TenderReference>
+</efac:LotTender>

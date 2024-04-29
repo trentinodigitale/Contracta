@@ -1,0 +1,251 @@
+﻿@page "/OTP.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject IHttpContextAccessor HttpContextAccessor
+@using Microsoft.AspNetCore.Http
+@using eProcurementNext.Application
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule
+@using static eProcurementNext.CommonModule.Basic;
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using eProcurementNext.Razor;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.OTPModel
+@{
+    Layout = ConfigurationServices.GetKey("LayoutVersion", "_masterPage");
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+}
+@{
+    var sqlParams = new Dictionary<string, object?>();
+    //--Al richiamo della pagina stessa dopo il submit del btn invio ottengo avvalorato il campo del form
+    string OtpCode = string.Empty;
+    string Server_Id = string.Empty;
+
+    //string REQUEST_METHOD = UCase(HttpContext.GetServerVariable("REQUEST_METHOD"));
+    bool isPost = HttpContextAccessor.HttpContext.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase);
+
+    //if (REQUEST_METHOD == "POST")
+    if (isPost)
+    {
+        OtpCode = CStr(GetValueFromForm(Request, "otp").Trim());
+        Server_Id = CStr(GetValueFromForm(Request, "Server_Id").Trim());
+    }
+
+    // Recupero dalla sessione l'idPfu
+    int idPfu = CInt(session["idpfu"]);
+
+    // Genero l'accessGuid dall'idPfu per passarlo ai servizi api
+    string accessGuid = insertAccessBarrier(session, HttpContext);
+
+    void drawContent()
+    {
+        TSRecordSet? rs;
+        string urlToInvoke = string.Empty;
+        string strSql = string.Empty;
+        int lunghezzaOTP = 0;
+        string templateHelper = string.Empty;
+        string responseText = string.Empty;
+
+        if (string.IsNullOrEmpty(CStr(idPfu)) || CStr(idPfu) == "-20")
+        {
+            htmlToReturn.Write($@"
+                    <div class=""otp-container"">
+					    <div>
+						    <h2 class='has_text_centered'>Tentativo di accesso non valido.</h2>
+					    </div>
+				    </div>
+                ");
+
+            throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+        }
+
+        //--Recupero il nome della pagina
+        string strNOMEAPPLICAZIONE_WEBAPI = CStr(ApplicationCommon.Application["NOMEAPPLICAZIONE_WEBAPI_PCP"]);
+
+        if (string.IsNullOrEmpty(strNOMEAPPLICAZIONE_WEBAPI))
+        {
+            strNOMEAPPLICAZIONE_WEBAPI = "WebApiFramework";
+        }
+
+        //--Controllo quale endpoint devo chiamare in base al request method della pagina
+        if (!string.IsNullOrEmpty(OtpCode))
+        {
+            urlToInvoke = $"{CStr(ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"])}/{strNOMEAPPLICAZIONE_WEBAPI}/api/OTP/Validate?idRow={Server_Id}&otpCode={OtpCode}&idPfuGuid={accessGuid}";
+        }
+        else
+        {
+            urlToInvoke = $"{CStr(ApplicationCommon.Application["WEBSERVERAPPLICAZIONE_INTERNO"])}/{strNOMEAPPLICAZIONE_WEBAPI}/api/OTP/Generate?idPfuGuid={accessGuid}";
+        }
+
+        #if DEBUG    
+    urlToInvoke =Replace(urlToInvoke, "https://localhost:7246", "https://eprocpa-dev.teamsystem.com") ;
+        #endif
+
+        //	Dim xmlhttp
+        //	Set xmlhttp = CreateObject ("Msxml2.ServerXMLHTTP.6.0")
+
+        // -- timeouts a 25 secondi
+        //	call xmlhttp.setTimeouts (600000,600000,600000,600000)
+
+        //	Effettua la richiesta GET
+        //	xmlhttp.open "GET", urlToInvoke, False
+        //	xmlhttp.send ""
+
+        try
+        {
+            // Effettua la richiesta GET
+            responseText = invokeUrl(urlToInvoke, 600000);
+            // Controlla se la richiesta è andata a buon fine
+        }
+        catch (Exception ex)
+        {
+            //--L'errore è generico per entrambi gli endpoint chiamati
+            // Gestisco l'errore della richiesta
+            htmlToReturn.Write($@"
+            			<div class=""otp-container"">
+            				<div>
+            					<h2 class='has_text_centered'>Errore durante l'operazione</h2>
+            					<p class='has_text_centered'>Contattare l'assistenza</p>
+            					</br>
+            					<form name=""form2"" type=""submit"" action=""../application/"">
+            						<button type=""submit"" class=""has_text_centered otp - button"">Ok</button>
+                                </form>
+                            </div>
+                        </div>
+            ");
+        }
+        // Tolgo il primo e l'ultimo carattere (le virgolette della response)
+        responseText = MidVb6(responseText, 2, responseText.Length - 2);
+
+        // Verifica se la risposta inizia con "1#"
+        if (Left(responseText, 2) == "1#")
+        {
+            // Caso di successo
+            //--Se OTPCode non è vuoto allora vengo dalla submit altrimenti dalla login.asp
+            if (!string.IsNullOrEmpty(OtpCode))
+            {
+                if (MidVb6(responseText, 3) == "OK")
+                {
+                    //--Da fare il redirect alla login.asp parametrizzato in modo che non ripassa per il controllo OTP
+                    accessGuid = insertAccessBarrier(session, HttpContext);
+                    throw new ResponseRedirectException($"./login.asp?redirectback=yes&chiamante=/portale/index.php&strMnemonicoMP=PA&LOGINOTP=YES&acckey={URLEncode(CStr(accessGuid))}", Response);
+                }
+                else
+                {
+                    //--recupero dalla configurazione la lunghezza dell'OTP per definire il controllo lato client sul form (se non lo trovo metto default a 6)
+                    strSql = "select dbo.parametri('certification','certification_req_33113','LunghezzaOTP','6',-1) as LunghezzaOTP";
+                    rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+
+                    lunghezzaOTP = CInt(rs["LunghezzaOTP"]!);
+
+                    htmlToReturn.Write(CStr(session["templateHelper"]));
+                    htmlToReturn.Write($@"
+                        					<div class=""otp-container"">
+                        						<div>
+                        							<h2 class='has_text_centered'>Codice Errato. Riprova</h2>
+                        							<form name=""form"" type=""submit"" action=""./ otp.asp ? lo = lista_attivita & accesso = multi"" method=""post"" id=""login"" autocomplete=""off"">
+                        								<input type=""text"" id=""otp"" class=""otp"" name=""otp"" requiredtype=""text"" id=""otp"" name=""otp"" pattern=""[0-9]*"" title=""Inserisci solo numeri"" minlength=""{lunghezzaOTP}"" maxlength=""{lunghezzaOTP}"" required>
+                        								<input type=""hidden"" name = ""Server_Id"" value = ""{Server_Id}"" >
+                        								<button class=""has_text_centered otp-button"">Accedi</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                        ");
+                }
+            }
+            else
+            {
+                //--recupero dalla configurazione la lunghezza dell'OTP per definire il controllo lato client sul form (se non lo trovo metto default a 6)
+                strSql = "select dbo.parametri('certification','certification_req_33113','LunghezzaOTP','6',-1) as LunghezzaOTP";
+                rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString);
+
+                lunghezzaOTP = CInt(rs["LunghezzaOTP"]!);
+
+                //--Recupero il template da visualizzare per l'helper, lo stampo e lo metto in sessione
+                sqlParams.Add("@Server_Id", MidVb6(responseText, 3));
+                strSql = "select TemplateHelper from OTP_Access with(nolock) where Server_Id = @Server_Id";
+                rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                templateHelper = CStr(rs["TemplateHelper"]);
+
+                session["templateHelper"] = templateHelper;
+
+                htmlToReturn.Write(CStr(session["templateHelper"]));
+                htmlToReturn.Write($@"
+                    				<div class=""otp-container"" >
+                    					<div>
+                    						<h2 class='has_text_centered'>Inserisci il Codice OTP</h2>
+                    						<form name=""form"" type=""submit"" action=""./otp.asp?lo=lista_attivita&accesso=multi"" method=""post"" id=""login"" autocomplete=""off"">
+                    							<input type=""text"" id=""otp"" class=""otp"" name=""otp"" requiredtype=""text"" id=""otp"" name=""otp"" pattern=""[0-9]*"" title=""Inserisci solo numeri"" minlength = ""{lunghezzaOTP}"" maxlength = ""{lunghezzaOTP}"" required >
+                    							<input type=""hidden"" name=""Server_Id"" value=""{MidVb6(responseText, 3)}"">
+                    							<button class=""has_text_centered otp-button"">Accedi</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                    			");
+            }
+        }
+        else
+        {
+            //--Sono nel caso di errore gestito lato server: ho un messaggio custom di errore da visualizzare a seconda della casistica (Per entrambi gli endpoint chiamati)
+
+            //--Recupero da DB l'informazione in base al numero di telefono dell'utente, se non trusted allora rientro nel meccanismo per fare il redirect sulla pagina per il cambio numero tel
+            sqlParams.Clear();
+            sqlParams.Add("@idpfu", idPfu);
+            strSql = "select TelTrusted from ProfiliUtente with(nolock) where idpfu = @idPfu";
+            rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+            bool TelTrusted = CBool(rs["TelTrusted"]);            
+
+            //-- Logica inversa: se è trusted allora non do il permesso di accedere
+            if (TelTrusted)
+            {
+                session["CanAccess_TelTrusted"] = 0;
+            }
+            else
+            {
+                session["CanAccess_TelTrusted"] = 1;
+            }
+
+            //--Se OTPCode non è vuoto allora vengo dalla submit quindi sono nel caso del secondo metodo chiamato e non ho un telefono trusted
+            if (!string.IsNullOrEmpty(OtpCode) && !TelTrusted)
+            {
+                htmlToReturn.Write($@"
+                    				<div class=""otp-container"">
+                    					<div>
+                    						<h2 class='has_text_centered'>Errore durante l'operazione</h2>
+                    						<p class='has_text_centered'>{MidVb6(responseText, 3)}</p>
+                    						</br>
+                    						<div class=""otp-container_inner"">
+                    							<a href=""./otp_PhoneChange.asp?lo=lista_attivita&accesso=multi"" class=""has_text_centered otp-button"">Modifica N° Telefono</a>
+                    							<a href=""../application/"" class=""has_text_centered otp - button"">Annulla</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                            ");
+            }
+            else
+            {
+                htmlToReturn.Write($@"
+                    				<div class=""otp-container"">
+                    					<div>
+                    						<h2 class='has_text_centered'>Errore durante l'operazione</h2>
+                    						<p class='has_text_centered'>{MidVb6(responseText, 3)}</p>
+                    						</br>
+                    						<form name=""form1"" type=""submit"" action=""../application/"">
+                    							<button type=""submit"" class=""has_text_centered otp - button""> Ok</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                ");
+            }
+        }
+    }
+
+    drawContent();
+}
+@Html.Raw(htmlToReturn.Out())

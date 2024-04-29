@@ -1,0 +1,1269 @@
+﻿@using eProcurementNext.CommonDB
+@using eProcurementNext.Core.Storage
+@using eProcurementNext.Session
+@using Microsoft.VisualBasic
+@using System.Web
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.masterPageToolsModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@inject eProcurementNext.Session.ISession _session;
+@inject eProcurementNext.Application.IEprocNextApplication _application;
+@inject IWebHostEnvironment _environment
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	string? pathRoot = (ViewData["pathRoot"] != null) ? ViewData["pathRoot"].ToString() : "../";// da settare su ogni pagina che richiama drawMasterPage(), Vedere cosa è stato fatto in Viewer.cshtml (Viewer.asp)
+	string? title = (ViewData["Title"] != null) ? ViewData["Title"].ToString() : "";
+
+	dynamic mp_jsOnload = (ViewData["mp_jsOnload"] != null) ? ViewData["mp_jsOnload"].ToString() : "";
+	dynamic mp_DocumentParamJS = (ViewData["mp_DocumentParamJS"] != null) ? ViewData["mp_DocumentParamJS"].ToString() : "";
+
+	LoadSession(Context, _session);
+
+	string versioneAflink = "";
+	versioneAflink = HttpUtility.UrlEncode(CStr(_application["VERSIONE_AFLINK"]));
+
+	if(string.IsNullOrEmpty(versioneAflink))
+	{
+		versioneAflink = "0";
+	}
+
+	string PATH_STYLE = GetParamURL(Context.Request.QueryString.ToString(), "PATH_STYLE");
+
+	long durataSessione = SessionCommon.SessionTimeout - CLng(_application["AVVISO_SESSIONE_LAG"]);
+
+	string portaleCliente = "";
+	if (string.IsNullOrEmpty(CStr(_application["SITO_ISTITUZIONALE_CLIENTE"])))
+	{
+		portaleCliente = "http://www.regione.emilia-romagna.it";
+	}
+	else
+	{
+		portaleCliente = CStr(_application["SITO_ISTITUZIONALE_CLIENTE"]);
+	}
+
+	if (string.IsNullOrEmpty(PATH_STYLE))
+	{
+		PATH_STYLE = _session["PATH_STYLE"];
+	}
+
+	if (string.IsNullOrEmpty(title))
+	{
+		title = "Home page";
+	}
+
+	string layout = CStr(Context.Request.Query["lo"]);
+
+
+    if (string.IsNullOrEmpty(layout))
+    {
+        layout = "none";
+    }
+
+	//'-- se ci sono per errore più parametri 'lo' nella querystring, il parametro mi arriverà con la virgola. quindi lo testo con una instr
+    if (CStr(layout).ToLower().Contains("print", StringComparison.Ordinal))
+    {
+        layout = "print";
+    }
+
+}
+@if(layout != "content" && layout != "print")
+{
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="it" xml:lang="it">
+		<head>
+			<title>@(Html.Raw(CNV(title, _session)))</title>
+			<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+			<!-- Forziamo il disable della 'compatibilità' perchè crea problemi di visualizzazione -->
+			<meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE" /> <!--EDGE è per IE10+ -->
+		
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/jscript/jquery/jquery-ui.css?v=@versioneAflink">
+		
+
+			<link rel="icon" href="@(pathRoot)favicon.ico?v=@versioneAflink">
+
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/themes/bootstrap.css?v=@versioneAflink" type="text/css">
+		
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/chat/chat.css?v=@versioneAflink" type="text/css" media="screen,projection"> 
+
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main_base.css?v=@versioneAflink" type="text/css" media="screen,projection"/> 
+			@if(CInt(_application["VERSIONE_GRAFICA"]) > 0){
+				<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main_base_new.css?v=@versioneAflink" type="text/css" media="screen,projection"/> 
+			}
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main.css?v=@versioneAflink" type="text/css" media="screen,projection"/> 
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main_stampa.css?v=@versioneAflink" type="text/css" media="print"/>
+
+			@if(!string.IsNullOrEmpty(GetParamURL(Context.Request.QueryString.ToString(), "CALENDAR"))){
+				<link rel=stylesheet href="@(pathRoot)CTL_Library/Themes/calendar.css?v=@versioneAflink" type="text/css">
+			}
+
+			<script src="@(pathRoot)CTL_Library/JScript/checkbrowser.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/JScript/getObj.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/JScript/setClassName.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/JScript/Grid/LockedGrid.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/Grid/GetIdSelectedRow.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/PROPERTYSELECTOR/PropertySelector.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/GetPosition.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/Grid/Grid.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/Grid/GetIdRow.js?v=@versioneAflink" type="text/javascript"></script>
+
+			<script src="@(pathRoot)CTL_Library/jscript/ExecFunction.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/OpenCloseSubMenu.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/toolbar/toolbar.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/DOCUMENT/document.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/DOCUMENT/sec_Dettagli.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/jscript/DOCUMENT/Sec_Dettagli_AddRow.js?v=@versioneAflink" type="text/javascript"></script>
+
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_Attach.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_mail.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_Quiz.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_Text.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_TextArea.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_VD.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ck_VN.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/ExtendedAttrib.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/FldDom.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/FldExtDom.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/FldHierarchy.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/SearchDocumentForExtendeAttrib.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/JScript/FIELD/UpdateFieldVisual.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_Library/JScript/replaceExtended.js?v=@versioneAflink" type="text/javascript"></script>
+
+			<script src="@(pathRoot)CTL_LIBRARY/jscript/jquery/js/jquery-3.6.0.min.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/jscript/jquery/js/jquery-ui.min.js?v=@versioneAflink" type="text/javascript"></script>
+		
+			<script src="@(pathRoot)CTL_LIBRARY/jscript/jquery.rte.AFS.js?v=@versioneAflink" type="text/javascript"></script>
+		
+			<script src="@(pathRoot)CTL_Library/JScript/setVisibility.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerDel.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerUpd.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerDelConfirm.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/Dash_ExecProcess.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerPrint.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerFilter.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/DashBoardOpenFunc.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerExcel.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/ViewerGrigliaXml.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/CubeGrid.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)DASHBOARD/jsapp/Dash_DocCopy.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/jscript/DOCUMENT/Print.js?v=@versioneAflink" type="text/javascript"></script>
+			<script src="@(pathRoot)CTL_LIBRARY/jscript/ScrollPage/ScrollPage.js?v=@versioneAflink" type="text/javascript"></script>
+    		
+			@*TODO: remove*@
+			<script src="@(pathRoot)CTL_Library/JScript/main.js?v=@versioneAflink" type="text/javascript"></script>
+			
+			@if(_application["chat_on"].ToLower()!="no") {
+			<script src="@(pathRoot)CTL_Library/Chat/chat.js?v=@versioneAflink" type="text/javascript"></script>
+			}
+
+@{
+	dynamic strPathJsCustom;
+	dynamic PATHTOOLBAR;
+
+	if ( !string.IsNullOrEmpty(CStr(GetParamURL(Context.Request.QueryString.ToString(), "jscript"))) )
+    {
+        PATHTOOLBAR = CStr( GetParamURL(Context.Request.QueryString.ToString(), "PATHTOOLBAR"));
+
+        if ( string.IsNullOrEmpty(PATHTOOLBAR)) {
+            PATHTOOLBAR = $"{pathRoot}customdoc/";
+        }
+
+		strPathJsCustom = $@"{HttpUtility.HtmlEncode(PATHTOOLBAR)}jsapp/{HttpUtility.HtmlEncode(CStr(GetParamURL(Context.Request.QueryString.ToString(), "jscript")))}.js";
+        if (CommonStorage.ExistsFile(System.IO.Path.Combine(_environment.WebRootPath, "." + Context.Request.Path, "../", strPathJsCustom.ToString())))
+        {
+			<script src="@(HttpUtility.HtmlEncode(PATHTOOLBAR))jsapp/@(HttpUtility.HtmlEncode(CStr(GetParamURL(Context.Request.QueryString.ToString(), "jscript")))).js?v=@(versioneAflink)" type="text/javascript"></script>
+        }
+
+    }
+
+	PATHTOOLBAR = $"{pathRoot}customdoc/";
+
+	strPathJsCustom = $@"{HttpUtility.HtmlEncode(PATHTOOLBAR)}jsapp/CustomMain.js";
+	if (CommonStorage.ExistsFile(System.IO.Path.Combine(_environment.WebRootPath, "." + Context.Request.Path, "../", strPathJsCustom.ToString())))
+    {
+		<script src="@(HttpUtility.HtmlEncode(PATHTOOLBAR))jsapp/CustomMain.js?v=@(versioneAflink)" type="text/javascript"></script>
+    }
+
+	if( !string.IsNullOrEmpty(mp_DocumentParamJS))
+    {
+		<script src="@(pathRoot)CustomDoc/JsApp/@(mp_DocumentParamJS).js?v=@(versioneAflink)" type="text/javascript"></script>
+    }
+
+	dynamic idPfu = CStr(_session["idpfu"]);
+
+    if (string.IsNullOrEmpty(idPfu))
+    {
+        idPfu = -20;
+    }
+
+    dynamic idAzi = CStr(_session["IDAZI"]);
+    if (string.IsNullOrEmpty(idAzi)) {
+        idAzi = -20;
+    }
+
+    string logoutIAM = "";
+    string idToken = CStr(_session["OPEN_ID_TOKEN"]);
+
+    if (!string.IsNullOrEmpty(CStr(_application["OPENID_URL_LOGOUT"])) && !string.IsNullOrEmpty(CStr(idToken))) {
+
+        logoutIAM = CStr(_application["OPENID_URL_LOGOUT"]);
+
+        if (InStrVb6(1, logoutIAM, "?") <= 0) { //codice originale InStr(logoutIAM,"?") <= 0
+            logoutIAM = $"{logoutIAM}?";
+        }
+
+        logoutIAM = $"{logoutIAM}state=xx123321yyy&id_token_hint={HttpUtility.UrlEncode(idToken)}";
+
+        string retUrl = CStr(_application["OPENID_REDIRECT_URI"]);
+
+        if (!string.IsNullOrEmpty(retUrl)) {
+            logoutIAM = $"{logoutIAM}&post_logout_redirect_uri={HttpUtility.UrlEncode(retUrl)}";
+        }
+
+    }
+
+}
+
+		<script type="text/javascript">
+			@{
+			<text>
+				/* Variabili globali */
+				var singleWin = '@(_application["SINGLEWIN"])';
+				var ApplicationAccessible = '@(_application["ACCESSIBLE"])';
+				var pathRoot = '@(pathRoot)';
+				var dDateStart = new Date();
+				var BrowseInPage = 1;
+				var LoadFromFrame = '@(Strings.UCase(CStr(_application["LoadFromFrame"])))';
+				var urlPortale = '@(CStr(_application["strVirtualDirectory"]))';
+				var urlLogoutIAM = '@(logoutIAM)';
+				var layout= '@(HttpUtility.HtmlEncode(CStr( GetParamURL(Context.Request.QueryString.ToString(), "lo")).Replace(@"'", @"\'")))';
+				var idpfuUtenteCollegato = @(idPfu);
+				var idaziAziendaCollegata = @(idAzi);
+				var start = +new Date(),diff,minutes,seconds;
+				var minAvvisoSessione = @(CLng(_application["AVVISO_SESSIONE_MINUTI"]) - 1); //Tempo in minuti allo scadere dei quali l'utente verrà avvisato dell'approssimarsi del _session expired
+				var isFaseII = @CStr(IsMasterPageNew()).ToLower();
+				var avvisaSessione = true;
+				var continuaConteggio = true;
+			</text>
+			}
+@{
+	if (string.IsNullOrEmpty(CStr(_application["ATTIVA_FASE_DI_TEST"]).ToUpper()))
+    {
+        <text>
+            try
+			{
+				document.onmousedown="if (event.button==2) return false"; 
+				document.oncontextmenu=new Function("return false");
+            }
+			catch(e){}
+        </text>
+    }
+}
+@{
+<text>	
+	$(document).ready(function() 
+	{
+					
+			//-- sostituisce i rich text edit
+			try
+			{
+				$('.RTE').rte("", "../images/toolbar/");
+						
+						
+			}
+			catch(e)
+			{						
+			}
+					
+			try
+			{
+				window.onscroll = OnBodyScroll;
+						
+			}
+			catch(e)
+			{						
+			}
+			
+			//Sostituisco gli alternative delle immagini/label con il relativo multilinguismo
+			try
+			{
+				var tmpMlg = '';
+				var cacheCnv = [];
+				var keyMlng = '';
+				var tmpIndice;
+				var bFound;
+				var imgSrc = '';
+
+				bFound = false;
+
+				$('.img_label_alt, .IMG_SIGNINFO').each( function( index, element )
+				{
+							
+					keyMlng = $( this ).attr('alt');
+					imgSrc = $( this ).attr('src');
+							
+					if ( keyMlng == '' )
+					{
+						keyMlng = ReplaceExtended( imgSrc,'../','');
+					}
+							
+					bFound = false;
+
+					//Controllo se la chiave richiesta è gia stata restituita da un altra chiamata precedente
+							
+					for	(tmpIndice = 0; tmpIndice @Html.Raw("<") cacheCnv.length;tmpIndice++) 
+					{
+						//alert(cacheCnv[tmpIndice] + '---' + keyMlng);
+						try
+						{
+							if ( cacheCnv[tmpIndice] == keyMlng )
+							{
+								bFound = true;
+								break; //Se trovo la chiave esco dal ciclo
+							}
+						}
+						catch(e){}
+					}
+							
+					if ( bFound == false )
+					{
+						tmpMlg = CNV( pathRoot , keyMlng );
+
+								
+						cacheCnv.push(keyMlng);
+						cacheCnv[keyMlng] = tmpMlg;
+					}
+					
+					$( this ).attr('alt', cacheCnv[keyMlng]);
+					$( this ).attr('title', cacheCnv[keyMlng]);
+					});
+				}
+				catch(e)
+				{
+				}
+
+				try
+				{
+					// Riapro l'ultimo gruppo aperto
+					var openMenu = getCookie('openGroup');
+						
+					if ( openMenu != '')
+						$('#' + openMenu.replace('_Open','_Close')).click();
+				}
+				catch(e)
+				{
+				}
+</text>
+}
+			@{
+
+				if ( !string.IsNullOrEmpty(_session["MSG_ERROR"])) {
+
+					string msg_local_err = _session["MSG_ERROR"];
+					msg_local_err = msg_local_err.Replace(@"'", @"\'");
+					msg_local_err = msg_local_err.Replace(Environment.NewLine, "\n");
+
+                    <text>
+                    try
+					{
+                        DMessageBox('../', '@Html.Raw((GetParam(msg_local_err,"MSG")))', '@Html.Raw((GetParam(msg_local_err, "CAPTION")))', '@(GetParam(msg_local_err, "ICO"))', 400, 300);
+
+                    }
+					catch(e)
+					{
+                        alert('@Html.Raw((GetParam(msg_local_err, "MSG")))');
+					}
+                    </text>
+
+                    _session["MSG_ERROR"] = "";
+
+                }
+
+                //'-- Se sono presenti dei messaggi di sistema
+                int lngContatore = CInt(_application["CONTATORE_MESSAGGI"]);
+                
+				//'-- Se c'è un messaggio di sistema e non l'ho ancora letto
+                for (int iM = 0; iM <= lngContatore; iM++){//to lngContatore
+                 //'response.write "//SYSTEM_INFO_" & iM & "[" &  session("SYSTEM_INFO_" & cstr(iM)) & "] - " & vbCrLf
+                 //'response.write "//" & iM & "_SYS_MSG" & application(iM & "_SYS_MSG")& vbCrLf
+                 //'response.write "//" & iM & "_SYS_DF" & application(iM & "_SYS_DF")& " - " & now & vbCrLf
+
+                    if (lngContatore > 0 && IsEmpty( _session["SYSTEM_INFO_" + CStr(iM)]) && !string.IsNullOrEmpty(CStr(_application[iM + "_SYS_MSG"]))  && DateAndTime.Now.Ticks < CDate(_application[iM + "_SYS_DF"]).Ticks ){
+
+                            string msgSysAttivo = CStr(_application[iM + "_SYS_MSG"]);
+                            msgSysAttivo = msgSysAttivo.Replace(Environment.NewLine,"<br/>");
+			
+							<text>
+								
+								try
+								{
+									showSysMessage( '@(msgSysAttivo.Replace(@"'",@"\'"))' , 'Messaggio di Sistema');
+								}
+								catch(e)
+								{
+									alert('@(msgSysAttivo.Replace(@"'",@"\'"))');
+								}
+							</text>
+		
+							
+							//'-- Messaggio letto!
+							_session["SYSTEM_INFO_" + CStr(iM)] = "LETTO";
+                            break;
+					}
+							
+				}
+					
+
+
+                if(!string.IsNullOrEmpty(CStr(mp_jsOnload)))
+                {
+                    <text>
+                        try
+					    {
+                            @(mp_jsOnload)
+                        }
+					    catch(e)
+					{
+                        alert(e.message);
+					}
+                    </text>
+                }
+
+
+                if (CStr(_session["ControlloPopUpInserito"]) != "si" && CInt(idPfu) > 0 && layout == "base") {
+
+                    <text>
+                    var myTestPopUp = window.open("about:blank","","directories=no,height=1,width=1,menubar=no,resizable=no,scrollbars=yes,status=no,titlebar=no,top=0,location=no");
+                    if (!myTestPopUp)
+                    {
+                        AF_Alert('Disabilitare il blocco dei pop-up');
+                    }
+                    else
+                    {
+                        myTestPopUp.close();
+                    }
+
+
+                    </text>
+
+                    _session["ControlloPopUpInserito"] = "si";
+
+
+                }
+				<text>});</text>
+
+                string bloccaTimerSessione = "";
+
+                <text>
+                    window.setInterval (SetDateTime,1000);
+                    function logout()
+					{
+						if ( typeof (FLAG_CHANGE_DOCUMENT) != "undefined")
+						{
+							if ( FLAG_CHANGE_DOCUMENT == 1)
+							{
+						
+								var Title = 'Attenzione';
+								var ML_text = 'Le modifiche non sono state salvate. Si vuole proseguire senza salvare ?';
+						
+								//se presente una frase specializzata la uso
+								if ( typeof (ML_CHANGE_DOCUMENT) != "undefined")
+								{	
+									if ( ML_CHANGE_DOCUMENT != '')
+										ML_text = ML_CHANGE_DOCUMENT ;
+								}
+								var ICO = 3;
+								var page = 'ctl_library/MessageBoxWin.asp?MODALE=YES&ML=YES&MSG=' + encodeURIComponent( ML_text ) +'&CAPTION=' + encodeURIComponent(Title) + '&ICO=' + encodeURIComponent(ICO);
+						
+								ExecFunctionModaleConfirm( page, null , 200 , 400 , null , 'logout_Sub' );
+						
+							}
+							else
+							{
+								logout_Sub();
+							}		
+						}
+						else
+						{	
+							logout_Sub();
+						}
+			
+					}
+			
+			
+					function logout_Sub()
+					{
+						$.ajax({
+								url: pathRoot + 'logout.asp',
+								cache: false
+							})
+							.done(function( responseText ) 
+							{
+								try
+								{
+									if ( responseText != '' )
+									{
+										//Invochiamo la pagina richiesta dalla nostra logout ( utile per effettuare logout IAM ad es. )
+										urlPortale = responseText;
+									}
+								}
+								catch(e){}
+													
+								if (LoadFromFrame == 'NO')
+									window.location.href = urlPortale;
+								else
+									window.close();							
+							});			
+					}
+			
+					function timer() 
+					{
+						if ( continuaConteggio )
+						{
+							duration = 60 * @(CStr(durataSessione)); //Durata della _sessione di lavoro in secondi meno 2 minuti
+
+							try
+							{
+								var strLastOpServer = getCookie('LASTOPERATION');
+								//console.log(strLastOpServer);
+						
+								if ( strLastOpServer )
+								{
+									strLastOpServer = decodeURIComponent(strLastOpServer);
+									//console.log(strLastOpServer);
+									var dtLastOpServer = +new Date(strLastOpServer);
+									//console.log(dtLastOpServer);
+							
+									if ( dtLastOpServer > start )
+									{
+										//console.log('timer di _sessione. la variabile start ( ' + start + ' ) è minore del LASTOPERATION ( ' + dtLastOpServer + ' )' );
+										start = dtLastOpServer;
+									}
+							
+								}
+							}
+							catch(e)
+							{
+								//console.error('Errore settaggio LASTOPERATION :' + e.message);
+							}
+
+							diff = duration - (((+new Date() - start) / 1000) | 0);
+
+							minutes = (diff / 60) | 0;
+							seconds = (diff % 60) | 0;
+
+							minutes = minutes @Html.Raw("<") 10 ? "0" + minutes : minutes;
+							seconds = seconds @Html.Raw("<") 10 ? "0" + seconds : seconds;
+
+							try
+							{
+								if (avvisaSessione && minutes @Html.Raw("<")= minAvvisoSessione )
+								{
+									avvisaSessione = false;
+									avvisaScadenzaSessione();
+								}					
+
+							}
+							catch(e){}
+
+							document.getElementById('tempo_di_sessione').innerHTML = minutes + ":" + seconds + ' m'; 
+							document.getElementById('alert_countdown_sessione').innerHTML = minutes + ":" + seconds + ' m'; 
+					
+							if (diff @Html.Raw("<")= 0) 
+							{
+								continuaConteggio = false;
+								document.getElementById('tempo_di_sessione').style.color = 'red';
+								document.getElementById('tempo_di_sessione').style.fontWeight = 'bold';
+						
+								/*
+						
+									att. 365583. Non facciamo più uscire fuori _sessione alla conclusione del timer
+						
+								//Faccio scadere la _sessione di lavoro senza aspettare il tempo di LAG calcolato in meno sulla durata di _sessione
+								$.ajax({url: pathRoot + 'CTL_LIBRARY/Abandon.asp'}).done(function() {
+										resetSessionTimer();
+									});
+
+								*/
+						
+								avvisaSessioneScaduta();
+						
+							}
+						}
+					}
+
+					function resetSessionTimer()
+					{
+						start = +new Date();
+					}
+
+					function SetDateTime()
+					{
+                </text>
+
+				@if(CStr(bloccaTimerSessione.ToUpper()) != "YES")
+                {
+					<text>
+					try
+					{
+						timer();
+					}
+					catch(e){}
+					</text>
+                }
+}
+
+@{
+			<text>
+				yServer='@(DateAndTime.Year(DateAndTime.Now))';
+				mServer='@(addZero(DateAndTime.Month(DateAndTime.Now).ToString()))';	
+				dServer='@(addZero(DateAndTime.Day(DateAndTime.Now).ToString()))';	
+				hs='@(DateAndTime.Hour(DateAndTime.Now))';
+				ms='@(DateAndTime.Minute(DateAndTime.Now))';
+				ss='@(DateAndTime.Second(DateAndTime.Now))';
+				sLng='@(_session["strSuffLing"])';
+				
+
+				var dServer=new Date(yServer,mServer-1,dServer,hs,ms,ss);
+				var dClient=new Date();
+				
+				//effettuo la differenza tra data client e data server in millisecondi
+				dDateDiffMillisec=dClient.getTime() - dDateStart.getTime();
+
+				//sommo la differenza in millisecondi alla data attuale
+				dDateCurrMilli= dServer.getTime() + dDateDiffMillisec;
+				
+				//visualizzo data corrente
+				var dDateCurr=new Date(dDateCurrMilli);
+
+				nDay=dDateCurr.getDate();
+				nMonth=dDateCurr.getMonth()+1;
+				nYear=dDateCurr.getFullYear();
+				nh=dDateCurr.getHours();
+				nm=dDateCurr.getMinutes();
+				ns=dDateCurr.getSeconds();
+				
+				strDay= new String(nDay);
+				if (strDay.length==1)
+					strDay='0'+strDay;
+				
+				strMonth= new String(nMonth);	
+				if (strMonth.length==1)
+					strMonth='0'+strMonth;
+				
+				strh= new String(nh);	
+				if (strh.length==1)
+					strh='0'+strh;
+				
+				strm= new String(nm);	
+				if (strm.length==1)
+					strm='0'+strm;
+				
+				strs= new String(ns);	
+				if (strs.length==1)
+					strs='0'+strs;
+				
+				
+				objCell=getObj('DateTime');
+				
+				try
+				{
+					if (sLng=='I')
+						objCell.innerHTML= strDay + '/'+ strMonth + '/' +nYear+ ' ' + strh + ':' + strm +':'+ strs ;  
+					else
+						objCell.innerHTML= strMonth + '/'+ strDay  + '' +nYear+ ' ' + strh + ':' + strm +':'+ strs ;  
+				}
+				catch(e){}
+			}
+			//variabile globale mi indica se sono stati fatti cambiamenti sul documento
+			var FLAG_CHANGE_DOCUMENT = 0;	
+			var TimeLastClick = 0 ;
+		
+		
+		
+		</text>
+}
+	</script>
+
+	</head>
+
+
+	<!-- <body onscroll="OnBodyScroll()" > -->
+	<body onchange="Set_Change_Document();" onmouseup="Set_OnClick_Document();">
+	
+		<ul class="skiplinks">
+			<!-- <li><a href="#cerca">Cerca nel sito</a></li> -->
+			<li><a href="#contenutopagina" class="u2" title="Salta ai contenuti" accesskey="k">Salta ai contenuti</a></li>
+			<li><a href="#main_middle_left_div" class="u2" title="Salta al menu principale" accesskey="n">Salta al menu principale</a></li>
+			<li><a href="@(pathRoot)home/main.asp?lo=base&GROUPS_NAME=@(CStr(_session["GROUPS_NAME"]))" class="u2" title="Salta alla home" accesskey="h">Salta alla home</a></li>
+		</ul>	
+			
+		<div id="finestra_modale">
+		</div>
+		
+		<div id="finestra_modale_confirm">
+		</div>
+		
+		<div id="finestra_modale_sessione" title="Avviso di sessione" style="display:none">
+			La sessione di lavoro sta per scadere. <br/> 
+			Rinnovarla? <br/><br/>
+			<p style="text-align:center;font-size:10;" id="alert_countdown_sessione"></p>
+		</div>
+
+
+	
+	@if(layout == "base"){
+
+		@await Component.InvokeAsync("Chat", new { pathRoot = pathRoot })
+		
+		<div id="GOTOP" class="backtop" onclick="GoTop()"  style="display:none" ><img src="@(pathRoot)ctl_library/images/general/top.png" alt="Vai inizio pagina" height="42" width="42"></div>		
+		<div id="container">
+			<div class="top" id="main_top_div">
+				<div class="ContDiv">
+				
+				<table class="TableLayout">
+					<tr>
+						<td class="TdLeft">
+							<div class="left" id="main_top_left_div">
+								<a href="@(portaleCliente)">
+									@drawLogo(pathRoot)
+								</a>					
+							</div>
+						</td>
+						<td class="TdRight">
+							<div class="right" id="main_top_right_div">
+
+								<div class="main_top_1">
+										<ul class="ul_main_top_elements">
+											<li class="li_main_top_element_Title">
+												@(Html.Raw(_application["NOMEPORTALE"]))
+											</li>
+											<li class="li_main_top_element_RagSociale">
+												<strong>@(Html.Raw(CNV("Azienda", _session))): </strong>
+				
+													@if (!string.IsNullOrEmpty(CStr(_session["RagSociale"])))
+													{
+														<span>@(Html.Raw(HttpUtility.HtmlEncode(_session["RagSociale"])))</span>
+													}
+
+											</li>	
+											<li class="li_main_top_element_UserName">
+												<strong>@(Html.Raw(CNV("Utente", _session))): </strong> 
+				
+													@if ( !string.IsNullOrEmpty(CStr(_session["UserName"]))){ 
+														<span>@(Html.Raw(HttpUtility.HtmlEncode(_session["UserName"])))</span>
+													}
+
+											</li>
+											@if(_session.IsLogged(Context, SessionMiddleware.Cookie_Auth_Name) && !Context.Request.Path.ToString().Contains("login_conferma.asp", StringComparison.Ordinal))
+											{
+												<li class="li_main_top_element_logout last">
+														<a href="#logout" onclick="logout();" class="link_logout"><strong>@(Html.Raw(CNV("Logout", _session)))</strong></a>
+												</li>
+											}
+										</ul>
+									</div>
+
+							</div>
+							<div class="TopInfo">
+								<div class="TopLeftInfo">
+									<h1 id="portal-logo">
+										<a href="@(CStr(_application["SITO_2_ISTITUZIONALE_CLIENTE"]))" accesskey="1">@(Html.Raw(CNV("Descrizione cliente", _session)))</a>
+									</h1>
+								</div>
+								<div class="TopRightInfo">
+									@*TODO: scommentare (immagine emilia romagna)*@
+									@*<a href="@(portaleCliente)">
+										<img src="@(pathRoot)images/rer.gif" alt="@(Html.Raw(CNV("Titolo cliente", _session)))"/>
+									</a>*@
+								</div>
+							</div>
+						</td>
+					</tr>
+				</table>
+					
+					
+				</div>
+				<div class="headerImg">
+				</div>
+				<div class="TopToolbar">
+
+					<div class="left">
+                        @if(string.IsNullOrEmpty(CStr(_session["ACCESS_GUID"]))){
+						    <a href="#" onclick="NascondiMenu();" class="span_footer_nascondi_menu" id="nascondi_menu">@(Html.Raw(CNV("Nascondi menu", _session)))</a>
+						    <a href="#" onclick="NascondiMenu();" class="display_none_soft" id="mostra_menu">@(Html.Raw(CNV("Mostra menu", _session)))</a>
+                        }
+                    </div>
+
+					<div class="top_header_mid">
+						@(Html.Raw(CNV("ML_HEADER_INFO_CLIENTE", _session)))
+					</div>
+					
+					<div class="right">
+						<div class="top_right_2">
+                            @if(string.IsNullOrEmpty(CStr(_session["ACCESS_GUID"]))){
+							    @await Component.InvokeAsync("Toolbar")
+                            }
+						</div>
+
+					</div>
+
+				</div>
+				
+				<div class="Sezione">
+				</div>
+				<div class="breadCrumb">
+				
+				@Html.Raw(CNV("portaleCliente", _session))
+
+					@await Component.InvokeAsync("Breadcrumb" , new { pathRoot = pathRoot })
+
+				</div>
+			</div>
+			<div class="middle" id="main_middle_div">
+
+				<table class="TableLayout">
+					<tr>
+                        @if(string.IsNullOrEmpty(CStr(_session["ACCESS_GUID"]))){
+						    <td class="TdLeft">
+							    <div class="left toolbar_head" id="main_middle_left_div">
+								    @await Component.InvokeAsync("Menu")
+							    </div>
+						    </td>
+                        }
+						<td class="TdRight" id="td_content_right">
+							<div class="right" id="contenutopagina">
+
+								@RenderBody()
+
+							</div>
+						</td>
+					</tr>	
+				</table>	
+				
+				
+			</div>
+			
+			<div id="push">
+			</div>
+			
+		</div>
+		
+		
+		
+		<div class="bottom" id="main_bottom_div">
+			<div class="Footer_00">
+				<div class="left">
+
+					<span class="span_footer_datetime">@(Html.Raw(CNV("Ora Server", _session))):</span><span class="span_footer_datetime" id="DateTime"></span>
+
+				</div>
+
+				<div class="links_footer right">
+					<ul>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_CONTATTI", _session)))">@(Html.Raw(CNV("Contatti", _session)))</a></li>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_INFOSITO", _session)))">@(Html.Raw(CNV("Informazioni sul sito", _session)))</a></li>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_NOTELEGALI", _session)))">@(Html.Raw(CNV("Note legali", _session)))</a></li>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_PRIVACY", _session)))">Privacy</a></li>
+					</ul>
+				</div>
+
+				@if(CStr(Strings.UCase("bloccaTimerSessione")) != "YES")
+                {
+						<div class="footer_right">
+							@(Html.Raw(CNV("Tempo stimato di sessione rimanente", _session)))<br/><span id="tempo_di_sessione">@CStr(durataSessione):00 m</span>
+						</div>
+                }
+
+			</div>
+			
+			
+			<div class="Footer_01">
+
+				<div class="left">
+				</div>
+				<div class="right">
+						@(Html.Raw(CNV("Footer_01", _session)))
+					 
+				</div>
+
+			</div>
+			
+			
+			<div class="Footer_02">
+				<div class="left">
+				</div>
+				<div class="right">
+						@(Html.Raw(CNV("Footer_02", _session)))
+					
+				</div>
+			</div>
+			
+		</div>
+		
+	
+		<div class="INFO_BOX" id="INFO_PROCESS">
+		</div>
+
+
+		<div class="INFO_BOX2" id="INFO_PROCESS2">
+			<table class="INFO_BOX_TB">
+				<tr>
+					<td colspan="3">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td>
+						&nbsp;
+					</td>
+					<td class="INFO_BOX_TD" valign="middle">
+						<table class="INFO_BOX_WIN_TB">
+							<tr>
+								<td class="INFO_BOX_WIN_CAPTION">@(Html.Raw(CNV("Attenzione", _session)))</td>
+							</tr>
+							<tr>
+								<td class="INFO_BOX_WIN_CELL">
+									<img alt="clessidra" src="@(pathRoot)images/grid/clessidra.gif"/>&nbsp;
+									@(Html.Raw(CNV("Elaborazione in corso...", _session)))
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+			</table>
+		</div>
+
+			<!--WriteScrollReposition-->
+
+			//'-- recupera la posizione delle scrollbar ed accoda su onload della pagina il riposizionamento	
+			@*@await Component.InvokeAsync("WriteScrollReposition")*@
+			
+				@if (!IsNull(_session["stack_index"]) ){
+
+					<input  type="hidden" name="PATH_LEVEL_NAVIGATION" id="PATH_LEVEL_NAVIGATION" value="@(_session["stack_index"])" > 
+					<script type="text/javascript">SetLastScrollWindowOnLoad();</script>
+	
+				}
+			
+
+	}else if(layout == "lista_attivita"){
+		<div id="container" class="ListaAtt">
+		
+			<div class="top" id="main_top_div">
+			
+				<div class="ContDiv">
+				
+					<table class="TableLayout">
+						<tr>
+							<td class="TdLeft">
+								<div class="left" id="main_top_left_div">
+									<a href="@(portaleCliente)">
+										@drawLogo(pathRoot)
+									</a>					
+								</div>
+							</td>
+							<td class="TdRight">
+								<div class="right" id="main_top_right_div">
+
+									<div class="main_top_1">
+										<ul class="ul_main_top_elements">
+											<li class="li_main_top_element_Title">
+												@(Html.Raw(_application["NOMEPORTALE"]))
+											</li>
+											<li class="li_main_top_element_RagSociale">
+												<strong>@(Html.Raw(CNV("Azienda", _session))): </strong>
+				
+													@if (!string.IsNullOrEmpty(CStr(_session["RagSociale"])))
+													{
+														<span>@(Html.Raw(HttpUtility.HtmlEncode(_session["RagSociale"])))</span>
+													}
+
+											</li>	
+											<li class="li_main_top_element_UserName">
+												<strong>@(Html.Raw(CNV("Utente", _session))): </strong> 
+				
+													@if ( !string.IsNullOrEmpty(CStr(_session["UserName"]))){ 
+														<span>@(Html.Raw(HttpUtility.HtmlEncode(_session["UserName"])))</span>
+													}
+
+											</li>
+											@if(_session.IsLogged(Context, SessionMiddleware.Cookie_Auth_Name) && !Context.Request.Path.ToString().Contains("login_conferma.asp", StringComparison.Ordinal))
+											{
+												<li class="li_main_top_element_logout last">
+														<a href="#logout" onclick="logout();" class="link_logout"><strong>@(Html.Raw(CNV("Logout", _session)))</strong></a>
+												</li>
+											}
+										</ul>
+									</div>
+
+								</div>
+							</td>
+						</tr>
+					</table>
+					
+				</div>
+				
+				<div class="headerImg">
+				</div>
+				
+				<div class="Sezione">
+				</div>
+				<div class="breadCrumb">
+				@(Html.Raw(CNV("portaleCliente", _session)))
+					@await Component.InvokeAsync("Breadcrumb", new { pathRoot = pathRoot })
+				</div>
+			</div>
+			
+			<div class="middle" id="main_middle_div">
+				<table class="TableLayout">
+					<tr>
+						<td class="TdRight">
+							<div class="right" id="contenutopagina">
+								@RenderBody()
+							</div>
+						</td>
+					</tr>	
+				</table>	
+			</div>
+			
+			<div id="push">
+			</div>
+			
+		</div>
+
+		<div class="bottom bottListaAtt" id="main_bottom_div">
+			<div class="Footer_00">
+				<div class="left">
+					<span class="span_footer_datetime">@(Html.Raw(CNV("Ora Server", _session))):</span><span class="span_footer_datetime" id="DateTime"></span>
+				</div>
+
+				<div class="links_footer right">
+					<ul>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_CONTATTI", _session))))">@(Html.Raw(CNV("Contatti", _session))))</a></li>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_INFOSITO", _session))))">@(Html.Raw(CNV("Informazioni sul sito", _session))))</a></li>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_NOTELEGALI", _session))))">@(Html.Raw(CNV("Note legali", _session))))</a></li>
+						<li><a href="@(Html.Raw(CNV("LINK_HOME_PRIVACY", _session))))">Privacy</a></li>
+					</ul>
+				</div>
+				
+				<div class="footer_right">
+					@(Html.Raw(CNV("Tempo stimato di sessione rimanente", _session)))<br/><span id="tempo_di_sessione">@CStr(durataSessione):00 m</span>
+				</div>
+				
+			</div>
+
+			<div class="Footer_01">
+				<div class="left">
+				</div>
+				<div class="right">
+						@(Html.Raw(CNV("Footer_01", _session)))
+				</div>
+			</div>
+			
+			
+			<div class="Footer_02">
+				<div class="left">
+				</div>
+				<div class="right">
+						@(Html.Raw(CNV("Footer_02", _session)))
+				</div>
+
+			</div>
+			
+		</div>
+
+		<div class="INFO_BOX" id="INFO_PROCESS">
+		</div>
+
+		<div class="INFO_BOX2" id="INFO_PROCESS2">
+			<table class="INFO_BOX_TB">
+				<tr>
+					<td colspan="3">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td>
+						&nbsp;
+					</td>
+					<td class="INFO_BOX_TD" valign="middle">
+						<table class="INFO_BOX_WIN_TB">
+							<tr>
+								<td class="INFO_BOX_WIN_CAPTION">@(Html.Raw(CNV("Attenzione", _session)))</td>
+							</tr>
+							<tr>
+								<td class="INFO_BOX_WIN_CELL">
+									<img alt="clessidra" src="@(pathRoot)images/grid/clessidra.gif"/>&nbsp;
+									@(Html.Raw(CNV("Elaborazione in corso...", _session)))
+								</td>
+							</tr>
+						</table>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+			</table>
+		</div>
+
+	}else if(layout == "DOCUMENT"){
+		
+				<div class="INFO_BOX" id="INFO_PROCESS">
+				</div>
+				
+				<div class="INFO_BOX2" id="INFO_PROCESS2">
+					<table class="INFO_BOX_TB">
+						<tr>
+							<td colspan="3">
+								&nbsp;
+							</td>
+						</tr>
+						<tr>
+							<td>
+								&nbsp;
+							</td>
+							<td class="INFO_BOX_TD" valign="middle">
+								<table class="INFO_BOX_WIN_TB">
+									<tr>
+										<td class="INFO_BOX_WIN_CAPTION">@(Html.Raw(CNV("Attenzione", _session)))</td>
+									</tr>
+									<tr>
+										<td class="INFO_BOX_WIN_CELL">
+											<img alt="clessidra" src="@(pathRoot)images/grid/clessidra.gif"/>&nbsp;
+											@(Html.Raw(CNV("Elaborazione in corso...", _session)))
+										</td>
+									</tr>
+								</table>
+							</td>
+							<td>&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+						</tr>
+					</table>
+				</div>
+				@RenderBody()
+
+	}else{
+		@RenderBody()
+	}
+
+	</body>
+</html>
+
+}else if(layout == "print"){
+
+	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	<html xmlns="http://www.w3.org/1999/xhtml" lang="it" xml:lang="it">
+
+		<head>
+	
+			<title>@(Html.Raw(CNV(title, _session)))</title>
+			<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		
+			<link rel="icon" href="@(pathRoot)favicon.ico" />
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main_base_stampa.css?v=@(versioneAflink)" type="text/css" /> 
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main_stampa.css?v=@(versioneAflink)" type="text/css" /> 
+			<!-- alla stampante oltre al main_stampa.css AGGIUNGIAMO il main_print.css -->		
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/Themes/main_print.css?v=@(versioneAflink)" type="text/css" media="print" />		
+			<link rel="stylesheet" href="@(pathRoot)CTL_Library/themes/bootstrap_print.css?v=@(versioneAflink)" type="text/css" /> 
+				@{
+					//'se richiesto in configurazione include un js per la stampa
+					if( GetParamURL(Context.Request.QueryString.ToString(), "JSCRIPT_STAMPA").ToUpper() == "YES" && !string.IsNullOrEmpty(GetParamURL(Context.Request.QueryString.ToString(), "JSCRIPT_STAMPA_NAME")))
+					{
+
+						<text>
+							<script src="@(pathRoot)CTL_LIBRARY/jscript/jquery/js/jquery-1.10.2.js?v=@(versioneAflink)" type="text/javascript"></script>
+							<script src="@(pathRoot)CTL_LIBRARY/jscript/jquery/js/jquery-ui-1.10.4.min.js?v=@(versioneAflink)" type="text/javascript"></script>
+							<script src="@(pathRoot)CTL_Library/JScript/getObj.js?v=@(versioneAflink)" type="text/javascript"></script>
+							<script src="@(pathRoot)CTL_LIBRARY/JScript/setVisibility.js?v=@(versioneAflink)" type="text/javascript"></script>
+							<script src="@(pathRoot)CustomDoc/jsapp/@(CStr(GetParamURL(Context.Request.QueryString.ToString(), "jscript"))).js?v=@(versioneAflink)" type="text/javascript"></script>
+                </text>
+
+            }
+        }
+
+    </head>
+
+    <!-- <body onload="window.print()" onfocus="window.close()"> -->
+    <body onunload="try{window.opener.ShowWorkInProgress(false);}catch(e){}">
+
+        <div id="container">
+
+            <div class="middle" id="main_middle_div">
+                <table class="TableLayout">
+                    <tr>
+                        <td class="TdRight">
+                            <div class="right" id="contenutopagina">
+                                @if (CStr(GetParamURL(Context.Request.QueryString.ToString(), "SHOW_TOOLBAR_PRINT")).Trim() != "NO")
+                                {
+                                    <ul class="Toolbar_stampa">
+
+                                        @if (!string.IsNullOrEmpty(CStr(GetParamURL(Context.Request.QueryString.ToString(), "TOOLBAR_PRINT")).Trim()))
+                                        {
+                                            string strSql = "select isnull(lfn_captionML,'') as caption, isnull(lfn_OnClick,'') as onClick, isnull(lfn_paramTarget,'') as params , isnull(lfn_UrlNewPage,'') as url from LIB_Functions where LFN_GroupFunction = '" + CStr(GetParamURL(Context.Request.QueryString.ToString(), "TOOLBAR_PRINT")).Trim().Replace(@"'", @"''") + "' order by lfn_order";
+
+                                            eProcurementNext.CommonDB.CommonDbFunctions cdf = new CommonDbFunctions();
+
+                                            TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, _application["ConnectionString"]);
+                                            if (rs.RecordCount > 0)
+                                            {
+
+                                                rs.MoveFirst();
+
+                                                while (!rs.EOF)
+                                                {
+                                                    string strOnClick = "";
+                                                    if (!string.IsNullOrEmpty(CStr(rs.Fields["onClick"])))
+                                                    {
+                                                        strOnClick = $@" onclick=""{rs.Fields["onClick"]}( '{rs.Fields["params"]}');try{{window.opener.ShowWorkInProgress(false);}}catch(e){{}}self.close();return false;"" ";
+                                                    }
+                                                    else
+                                                    {
+                                                        strOnClick = $@" onclick=""ExecFunction('{rs.Fields["url"]}','' ,''); try{{window.opener.ShowWorkInProgress(false);}}catch(e){{}} self.close(); return false;"" ";
+                                                    }
+
+                                                    string caption = CStr(rs.Fields["caption"]);
+
+
+                                                    <li class="Toolbar_button">
+                                                        <a class="button_link" @Html.Raw(strOnClick) href="#">@Html.Raw(CNV(caption, _session))</a>
+                                                    </li>
+                                                    rs.MoveNext();
+
+                                                }
+
+                                            }
+                                        }
+
+
+                                        <li class="Toolbar_button">
+                                            <a id="USER_DOC_READONLY_TOOLBAR_DOCUMENT_PRINT" class="button_link" onclick="Javascript:window.print();return false;" href="#" title="Stampa">@(Html.Raw(CNV("Stampa", _session)))</a>
+                                        </li>
+                                        <li class="Toolbar_button last">
+                                            <a id="USER_DOC_READONLY_TOOLBAR_DOCUMENT_EXCEL" class="button_link" onclick="Javascript:self.close(); try{window.opener.ShowWorkInProgress(false);}catch(e){} return false;" href="#" title="Chiudi">@(Html.Raw(CNV("Chiudi", _session)))</a>
+                                        </li>
+                                    </ul>
+                                }
+                                @RenderBody()
+									</div>
+								</td>
+							</tr>	
+						</table>	
+					</div>
+			
+					<div id="push">
+					</div>
+			
+				</div>
+				</body>
+				</html>
+			
+}else{
+	@RenderBody();
+}

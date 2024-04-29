@@ -1,0 +1,229 @@
+TABLE.Grid
+{
+    PADDING-LEFT: 2px;
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+	border-collapse:collapse;
+	border:1px solid #C0BFBF;
+}
+TABLE.Grid td{ border:1px solid #C0BFBF; padding:3px;}
+
+TABLE.Grid td.Grid_RowCaption{ padding:5px;}
+
+TD.Grid_RowCaption
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    MARGIN-LEFT: 2px;
+    COLOR: #333;
+    MARGIN-RIGHT: 2px;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: #CCC;
+    TEXT-ALIGN: center;
+	border:1px solid #999;
+	padding:5px;
+}
+TD.Grid_RowCaption_Sort
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 12px;
+    MARGIN-LEFT: 2px;
+    BORDER-LEFT: 1px outset;
+    CURSOR: pointer;
+    COLOR: white;
+    MARGIN-RIGHT: 2px;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: silver
+}
+
+TD.Grid_TitleCell
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 18px
+}
+TD.Grid_Total
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12pt;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TD.Grid_Total_GridCol_Link_Number
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+TD.Grid_Total_Fld_Number
+{
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12px;
+    FONT-FAMILY: Arial;
+    TEXT-ALIGN: right
+}
+
+
+
+TR.GR0
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: white;
+
+}
+TR.GR1
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: black;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightgrey;
+}
+
+TR.GR_OverRow
+{
+    FONT-WEIGHT: lighter;
+    FONT-SIZE: 12px;
+    COLOR: white;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightblue;
+}
+
+TD.GR0
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+
+}
+TD.GR1
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+
+TD.GR0_TextArea
+{
+    BORDER: lightgrey 1px solid;
+
+}
+
+
+TD.GR1_TextArea
+{
+    BORDER: lightgrey 1px solid;
+}
+
+
+
+TD.Grid_TitleCell
+{
+    FONT-WEIGHT: bolder
+}
+TD.GR0_GridCol_Link
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: pointer;
+    COLOR:#2268B3;
+	font-weight:bold;
+}
+TD.GR1_GridCol_Link
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: pointer;
+    COLOR: #2268B3;
+	font-weight:bold;
+}
+TD.GR0_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_Fld_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_GridCol_Link_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: pointer;
+    COLOR: blue;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+TD.GR1_GridCol_Link_Number
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+    CURSOR: pointer;
+    COLOR: blue;
+    TEXT-ALIGN: right;
+    TEXT-DECORATION: underline
+}
+TD.GR0_Text
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_Text
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_FldDomainValue
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_FldDomainValue
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_Foto
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_Foto
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_FldExtDom
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_FldExtDom
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_Attach
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_Attach
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_FldHier
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_FldHier
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_Fld_DescDB
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_Fld_DescDB
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR0_checkbox
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}
+TD.GR1_checkbox
+{
+    BORDER-RIGHT: lightgrey 1px solid;
+}

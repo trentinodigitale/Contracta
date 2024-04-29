@@ -1,0 +1,109 @@
+ANALISI - VERBALI
+
+----------------
+
+1) estendere il RichText aggiungendo alla toolbar n comando che apre a tutto schermo una area di edit più estesa con comandi per la formattazione del testo 
+
+
+
+2) VERBALETEMPLATE
+
+IL dominio "Tipo Verbale" lo modifichiamo cancelliamo logicamente i valori attuali ed inseriamo i nuovi "Amministrativo" , "Tecnico", "Economico"
+
+ gestire gli attributi del VERBALETEMPLATE a multiselezione : "Procedura di gara" , "Criterio Aggiudicazione Gara" , "Criterio Formulazione Offerta Economica"
+Fare uno script per adeguare tutti i verbali esistenti al cambio di monoselezione a multiselezione
+gestire tutti i punti in cui gli attributi vengono utilizzati per adeguarsi alla multi selezione
+
+La ricerca nel DB ha evidenziato almeno questi oggetti da cambiare
+xtype	name
+FN	RisolvoTemplatePDAMicrolotti
+P 	CLAUSOLE_PDF_CREATE_FROM_CONVENZIONE
+P 	CONTRATTO_PDF_CREATE_FROM_CONVENZIONE
+P 	SEDUTA_SDA_CREATE_FROM_BANDO_ISCRIZ_ALBO
+P 	SEDUTA_SDA_CREATE_FROM_BANDO_SDA
+P 	VERBALETEMPLATE_CREATE_FROM_VERBALETEMPLATE
+V 	LISTATEMPLATE
+V 	SEDUTA_PDA_VERBALE_FROM_PDA
+V 	VERBALETEMPLATE_DETTAGLI_FROM_VERBALETEMPLATE 
+V 	VERBALETEMPLATE_TESTATA2_FROM_VERBALETEMPLATE
+V 	VIEWER_LISTA_TEMPLATE
+
+Verificare anche eventuali pagine ASP oltre quelle elencate:
+
+- Application\CustomDoc\Crea_Verbale_Seduta.asp
+
+
+3) SEDUTA_PDA
+
+togliamo il comando "Verbale"
+Il documento è editabile al solo compilatore, nuovo copmando "Assegna A" per cambiare compilatore, gli utenti utili sono i membri della commissione ed i riferimenti (Inviti) del bando
+nascondiamo la sezione per scegliere il tipo verbale
+aggiungiamo una nuova sezione "Elenco Verbali" con toolbar :"Aggiungi Allegato" , "Seleziona Verbale"
+Nella griglia : Drag , Del , Apri , (Hide - tipo) , Descrizione , file allegato.
+ - la colonna apri solo se la riga è di tipo VERBALEGARA
+ - Il Comando "Aggiungi Allegato" inserisce una nuova riga di tipo Allegato
+ - Il Comando "Seleziona Verbale" Apre un viewer dove scegliere un verbale (confermato o in lavorazione ) creato sulla PDA e non associato ad una seduta
+
+
+
+4) VERBALEGARA
+ Il documento è editabile solamente al compilatore
+aggiungiamo il comando "Assegna A" ( attivo al compilatore ed all'utente super ) per far continuare l'edit ad un collega , gli utenti utili sono i membri della commissione ed i riferimenti (Inviti) del bando
+
+la creazione di un verbale per lotto nel caso in cui esiste in lavorazione si riapre quello in lavorazione, altrimenti si crea nuovo
+
+
+
+5) PDA_MICROLOTTI e RIEPILOGO FINALE
+aggiungiamo nelle buste amminstrativa, tecnica, economicai comandi "Crea Verbale"
+sia a lotti che singolo lotto.
+Il comando, nel caso in cui siano presenti più template che soddisfano il contesto aprirà in una finestrella modale l'elenco dei template sul quale effettuare la scelta per la creazione del Verbale
+I comandi si attivano con le seguenti regole:
+
+    AMMINSTRATIVA
+       - è attivo dopo il comando "Termina valutazione amministrativa"
+
+    TECNICA
+      - al termine della fase tecnica se una fase dopo assegna punteggio se a più fasi dopo la seconda fase
+ 
+    ECONOMICA / RIEPILOGO FINALE 
+      - O in giustificazione prezzi o in aggiudicazione ( il senso è che deve essere stata determinata la graduatoria , possiamo lavorare escludendo tutti gli stati precedenti) 
+
+
+
+6) PDA - Sedute di Gara
+nella sezione modifichiamo la griglia per visualizzare nella colonna Verbale o il file dell'unico allegato inserito nel verbale oppure un allegato fittizio con iconcina di ZIP dal quale far partire il comando di "Scarico Allegati" per ottenere tutti i file contenuti nella seduta
+
+
+7) PDA - PARTECIPANTI - OFFERTA_PARTECIPANTI
+Sul documento OFFERTA_PARTECIPANTI, che si apre dalla busta amministrativa della PDA, il documento deve consentire l'input di tutta la griglia e non solo il CF
+se la compilazione del CF, come ora, recupera i dati li riporta a video, altrimenti effettua solo una verifica che il CF se lo stato italia rispetta il formato italiano
+
+ATTENZIONE, si deve modificare la funzione di verifica che effettua l'incrocio di tutti i partecipanti evidenziando partecipazioni multiple a più offerte da parte dello stesso OE
+
+
+
+
+8) CREAZIONE DEL VERBALE - PAGINA :  Crea_Verbale_Seduta.asp
+calcolare le informazioni per la creazione del verbale:
+ - griglia amministrativa
+ - griglia economica OEPV
+ - griglia economica OEPV + PT - PE - PTot
+ - griglia economica PPB ( sfruttare l'anomalia se presente per mostrare o meno la colonna delle ALI, la colonna "Ribasso %" cambia in funzione della caratteristica del lotto: se il criterio è più di uno mettiamo il punteggio, altrimenti se è percentuale mettiamo "Ribasso %" , se prezzo mettiamo "ValoreOfferto" ) 
+ 
+ - griglia - tecnica
+ - dati di sintesi
+ - inizio e fine di ogni fase
+
+il verbale deve essere compilato per lotto, recuperando dalla sorgente il lotto oppure la gara
+vedere gli esempi forniti da MG per i dettagli
+
+9) VALUTAZIONE ECONOMICA del LOTTO
+ collezionare il dato del valore offerto in forma strutturata per ogni criterio
+è necessario per la produzione di un nuovo report
+
+10) REPORT - Riepilogo finale - "Tabella Riepilogo Punteggi"
+Nuovo report, analogo a quello della parte tecnica, che esprime in una matrice multidimensionale per ogni fornitore i criteri ed i punteggi.
+Vedi esempio fornito da MG
+
+

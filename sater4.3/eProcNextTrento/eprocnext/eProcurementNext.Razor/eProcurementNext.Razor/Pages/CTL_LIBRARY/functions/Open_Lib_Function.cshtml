@@ -1,0 +1,67 @@
+﻿@page "/CTL_LIBRARY/functions/Open_Lib_Function.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.Open_Lib_FunctionModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+
+	string Gruppo = "";
+	string Cartella = "";
+	string Filter = "";
+	string strViewer = "";
+
+	Gruppo = GetParamURL(Request.QueryString.ToString(), "Gruppo").Trim();
+	Cartella = GetParamURL(Request.QueryString.ToString(), "Cartella").Trim();
+	Filter = GetParamURL(Request.QueryString.ToString(), "Filter").ToUpper();
+
+	//'--mettiamo le validate per i parametri 
+
+	validate( "Gruppo", Gruppo.Replace("-","") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 1,HttpContext,session);
+	validate("Cartella", Cartella.Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 1, HttpContext, session);
+	validate("Filter", Filter, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 1, HttpContext, session);
+
+	Dictionary <string,object> dict = new Dictionary<string, object>();
+	dict.Add("@gruppo",  Gruppo);
+	dict.Add("@cartella", Cartella);
+	string strSql = "select LFN_paramTarget from lib_functions with (nolock) where LFN_GroupFunction = @gruppo and lfn_id = @cartella";
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, dict);
+	if(rs.RecordCount > 0)
+	{
+		strViewer = CStr(rs["LFN_paramTarget"]);
+		strViewer = strViewer.Replace("&amp;", "&");
+
+		//'--se pasastoun filtro tolgo il vecchio e metto il nuovo
+		if(!string.IsNullOrEmpty(Filter))
+		{
+			strViewer = strViewer.ToLower();
+			//'--rimpiazzo il parametro filter esistente
+			strViewer = strViewer.Replace("&filter=", "&filter_x=");
+
+			//'--applico il filtro passato
+			strViewer = strViewer + "&filter=" + UrlEncode(Filter);
+		}
+		//'--faccio la redirect al viewer recuperato
+		throw new ResponseRedirectException("../../" + strViewer + "&lo=base", Response);
+	}
+	else
+	{
+		//'--parametri passati in input non corretti viewer non presenti
+		throw new ResponseRedirectException("../../ctl_library/MessageBoxWin.asp?MSG=" + ApplicationCommon.CNV("I riferimenti passati per aprire la funzione non sono corretti") + "&CAPTION=ATTENZIONE", Response);
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+
+}@Html.Raw(htmlToReturn.Out())

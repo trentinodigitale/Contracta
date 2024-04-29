@@ -1,0 +1,23 @@
+.ToolBar_button
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 8pt;
+    CURSOR: hand;
+    COLOR: #161a74;
+    LINE-HEIGHT: 8pt;
+    FONT-FAMILY: Arial;
+    TEXT-DECORATION: underline
+}
+TABLE.Toolbar
+{
+    BORDER-TOP: thin;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: transparent
+}
+TD.toolbar
+{
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    COLOR: #161a74;
+    FONT-FAMILY: Arial
+}

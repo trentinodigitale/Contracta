@@ -1,0 +1,298 @@
+html,body{font-size:11px; font-family:Arial, Helvetica, sans-serif; background-color:#ececec;height:100%;}
+#main{ width:900px; margin:auto; margin-top:30px;}
+#top{ width:900px; margin:auto; height:198px;background:url(../img/top.png) top left no-repeat;}
+#menu{ width:871px; height:53px; margin:auto; z-index:1000; background: url(../img/menu.jpg) top left no-repeat; position:relative; top:-15px;}
+#bigcontent{ background:#fff; width:900px; margin:auto; height:auto; min-height:600px; z-index:100; position:relative; top:-52px;}
+.cmscontent{ width:900px; height:1100px; position:relative; top:50px;}
+h1{ margin:0px;padding-left:15px; font-size:16px; padding-top:20px;}
+p{padding-left:15px;}
+a{ text-decoration:underline;}
+a:hover{ color:#F2821D;}
+.giallo{ color:#DCA902;}
+.blu{ color:#4073DA;}
+.rosa{color:#B75183;}
+.rosso{color:#BF0B27;}
+ul{ list-style-type:none; margin:0px; padding-top:20px; padding-left:40px;}
+li{ display:inline; padding-right:10px; text-transform:uppercase; font-weight:bold;}
+li a{ text-decoration:none; color:#4F7D18;}
+li a:hover{ color:#754C24;}
+#bottom{ width:900px; height:170px; background:#ECECEC url(../img/bottom.png) bottom left no-repeat; position:relative; top:-51px;}
+#bottom p{ color:#fff; margin:0px; padding-top:20px; text-align:justify; padding-right:15px;}
+#divleft{ float:left; height:140px; margin-top:10px; margin-left:5px; width:440px;}
+#divright{ float:right; height:130px; margin-top:15px; margin-right:20px; width:430px; text-align:right;}
+h2{ font-size:14px; color:#C9E1AC; font-weight:normal;}
+table{ margin:auto; width:800px;}
+th{ font-size:18px; color:#BF0B27; text-align:left; font-weight:normal;}
+tr{ text-align:center;}
+tr a{ font-size:12px; color:#6EAF22; }
+.empty{ border-top:1px solid #8B9298;}
+.last{ height:50px;}
+img{ border:none;}
+.smalltable{ width:796px; text-align:center;margin:auto;}
+
+
+#footer{ margin:auto; position:relative; top:-50px;}
+#footer p{ color:#284673; text-align:center;}
+
+input.fontCommand {color:#6EAF22; cursor:pointer; background:#fff;  border:none; font-size:12px; padding:0px; margin:0px auto; text-decoration:underline; }
+input.fontCommand:hover{color:#F2821D;}
+
+input.ProfiloSabato, input.ProfiloA, input.ProfiloB, input.ProfiloC, input.ProfiloD, input.ProfiloE, input.ProfiloF, input.ProfiloG, input.ProfiloH, input.ProfiloI, input.fontCommandF1, input.fontCommandF2, input.fontCommandF3, input.fontCommandAFS, input.ProfiloL{cursor:pointer; height:119px; width:119px; border:0px solid #fff;}
+input.ProfiloA{background-image:url(../img/A.jpg);}
+input.ProfiloSabato{background-image:url(../img/Sabato.jpg);}
+input.ProfiloB{background-image:url(../img/B.jpg);}
+input.ProfiloC{background-image:url(../img/C.jpg);}
+input.ProfiloD{background-image:url(../img/D.jpg);}
+input.ProfiloE{background-image:url(../img/E.jpg);}
+input.ProfiloF{background-image:url(../img/F.jpg);}
+input.ProfiloG{background-image:url(../img/GCarla.jpg);}
+input.ProfiloH{background-image:url(../img/H.jpg);}
+input.ProfiloI{background-image:url(../img/I.jpg);}
+input.ProfiloL{background-image:url(../img/L.jpg);}
+
+input.fontCommandF1{background-image:url(../img/fornitore_4.jpg);}
+input.fontCommandF2{background-image:url(../img/fornitore_3.jpg);}
+input.fontCommandF3{background-image:url(../img/fornitore_2.jpg);}
+input.fontCommandAFS{background-image:url(../img/fornitore_1.jpg);}
+input.fontCommandblu {color:#4073DA; cursor:pointer; background:#fff; border:none; font-size:12px; padding:0px;  margin:0px auto; text-decoration:underline;}
+input.fontCommandblu:hover{color:#F2821D;}
+input.fontCommandRosa {color:#B75183; cursor:pointer; background:#fff; border:none; font-size:12px; padding:0px; margin:0px auto; text-decoration:underline;}
+input.fontCommandRosa:hover{color:#F2821D;}
+input.fontCommandGiallo {color:#DCA902; cursor:pointer; background:#fff; border:none; font-size:12px; padding:0px; margin:0px auto; text-decoration:underline;}
+input.fontCommandGiallo:hover{color:#F2821D; }
+
+body {
+    font-family: "Roboto", sans-serif;
+    background-color: #fff;
+}
+
+p {
+    color: #b3b3b3;
+    font-weight: 300;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: "Roboto", sans-serif;
+}
+
+a {
+    -webkit-transition: .3s all ease;
+    -o-transition: .3s all ease;
+    transition: .3s all ease;
+}
+
+    a:hover {
+        text-decoration: none !important;
+    }
+
+.content {
+    padding: 7rem 0;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+.half, .half .container > .row {
+    height: 100vh;
+    min-height: 700px;
+}
+
+    .half .contents {
+        background: #f6f7fc;
+    }
+
+    .half .bg {
+        width: 25%;
+    }
+
+@media (max-width: 767.98px) {
+    .half .bg {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+.half .contents {
+    width: 75%;
+}
+
+@media (max-width: 767.98px) {
+    .half .contents {
+        width: 100%;
+    }
+}
+
+.half .contents .form-control, .half .bg .form-control {
+    border: none;
+    border-radius: 4px;
+    height: 54px;
+    background: #efefef;
+}
+
+    .half .contents .form-control:active, .half .contents .form-control:focus, .half .bg .form-control:active, .half .bg .form-control:focus {
+        outline: none;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+    }
+
+.half .bg {
+    background-size: cover;
+    background-position: center;
+}
+
+.half a {
+    color: #888;
+    text-decoration: underline;
+}
+
+.half .btn {
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.half .forgot-pass {
+    position: relative;
+    top: 2px;
+    font-size: 14px;
+}
+
+.form-block {
+    background: #fff;
+    padding: 40px;
+    max-width: 500px;
+    -webkit-box-shadow: 0 15px 30px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 15px 30px 0 rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 767.98px) {
+    .form-block {
+        padding: 25px;
+    }
+}
+
+.control {
+    display: block;
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+    .control .caption {
+        position: relative;
+        top: .2rem;
+        color: #888;
+    }
+
+    .control input {
+        position: absolute;
+        z-index: -1;
+        opacity: 0;
+    }
+
+.control__indicator {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background: #e6e6e6;
+    border-radius: 4px;
+}
+
+.control--radio .control__indicator {
+    border-radius: 50%;
+}
+
+.control:hover input ~ .control__indicator,
+.control input:focus ~ .control__indicator {
+    background: #ccc;
+}
+
+.control input:checked ~ .control__indicator {
+    background: #fb771a;
+}
+
+.control:hover input:not([disabled]):checked ~ .control__indicator,
+.control input:checked:focus ~ .control__indicator {
+    background: #fb8633;
+}
+
+.control input:disabled ~ .control__indicator {
+    background: #e6e6e6;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.control__indicator:after {
+    font-family: 'icomoon';
+    content: '\e5ca';
+    position: absolute;
+    display: none;
+    font-size: 16px;
+    -webkit-transition: .3s all ease;
+    -o-transition: .3s all ease;
+    transition: .3s all ease;
+}
+
+.control input:checked ~ .control__indicator:after {
+    display: block;
+    color: #fff;
+}
+
+.control--checkbox .control__indicator:after {
+    top: 50%;
+    left: 50%;
+    margin-top: -1px;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.control--checkbox input:disabled ~ .control__indicator:after {
+    border-color: #7b7b7b;
+}
+
+.control--checkbox input:disabled:checked ~ .control__indicator {
+    background-color: #7e0cf5;
+    opacity: .2;
+}
+
+.btn {
+    text-decoration: none !important;
+}
+
+    .btn.btn-facebook {
+        display: block;
+        background: #3b5998;
+        color: #fff;
+    }
+
+    .btn.btn-google {
+        background: #ea4335;
+        color: #fff;
+    }
+
+
+
+/*
+
+input.fontCommandPM{cursor:pointer; background-image:url(../img/Procurement_mamager.jpg); height:130px; width:200px; border:0px solid #fff; }
+input.fontCommandGF{cursor:pointer; background-image:url(../img/gestione_fornitori.jpg); height:119px; width:119px; border:0px solid #fff; }
+input.fontCommandUF{cursor:pointer; background-image:url(../img/uff_acc.jpg); height:119px; width:119px; border:0px solid #fff; }
+input.fontCommandO{cursor:pointer; background-image:url(../img/ordini.jpg); height:119px; width:119px; border:0px solid #fff; }
+input.fontCommandDG{cursor:pointer; background-image:url(../img/direttore-generale.jpg); height:119px; width:119px; border:0px solid #fff; }
+input.fontCommandRF{cursor:pointer; background-image:url(../img/resp_funzione.jpg); height:119px; width:119px; border:0px solid #fff; }
+input.fontCommandCS{cursor:pointer; background-image:url(../img/controllo_spesa.jpg); height:119px; width:119px; border:0px solid #fff; }*/
+
+
+
+
+
+
+
+
+ 

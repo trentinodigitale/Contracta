@@ -1,0 +1,31 @@
+TABLE.GridProfile
+{
+    BORDER-RIGHT: white;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: white;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: white;
+    WIDTH: 100%;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: white;
+    HEIGHT: 100%
+}
+TD.CellGridProfile
+{
+    BORDER-RIGHT: white;
+    PADDING-RIGHT: 0px;
+    BORDER-TOP: white;
+    PADDING-LEFT: 0px;
+    PADDING-BOTTOM: 0px;
+    MARGIN: 0px;
+    BORDER-LEFT: white;
+    PADDING-TOP: 0px;
+    BORDER-BOTTOM: white
+}
+BODY.BodyProfile
+{
+    MARGIN: 0px 5px;
+    BACKGROUND-COLOR: white
+}

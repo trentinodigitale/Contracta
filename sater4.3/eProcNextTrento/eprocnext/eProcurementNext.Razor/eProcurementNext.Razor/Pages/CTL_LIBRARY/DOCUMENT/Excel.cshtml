@@ -1,0 +1,43 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/Excel.asp"
+@inject eProcurementNext.Session.ISession session;
+@inject ITabManage _tabManage;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.DocumentPermissionModel
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+    validate("DOCUMENT", Strings.Replace(GetParamURL(Request.QueryString.ToString(), "DOCUMENT"), ".", "_"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "TYPEDOC", Strings.Replace(GetParamURL(Request.QueryString.ToString(), "TYPEDOC"),".","_") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "READONLY", GetParamURL(Request.QueryString.ToString(), "READONLY") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+    validate( "OPERATION", GetParamURL(Request.QueryString.ToString(), "OPERATION") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+    validate( "IDDOC", Strings.Replace(GetParamURL(Request.QueryString.ToString(), "IDDOC"),"-","") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+    //'--controllo permesso apertura documento
+    DocPermission(HttpContext, GetParamURL(Request.QueryString.ToString(), "IDDOC"), GetParamURL(Request.QueryString.ToString(), "DOCUMENT"), CStr(GetParamURL(Request.QueryString.ToString(), "PARAM")), session, htmlToReturn, Request, Response);
+
+    string strfilename = "Document.xls";
+    Response.ContentType = "application/x-msexcel";
+    Response.Headers.TryAdd("Content-Disposition", "attachment; filename=" + strfilename);
+}
+@{
+    htmlToReturn.Write("<html>");
+    htmlToReturn.Write("<head>");
+	htmlToReturn.Write("<meta http-equiv=content-type content=text/html; charset=utf-8>");
+}
+@{
+    eProcurementNext.Document.CTLDOC.Document temp = new eProcurementNext.Document.CTLDOC.Document(HttpContext, session, htmlToReturn);
+    temp.run(session, htmlToReturn);
+}
+@Html.Raw(htmlToReturn.Out())

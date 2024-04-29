@@ -1,0 +1,79 @@
+﻿@page "/CTL_LIBRARY/functions/gotoFun.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.gotoFunModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@* <!-- #Include File="./Intest.inc" --> *@
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.gotoFunModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	string lfn_identity = GetParamURL(Request.QueryString.ToString(), "lfn_id");
+	string path = GetParamURL(Request.QueryString.ToString(), "path");
+	string filterhide = GetParamURL(Request.QueryString.ToString(), "FilterHide");
+
+	validate("lfn_id", lfn_identity, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session); 
+	TSRecordSet? rs = null;
+	Dictionary <string,object> dict = new Dictionary<string, object>();
+	dict.Add("@lfn",  lfn_identity.Replace("\"", "'"));
+	
+	string strSql = "select f.* from LIB_Functions f inner join profiliutente on idpfu = '" + session["IdPfu"] + "'";
+	strSql = strSql +" and ( substring( pfufunzionalita , LFN_PosPermission , 1 ) = '1' ";
+	strSql = strSql + " or isnull(LFN_PosPermission,0) = 0) where lfn_identity = @lfn";
+	strSql = strSql + " order by LFN_Order ";
+	CommonDbFunctions cdb = new CommonDbFunctions();
+	rs = cdb.GetRSReadFromQuery_(CStr(strSql), ApplicationCommon.Application["ConnectionString"],dict);
+
+	if(rs is not null && rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+		//'-- torno sulla root e poi lancio l'url preso dalla function
+		string url = CStr(rs["lfn_paramTarget"]);
+
+
+		if ((url.ToUpper()).Contains("&AMP;FILTERHIDE=", StringComparison.Ordinal))
+		{
+			url = url.Replace("&amp;FilterHide=", "&FilterHide=" + filterhide + " and ");
+		}
+		else
+		{
+			if ((url.ToUpper()).Contains("&FILTERHIDE=", StringComparison.Ordinal))
+			{
+				url = url.Replace("&FilterHide=", "&FilterHide=" + filterhide + " and ");
+			}
+
+			else
+			{
+				url = url + "&FilterHide=" + filterhide;
+			}
+		}
+		Response.Redirect( "../../" + path + url + "&lo=content&anti_cache=" + UrlEncode(CStr(timestamp(DateTime.Now))) + "&PropModel=NO_PROP&nostack=yes");
+		//'-- passo nostack  al viewer così da non far aggiornare lo stack delle molliche di pane);
+			
+
+	}
+	else
+	{
+		htmlToReturn.Write("FUNCTION NOT FOUND");
+	}
+	
+	long timestamp( DateTime data)
+	{
+		
+		long timestamp = DateDiff("s", Convert.ToDateTime("01/01/1970 00:00:00"), data);
+		return timestamp;
+	}
+	
+	
+}@Html.Raw(htmlToReturn.Out())

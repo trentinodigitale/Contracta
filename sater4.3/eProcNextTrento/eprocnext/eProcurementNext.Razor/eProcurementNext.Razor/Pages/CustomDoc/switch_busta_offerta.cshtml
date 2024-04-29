@@ -1,0 +1,22 @@
+﻿@page "/CustomDoc/switch_busta_offerta.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.switch_busta_offertaModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.switch_busta_offertaModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	Response.Redirect("buste_offerta.aspx?" + GetQueryStringFromContext(Request.QueryString));
+	//Vecchio codice non funzionante
+	//throw new ResponseRedirectException(ApplicationCommon.Application["APPLEGACY"] + "/customdoc/buste_offerta.aspx?" + GetQueryStringFromContext(Request.QueryString), Response);
+}

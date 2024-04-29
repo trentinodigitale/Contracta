@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="access.aspx.cs" Inherits="OAuth2OpenID.OpenID.access" %>

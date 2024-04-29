@@ -1,0 +1,26 @@
+﻿@page "/DASHBOARD/ViewerInfo.asp"
+@using eProcurementNext.Application
+@using eProcurementNext.CommonModule
+@using eProcurementNext.DashBoard
+@using eProcurementNext.HTML
+@using Microsoft.VisualBasic
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@inject IConfiguration configuration;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.DASHBOARD.ViewerInfoModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	StartPage(htmlToReturn);
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/caption.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/model.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/buttonbar.css"" type=""text/css"">");
+	htmlToReturn.Write($@"<link rel=stylesheet href=""../CTL_Library/Themes/SinteticHelp.css"" type=""text/css"">");
+	
+	ViewerInfo view = new ViewerInfo(configuration);
+	view.run(HttpContext,session,htmlToReturn);
+}@Html.Raw(htmlToReturn.Out())

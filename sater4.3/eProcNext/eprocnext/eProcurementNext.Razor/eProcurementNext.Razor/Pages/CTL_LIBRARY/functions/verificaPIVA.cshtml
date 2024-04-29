@@ -1,0 +1,239 @@
+﻿@page "/CTL_LIBRARY/functions/verificaPIVA.asp"
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.cnvModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.controlliModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.logModel;
+@using Microsoft.VisualBasic;
+@using System.Web
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaPIVAModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+    CommonDbFunctions cdf = new();
+}
+@{
+    //'--Versione=1&data=2013-06-11&Attvita=43666&Nominativo=Leone
+
+
+    //'-- Pagina atta alla validazione formale di una partita iva rispetto ad uno stato.
+    //'-- la pagina � stata creata per essere invocata via ajax quindi restituisce in output
+    //'-- un testo formattato nella forma    numeroErrore#Messaggio
+
+    //'-- NOTE
+    //'-- Il dato viene controllato con dei criteri espressi nella tabella ctl_controllopiva
+    //'-- dare un warning se la codifica ( dei primi due caratteri ) non corrisponde al paese
+
+
+    //'-- Parametri di input : 
+    //'--		* STATO = Codice di 2 cifre per indicare il paese di provenienza
+    //'--		* PIVA  = Partita iva ( Inizia con le 2 cifre dello stato )
+
+    //'-- Output :  ( esempi )
+    //'--		* 0#Tutto ok
+    //'--		* 1#Messaggio di warning. La codifica non corrisponde con lo stato
+    //'--		* 2#Errore. Partita iva non valida
+
+    //on error resume next
+
+    string stato = GetParamURL(Request.QueryString.ToString(), "STATO").Trim();
+    string piva = GetParamURL(Request.QueryString.ToString(), "PIVA").Trim();
+    string ext =  GetParamURL(Request.QueryString.ToString(),"EXT").ToUpper();
+
+    var sqlParams = new Dictionary<string, object?>();
+
+    if (ext !=  "YES")
+    {
+        if (string.IsNullOrEmpty(stato) || string.IsNullOrEmpty(piva))
+        {
+            htmlToReturn.Write($@"2#" + CNV("Parametri STATO e PIVA obbligatori", session));
+            throw new ResponseEndException(htmlToReturn.Out(), Response, "Parametri STATO e PIVA obbligatori");
+        }
+
+        //'-- Se le prime 2 cifre della piva non coincidono con lo stato restituisco il warning
+
+        if(!(String.Equals((piva.Substring(0, 2)).ToUpper(),stato.ToUpper())))
+        {
+            htmlToReturn.Write($@"1#" + CNV("La partita iva non corrisponde con lo stato", session));
+            throw new ResponseEndException(htmlToReturn.Out(), Response, "La partita iva non corrisponde con lo stato");
+        }
+
+        //'-- tolgo dalla partita iva le prime 2 cifre indicanti lo stato
+
+        piva = Strings.Right(piva, piva.Length - 2);
+
+        string strRet = checkPivaExt(stato,piva);
+        htmlToReturn.Write(strRet);
+        throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+    }
+    else
+    {
+        // '-- la variabile stato contiene il codice dello stato rispetto al dominio GEO
+        if (string.IsNullOrEmpty(piva))
+        {
+            htmlToReturn.Write("0#Inserire la Partita Iva");
+            return;
+        } 
+        else
+        {
+            // '-- ****************************************
+            // '-- **** CONTROLLO FORMALE PARTITA IVA *****
+            //'-- ****************************************
+
+            //'-- Se lo stato � italia facciamo il controllo classico
+
+            if (stato == "M-1-11-ITA")
+            {
+                string pi = MidVb6(piva, 3);
+
+                if( MidVb6(piva,1,2).ToUpper() != "IT")
+                {
+                    htmlToReturn.Write("0#La partita Iva italiana deve iniziare per IT");
+                    throw new ResponseEndException(htmlToReturn.Out(), Response, "La partita Iva italiana deve iniziare per IT");
+                }
+                else
+                {
+                    string strCheck = ControllaPIVA(pi);
+
+                    if (!string.IsNullOrEmpty(strCheck))
+                    {
+                        htmlToReturn.Write("0#"+strCheck);
+                        throw new ResponseEndException(htmlToReturn.Out(), Response, strCheck);
+                    }
+                    else
+                    {
+                        htmlToReturn.Write("1#OK");
+                        throw new ResponseEndException(htmlToReturn.Out(), Response,"OK");
+                    }
+                }
+            }
+            else
+            {
+                //'-- se è stato selezionato lo stato
+
+                if (!string.IsNullOrEmpty(stato))
+                {
+                    //'-- Se lo stato NON fa parte dell'europa ed è attiva la SYS per il DANS number per le partite ive extra comunitarie
+
+                    if ((CStr(ApplicationCommon.Application["ATTIVA_PIVA_DANS"]).ToUpper()) == "YES" && Strings.Left(stato, 3) != "M-1")
+                    {
+                        // '------------------------------------------------------------------------------------------------------
+                        // '-- per le partite non europee accettiamo o il formato EUXX dove XX sono una serie di 9 numerici   ----
+                        // '--		oppure accettiamo un DUNS number. cioè un numero di 9 cifre ( senza quindi EU davanti )    ----
+                        // '------------------------------------------------------------------------------------------------------ 
+
+                        piva = piva.Replace("EU", "");
+
+                        if ((piva.Length) == 9 && IsNumeric(piva))
+                        {
+                            htmlToReturn.Write("1#OK");
+                            throw new ResponseEndException(htmlToReturn.Out(), Response, "OK");
+                        }
+                        else 
+                        {
+                            htmlToReturn.Write("0#Partita IVA extra EU non valida");
+                            throw new ResponseEndException(htmlToReturn.Out(), Response, "Partita IVA extra EU non valida");
+                        }
+                    }
+                    else 
+                    {
+                        //'-- Recupero il prefisso dello stato dalle prime 2 cifre della piva
+
+                        string prefissoStato = CStr(MidVb6(piva, 1, 2)).ToUpper();
+
+                        string pi = Strings.Right(piva, piva.Length - 2);
+
+                        //'-- Se il formato della partita iva è valido passo a verificare se è corretta rispetto
+                        //'-- allo stato selezionato
+
+                        //'Se la partita IVA non inizia per EU 
+                        //'	lo stato deve combaciare con la partita iva, cioè le prime 2 cifre.
+                        //'
+                        //'Se la partita IVA inizia per EU
+                        //'	Se lo stato scelto è tra quelli presenti nella nostra tabella di validazione PIVA, blocchiamo per stato non coincidente
+                        //'	Se lo stato scelto non è tra quelli presenti nella tabella di validazione PIVA, lo facciamo passare previa validazione piva EU 
+
+                        string[] arrTmp = stato.Split('-');
+
+
+                        //string codStatoISO = arrTmp[arrTmp.Length - 1].Replace("'","''");
+                        string codStatoISO = arrTmp[arrTmp.GetUpperBound(0)];
+
+                        sqlParams.Add("@codStatoISO", codStatoISO);
+                        if (prefissoStato.ToUpper() != "EU")
+                        {
+                            string strSql = @"select stato from ctl_controllopiva with (nolock)
+                                                        inner join GEO_Elenco_Stati_ISO_3166_1 with (nolock) on iso_3166_1_Number = CodiceEsterno 
+                                                        where iso_3166_1_3_lettercode = @codStatoISO";
+
+                            TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                            if (rs.RecordCount > 0)
+                            {
+                                rs.MoveFirst();
+
+                                string codStato2 = CStr(rs["stato"]).Trim();
+
+                                if(codStato2.ToUpper() != prefissoStato.ToUpper())
+                                {
+                                    htmlToReturn.Write("0#Partita iva non valida per lo stato scelto");
+                                    throw new ResponseEndException(htmlToReturn.Out(), Response, "0#Partita iva non valida per lo stato scelto");
+                                }
+                            }
+                            else
+                            {
+                                htmlToReturn.Write("0#Partita iva non valida per lo stato scelto");
+                                throw new ResponseEndException(htmlToReturn.Out(), Response, "0#Partita iva non valida per lo stato scelto");
+                            }
+                        }
+                        else
+                        {
+                            string strSql = @"select stato from CTL_ControlloPiva with (nolock)
+                                                        inner join GEO_Elenco_Stati_ISO_3166_1 with (nolock) on ISO_3166_1_Number = codiceEsterno
+                                                        where isnull(pattern,'') <> '' and ISO_3166_1_3_LetterCode = @codStatoISO";
+                            TSRecordSet rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+                            if (rs.RecordCount > 0)
+                            {
+                                htmlToReturn.Write("0#Partita iva non valida per lo stato scelto");
+                                throw new ResponseEndException(htmlToReturn.Out(), Response, "0#Partita iva non valida per lo stato scelto");
+                            }
+                        }
+
+                        try
+                        {
+                            string resp = checkPivaExt(prefissoStato,pi);
+
+                            string [] arr = resp.Split("#");
+                            if (arr[0] != "0")
+                            { //'se c'è un warning(errore formale sulla piva)
+                                //bool erroreValidazione = true;
+
+                                htmlToReturn.Write("0#" + arr[1]);
+                                throw new ResponseEndException(htmlToReturn.Out(), Response, arr[1]);
+                            }
+                        }
+                        catch(Exception ex)
+                        {
+                            htmlToReturn.Write("0#" + ex.Message);
+                            throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+                        }
+
+                        //'response.write "debug-" & resp
+					    //'response.end
+                        htmlToReturn.Write("1#OK");
+                        throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+                    } //'-- end if dans
+                }
+            }
+        }
+    }
+}
+@Html.Raw(htmlToReturn.Out())

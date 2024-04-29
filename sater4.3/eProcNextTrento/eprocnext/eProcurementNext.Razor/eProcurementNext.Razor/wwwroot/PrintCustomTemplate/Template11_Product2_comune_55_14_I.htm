@@ -1,0 +1,920 @@
+<script id="script1" language="javascript">
+
+function getObj(strId) {
+	
+  if (document.all != null)
+	return document.all(strId)
+  else{
+	return document.getElementById(strId)
+  }
+}
+
+//recupero iddzt attributi coinvolti
+var ListAttrib;
+var InfoAttrib;
+var i;
+var ainfo;
+var ainfo1;
+var strRadio1;
+var strRadio2;
+var strCCIAA;
+var strPrevid;
+var strANNO;
+var strNumINPS;
+var strNumINAIL;
+var strIscrCCIAA;
+var strSedeCCIAA;
+var strNotaIscrizioneCCIAA;
+var strPersgiuridica;
+var strQualitaImprenditore;
+var strSedeINPS;
+var strSedeINAIL;
+var strSettoriCCNL;
+
+ListAttrib = getObj('ListAttrib_DICHIARAZIONE_comune').value;
+InfoAttrib="";
+	
+if (ListAttrib != ''){
+	ainfo=ListAttrib.split('#');
+	for (i=0; i < ainfo.length; i++){
+		InfoAttrib=ainfo[i];
+		ainfo1=ainfo[i].split(';');
+		if (ainfo1[0] == 'Check1'){
+			strRadio1=ainfo1[1];
+		}
+		if (ainfo1[0] == 'Check4'){
+			strRadio2=ainfo1[1];
+		}
+		if (ainfo1[0] == 'BelongCCIAA'){
+			strCCIAA=ainfo1[1];
+		}
+		if (ainfo1[0] == 'PosPrevidenziali'){
+			strPrevid=ainfo1[1];
+		}
+		if (ainfo1[0] == 'ANNOCOSTITUZIONE'){
+			strANNO=ainfo1[1];
+		}
+		if (ainfo1[0] == 'NumINPS'){
+			strNumINPS=ainfo1[1];
+		}
+		if (ainfo1[0] == 'NumINAIL'){
+			strNumINAIL=ainfo1[1];
+		}
+		if (ainfo1[0] == 'IscrCCIAA'){
+			strIscrCCIAA=ainfo1[1];
+		}
+		if (ainfo1[0] == 'SedeCCIAA'){
+			strSedeCCIAA=ainfo1[1];
+		}
+		if (ainfo1[0] == 'NotaIscrizioneCCIAA'){
+			strNotaIscrizioneCCIAA=ainfo1[1];
+		}
+		if (ainfo1[0] == 'Persgiuridica'){
+			strPersgiuridica=ainfo1[1];
+		}
+		if (ainfo1[0] == 'QualitaImprenditore'){
+			strQualitaImprenditore=ainfo1[1];
+		}	
+		if (ainfo1[0] == 'SedeINPS'){
+			strSedeINPS=ainfo1[1];
+		}
+		if (ainfo1[0] == 'SedeINAIL'){
+			strSedeINAIL=ainfo1[1];
+		}
+		if (ainfo1[0] == 'SettoriCCNL'){
+			strSettoriCCNL=ainfo1[1];
+		}
+	}	
+}
+
+</script>
+
+<p><b><span lang="IT" style="font-size: 12.0pt; font-family: Arial">
+<font face="Arial" size="3">
+<br>
+Alla Regione Puglia 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></b>
+</font>
+</span></b></p>
+
+<p><b><span lang="IT" style="font-size: 12.0pt; font-family: Arial">
+<font face="Arial" size="3">
+</font></span></b></p>
+<p align="left"><i>
+<span lang="IT" style="font-size: 14.0pt; font-family: Arial"><font face="Arial" size="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+Istanza di iscrizione</font></span></i></p>
+<p align="left"><span style="font-family: Arial; font-weight: 700"><font face="Arial" size="3"><i>
+OGGETTO: </i>Domanda di iscrizione all'Albo on line dei fornitori della Regione Puglia 
+.</font></span></p>
+<p align="left">
+<font face="Arial" size="3">
+
+<div id="globale" style="font-size: 10.0pt; font-family: Arial;">
+<p align="left">Il 
+sottoscritto 
+<input type="text" name="CognomeRapLeg" size="30" value="Inserisci Cognome">
+<input type="text" name="NomeRapLeg" size="37" value="Inserisci Nome"></font></p>
+<p align="left">Nato a <input type="text" name="LocalitaRapLeg" size="30"> 
+Prov.
+<input type="text" name="ProvinciaRapLeg" size="10">&nbsp; il
+<input type="text" name="DataRapLeg" size="18">&nbsp;</p>
+<p align="left">In qualità di (Carica sociale)
+<input type="text" name="RuoloRapLeg" size="56" value="Rappresentante Legale o Procuratore"></p>
+<p align="left">Se Procuratore: giusta 
+procura per notaio  
+<input type="text" name="Procura" size="17"> del 
+<input type="text" name="DelProcura" size="17">&nbsp;&nbsp; rep.</p>
+<p align="left">N.
+<input type="text" name="NumProcura" size="25">&nbsp;&nbsp;&nbsp;&nbsp; raccolta n&nbsp;&nbsp;&nbsp;&nbsp; 
+<input type="text" name="NumRaccolta" size="38"></p>
+<p align="left">dell'operatore economico (denominazione)
+<input type="text" name="RagSoc" size="30" value="Inserisci Ragione Sociale"> 
+(forma giuridica) <input type="text" name="NaGi" size="11"></p>
+<p align="left">
+ con sede legale in via&nbsp; <input type="text" name="INDIRIZZOLEG" size="62"></p>
+<p align="left">
+Città
+<input type="text" name="LOCALITALEG" size="30"> CAP
+<input type="text" name="CAPLEG" size="10"> Prov.
+<input type="text" name="PROVINCIALEG" size="23"></p>
+
+<p align="left">
+Telefono 1
+<input type="text" name="NUMTEL" size="30"> Telefono 2
+<input type="text" name="NUMTEL2" size="10"> fax
+<input type="text" name="NUMFAX" size="33"> e-mail
+<input type="text" name="EMail" size="33">
+</p>
+
+<!--SEDE OPERATIVA -->
+<p align="left">
+ (indicare solo se diversa dalla sede legale)
+ con sede opeartiva in via &nbsp;<input type="text" name="PAIndirizzoOP" size="38">
+  <label> Città </label>   <input type="text" name="PALocalitaOP" size="22">
+  <label> CAP  </label>  <input type="text" name="PACapOP" size="10"> 
+  <label> Prov. </label>  <input type="text" name="PAProvinciaOp" size="22">
+</p>
+
+
+
+<p align="left">
+Codice Fiscale operatore economico  <input type="text" name="codicefiscale" size="64"></p>
+<p align="left">
+Partita IVA <input type="text" name="PIVA" size="71"></p>
+
+
+<b>Informazioni del rappresentante legale/procuratore a cui verranno inviate tutte le comunicazioni</b>
+<p align="left">
+<label> Telefono </label> <input type="text" name="TelefonoRapLeg" size="35">
+<label> Fax </label> <input type="text" name="FaxRapLeg" size="35">
+</p>
+
+<p align="left">
+<label>Cellulare </label>  <input type="text" name="CellulareRapLeg" size="35"> 
+<label>e-mail </label>  <input type="text" name="EmailRapLeg" size="76">
+</p>
+
+<p align="left">
+<label>Altro indirizzo E-mail di riferimento </label> <input type="text" name="EMailRiferimentoAzienda" size="100"> 
+</p>
+
+
+<p align="justify">
+Consapevole delle responsabilità e delle conseguenze civili e penali previsti in 
+caso di dichiarazioni mendaci 
+e/o formazione od uso di atti falsi, ai sensi e per gli effetti dell’art. 
+76 del D.P.R. 445/2000, nonché 
+in caso di esibizione di atti contenenti dati non più corrispondenti a verità, e 
+consapevole, altresì, che 
+qualora emerga la non veridicità del contenuto della presente dichiarazione 
+l'operatore economico verrà escluso dall'Albo. </p>
+<table align="center"><tr><td>
+<p align="center"><font face="Arial" size="3"><b><i><span lang="IT" style="border:2px solid #CCC;">C H I E D E</span></i></b></font></p>
+</td></tr></table>
+<p align="left">L'iscrizione del suddetto operatore economico all'Albo on line dei Fornitori della Regione Puglia
+nelle categorie merceologiche indicate nella sottostante area Categorie Merceologiche e a tal fine</p>
+<table align="center"><tr><td>
+<p align="center"><font face="Arial" size="3"><b><i><span lang="IT" style="border:2px solid #CCC;">D I C H I A R A</span></i></b></font></p>
+</td></tr></table>
+<p align="left"><b><i>A) Ai sensi degli artt. 46 e 47 D.P.R. 28.12.2000 n° 445:</i></b></p>
+<p   style="margin-top:0cm;margin-right:2.55pt;margin-bottom:
+0cm;margin-left:21.3pt;margin-bottom:.0001pt;text-align:justify;text-indent:
+-21.3pt; "><b><i>a1)&nbsp; </i></b>di aver preso visione e di obbligarsi
+all’osservanza di tutte le disposizioni previste dalla Disciplina per l'utilizzo di EmPULIA e del Regolamento dell'Albo on line dei Fornitori della Regione Puglia approvato 
+con R.R. n. 22 del 11 novembre 2008;</p>
+
+<p   style="margin-top:0cm;margin-right:1pt;margin-bottom:
+0cm;margin-left:20.3pt;margin-bottom:0;text-align:justify;text-indent:
+-21.3pt;"><b><i>a2)&nbsp;</i></b>che l'operatore economico è iscritto alla CCIAA 
+<input type="text" name="BelongCCIAA" size="10">:</p>
+
+<div id="cciia1" style="font-size: 10.0pt; font-family: Arial">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;è iscritto dall’anno
+<input type="text" name="ANNOCOSTITUZIONE" size="10"> &nbsp;
+alla Camera di Commercio, Industria, Artigianato ed Agricoltura della Provincia di &nbsp;
+<input type="text" name="SedeCCIAA" size="23"></p>
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;al numero REA 
+<input type="text" name="IscrCCIAA" size="28">&nbsp;
+	con un oggetto sociale compatibile con la classe/categoria per la quale si è 
+	chiesta l’iscrizione;</p>
+</div>
+
+<div id="cciia2" style="font-size: 10.0pt; font-family: Arial">
+
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp; non è iscritto alla CCIAA in quanto &nbsp;
+<input type="text" name="NotaIscrizioneCCIAA" size="52"></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp; e che possiede personalità giuridica
+<input type="text" name="Persgiuridica" size="12">
+ 
+</font>
+</p>
+</div>
+
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    &nbsp;</p>
+
+<p   style="text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+	<i><b>a3)</b></i> &nbsp;di 
+	non trovarsi in nessuna delle condizioni di esclusione dalla partecipazione 
+	alle gare di cui all'art. 38 del d.lgs. 163/06&nbsp; ed in particolare ai fini dell'iscrizione nell'Albo:
+	&nbsp;
+</p>
+
+<p   style="text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0; text-align: justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a) di non trovarsi in stato di fallimento, di liquidazione coatta, di concordato 
+preventivo nè sia in corso nei 
+propri riguardi un procedimento per la dichiarazione di una di tali situazioni;</p>
+<p style="margin-top: 0cm; margin-bottom: 0; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt; text-align: justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b) che nei propri confronti e nei confronti di tutti gli altri soggetti espressamente richiamati nell'art. 38 comma 1 lett. b) del d. legs. 163/06 non è pendente procedimento per l'applicazione di 
+una delle misure di prevenzione 
+di cui all'articolo 3 della legge 27 dicembre 1956, n. 1423 o di una delle cause 
+ostative previste dall'articolo 
+10 della legge 31 maggio 1965, n. 575; <i>(l'esclusione e il divieto operano se la 
+pendenza del procedimento riguarda il titolare o il direttore tecnico, se si 
+tratta di impresa individuale; il socio o il direttore tecnico se si tratta di 
+società in nome collettivo, i soci accomandatari o il direttore tecnico se si 
+tratta di società in accomandita semplice, gli amministratori muniti di poteri 
+di rappresentanza o il direttore tecnico, se si tratta di altro tipo di società)</i>;</p>
+
+<p style="margin-top: 0cm; margin-bottom: 0; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt; text-align: justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;c) che nei propri confronti e nei confronti di tutti gli altri soggetti espressamente richiamati nell'art. 38 comma 1 lett. b) del d. legs. 163/06 non è stata pronunciata sentenza di condanna passata 
+in giudicato, o emesso decreto 
+penale di condanna divenuto irrevocabile, oppure sentenza di applicazione della 
+pena su richiesta, ai sensi 
+dell'articolo 444 del codice di procedura penale, per reati gravi in danno dello 
+Stato o della Comunita' che 
+incidono sulla moralita' professionale; che altresì nei propri confronti non è 
+stata pronunciata sentenza di 
+condanna, passata in giudicato, per uno o piu' reati di partecipazione a 
+un'organizzazione criminale, corruzione, 
+frode, riciclaggio, quali definiti dagli atti comunitari citati all'articolo 45, 
+paragrafo 1, direttiva Ce 2004/18; <i>(l'esclusione e il divieto operano se la 
+pendenza del procedimento riguarda il titolare o il direttore tecnico, se si 
+tratta di impresa individuale; il socio o il direttore tecnico se si tratta di 
+società in nome collettivo, i soci accomandatari o il direttore tecnico se si 
+tratta di società in accomandita semplice, gli amministratori muniti di poteri 
+di rappresentanza o il direttore tecnico, se si tratta di altro tipo di società. 
+In ogni caso l'esclusione e il divieto operano anche nei confronti dei soggetti 
+cessati dalla carica nel triennio antecedente la data di pubblicazione del bando 
+di gara, qualora l'impresa non dimostri di aver adottato atti o misure di 
+completa dissociazione della condotta penalmente sanzionata; resta salva in ogni 
+caso l'applicazione dell'articolo 178 del codice penale e dell'articolo 445, 
+comma 2, del codice di procedura penale)</i>;</span></font></p>
+<p style="margin-top: 0cm; margin-bottom: 0; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt; text-align:justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+d) di non aver violato il divieto di intestazione fiduciaria posto all'articolo 
+17 comma 3 della legge 19 marzo 1990, n.55 sulla prevenzione della delinquenza di tipo mafioso (art. 75 comma 1, lett. d) ;</p>
+<p style="margin-top: 0cm; margin-bottom: 0; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt; text-align:justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e) di non aver commesso gravi infrazioni debitamente accertate alle norme in 
+materia di sicurezza e a ogni altro obbligo derivante dai rapporti di lavoro e, 
+risultanti dai dati in possesso dell'Osservatorio dei contratti pubblici;</p>
+<p style="margin-top: 0cm; margin-bottom: 0; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt; text-align:justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f) di non aver commesso grave negligenza o malafede nell'esecuzione delle 
+prestazioni affidate dalla Regione Puglia e di non aver commesso un errore grave 
+nell'esercizio della propria attività 
+professionale;</p>
+<p style="margin-top: 0cm; margin-bottom: 0; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt; text-align:justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;g) di 
+non aver commesso violazioni, definitivamente accertate, rispetto agli obblighi relativi al pagamento delle imposte e tasse, 
+secondo la legislazione italiana o quella dello Stato in cui sono stabiliti;
+</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">&nbsp;</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<span style="font-style: italic">
+	 a tal fine indico in via collaborativa l'ufficio competente ed il numero di protocollo del certificato di regolarità fiscale  
+   in corso di validità in mio possesso dal quale si evince la posizione di regolarità:</span></p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Ufficio competente <input type="text" name="UfficioEntrate" size="21"> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Certificato Prot.n. <input type="text" name="ProtAgenziaEntrate" size="15"> del <input type="text" name="DataAgenziaEntrate" size="20">
+</font></p>
+
+<!--inizio CONTENZIOSO LETTERA G>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    <i> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>
+
+
+	<span style="font-style: italic">
+	Nel caso di contenziosi in corso, specificare: ( in caso di più contenziosi allegare separata dichiarazione )</span></p>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    <i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>
+	<span style="font-style: italic">
+	1. Estremi del procedimento </span>
+<input type="text" name="EstremiProcedimento" size="57"></p>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+
+    <i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>
+
+	<span style="font-style: italic">
+	2. Addebito contestato </span>
+<input type="text" name="AddebitoContestato" size="57"></p>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    &nbsp;</p>
+ <fine CONTENZIOSO LETTERA G -->
+    
+<p   style="text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0; text-align:justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h)&nbsp;di non aver reso false dichiarazioni 
+	in merito ai requisiti e alle condizioni rilevanti per la partecipazione alle procedure 
+	di gara  e per l'affidamento dei subappalti risultanti dai 
+	dati in possesso dell'Osservatorio dei contratti pubblici;</p>
+<p   style="text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0; text-align:justify;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i)
+	di non aver commesso violazioni gravi, definitivamente accertate, alle norme in materia 
+	di contributi previdenziali e assistenziali,
+	secondo la legislazione italiana o quella dello Stato in cui sono stabiliti, e a tal 
+	fine di <input type="text" name="PosPrevidenziali" size="15">:</p>
+
+<div id="previdenziali_inps" style="font-size: 10.0pt; font-family: Arial">
+<p   style="text-align: left; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<span lang="IT" style="font-size: 12.0pt; font-family: Arial">
+<font face="Arial" size="3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<b>ENTE INPS</b></font></span></p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+&nbsp;</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SEDE specificare Città 
+<input type="text" name="SedeINPS" size="15"> MATRICOLA AZIENDA 
+<input type="text" name="NumINPS" size="19"> Settori CCNL
+<input type="text" name="SettoriCCNL" size="19"></p><br>
+</div>
+<div id="previdenziali_inail" style="font-size: 10.0pt; font-family: Arial">
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<span lang="IT" style="font-size: 12.0pt; font-family: Arial"><font face="Arial" size="3">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>ENTE INAIL</b></font></span></p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+&nbsp;</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SEDE specificare Città
+<input type="text" name="SedeINAIL" size="15"> CODICE DITTA
+<input type="text" name="NumINAIL" size="20"></font></p>
+
+</div>
+
+<div id="previdenziali_extra" style="font-size: 10.0pt; font-family: Arial">
+
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">&nbsp;</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<span style="font-style: italic">
+	A tal fine indico in via collaborativa l'ufficio competente ed il numero di protocollo del certificato (Documento Unico di Regolarità Contributiva DURC) in corso di validità in mio possesso dal quale si evince la posizione di regolarità:</span></p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Ufficio competente<input type="text" name="UfficioCertificato" size="20"><br> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Certificato Prot.n. <input type="text" name="ProtocolloCertificato" size="15"> del <input type="text" name="DelCertificato" size="20">
+	</font></p>
+
+</div>
+<!--inizio CONTENZIOSO LETTERA I>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">&nbsp;</p>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<span style="font-style: italic">
+	Nel caso di contenziosi in corso, specificare:  ( in caso di più contenziosi allegare separata dichiarazione )</span></p>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+
+	<span style="font-style: italic">
+	1. Estremi del procedimento </span>
+<input type="text" name="EstremiProcedimentoINAIL" size="57"></p>
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+    
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+
+	<span style="font-style: italic">
+	2. Addebito contestato </span>
+<input type="text" name="AddebitoContestatoINAIL" size="57"></p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">&nbsp;</p>
+
+<fine CONTENZIOSO LETTERA I -->
+
+<p   style="text-align: justify; text-indent: -21.3pt; margin-left: 20.3pt; margin-right: 1pt; margin-top: 0; margin-bottom: 0;">
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; l) di essere in regola con 
+le norme che disciplinano il diritto al lavoro dei disabili ai sensi della L. 
+68/99, in quanto (<i>barrare 
+la casella corrispondente</i>):
+<!--blockquote>
+	<p    style="text-align: justify; text-indent: -21.3pt; line-height: 20.0pt; margin-left: 21.3pt; margin-top:0; margin-bottom:0">
+	
+	<label id="ctlRCheck1" ><input type="radio" id="1RCheck" name="1RCheck" value="1" onclick="javascript:getObj('2RCheck').checked=false;getObj('3RCheck').checked=false; document.getElementById('elemento_Product2_comune_'+strRadio1).value=1;HandleOnChangeEvent('','Product2_comune','','','');"></label>
+	l’operatore economico non è tenuto al rispetto di tale normativa, avendo alle dipendenze 
+	un numero di lavoratori inferiore a 15;</span></p>
+	
+	<p   style="text-align: justify; text-indent: -21.3pt; line-height: 20.0pt; margin-left: 21.3pt; margin-top:0; margin-bottom:0">
+	
+	<label id="ctlRCheck2" ><input type="radio"  id="2RCheck" name="2RCheck" value="2" onclick="getObj('1RCheck').checked=false;getObj('3RCheck').checked=false;document.getElementById('elemento_Product2_comune_'+strRadio1).value=2;HandleOnChangeEvent('','Product2_comune','','','');" ></label>
+	l’operatore economico ha alle dipendenze un numero di lavoratori pari o superiore a 15 
+	dipendenti, ed ha ottemperato agli obblighi ex legge 68/1999;</p>
+	<p   style="text-align: justify; text-indent: -21.3pt; line-height: 20.0pt; margin-left: 21.3pt; margin-top:0; margin-bottom:0">
+	
+	<label id="ctlRCheck3" ><input type="radio"  id="3RCheck" name="3RCheck" value="3" onclick="getObj('1RCheck').checked=false;getObj('2RCheck').checked=false;document.getElementById('elemento_Product2_comune_'+strRadio1).value=3;HandleOnChangeEvent('','Product2_comune','','','');"></label>
+	l’operatore economico ha un numero di dipendenti tra 15 e 35 e non ha compiuto nuove 
+	assunzioni successivamente alla data del 7 gennaio 2000;</p>
+</blockquote-->
+
+<style>
+  .Table_Radio{margin-top:5px;}
+  .TD_Radio{font-size:12px; font-weight:normal;vertical-align:middle}
+  .img_radio{margin-left: 21.3pt;vertical-align:middle}
+  .label_radio{margin-left:3px; vertical-align:middle}
+</style>
+
+<blockquote>
+  <input type="text" name="Check1" value="3">
+</blockquote>
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;
+</p>
+
+<p style="margin-top: 0; margin-bottom: 0; text-align:justify; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m) che nei propri confronti non è stata 
+applicata la sanzione interdittiva di cui all'articolo 9, comma 2, lettera c), 
+del 
+decreto legislativo dell'8 giugno 2001 n. 231 o altra sanzione che comporta il 
+divieto di contrarre con la pubblica 
+amministrazione compresi i provvedimenti interdittivi di cui all'articolo 36-bis, comma 1, del decreto
+legge 4 luglio 2006, n. 223, convertito, con modificazioni, dalla legge 4 agosto 2006 n. 248;</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+
+<p style="margin-top: 0; margin-bottom: 0; text-align:justify; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt">
+&nbsp;&nbsp;&nbsp;&nbsp; m-bis) (<i>barrare 
+la casella corrispondente</i>): 
+<!--blockquote>
+	<p   style="text-align: justify; text-indent: -21.3pt; line-height: 20.0pt; margin-left: 21.3pt; margin-top:0; margin-bottom:0">
+	<label id="ctlRRCheck1" ><input type="radio"  id="1RCheck1" name="1RCheck1" value="1" onclick="javascript:getObj('2RCheck1').checked=false;document.getElementById('elemento_Product2_comune_'+strRadio2).value=1;HandleOnChangeEvent('','Product2_comune','','','');"></label>
+che nei propri confronti non è stata 
+applicata la sospensione o la decadenza dell'attestazione SOA per aver prodotto 
+falsa documentazione o dichiarazioni mendaci, risultanti dal casellario informatico;</font></p>
+	<p   style="text-align: justify; text-indent: -21.3pt; line-height: 20.0pt; margin-left: 21.3pt; margin-top:0; margin-bottom:0">
+	<label id="ctlRRCheck2" ><input type="radio"  id="2RCheck1" name="2RCheck1" value="2" onclick="getObj('1RCheck1').checked=false;document.getElementById('elemento_Product2_comune_'+strRadio2).value=2;HandleOnChangeEvent('','Product2_comune','','','');" ></label>
+	di non essere in possesso di attestazione SOA;</p>
+</blockquote-->
+<blockquote>
+<input type="text" name="Check4" value="2">
+</blockquote>
+</p>
+
+
+<p style="margin-top: 0; margin-bottom: 0; text-align:justify; text-indent:-21.3pt; margin-left:20.3pt; margin-right:1pt">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m-ter) che nei propri confronti e nei confronti di tutti gli altri soggetti espressamente richiamati nell’art. 38, comma 1 lett. b) del D.Lgs. 163/2006 non sussiste la circostanza che, anche in assenza nei loro confronti di un procedimento per l’applicazione di una misura di prevenzione o di una causa ostativa ivi previste, pur essendo stati vittime dei reati previsti e puniti dagli articoli 317 e 629 del codice penale aggravati ai sensi dell’articolo 7 del decreto-legge 13 maggio 1991, n. 152, convertito, con modificazioni, dalla legge 12 luglio 1991, n. 203, non risultino aver denunciato i fatti alla autorità giudiziaria, salvo che ricorrano i casi previsti dall’articolo 4, primo comma, della legge 24 novembre 1981, n. 689. La circostanza di cui al primo periodo deve emergere dagli indizi a base della richiesta di rinvio a giudizio formulata nei confronti dell’imputato nei tre anni antecedenti alla pubblicazione del bando e deve essere comunicata, unitamente alle generalità del soggetto che ha omesso la predetta denuncia, dal procuratore della Repubblica procedente all’Autorità di cui all’articolo 6, la quale cura la pubblicazione della comunicazione sul sito dell’Osservatorio.</p>
+<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>
+	
+<!--p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<b><i>a4)</b> </i>di applicare a favore dei lavoratori dipendenti, e se cooperativa anche verso i soci, condizioni normative e retributive non inferiori a quelle risultanti dai contratti di lavoro e dagli accordi locali in cui si svolgono i lavori, se più favorevoli nei confronti dei suddetti soggetti rispetto a quelle dei contratti di lavoro e degli accordi del luogo in cui ha sede la Ditta, nonché di rispettare le norme e le procedure previste in materia dalla legge 19.03.1990 n. 55 e successive modifiche ed integrazioni;</span></font>
+</p-->
+
+<p style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<b><i>a4)</b> </i>
+di applicare integralmente ai rapporti al lavoro intercorrenti con i propri dipendenti il contratto collettivo nazionale per il settore di appartenenza
+e, se esistente, anche il contratto collettivo territoriale, che siano stati stipulati dalle organizzazioni sindacali dei lavoratori e dalle associazioni
+dei datori di lavoro comparativamente più rappresentative sul piamo nazionale, in applicazione della legge regionale n. 28 del 
+26 ottobre 2006 "Disciplina in materia di contrasto al lavoro non regolare" e del Regolamento Regionale n.31 del 27 novembre 2009;
+</span></font>
+</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<i><b>a5)</b></i> di 
+essere in possesso di firma digitale rilasciata da un Ente accreditato presso DigitPA; </span></font></p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<i><b>a6)</b></i> che tutti i documenti eventualmente  
+allegati, nella sezione "ULTERIORE DOCUMENTAZIONE", alla presente richiesta di iscrizione in formato elettronico sono 
+conformi all'originale.</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">&nbsp;</p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<i><b>B) dichiara altresì,</b></i></p>
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<i><b>b1)</b></i>
+ di accettare che gli inviti alle procedure di gara e tutte le comunicazioni inerenti l’utilizzo e la gestione 
+ dell’Albo on line dei Fornitori siano effettuate tramite il Portale EmPULIA all'indirizzo di posta 
+ elettronica del legale rappresentante indicato nella presente istanza, assumendosene la responsabilità in caso di non
+corretta  indicazione e/o di non corretto funzionamento.
+</p>
+
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<i><b>b2)</b></i> di impegnarsi a comunicare 
+tempestivamente ogni variazione dei dati inseriti nella presente istanza con particolare riferimetno al mantenimento dei requisiti dichiarati
+ogni qualvolta sarà invitato a partecipare a procedure di gara;</font></p>
+
+ 
+<p   style="text-align: justify; text-indent: -21.3pt;   margin-left: 20.3pt; margin-right: 1pt; margin-top: 0cm; margin-bottom: 0">
+<i><b>b3)</b> </i>di aver preso visione dell'informativa sul trattamento dei dati personali fornita al momento della registrazione al portale
+EmPULIA, secondo quanto previsto dall'art. 23 del D.Lgs. n. 196/2003 e di  
+essere informato, che i dati raccolti saranno trattati, anche con strumenti informatici,
+esclusivamente nel procedimento di iscrizione all'albo e nelle procedure di gara. 
+</p>
+
+</div>
+
+
+
+<input type="hidden" name="NumeroTagScript" id ="NumeroTagScript" value="2">
+	
+<script id="script2" language="javascript">
+	
+	
+  
+  var tempOnChangeCCIA;
+	var tempOnChangePrevidenza;
+	var objBelongCCIIA;
+	var objPrevidenza;
+	try {
+		objBelongCCIIA=getObj('elemento_Product2_comune_' + strCCIAA );
+
+		tempOnChangeCCIA=objBelongCCIIA.onchange;
+		objBelongCCIIA.onchange= HideSectionBelongCCIIA;
+		objPrevidenza=getObj('elemento_Product2_comune_' + strPrevid );
+		tempOnChangePrevidenza=objPrevidenza.onchange;
+		objPrevidenza.onchange= HideSectionPrevidenza;
+	}catch(e){
+	  //alert(e);
+ 	}
+	
+	try{
+		//se presente anno di iscrizione camera di commercio allora seleziono si per la camera di commercio
+		if ( getObj('elemento_Product2_comune_'+ strANNO).value != '' )
+			objBelongCCIIA.value = '1';
+	
+		//se presenti dati inail e inps setto opzione entrambi
+		if ( getObj('elemento_Product2_comune_' + strNumINPS).value != '' && getObj('elemento_Product2_comune_' + strNumINAIL).value != '')	
+			objPrevidenza.value = '1';		
+		else {
+			//se presente solo un dato inps(matricola azienda) visualizzo solo inps e setto solo inps
+			if ( getObj('elemento_Product2_comune_' + strNumINPS).value != '' )
+				objPrevidenza.value = '2';	
+	
+			//se presente solo un dato inail(codice ditta) visualizzo solo inail e setto solo inail
+			if ( getObj('elemento_Product2_comune_' + strNumINAIL).value != '' )
+				objPrevidenza.value = '3';
+		}
+	
+	}catch(e){
+		
+	}	
+
+
+	function CheckNumber(){
+		if (IsNumber(getObj('elemento_Product2_comune_' + strNumINPS).value)==0) {
+			alert('La Matricola Azienda deve essere numerica');
+			getObj('elemento_Product2_comune_' + strNumINPS).value=''; getObj('elemento_Product2_comune_' + strNumINPS).focus();
+		}
+	}
+
+	function HideSectionBelongCCIIA(){
+		try {
+			try{	
+				tempOnChangeCCIA();
+			}catch(e){
+			}
+				
+
+		if	(objBelongCCIIA.value=='0'){
+
+			document.getElementById('cciia2').style.display='';
+			document.getElementById('cciia1').style.display='none';
+
+			document.getElementById('elemento_Product2_comune_' + strANNO).value='';
+			document.getElementById('elemento_Product2_comune_' + strSedeCCIAA).value='';
+			document.getElementById('elemento_Product2_comune_' + strIscrCCIAA).value='';
+			
+
+
+		}else{
+					if	(objBelongCCIIA.value=='1'){
+						
+						document.getElementById('cciia2').style.display='none';
+						document.getElementById('cciia1').style.display='';
+						
+						document.getElementById('elemento_Product2_comune_' + strNotaIscrizioneCCIAA).value='';
+						document.getElementById('elemento_Product2_comune_' + strPersgiuridica).value='';
+						document.getElementById('elemento_Product2_comune_' + strQualitaImprenditore).value='';
+						
+												
+					}else{
+						if	(objBelongCCIIA.value==''){
+							document.getElementById('cciia2').style.display='';
+							document.getElementById('cciia1').style.display='';
+							objBelongCCIIA.selectedIndex=0;
+							document.getElementById('elemento_Product2_comune_' + strANNO ).value='';
+							document.getElementById('elemento_Product2_comune_' + strSedeCCIAA).value='';
+							document.getElementById('elemento_Product2_comune_' + strIscrCCIAA).value='';
+							document.getElementById('elemento_Product2_comune_' + strNotaIscrizioneCCIAA).value='';
+							document.getElementById('elemento_Product2_comune_' + strPersgiuridica).value='';
+							document.getElementById('elemento_Product2_comune_' + strQualitaImprenditore).value='';
+		
+							
+						}
+					}
+						
+		}
+		}catch(e){
+		   
+		}
+	}
+	
+	
+	
+	function HideSectionPrevidenza(){
+	
+		try {
+			try{
+				tempOnChangePrevidenza();
+			}catch(e){}
+
+			if	(objPrevidenza.value=='0'){
+			
+
+				getObj('previdenziali_inps').style.display='none';
+				getObj('previdenziali_inail').style.display='none';	
+				getObj('previdenziali_extra').style.display='none';
+
+				getObj('elemento_Product2_comune_' + strSedeINPS).value='';
+				getObj('elemento_Product2_comune_' + strNumINPS).value='';
+				getObj('elemento_Product2_comune_' + strSettoriCCNL).value='';
+							
+				getObj('elemento_Product2_comune_' + strSedeINAIL).value='';
+				getObj('elemento_Product2_comune_' + strNumINAIL).value='';
+
+				
+
+
+			}else{
+				if	(objPrevidenza.value=='1'){
+					getObj('previdenziali_inps').style.display='';
+					getObj('previdenziali_inail').style.display='';
+				}
+				if	(objPrevidenza.value=='2'){
+					getObj('previdenziali_inps').style.display='';
+					getObj('previdenziali_inail').style.display='none';
+				}
+				if	(objPrevidenza.value=='3'){
+					getObj('previdenziali_inps').style.display='none';
+					getObj('previdenziali_inail').style.display='';
+				}
+				if	(objPrevidenza.value==''){
+					getObj('previdenziali_inps').style.display='';
+					getObj('previdenziali_inail').style.display='';
+				}
+				getObj('previdenziali_extra').style.display='';
+					
+		}
+		}catch(e){
+		  
+		}
+
+	}	
+
+
+	
+
+
+	function CheckTemplate(){
+	 try {
+		
+		//controllo opzione camera di commercio
+		if (objBelongCCIIA.value==''){
+			
+			alert('Selezionare Iscrizione alla CCIAA');
+			try {
+		   	objBelongCCIIA.focus();
+			}catch(e){
+			}
+			return 1;
+
+		}
+
+		if	(objBelongCCIIA.value=='0'){
+			
+			if (document.getElementById('elemento_Product2_comune_' + strNotaIscrizioneCCIAA).value==''){
+				alert('Motivazione Non Iscrizione Obbligataria');
+				document.getElementById('elemento_Product2_comune_' + strNotaIscrizioneCCIAA).focus();
+				return 1;
+			}
+			
+			if (document.getElementById('elemento_Product2_comune_' + strPersgiuridica).value==''){
+				alert('personalità giuridica obbligatoria');
+				document.getElementById('elemento_Product2_comune_' + strPersgiuridica).focus();
+
+				return 1;
+			}
+			
+			if (document.getElementById('elemento_Product2_comune_' + strQualitaImprenditore).value==''){
+				alert('qualità imprenditore');
+				document.getElementById('elemento_Product2_comune_' + strQualitaImprenditore).focus();
+				return 1;
+			}
+				
+		}else{
+			
+			if (document.getElementById('elemento_Product2_comune_' + strANNO ).value==''){
+				alert('Iscrizione obbligatoria');
+				document.getElementById('elemento_Product2_comune_' + strANNO ).focus();
+				return 1;
+			}
+			
+			if (document.getElementById('elemento_Product2_comune_' + strSedeCCIAA).value==''){
+				alert('Provincia obbligatoria');
+				document.getElementById('elemento_Product2_comune_' + strSedeCCIAA).focus();
+				return 1;
+			}
+			
+			if (document.getElementById('elemento_Product2_comune_' + strIscrCCIAA).value==''){
+				alert('Numero REA obbligatorio');
+				document.getElementById('elemento_Product2_comune_' + strIscrCCIAA).focus();
+				return 1;
+			}
+		}
+		
+		//controllo che ho selezianato le opzioni previdenziali
+		if (objPrevidenza.value==''){
+			
+			alert('Selezionare Posizione Previdenziale');
+			try {
+		   		objPrevidenza.focus();
+			}catch(e){
+			}
+			return 1;
+
+		}
+		
+		if	(objPrevidenza.value=='1' || objPrevidenza.value=='2'){
+			
+			if (getObj('elemento_Product2_comune_' + strSedeINPS).value==''){
+				alert('Sede Inps obbligatoria');
+				getObj('elemento_Product2_comune_' + strSedeINPS).focus();
+				return 1;
+			}
+
+			if (getObj('elemento_Product2_comune_' + strNumINPS).value==''){
+				alert('MATRICOLA AZIENDA Inps obbligatoria');
+				getObj('elemento_Product2_comune_' + strNumINPS).focus();
+				return 1;
+			}
+			
+			if (getObj('elemento_Product2_comune_' + strSettoriCCNL).value==''){
+				alert('Settori CCNL Inps obbligatoria');
+				getObj('elemento_Product2_comune_' + strSettoriCCNL).focus();
+				return 1;
+			}
+		}			
+
+		if	(objPrevidenza.value=='1' || objPrevidenza.value=='3'){
+
+			if (getObj('elemento_Product2_comune_' + strSedeINAIL).value==''){
+				alert('Sede Inail obbligatoria');
+				getObj('elemento_Product2_comune_' + strSedeINAIL).focus();
+				return 1;
+			}
+
+			if (getObj('elemento_Product2_comune_' + strNumINAIL).value==''){
+				alert('CODICE DITTA  Inail obbligatoria');
+				getObj('elemento_Product2_comune_' + strNumINAIL).focus();
+				return 1;
+			}
+			
+		}
+
+			 }catch(e){
+			
+    return 1;		
+	 }
+
+		return 0;
+	}
+	
+	
+	//effettua azioni javascript sul template
+	function ExecuteScriptTemplate(){
+  
+      //recupero hostname
+    	strUrl=document.URL;
+    	
+    	nPos=strUrl.indexOf('//');
+    	strHeadUrl=strUrl.substr(0, nPos+2);	
+    	strCodaURL=strUrl.substr(nPos+2, strUrl.length);	
+    	
+    	nPos=strCodaURL.indexOf('/');
+    	strHost=strCodaURL.substr(0, nPos);
+    	strPath=strHeadUrl + strHost ;
+      
+      strFineURL = strCodaURL.substr(nPos+1, strCodaURL.length);	
+     
+      nPosApp=strFineURL.indexOf('/');
+      strAppName=strFineURL.substr(0, nPosApp);
+      
+      //alert(strAppName);
+      
+      //setto il radiobutton strRadio1
+      
+      /*
+      var Value;
+  		var objCheck;
+  		var Index;
+  		try {
+  			Value=document.getElementById('elemento_Product2_comune_'+ strRadio1).value;
+  			
+  			if (Value!=''){
+  			  try{
+  			   objCheck=document.forms['new_document'].elements[Value + 'RCheck'];
+          		}catch(e){
+           		 objCheck=getObj(Value + 'RCheck');
+          		}
+  				
+  				objCheck.checked=true ;
+  			}
+  		}catch(e){
+  		}
+      
+      var ModePrint='0';
+      try{
+       ModePrint = getObj('Print').value ;
+      }catch(e){
+  		}
+      
+      //in caso si stampa metto le immagini al posto dei controlli    
+      if (ModePrint == '1' ){
+			
+  			for ( n=1; n < 4; n++){
+  				
+  				getObj('ctlRCheck'+n).innerHTML='<img style="margin-left: 21.3pt; " src='+ strPath + '/' + strAppName + '/images/radiounSel.gif>' ;
+  				
+  				if (n == Value){
+  				   getObj('ctlRCheck'+n).innerHTML='<img style="margin-left: 21.3pt; " src='+ strPath + '/' + strAppName + '/images/radioSel.gif>' ;
+  				}
+  
+  			}
+			
+		  }
+      
+      */
+     
+     var ModePrint='0';
+      try{
+       ModePrint = getObj('Print').value ;
+      }catch(e){
+  		} 
+    //setto il radiobutton strRadio2
+		/*
+    try {
+			Value=document.getElementById('elemento_Product2_comune_'+strRadio2).value;
+			if (Value!=''){
+			  try{
+			   objCheck=document.forms['new_document'].elements[Value + 'RCheck1'];
+        }catch(e){
+          objCheck=getObj(Value + 'RCheck1');
+        }
+				objCheck.checked=true;
+			}
+			
+		}catch(e){
+		}
+    */
+    
+    //in caso si stampa metto le immagini al posto dei controlli
+    /*
+    if (ModePrint == '1' ){
+			
+			for ( n=1; n < 3; n++){
+				
+				getObj('ctlRRCheck'+n).innerHTML='<img style="margin-left: 21.3pt; " src='+ strPath +'/' + strAppName + '/images/radiounSel.gif>';
+				
+				if (n == Value){
+				   getObj('ctlRRCheck'+n).innerHTML='<img style="margin-left: 21.3pt; " src='+ strPath +'/' + strAppName + '/images/radioSel.gif>';
+				}
+
+			}
+			
+		}  
+		*/
+      
+  }
+	
+  HideSectionBelongCCIIA();
+	HideSectionPrevidenza();
+  //ExecuteScriptTemplate();
+
+
+
+</script>
+
+

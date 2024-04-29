@@ -1,0 +1,360 @@
+﻿@page "/Report/OFFERTA_BUSTA_TEC.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using System.Diagnostics
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.Report.OFFERTA_BUSTA_TECModel;
+@model eProcurementNext.Razor.Pages.Report.OFFERTA_BUSTA_TECModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	string IDDOC = objDoc.mp_IDDoc;
+}
+@{
+
+	htmlToReturn.Write($@"
+	<html>
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/main_base_print.css""  />
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/GridPrint.css""  />
+	<style>
+	.display_none
+	{{
+		display: none;
+
+	}}
+	</style>
+	<title>" + ApplicationCommon.CNV("OFFERTA") + $@"</title>
+	</head>");
+	void Header()
+	{
+		htmlToReturn.Write($@"<tr><td height=""50px"" align=""center"" valign=""top"" >");
+
+		string imgHeader = ApplicationCommon.CNV("HEADER_STAMPE");
+
+		if(imgHeader.Contains("???", StringComparison.Ordinal))
+		{
+			htmlToReturn.Write($@"<img height=""50px"" src=""logo_new.gif"" border=""0"" alt=""" +ApplicationCommon.CNV("ALT LOGO") + $@"""/>");
+		}
+		else
+		{
+			htmlToReturn.Write(imgHeader);
+		}
+		htmlToReturn.Write("</td></tr>");
+		htmlToReturn.Write($@"<tr><td align=""center"" valign=""top"">" + ApplicationCommon.CNV("HEADER_STAMPA_BUSTA_OFFERTA") + $@"</td></tr>");
+	}
+	string stazioneappaltante(dynamic cod)
+	{
+		//'--recupero info ente
+		TSRecordSet rsEnte;
+		var sqlParams = new Dictionary<string, object?>();
+		sqlParams.Add("@cod",cod);
+		rsEnte = cdf.GetRSReadFromQuery_("select aziRagioneSociale from aziende with(nolock) where idazi=@cod", ApplicationCommon.Application.ConnectionString, sqlParams);
+		rsEnte.MoveFirst();
+		return CStr(rsEnte["aziRagioneSociale"]);
+	}
+	string recuperoTipoProcedura(string cod)
+	{
+		string _recuperoTipoProcedura = "";
+		TSRecordSet rstipoproc;
+		var sqlParams1 = new Dictionary<string, object?>();
+		sqlParams1.Add("@cod",cod);
+		rstipoproc = cdf.GetRSReadFromQuery_("select c2.tipodoc,ISNULL(DB.TipoProceduraCaratteristica,'') as TipoProceduraCaratteristica,dbo.GetCodDom2DescML('Caratteristica',ISNULL(DB.TipoProceduraCaratteristica,''),'I') as desc_carat,db.ProceduraGara, dbo.GetDescDominioFromDztNome('ProceduraGara','I',ISNULL(db.ProceduraGara,'')) as Desc_ProceduraGara from Document_MicroLotti_Dettagli_view D inner join ctl_doc c with(nolock) on c.id=D.IdHeader and C.TipoDoc='OFFERTA' inner join ctl_doc C2 with(nolock) on C2.id=C.LinkedDoc inner join document_bando DB with(nolock) on DB.idHeader=c2.id where D.id= @cod", ApplicationCommon.Application.ConnectionString, sqlParams1);
+		rstipoproc.MoveFirst();
+
+		string tipoDoc = CStr(rstipoproc["tipodoc"]);
+		string TipoProceduraCaratteristica = CStr(rstipoproc["TipoProceduraCaratteristica"]);
+
+		if (tipoDoc == "BANDO_SEMPLIFICATO")
+		{
+			_recuperoTipoProcedura = "Bando Semplificato";
+		}
+		if (tipoDoc == "BANDO_GARA" && !string.IsNullOrEmpty(TipoProceduraCaratteristica))
+		{
+			_recuperoTipoProcedura = CStr(rstipoproc["desc_carat"]);
+		}
+		if (tipoDoc == "BANDO_GARA" && string.IsNullOrEmpty(TipoProceduraCaratteristica))
+		{
+			_recuperoTipoProcedura = CStr(rstipoproc["Desc_ProceduraGara"]);
+		}
+		return _recuperoTipoProcedura;
+
+	}
+	string infoOfferta (string cod,string param)
+	{
+		string _infoOfferta = "";
+		TSRecordSet rsofferta = null;
+		var sqlParams2 = new Dictionary<string, object?>();
+		sqlParams2.Add("@cod",cod);
+		rsofferta = cdf.GetRSReadFromQuery_("select C.idpfu,p.pfuNomeUtente + ' ' + p.pfuCognome as Responsabile ,C.Body,C.ProtocolloRiferimento from  Document_MicroLotti_Dettagli_view D inner join ctl_doc C with(nolock) on C.id=D.idheader and C.tipodoc='OFFERTA' inner join profiliUtente P with(nolock) on P.idpfu=C.idpfu where D.id=@cod", ApplicationCommon.Application.ConnectionString, sqlParams2);
+		rsofferta.MoveFirst();
+		if(param == "Oggetto")
+		{
+			_infoOfferta = GetValueFromRS(rsofferta.Fields["Body"]);
+		}
+		if(param == "Registro_Bando")
+		{
+			_infoOfferta = GetValueFromRS(rsofferta.Fields["ProtocolloRiferimento"]);
+		}
+		if(param == "Responsabile")
+		{
+			_infoOfferta = GetValueFromRS(rsofferta.Fields["Responsabile"]);
+		}
+		return _infoOfferta;
+	}
+	string DenominazioneATI(string cod)
+	{
+		string _DenominazioneATI = "";
+		TSRecordSet rsDenominazioneATI = null;
+		var sqlParams3 = new Dictionary<string, object?>();
+		sqlParams3.Add("@cod",cod);
+		rsDenominazioneATI = cdf.GetRSReadFromQuery_("select value from Document_MicroLotti_Dettagli_view D inner join ctl_doc c with(nolock) on c.id=D.IdHeader and C.TipoDoc='OFFERTA' inner join ctl_doc_value CV with(nolock) on CV.IdHeader=c.Id and DSE_ID='TESTATA_RTI' and CV.DZT_Name='DenominazioneATI' where D.id=@cod", ApplicationCommon.Application.ConnectionString, sqlParams3);
+		if(rsDenominazioneATI.RecordCount >0)
+		{
+			rsDenominazioneATI.MoveFirst();
+			_DenominazioneATI = GetValueFromRS(rsDenominazioneATI.Fields["value"]);
+
+		}
+		else
+		{
+			_DenominazioneATI = "";
+		}
+		//'-- se il campo è vuoto recuperiamo la ragione sociale del fornitore
+		if(string.IsNullOrEmpty(_DenominazioneATI.Trim()))
+		{
+			var sqlParams4 = new Dictionary<string, object?>();
+			sqlParams4.Add("@cod",cod);
+			rsDenominazioneATI = cdf.GetRSReadFromQuery_("select aziRagioneSociale  from Document_MicroLotti_Dettagli_view D inner join ctl_doc c with(nolock) on c.id=D.IdHeader and C.TipoDoc='OFFERTA' inner join aziende a on a.idazi = c.azienda where D.id=@cod", ApplicationCommon.Application.ConnectionString, sqlParams4); 
+			if(rsDenominazioneATI.RecordCount>0)
+			{
+				rsDenominazioneATI.MoveFirst();
+				_DenominazioneATI = GetValueFromRS(rsDenominazioneATI.Fields["aziRagioneSociale"]);
+			}
+		}
+		return _DenominazioneATI;
+	}
+	void info_concorrente(string cod)
+	{
+		var sqlParams5 = new Dictionary<string, object?>();
+		sqlParams5.Add("@cod",cod);
+		TSRecordSet rsinfo_concorrente = null;
+		rsinfo_concorrente = cdf.GetRSReadFromQuery_("select C.azienda,aziIndirizzoLeg + ' - ' + aziCAPLeg + ' ' + aziLocalitaLeg + ' (' + aziProvinciaLeg +') ' as aziIndirizzoLeg,'C.F. '+ vatValore_FT as cF, 'P.IVA ' + aziPartitaIVA as PIVA  from Document_MicroLotti_Dettagli_view D inner join ctl_doc c on c.id=D.IdHeader and C.TipoDoc='OFFERTA' inner join Aziende A on A.IdAzi=C.Azienda inner join DM_Attributi on A.IdAzi=lnk and dztNome='codicefiscale' where D.id=@cod", ApplicationCommon.Application.ConnectionString, sqlParams5);
+		rsinfo_concorrente.MoveFirst();
+		htmlToReturn.Write("<tr><td>" + GetValueFromRS(rsinfo_concorrente.Fields["aziIndirizzoLeg"]) + "</td></tr>");
+		htmlToReturn.Write("<tr><td>" + GetValueFromRS(rsinfo_concorrente.Fields["cF"]) + "&nbsp;" + GetValueFromRS(rsinfo_concorrente.Fields["PIVA"]) + "</td></tr>");
+	}
+	htmlToReturn.Write($@"
+	<body style=""min-width:1500px; padding-left:20px; padding-right:20px; padding-top:20px; padding-bottom:20px;"">
+	<table style=""font-weight:bold; align=center; vertical-align:center;"" width=""100%"" >");
+	Header();
+	htmlToReturn.Write($@"
+	</table>
+	<table  cellpadding=0 cellspacing=0 >
+		 <thead>
+
+    	<tr><td>&nbsp;</td></tr>");
+	htmlToReturn.Write($@"
+	<tr>
+    	  <td nowrap style=""font-size:18px; align=left""><b>Stazione appaltante:</b> "+stazioneappaltante(DOC_FieldTecnical( "TESTATA", "Destinatario_Azi"))+$@"</td>
+    	</tr>
+		<tr>
+    	  <td nowrap style=""font-size:18px; align=left""><b>Tipo Procedura:</b> "+recuperoTipoProcedura(IDDOC)+$@"</td>
+    	</tr>
+		<tr>
+    	  <td style=""font-size:18px; align=left""><b>Titolo:</b> "+infoOfferta( IDDOC,"Oggetto")+$@" <b>e numero registro di sistema:</b> "+infoOfferta( IDDOC,"Registro_Bando")+$@"</td>
+    	</tr>
+
+		<tr><td>&nbsp;</td></tr>");
+
+	htmlToReturn.Write($@"
+		 <tr><td>&nbsp;</td></tr>
+        <tr ><td style=""border:0px;"" ><label style=""font-size:18px; font-weight:bold; align:left"">");
+	htmlToReturn.Write(ApplicationCommon.CNV("Offerta Tecnica"));
+	string DSE_ID = "";
+	DSE_ID = "BUSTA_TECNICA";
+	if(GetParamURL(Request.QueryString.ToString(), "TYPEDOC") != "OFFERTA")
+	{
+		htmlToReturn.Write($@" - Lotto Numero:</label>" + DOC_Field("TESTATA", "NumeroLotto"));
+		DSE_ID = "OFFERTA_BUSTA_TEC";
+	}
+	htmlToReturn.Write($@"
+	  </td></tr>
+
+		<tr><td>&nbsp;</td></tr>
+
+        </thead>
+
+        <tr>
+			<td style=""border:0px;"" >");
+	//dim ObjSession
+	//ObjSession = session("Session")
+	//set ObjSession(0) = Request.QueryString
+	//set ObjSession(1) = Request.form
+	//
+	//'-- Passiamo di nuovo anche la request all'indice 3 per permettere alla classe ctldb.blacklist di recuperare l'ip
+	//set ObjSession(3) = request
+	//set ObjSession(5) = session
+	//set ObjSession(6) = application
+	//ObjSession(9) = application("Server_RDS")
+	//ObjSession(10) = session("Funzionalita")' permessi utenti
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+	//session("Session") = ObjSession
+
+
+	//'--stampo la griglia dell'offerta del microlotto
+	//Set objDB = CreateObject("ctldb.clstabmanage")
+
+	//'--recupero modello offerta microlotto
+	var sqlParams6 = new Dictionary<string, object?>();
+	sqlParams6.Add("@idHeader",IDDOC);
+	sqlParams6.Add("@DSE_ID",DSE_ID);
+	TSRecordSet rsM = null;
+	// 'set rsM = objDB.GetRSReadFromQuery( cstr("select MOD_Name from CTL_DOC_SECTION_MODEL where idheader = " & idDoc & " and DSE_ID in( 'OFFERTA_BUSTA_TEC' , 'BUSTA_TECNICA')" ) , application("connectionstring") )
+	rsM = cdf.GetRSReadFromQuery_("select MOD_Name from CTL_DOC_SECTION_MODEL where idheader = @idHeader and DSE_ID in( @DSE_ID )", ApplicationCommon.Application.ConnectionString, sqlParams6);
+	if(rsM.RecordCount >0)
+	{
+		string strModelloOfferta = GetValueFromRS(rsM.Fields["MOD_Name"]);
+		Dictionary<string, Field> mp_Columns = new Dictionary<string, Field>();
+		Dictionary<string, Grid_ColumnsProperty> mp_ColumnsProperty = new Dictionary<string, Grid_ColumnsProperty>();
+
+		//'--recupero modello griglia
+		LibDbModelExt mp_objDB = new LibDbModelExt();
+		mp_objDB.GetFilteredFieldsWeb(strModelloOfferta, ref mp_Columns, ref mp_ColumnsProperty, CStr(session["strSuffLing"]), 0, 0, ApplicationCommon.Application.ConnectionString, session, true);
+		//'--rimuovo colonna Esito
+		//'mp_Columns.Remove "EsitoRiga"
+		//stop
+		Grid_ColumnsProperty prop;
+
+		try
+		{
+			prop = mp_ColumnsProperty["EsitoRiga"];
+			prop.Hide = true;
+		}
+		catch
+		{
+			//err.Clear
+			//'-- creo la property per nascondere la colonna 
+			prop = new Grid_ColumnsProperty();
+			prop.Hide = true;
+			mp_ColumnsProperty.Add("EsitoRiga", prop);
+		}
+		//  Set mp_objDB = nothing
+		// '--recupero recordset dei dati per la griglia
+
+		// 'dim rs
+		//'if request.QueryString( "TYPEDOC" ) = "OFFERTA" then 
+		//'    set rs = objDB.GetRSReadFromQuery( cstr("select * from Document_MicroLotti_Dettagli where TipoDoc = 'OFFERTA' and idheader  =" & idDoc  & " order by id asc") , application("connectionstring") )
+		// 'else
+		//'    set rs = objDB.GetRSReadFromQuery( cstr("select * from Document_MicroLotti_Dettagli where TipoDoc = 'OFFERTA' and idheaderlotto =" & idDoc  & " order by id asc") , application("connectionstring") )
+		//'end if
+		Grid mp_objGrid = new Grid();
+		mp_objGrid.Columns = mp_Columns;
+		mp_objGrid.ColumnsProperty = mp_ColumnsProperty;
+		string strColId;
+		bool bAutocol;
+		strColId = "Id";
+		bAutocol = false;
+		//'mp_objGrid.RecordSetWeb rs, strColId, bAutocol
+		mp_objGrid.SetMatrixDisposition(false);
+		// stop
+		//err.clear
+		try
+		{
+
+			if (GetParamURL(Request.QueryString.ToString(), "TYPEDOC") == "OFFERTA")
+			{
+				mp_objGrid.SetMatrix(objDoc.Sections["BUSTA_TECNICA"].mp_Matrix);
+			}
+			else
+			{
+				mp_objGrid.SetMatrix(objDoc.Sections["OFFERTA_BUSTA_TEC"].mp_Matrix);
+			}
+		}
+		catch(Exception ex)
+		{
+			TracciaErrore("STAMPA-RECUPERO MATRICE", "Errore nel recupero matrice elenco prodotti - " + ex.Message,0, "OFFERTA_BUSTA_TEC.asp");
+
+		}
+		mp_objGrid.id = "GridViewer";
+		mp_objGrid.width = "100%";
+		mp_objGrid.Editable = false;
+		// 'mp_objGrid.ShowTotal CNV("totale") , "2"
+		mp_objGrid.Html(htmlToReturn);
+		// set mp_objGrid = nothing
+	}	
+	htmlToReturn.Write($@"
+	  </td>
+        </tr>
+		<tr><td>&nbsp;</td></tr>
+
+
+		<tr>
+    	  <td nowrap style=""font-size:18px; align=left""><b>Ragione sociale del Concorrente: </b> "+DenominazioneATI(IDDOC)+$@"</td>
+    	</tr>");
+	info_concorrente(IDDOC);
+	htmlToReturn.Write($@"
+	</table>
+	<br/><br/><br/>
+
+				<table width=""100%"">
+
+					<tr>
+
+						<td align=""right"">");
+	string param_mostra_nome = Get_Func_Property("OFFERTA_BUSTA_TEC.asp", "Responsabile", "HIDE", "0", CInt("-1"));
+	if (CStr(param_mostra_nome).ToUpper() == "0")
+	{
+		infoOfferta(IDDOC, "Responsabile");
+	}
+	htmlToReturn.Write($@"
+		<b>Firmato digitalmente</b>
+						</td>
+
+					</tr>		
+
+				</table>
+
+	</body>
+	</html>");
+	void TracciaErrore(string source, string text, int tipo, string oggetto)
+	{
+		Exception e = new Exception(text);
+        e.Source = source;
+		StackTrace st = new StackTrace(true);
+		e = eProcurementNext.CommonDB.Basic.SetStackTrace(e, st);
+ 
+
+        // oltre allo StackTrace nel contesto aggiungere eventuali altre 
+        // informazioni che possano essere d'aiuto a chi dovrà valutare l'errore
+        string contesto = st.ToString();
+        TraceErr(e, ApplicationCommon.Application.ConnectionString, contesto);
+
+		throw new ResponseRedirectException("../ctl_library/MessageBoxWin.asp?ML=yes&MSG=INFO_UTENTE_ERRORE_PROCESSO&CAPTION=Errore&ICO=2", Response);
+	}
+	
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+		
+	}
+}@Html.Raw(htmlToReturn.Out())

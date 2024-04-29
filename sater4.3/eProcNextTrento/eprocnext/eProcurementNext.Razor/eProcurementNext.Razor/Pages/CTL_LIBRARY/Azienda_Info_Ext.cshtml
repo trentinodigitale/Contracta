@@ -1,0 +1,167 @@
+﻿@page "/CTL_LIBRARY/Azienda_Info_Ext.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.Azienda_Info_ExtModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.Azienda_info_extModel;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.Azienda_Info_ExtModel
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	string piva = string.Empty;
+
+	string idazi = GetParamURL(Request.QueryString.ToString(), "idazi");
+
+	validate("idazi", idazi, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);	
+
+	generaChiaveSessione();	
+
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@idazi", CInt(idazi));
+	TSRecordSet rs = cdf.GetRSReadFromQuery_("select vatValore_FT from DM_Attributi with(nolock) where lnk=@idazi and dztNome='codicefiscale' and idApp=1", ApplicationCommon.Application.ConnectionString, sqlParams);
+	string cf = string.Empty;
+	if ( rs.RecordCount > 0)
+	{
+		rs.MoveFirst();
+		cf = CStr(rs["vatValore_FT"]);
+	}
+
+	Dictionary<string, object?> param = new Dictionary<string, object?>();
+	param.Add("@idazi", CInt(idazi));
+
+	string strSql = "select aziPartitaIVA from aziende with(nolock) where idazi = @idazi";
+	rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, param);
+
+	if(rs.RecordCount > 0)
+	{
+		rs.MoveFirst();
+		piva = CStr(rs["aziPartitaIVA"]);
+	}
+
+	if (!string.IsNullOrEmpty(cf))
+	{
+		string esito_chiamata = GetDatiAziCessateEnon(cf, piva, session, htmlToReturn);
+		string esito = string.Empty;
+		strSql = string.Empty;
+		//'--INSERISCE NELLA dm_attributi LA SENTINELLA DI CHIAMATA AL SISTEMA PER RECUPERARE I DATI ESTERNI
+		string strSqlData = "DECLARE @DataCORRENTE VARCHAR(255) set @DataCORRENTE=convert( varchar(19) , getdate() , 121) execute UpdAttrAzi @idazi, 'Data_Last_Get_Dati_Azienda_Ext', @DataCORRENTE";
+
+		if (string.IsNullOrEmpty(esito_chiamata))
+		{
+			//'-- azzero la sentinella di azienda anomala
+			strSql = "exec UpdAttrAzi @idazi,'AZI_ANOMALA',NULL";
+			cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+			//'INVOCO LA STORED PER VERIFICARE SE CI SONO DIFFERENZE TRA DATI INTERNI E ESTERNI
+			sqlParams.Clear();
+			sqlParams.Add("@WORK_KEY", CStr(session["SESSION_WORK_KEY"]));
+			sqlParams.Add("@cf", cf);
+			sqlParams.Add("@idazi", CInt(idazi));
+			strSql = "Exec Verifica_Azienda_Info_Ext @WORK_KEY, @cf, @idazi";
+			rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+			cdf.Execute(strSqlData, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+			if (rs.RecordCount > 0)
+			{
+				rs.MoveFirst();
+				esito = CStr(rs["esito"]);
+				//'response.write esito	
+				//'SE CI SONO LE DIFFERENZE CREA IL DOCUMENTO E ATTIVITA' SCHEDULO IL PROCESSO DI CHIUSURA UFFICIO
+				if (esito == "i-dati-sono-variati")
+				{
+					strSql = "Exec Variazione_Dati_Azienda_CREATE_DOC @WORK_KEY, @cf, @idazi";
+					cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+				}
+			}
+
+			htmlToReturn.Write("1#OK");
+		}
+		else
+		{
+			//'-- se ottengo un errore non devo aggiornare la sentinella 'Data_Last_Get_Dati_Azienda_Ext' a meno che non ho un errore di tipo "azienda non trovata" o "azienda cessata"
+			//'--		in questi ultimi 2 casi devo aggiornare la sentinella e alzare uno specifico flag che permetterà all'ente di eseguire delle azioni specifiche manualmente
+			if (CStr(esito_chiamata) == "IMP_OCCORRENZA_0" )
+			{
+				cdf.Execute(strSqlData, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+				//'--se azienda non presente e la sua forma societaria è tra una serie di forme societarie stabilite propongo AZI_ANOMALA
+				//'INVOCO LA STORED PER VERIFICARE SE POSSO PROPORRE AZI_ANOMALA
+				sqlParams.Clear();
+				sqlParams.Add("@idazi", CInt(idazi));
+				strSql = "Exec Verifica_Azienda_For_ToDelete @idazi";
+				rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+				//cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+				esito = "OK";
+
+				if (rs.RecordCount > 0)
+				{
+					rs.MoveFirst();
+					esito = CStr(rs["esito"]);
+				}
+
+				if (esito == "OK")
+				{
+					strSql = "exec UpdAttrAzi @idazi,'AZI_ANOMALA','1'";
+					cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+				}
+				else
+				{
+					//'--KPF 503348  se una azienda era società da controllare ed era anomala, se cambiava rimaneva tale sempre
+					strSql = "exec UpdAttrAzi @idazi,'AZI_ANOMALA',NULL";
+					cdf.Execute(CStr(strSql), ApplicationCommon.Application.ConnectionString);
+				}
+			}
+
+			if (esito_chiamata == "AZIENDA_CESSATA")
+			{
+				cdf.Execute(strSqlData, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+				strSql = "exec UpdAttrAzi @idazi,'AZI_TO_DELETED','1'";
+				cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+
+				strSql = "declare @data varchar(20) set @data = convert(varchar(19), GETDATE() , 121) exec UpdAttrAzi @idazi,'AZI_TO_DELETE_LAST_UPD', @data";
+				cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+			}
+
+			htmlToReturn.Write($"1#{esito_chiamata}");
+		}	
+	}
+	else
+	{
+		htmlToReturn.Write("1#CODICE FISCALE NON TROVATO");
+	}
+
+	string timestamp(DateTime data) 
+	{
+		return DateAndTime.DateDiff("s", "01/01/1970 00:00:00", data).ToString();
+	}
+
+	string generaChiaveSessione() 
+	{
+		string sessionid = CStr(this.session.SessionID);
+		string addKey = CStr(timestamp(DateAndTime.Now));
+		addKey = Strings.Right(addKey, addKey.Length - 2);
+		string extendedSessionId = addKey + sessionid;
+
+		//'-- normalizzo togliendo gli 0 a sinistra
+		while (!string.IsNullOrEmpty(extendedSessionId) && Strings.Left(extendedSessionId, 1) == "0")
+		{
+			extendedSessionId = Strings.Right(extendedSessionId, extendedSessionId.Length - 1);
+		}
+
+		session["SESSION_WORK_KEY"] = extendedSessionId;
+		session.Save();
+		return Strings.Left(extendedSessionId, 50);
+	}
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,104 @@
+﻿@page "/CustomDoc/SetPrincipaleProdottoConvenzione.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.SetPrincipaleProdottoConvenzioneModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.SetPrincipaleProdottoConvenzioneModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+
+	string OPERATION= GetParamURL(Request.QueryString.ToString(), "OPERATION");
+	string IDHEADER = GetParamURL(Request.QueryString.ToString(), "IDHEADER");
+	string IDROWPRINCIPALE= GetParamURL(Request.QueryString.ToString(), "IDROWPRINCIPALE");
+	string SELPRINCIPALE = GetParamURL(Request.QueryString.ToString(), "SELPRINCIPALE");
+	string IDROW=GetParamURL(Request.QueryString.ToString(), "IDROW");
+	string strSQL = string.Empty;
+	string strSql = string.Empty;
+	var SqlParameters = new Dictionary<string, object?>();
+	SqlParameters.Add("@id", CInt(IDROW));
+	SqlParameters.Add("@idheader", CInt(IDHEADER));
+	SqlParameters.Add("@idRowPrincipale", CInt(IDROWPRINCIPALE));
+
+	TSRecordSet? rs = null;
+	if(string.IsNullOrEmpty(OPERATION))
+	{
+		//'--cancello la vecchia associazione
+		strSql = "delete Document_Convenzione_Prodotti_Principale where IdRowProdotto = @id and IdConvenzione = @idheader and IdRowPrincipale = @idRowPrincipale";
+		if(CInt(SELPRINCIPALE) == 1)
+		{
+			//'--inserisco la associazione
+			strSql = $"{strSql} insert into Document_Convenzione_Prodotti_Principale (IdRowProdotto, IdConvenzione, IdRowPrincipale) values (@id,@idheader,@idRowPrincipale)";
+		}
+		//'Response.Write strSql
+		//'Response.end
+		//'--eseguo statement per aggiornare
+		cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+		//'--ricavo le associazioni per ricavare html della cella Articoli collegati
+		strSQL = "select Codice, Descrizione from Document_Convenzione_Prodotti_Principale, Document_Convenzione_Product where idHeader=IdConvenzione and IdRowPrincipale=idRow and IdRowProdotto=@id";
+		rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+		if(rs.RecordCount >0)
+		{
+			rs.MoveFirst();
+			while(!rs.EOF)
+			{
+				htmlToReturn.Write($"{CStr(rs["Codice"])} - {CStr(rs["Descrizione"])}<br>");
+				rs.MoveNext();
+			}
+		}
+		else
+		{
+			htmlToReturn.Write("");
+		}
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+	}
+	//'--cancello le associazioni con questo principale
+	if(OPERATION == "DELETEPRINCIPALE")
+	{
+		strSql = "delete Document_Convenzione_Prodotti_Principale where IdConvenzione= @idheader and IdRowPrincipale= @idRowPrincipale";
+	}
+	//'--cancello la riga dalle associazioni con i principali
+	if(OPERATION == "DELETEROW")
+	{
+		strSql = "delete Document_Convenzione_Prodotti_Principale where IdConvenzione= @idheader and IdRowProdotto= @idRowPrincipale";
+	}
+	//'--eseguo statement per aggiornare tutte le righe
+	cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+	//'--ricavo le associazioni per ricavare html delle celle Articoli collegati per tutte le righe della convezione
+	strSQL = "select IdRowProdotto, Codice, Descrizione from Document_Convenzione_Prodotti_Principale, Document_Convenzione_Product where idHeader=IdConvenzione and idrow=IdRowPrincipale and IdConvenzione=@idheader";
+	rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, SqlParameters);
+	if(rs.RecordCount >0)
+	{
+		rs.MoveFirst();
+		string tempprodotto = CStr(rs["IdRowProdotto"]);
+		string strReturn = $"{tempprodotto}@@@";
+		while(!rs.EOF)
+		{
+			if (tempprodotto == CStr(rs["IdRowProdotto"]))
+			{
+				strReturn = $"{strReturn}{CStr(rs["Codice"])} - {CStr(rs["Descrizione"])}<br>";
+			}
+			else
+			{
+				tempprodotto = CStr(rs["IdRowProdotto"]);
+				strReturn = $"{strReturn}###{tempprodotto}@@@{CStr(rs["Codice"])} - {CStr(rs["Descrizione"])}<br>";
+			}
+			rs.MoveNext();
+		}
+		htmlToReturn.Write(strReturn);
+	}
+	else
+	{
+		htmlToReturn.Write("");
+	}
+}
+@Html.Raw(htmlToReturn.Out())

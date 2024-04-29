@@ -1,0 +1,26 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:smar="smartCig.ws.comunicazioni_v1.0.0" xmlns:smar1="smartCig.comunicazione" xmlns:smar2="smartCig.user">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <smar:comunicaSingolaRequest>
+      <smar:comunicazione>
+        <smar1:cig>@@@CIG@@@</smar1:cig>
+        <smar1:codiceFattispecieContrattuale>@@@CODICEFATTISPECIECONTRATTUALE@@@</smar1:codiceFattispecieContrattuale>
+        <smar1:importo>@@@IMPORTO@@@</smar1:importo>
+        <smar1:oggetto>@@@OGGETTO@@@</smar1:oggetto>
+        <smar1:codiceProceduraSceltaContraente>@@@CODICEPROCEDURASCELTACONTRAENTE@@@</smar1:codiceProceduraSceltaContraente>
+        @@@CIGACCORDOQUADRO@@@
+        @@@CUP@@@
+        <smar1:codiceClassificazioneGara>@@@CODICECLASSIFICAZIONEGARA@@@</smar1:codiceClassificazioneGara>
+        <smar1:motivo_rich_cig_catmerc>@@@MOTIVO_RICH_CIG_CATMERC@@@</smar1:motivo_rich_cig_catmerc>
+        @@@MOTIVO_RICH_CIG_COMUNI@@@
+        <smar1:categorie_merc>
+          @@@CATEGORIE_MERC@@@
+        </smar1:categorie_merc>
+      </smar:comunicazione>
+      <smar:user>
+        <smar2:ticket>@@@TICKET@@@</smar2:ticket>
+        <smar2:index>@@@INDEX@@@</smar2:index>
+      </smar:user>
+    </smar:comunicaSingolaRequest>
+  </soapenv:Body>
+</soapenv:Envelope>

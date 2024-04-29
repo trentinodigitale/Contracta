@@ -1,0 +1,22 @@
+﻿@page "/DASHBOARD/xml.asp"
+@using eProcurementNext.DashBoard
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic
+@* <!-- #Include File="../CTL_Library/Functions/intestxml.inc" --> *@
+@using static eProcurementNext.CommonModule.Basic;
+@inject eProcurementNext.Session.ISession session;
+@inject IConfiguration configuration;
+@model eProcurementNext.Razor.Pages.DASHBOARD.xmlModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	string strfilename = "viewer.xml";
+	Response.ContentType = "text/xml";
+	Response.Headers.Add("Content-Disposition", "attachment; filename=" + strfilename);
+	ViewerGriglia view = new ViewerGriglia(configuration, HttpContext, session, htmlToReturn);
+	view.run(htmlToReturn);
+
+}@Html.Raw(htmlToReturn.Out())

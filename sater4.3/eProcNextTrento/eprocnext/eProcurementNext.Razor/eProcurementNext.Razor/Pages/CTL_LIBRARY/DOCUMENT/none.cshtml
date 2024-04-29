@@ -1,0 +1,25 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/none.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using System.Data.SqlClient
+@using static  eProcurementNext.CommonDB.CommonDbFunctions;
+@inject eProcurementNext.Application.IEprocNextApplication _application;
+@inject eProcurementNext.DashBoard.IViewer _viewer;
+@inject IConfiguration configuration;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.noneModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+    htmlToReturn.Write("");
+   
+} @Html.Raw(htmlToReturn.Out())

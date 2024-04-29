@@ -1,0 +1,250 @@
+﻿@page "/CustomDoc/OperationCarrello.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.OperationCarrelloModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.OperationCarrelloModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	var SqlParameters = new Dictionary<string, object?>();
+
+	int lIdPfu = 0;
+	string ID = "";
+	string strSql = string.Empty;
+	TSRecordSet? rsMsg = null;
+	TSRecordSet? rsConv = null;
+	int Convenzioni_Importi_Negativi = 0;
+
+	lIdPfu = session["idpfu"];
+	string OPERATION = CStr(GetParamURL(Request.QueryString.ToString(), "OPERATION")).ToUpper();
+	string QT = GetParamURL(Request.QueryString.ToString(), "QT");
+	string PrezzoUnitario = GetParamURL(Request.QueryString.ToString(), "PrezzoUnitario");
+	int ValoreAccessorio = CInt(GetParamURL(Request.QueryString.ToString(), "ValoreAccessorio"));
+
+	if (string.IsNullOrEmpty(CStr(ValoreAccessorio)))
+	{
+		ValoreAccessorio = 0;
+	}
+	string not_editable = GetParamURL(Request.QueryString.ToString(), "not_editable");
+	ID = GetParamURL(Request.QueryString.ToString(), "ID");
+
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+	if (OPERATION != "ADDROW" && OPERATION != "DELETE_ALL" && OPERATION != "COUNTER_ROWS")
+	{
+		traceAttack("Valore non consentito per il parametro OPERATION", session, HttpContext);
+	}
+
+	validate("ID", ID, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("QT", QT, TIPO_PARAMETRO_FLOAT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("PrezzoUnitario", PrezzoUnitario, TIPO_PARAMETRO_FLOAT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("ValoreAccessorio", CStr(ValoreAccessorio), TIPO_PARAMETRO_FLOAT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	validate("not_editable", not_editable.Replace(" ", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_PAROLASINGOLA, "", 0, HttpContext, session);
+
+	//'--aggiunge riga al carrello
+	if (OPERATION == "ADDROW")
+	{
+
+		//'--CONTROLLO SE LA CONVENZIONE E' AD IMPORTI NEGATIVI (SE IL TOTALE NEGATIVO)
+		SqlParameters.Clear();
+		SqlParameters.Add("@id", CStr(CLng(ID)));
+		strSql = "select DC.id from Document_MicroLotti_Dettagli DETT with (nolock) inner join Document_Convenzione DC with (nolock) on DETT.IdHeader = DC.id where DETT.ID = @id and Total < 0 ";
+		rsConv = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, SqlParameters);
+
+		if (rsConv.RecordCount > 0)
+		{
+			Convenzioni_Importi_Negativi = 1;
+
+		}
+		//'--controllo che qt sia positiva
+		if (CDbl(QT) <= 0)
+		{
+			htmlToReturn.Write("Quantita deve essere maggiore di 0");
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "Quantita deve essere maggiore di 0");
+		}
+
+		if (Convenzioni_Importi_Negativi == 0)
+		{
+			//'--controllo che prz sia positivo
+			if (CDbl(PrezzoUnitario) <= 0)
+			{
+				htmlToReturn.Write("Prezzo deve essere maggiore di 0");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "Prezzo deve essere maggiore di 0");
+			}
+
+			//'--controllo che valoreaccessorio sia non engativo
+			if (CDbl(ValoreAccessorio) < 0)
+			{
+				htmlToReturn.Write("ValoreAccessorio deve essere maggiore o uguale a 0");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "ValoreAccessorio deve essere maggiore o uguale a 0");
+			}
+		}
+		else
+		{
+			//'--SE LA CONVENZIONE E' AD IMPORTI NEGATIVI (SE IL TOTALE NEGATIVO)
+			//'--controllo che prz sia negativo
+			if (CDbl(PrezzoUnitario) >= 0)
+			{
+				htmlToReturn.Write("il Prezzo deve essere minore di 0");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "il Prezzo deve essere minore di 0");
+			}
+
+			//'--controllo che valoreaccessorio sia negativo
+			if (CDbl(ValoreAccessorio) > 0)
+			{
+				htmlToReturn.Write("ValoreAccessorio deve essere minore o uguale a 0");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "ValoreAccessorio deve essere minore o uguale a 0");
+			}
+		}
+		//'--inserisco la riga nel carrello se non presente
+		SqlParameters.Clear();
+		SqlParameters.Add("@id", CStr(CLng(ID)));
+		SqlParameters.Add("@idpfu", lIdPfu);
+		strSql = "select * from carrello where id_product=@id  and idpfu=@idpfu";
+		//'Response.Write strSql
+		//'Response.End
+		rsMsg = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, SqlParameters);
+		if (rsMsg.RecordCount > 0)
+		{
+			htmlToReturn.Write("articolo gia presente nel carrello");
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "articolo gia presente nel carrello");
+		}
+		else
+		{
+			SqlParameters.Clear();
+			SqlParameters.Add("@id", CStr(CLng(ID)));
+			strSql = "insert into carrello ( Codice, Descrizione, QTDisp, PrezzoUnitario, idPfu, Id_Convenzione, Id_Product,NumeroRepertorio,NumeroLotto,Voce,Iva,Titolo,Not_Editable,ValoreAccessorioTecnico) ";
+			strSql = strSql + " select codice_regionale,DESCRIZIONE_CODICE_REGIONALE," + QT + "," + PrezzoUnitario + "," + lIdPfu + ",idheader,D.id, NumeroRepertorio,NumeroLotto,Voce,aliquotaiva,C.Titolo,'" + not_editable.Replace("'", "''") + "'," + ValoreAccessorio + " from document_microlotti_dettagli D ,ctl_doc C where D.idheader=C.ID and C.TipoDoc='CONVENZIONE' and D.id= @id";
+			//'Response.Write strSql
+			//'Response.end
+			try
+			{
+				cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+				//'--chiamo stored che in caso di ADDROW controlla se ho disponibilita e se si inserisce nel carrello
+				//'--altrimenti ritorna messaggio errore; mentre nel caso di DELROW cancella dal carrello
+				string strCodRet = "";
+				strCodRet = Check_Disponibilita_Carrello(ID, lIdPfu);
+				htmlToReturn.Write(strCodRet);
+				//'Response.end
+			}
+			catch
+			{
+				htmlToReturn.Write("articolo non inserito nel carrello.Mancano le informazioni obbligatorie");
+
+			}
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		}
+	}
+	//'--svuota carrello
+	if (OPERATION == "DELETE_ALL")
+	{
+		SqlParameters.Clear();
+		SqlParameters.Add("@idpfu", lIdPfu);
+		//'--svuoto il carrello
+		strSql = "delete carrello where idpfu=@idpfu";
+		try
+		{
+			cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: SqlParameters);
+		}
+		catch (Exception ex)
+		{
+			htmlToReturn.Write(ex.Message);
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		}
+
+	}
+	//'--recupero righe del carrello
+	if (OPERATION == "COUNTER_ROWS")
+	{
+		//'--svuoto il carrello
+		//set objDB = server.CreateObject("ctldb.clsTabManage")
+		SqlParameters.Clear();
+		SqlParameters.Add("@idpfu", lIdPfu);
+		strSql = "select count(*) as NumRow from carrello where idpfu=@idpfu";
+		//'Response.Write strSql
+		//'Response.End
+		try
+		{
+			rsMsg = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, SqlParameters);
+			if (rsMsg.RecordCount > 0)
+			{
+				rsMsg.MoveFirst();
+				htmlToReturn.Write(CStr(rsMsg["NumRow"]));
+			}
+		}
+		catch (Exception ex)
+		{
+			htmlToReturn.Write(ex.Message);
+		}
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+
+
+	}
+	//'--controlla se l'utente in input ha il permesso di creare il documento destinazione
+	string Check_Disponibilita_Carrello(string idDoc, int User)
+	{
+		//dim objdb
+		//'dim rsMsg
+		string Esito = "";
+		string strSql = "";
+		string strErrore = "";
+		string _Check_Disponibilita_Carrello = "";
+
+		//on error resume next
+		Esito = "OK";
+
+		//set objdb = nothing
+		//set objdb = CreateObject("ctldb.clsTabManage")
+		SqlParameters.Clear();
+		SqlParameters.Add("@idDoc", CLng(idDoc));
+		SqlParameters.Add("@user", User);
+		//'--la stored di controllo ritorna OK oppure ERRORE e nella colonna Errore il messaggio da visualizzare
+		strSql = "exec CK_DISPONIBILITA_CARRELLO @idDoc ,@user ,-1,'' ";
+
+		try
+		{
+			rsMsg = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, SqlParameters);
+			//response.write strSql  & "---" & Err.number
+			//'response.end
+
+			//'if Err.number <> 0 then call ShowError( "Errore check creazione documento, ripetere l'operazione - [" & strSql & "]")
+			if (rsMsg.RecordCount > 0)
+			{
+				rsMsg.MoveFirst();
+				Esito = CStr(rsMsg["id"]);
+				strErrore = CStr(rsMsg["Errore"]);
+			}
+		}
+		catch (Exception ex)
+		{
+			strErrore = ex.Message;
+			Esito = "ERRORE";
+			//'err.clear
+			//'on error goto 0
+		}
+		if (Esito.ToUpper() == "ERRORE")
+		{
+			_Check_Disponibilita_Carrello = strErrore;
+		}
+		if (Esito.ToUpper() == "INFO_NOML")
+		{
+			_Check_Disponibilita_Carrello = "NO_ML###" + strErrore;
+		}
+		return _Check_Disponibilita_Carrello;
+	}
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,40 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/DocumentCTL.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using Microsoft.VisualBasic;
+@using System.Data.SqlClient
+@using static  eProcurementNext.CommonDB.CommonDbFunctions;
+@inject eProcurementNext.Application.IEprocNextApplication _application;
+@inject eProcurementNext.DashBoard.IViewer _viewer;
+@inject IConfiguration configuration;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.DocumentCTLModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+
+	//'--se dovesse arrivare -1 per qualche motivo, lo facciamo diventare 1 solo per fare il test, non utilizzo il tipo numerico perchè iddoc potrebbe anche essere "new" o simile
+
+	validate("IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC").Replace("-", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC"));
+	TSRecordSet rs = cdf.GetRSReadFromQuery_("select TipoDoc from CTL_DOC with(nolock) where Id = @IDDOC", ApplicationCommon.Application.ConnectionString, sqlParams);
+
+	string TipoDoc = CStr(rs["TipoDoc"]);
+
+	HttpContext.Response.Redirect($"document.asp?MODE=OPEN&DOCUMENT={TipoDoc}&JSCRIPT={TipoDoc}&{GetQueryStringFromContext(Request.QueryString)}");
+}

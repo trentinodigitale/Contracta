@@ -1,0 +1,237 @@
+﻿@page "/AVCP/AVCP_CSV.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.AVCP.AVCP_CSVModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	int TIPOATTRIB_NUMBER = 0;
+	string P_Azi_Ente = "";
+	P_Azi_Ente = GetValueFromForm(Request, "Azi_Ente");
+
+	validate("Azi_Ente", P_Azi_Ente, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0,HttpContext,session);
+
+	string P_CIG = "";
+	P_CIG = GetValueFromForm(Request, "CIG");
+
+	validate( "CIG", P_CIG , TIPO_PARAMETRO_STRING, SOTTO_TIPO_VUOTO, "", 0,HttpContext,session);
+
+	string P_Anno = "";
+	P_Anno = GetValueFromForm(Request, "Anno");
+
+	P_Anno = P_Anno.Replace("%25", "");
+	P_Anno = P_Anno.Replace("%", "");
+	    
+	//'response.write P_Anno
+	//'response.end
+
+	validate("Anno", P_Anno, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	string P_Oggetto = "";
+	P_Oggetto = GetValueFromForm(Request, "Oggetto");
+
+	validate("Oggetto", P_Oggetto, TIPO_PARAMETRO_STRING, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	string singoloEnte = "";
+	singoloEnte = GetValueFromForm(Request, "SINGOLO_ENTE");
+
+	validate("SINGOLO_ENTE", singoloEnte, TIPO_PARAMETRO_STRING, SOTTO_TIPO_VUOTO, "", 0, HttpContext, session);
+	string strfilename = "";
+	strfilename = GetParamURL(Request.QueryString.ToString(), "TitoloFile");
+
+	//throw new ResponseRedirectException("/" + ApplicationCommon.Application["APPLEGACY"] + "/AVCP/avcp_xlsx.aspx?TitoloFile=" + URLEncode(strfilename) + "&Azi_Ente=" + URLEncode(P_Azi_Ente) + "&CIG=" + URLEncode(P_CIG) + "&Anno=" + URLEncode(P_Anno) + "&Oggetto=" + URLEncode(P_Oggetto) + "&SINGOLO_ENTE=" + URLEncode(singoloEnte), Response);
+	throw new ResponseRedirectException("avcp_xlsx.aspx?TitoloFile=" + URLEncode(strfilename) + "&Azi_Ente=" + URLEncode(P_Azi_Ente) + "&CIG=" + URLEncode(P_CIG) + "&Anno=" + URLEncode(P_Anno) + "&Oggetto=" + URLEncode(P_Oggetto) + "&SINGOLO_ENTE=" + URLEncode(singoloEnte), Response);
+
+	htmlToReturn.Clear();
+	//'Response.CodePage = 65001 
+	//'Response.CharSet = "utf-8"
+
+	//Response.CodePage = 1252;
+	//Response.CharSet = "windows-1252";
+
+	strfilename = strfilename + ".csv";
+	Response.ContentType = "application/CSV";
+	Response.Headers.Add("content-disposition", "attachment; filename=" + strfilename);
+
+
+	//'-- recupero lingua
+	string strSuffix = "";
+	strSuffix = session["strSuffLing"];
+	if(string.IsNullOrEmpty(strSuffix))
+	{
+		strSuffix = "I";
+	}
+
+	//'-- recupero contesto
+	string strContext = "";
+	strContext = session["IdMP"];
+	if(string.IsNullOrEmpty(strContext))
+	{
+		strContext = "0";
+	}
+
+	string strGrid = "";
+	string[,] MatrixValue = null;
+	int NumRow = 0;
+	int NumCol = 0;
+	int indRow = 0;
+	int indCol = 0;
+	int indiceRiga = 0;
+	bool bShowCol = true;
+	Field objField = null;
+	string strTechValue = "";
+	string strVisualValue = "";
+	string strClassCell = "";
+	Dictionary <string,object> SqlParameters = new Dictionary<string, object>();
+	//  '-- recupero i record da esportare in CSV
+	TSRecordSet? rsDati = null;
+	//'response.write "exec AVCP_EXPORT_CSV 0 , '" & replace( P_Azi_Ente , "'" , "''" ) & "' , '" & replace( P_CIG , "'" , "''" ) & "' , '" & replace( P_Anno , "'" , "''" ) & "' , '" & replace( P_Oggetto , "'" , "''" ) & "' "
+	//'response.end
+	try
+	{
+		SqlParameters.Add("@azi", P_Azi_Ente.Replace("'", "''"));
+		SqlParameters.Add("@cig", P_CIG.Replace("'", "''"));
+		SqlParameters.Add("@anno", P_Anno.Replace("'", "''"));
+		SqlParameters.Add("@oggetto", P_Oggetto.Replace("'", "''"));
+		rsDati = cdf.GetRSReadFromQuery_("exec AVCP_EXPORT_CSV 0 , @azi , @cig , @anno , @oggetto ", ApplicationCommon.Application.ConnectionString, SqlParameters);
+	}
+	catch(Exception ex)
+	{
+		htmlToReturn.Write(ex.Message);
+		throw new ResponseEndException(htmlToReturn.Out(), Response, ex.Message);
+	}
+	//'-- RECUPERO LE COLONNE DA VISUALIZZARE
+	TSRecordSet? rsColonne = null;
+
+
+	try
+	{
+		SqlParameters.Clear();
+		SqlParameters.Add("@funzione", "AVCP_EXPORT_CSV");
+		rsColonne = cdf.GetRSReadFromQuery_("exec GET_COLUMN_LOTTI_TO_EXTRACT_CSV @funzione , ''", ApplicationCommon.Application.ConnectionString, SqlParameters);
+	}
+	catch(Exception ex)
+	{
+		htmlToReturn.Write(ex.Message);
+		throw new ResponseEndException(htmlToReturn.Out(), Response, ex.Message);
+	}
+
+	//'response.Write "OK"
+	//'response.End
+
+	//'--CICLO SULLE COLONNE PER ESPORTARE LA TESTATA
+	if(rsColonne.RecordCount >0)
+	{
+		rsColonne.MoveFirst();
+		indCol = 1;
+		while(!rsColonne.EOF)
+		{
+			strVisualValue = GetValueFromRS(rsColonne.Fields["Caption"]);
+			strVisualValue = ApplicationCommon.CNV(strVisualValue);
+			//'-- se nel valore sono presenti doppi apici, oppure a capo , oppure un punto e virgola si mettono gli apici di inizio e fine e si raddoppiano i doppi apici
+			if(strVisualValue.Contains(@"""", StringComparison.Ordinal)|| strVisualValue.Contains(CStr(Strings.Chr(13)), StringComparison.Ordinal) || strVisualValue.Contains(";", StringComparison.Ordinal))
+			{
+				htmlToReturn.Write($@"""" + strVisualValue.Replace(@"""",@"""""") + @"""" );
+			}
+			else
+			{
+				htmlToReturn.Write(strVisualValue);
+			}
+			rsColonne.MoveNext();
+			if(!rsColonne.EOF)
+			{
+				htmlToReturn.Write(";");
+			}
+
+
+		}
+	}
+	//'--CICLO SUI DATI
+	if(rsDati.RecordCount >0)
+	{
+		// '-- vado a capo perstaccare dalla riga delle caption
+		htmlToReturn.Write(""+Environment.NewLine);
+
+		rsDati.MoveFirst();
+		while(! rsDati.EOF)
+		{
+			//'--CICLO SULLE COLONNE
+			if(rsColonne.RecordCount >0)
+			{
+				rsColonne.MoveFirst();
+				while(!rsColonne.EOF)
+				{
+					//'--se si tratta di un attributo numerico cambio classe di stile	
+					if(GetValueFromRS(rsColonne.Fields["DZT_Type"]) == TIPOATTRIB_NUMBER)
+					{
+						strVisualValue = "";
+						strTechValue = GetValueFromRS(rsDati.Fields[GetValueFromRS(rsColonne.Fields["DZT_Name"])])+ "";
+
+						strVisualValue = strTechValue.Replace(".", ",");
+					}
+					else
+					{
+						//'--valore visuale della colonna
+						strVisualValue = GetValueFromRS(rsDati.Fields[GetValueFromRS(rsColonne.Fields["DZT_Name"])]) + "";
+					}
+					//'-- se nel valore sono presenti doppi apici, oppure a capo , oppure un punto e virgola si mettono gli apici di inizio e fine e si raddoppiano i doppi apici
+					if(strVisualValue.Contains(@"""", StringComparison.Ordinal )|| strVisualValue.Contains(CStr(Strings.Chr(13)), StringComparison.Ordinal) || strVisualValue.Contains(";", StringComparison.Ordinal))
+					{
+						htmlToReturn.Write ($@"""" + UnicodeToAscii( strVisualValue.Replace(@"""",@"""""") ) + @"""") ;
+					}
+					else
+					{
+						htmlToReturn.Write(strVisualValue);
+					}
+					rsColonne.MoveNext();
+					// '-- metto il separatore di campo tranne che sull ultima riga	
+					if(!rsColonne.EOF)
+					{
+						htmlToReturn.Write(";");
+					}
+				}
+			}
+			rsDati.MoveNext();
+			if(!rsDati.EOF)
+			{
+				htmlToReturn.Write("" + Environment.NewLine);
+			}
+
+		}
+	}
+	string UnicodeToAscii(string sText )
+	{
+		//'Dim x As Long, sAscii As String, ascval As Long
+		if(sText.Length == 0)
+		{
+			return "";
+		}
+		string sAscii = "";
+		long ascval = 0;
+		for(long x= 1;x<sText.Length;x++)
+		{
+			ascval = Strings.AscW(Strings.Mid(sText, CInt(x), 1));
+			if(ascval < 0)
+			{
+				ascval = 65536 + ascval; //http://support.microsoft.com/kb/272138
+			}
+			sAscii = sAscii + "&#" + ascval + ";";
+		}
+
+		return sAscii;
+
+	}
+
+
+}@Html.Raw(htmlToReturn.Out())

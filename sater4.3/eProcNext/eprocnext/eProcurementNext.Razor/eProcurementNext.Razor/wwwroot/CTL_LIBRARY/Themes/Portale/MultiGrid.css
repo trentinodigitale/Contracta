@@ -1,0 +1,83 @@
+TD.Grid_TotalCaption
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: gainsboro
+}
+TD.Grid_TotalValue
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: white 1px solid;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 12pt;
+    BORDER-LEFT: white 1px solid;
+    BORDER-BOTTOM: 1px outset;
+    BACKGROUND-COLOR: gainsboro;
+    TEXT-ALIGN: right
+}
+TD.Grid_RowCaption_DimColDesc
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: #161a74;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightsteelblue
+}
+TD.Grid_RowCaption_DimColValue_1
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bolder;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: #161a74;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightsteelblue;
+    TEXT-ALIGN: center
+}
+TD.Grid_RowCaption_DimRowDesc
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: bold;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: white;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightsteelblue
+}
+TD.Grid_RowCaption_DimRowValue_1
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-SIZE: 10pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: white;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightsteelblue
+}
+TD.Grid_CaptionData
+{
+    BORDER-RIGHT: 1px outset;
+    BORDER-TOP: 1px outset;
+    FONT-WEIGHT: 600;
+    FONT-SIZE: 8pt;
+    BORDER-LEFT: 1px outset;
+    COLOR: #161a74;
+    BORDER-BOTTOM: 1px outset;
+    FONT-FAMILY: Arial;
+    BACKGROUND-COLOR: lightsteelblue;
+    TEXT-ALIGN: center
+}

@@ -1,0 +1,7 @@
+﻿@page "/NotFound.asp"
+@model eProcurementNext.Razor.Pages.NotFound.NotFoundModel
+@{
+    Response.StatusCode = 404;
+
+}
+<h1>Page @(Request.Query["page"].ToString()) Not Found</h1>

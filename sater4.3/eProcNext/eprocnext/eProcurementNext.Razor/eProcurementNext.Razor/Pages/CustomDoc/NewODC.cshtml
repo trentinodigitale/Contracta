@@ -1,0 +1,35 @@
+﻿@page "/CustomDoc/NewODC.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.NewODCModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.NewODCModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	//stop
+
+	bool bRet =  false;
+	objDoc = null;
+	
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext,Response,Request);//PrintDocument ok
+	bRet = objDoc.Save(session);
+
+	string QS = GetQueryStringFromContext(Request.QueryString);
+	QS = QS.Replace("&IDDOC=", "&OLDIDDOC=");
+	QS = QS.Replace("TYPEDOC=CARRELLO&", "");
+
+	throw new ResponseRedirectException("../ctl_Library/document/document.asp?" + QS, Response);
+}
+@Html.Raw(htmlToReturn.Out())

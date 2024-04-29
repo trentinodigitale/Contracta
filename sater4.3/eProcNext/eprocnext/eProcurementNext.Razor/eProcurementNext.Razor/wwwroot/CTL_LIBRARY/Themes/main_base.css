@@ -1,0 +1,835 @@
+.backtop {
+  //background: url(../../images/General/info_aggiuntive.png) no-repeat 0px 0px;
+  //background-color: blue;
+  opacity: 0.7;
+  width: 42px;
+  height: 42px;
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  z-index: 10;
+  cursor: pointer;
+}
+
+
+.Evidenzia_Bordo_Cella {
+  border: 1px solid red !important;
+}
+
+.center_button {
+  text-align: center;
+}
+
+.emphasized {
+  COLOR: #333 !important;
+  font-style: italic;
+  font-weight: bold;
+}
+
+.Text .Text  {
+  white-space: nowrap;
+
+}
+
+textarea {
+  white-space: pre-wrap;
+
+}
+
+.release_notes {
+  background: url(../../images/prosegui_new_release.png) center left no-repeat;
+}
+
+.Center_Images_Domain {
+  text-align: center;
+}
+
+
+.LBL_HELP {
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 10px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-style: italic;
+  /*white-space:normal;*/
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+
+.LBL_HELP p {
+  margin-top: 0.5em;
+  white-space: normal;
+}
+
+ul.force_decimal li {
+  list-style-type: decimal !important;
+  margin-left: 20px;
+}
+
+
+#TOOLBAR_HOMELIGHT_separatore {
+  background: transparent;
+  cursor: default;
+  margin-left: 200px;
+  pointer-events: none;
+  /* non tutti i browser la recepiscono, annullo gli eventi del mouse su questo bottone */
+  border: none;
+}
+
+.GridCol_LinkCal_fermo_sistema {
+  BACKGROUND-COLOR: red;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-weight: bold;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+
+}
+
+/*per posizionamento modali dei messaggi fissata al centro dello schermo indipendente dalla scrollbar*/
+.ui-dialog {
+  position: fixed;
+}
+
+/*per posizionamento "Elaborazione in corso"  dei messaggi fissata al centro dello schermo indipendente dalla scrollbar*/
+.INFO_BOX2 {
+
+  position: fixed;
+
+}
+
+.Grid .Grid_CaptionObblig:before {
+  content: "* ";
+}
+
+.Grid .Grid_CaptionObblig {
+  font-style: italic;
+}
+
+
+/* INIZIO STILE PER VISUALIZZARE L'HASH SOTTO L'ALLEGATO */
+.Attach_Tab span.attach_info_hashfile {
+  color: #777;
+  font-style: italic;
+  line-height: 2;
+  font-size: 0.8em;
+  cursor: auto;
+}
+
+/*.attach_info_hashfile:before 
+{
+	content: "HASH "
+}*/
+/* FINE STILE PER VISUALIZZARE L'HASH SOTTO L'ALLEGATO */
+
+
+
+
+/*formattazione comandi add - remove sul DGUE*/
+
+a.IDENTIFIER_LOT_BUTTON_ADD,
+a.IDENTIFIER_LOT_BUTTON_DEL {
+  margin: 0em 0.5em;
+  cursor: pointer;
+  font-style: normal;
+  font-weight: bold;
+  color: #cb1d15;
+  font-size: 12px;
+  padding-top: 10px;
+}
+
+a.IDENTIFIER_LOT_BUTTON_ADD:hover,
+a.IDENTIFIER_LOT_BUTTON_DEL:hover {
+  color: #cb1d15;
+}
+
+
+/*formattazione pulsanti per la generazione del pdf*/
+
+
+/*  SOVRASCRITTI STILI BOOTSTRAP   http://172.16.3.43/Application/CTL_Library/themes/bootstrap.css*/
+#DIV_FIRMA .ModuloBootstrap input {
+  height: 32px;
+  width: 148px;
+}
+
+#DIV_FIRMA .ModuloBootstrap input {
+  border: none;
+}
+
+#DIV_FIRMA .generapdf,
+#DIV_FIRMA .attachpdf,
+#DIV_FIRMA .generapdfdisabled,
+#DIV_FIRMA .attachpdfdisabled,
+DIV_FIRMA .editistanzadisabled,
+#DIV_FIRMA .editistanza {
+  padding-left: 10px;
+}
+
+#DIV_FIRMA .generapdf {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/generapdf.png) bottom left no-repeat;
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+#DIV_FIRMA .generapdf:hover {
+  background: url(../images/General/generapdf.png) top left no-repeat;
+}
+
+#DIV_FIRMA .attachpdf {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/attachpdf.png) bottom left no-repeat;
+  border: none;
+  color: #990000;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+#DIV_FIRMA .generapdfdisabled {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/generapdfdisabled.png) bottom left no-repeat;
+  border: none;
+  color: #898989;
+  font-weight: bold;
+  cursor: default;
+  font-size: 11px;
+}
+
+#DIV_FIRMA .attachpdfdisabled {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/attachpdfdisabled.png) bottom left no-repeat;
+  border: none;
+  color: #898989;
+  font-weight: bold;
+  cursor: default;
+  font-size: 11px;
+}
+
+#DIV_FIRMA .editistanzadisabled {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/editdisabled.png) bottom left no-repeat;
+  border: none;
+  color: #898989;
+  font-weight: bold;
+  cursor: default;
+  font-size: 11px;
+}
+
+#DIV_FIRMA .attachpdf:hover {
+  background: url(../images/General/attachpdf.png) top left no-repeat;
+}
+
+#DIV_FIRMA .editistanza {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/edit.png) bottom left no-repeat;
+  border: none;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+#DIV_FIRMA .editistanza:hover {
+  background: url(../images/General/edit.png) top left no-repeat;
+}
+
+
+
+.display_none {
+  display: none !important;
+
+}
+
+.display_none_soft {
+  display: none;
+
+}
+
+.ListStyleTypeNone {
+  list-style-type: none !important;
+}
+
+.ulcircle {
+  list-style-type: disc !important;
+  overflow: inherit !important;
+  margin-left: 30px !important;
+}
+
+.National_Style_IT {
+  background: #DFEEFF !important;
+}
+
+
+#Div_CubeFilter .FldDomainValue {
+  padding: 0em;
+  margin: 0em;
+  margin-bottom: 0.3em;
+}
+
+#Div_CubeFilter>table {
+  margin: 0.5em;
+}
+
+#Div_CubeFilter table td,
+#Div_CubeFilter table,
+#Div_CubeGriglia table,
+#Div_CubeGriglia table td,
+#Div_CubeGriglia table.Grid td table.GridCol_Link_Tab td {
+  border: none;
+}
+
+#Div_CubeFilter {
+  border-top: 10px solid #fff;
+}
+
+#Div_CubeFilter table {
+  background: #ececec;
+  margin: 0em;
+}
+
+#Div_CubeFilter table td {
+  padding-top: 0.2em;
+  padding: 0.2em;
+}
+
+#Div_CubeGriglia .SinteticHelp_Tab {
+  margin-top: 1em;
+}
+
+#Div_CubeGriglia .SinteticHelp_label {
+  max-width: 800px !important;
+}
+
+/* inizio stili dell' AF_LOADER */
+
+.af_loader_caption {
+  text-align: center;
+  margin-bottom: 5px
+}
+
+.af_loader_div {
+  padding: 10px;
+  margin-top: 10px
+}
+
+/*usato per i colored number che non venivano allineati a destra - risolto kpf 366653 */
+span.Fld_Number_POS {
+  float: right;
+  text-align: right;
+}
+
+
+/* fine stili dell' AF_LOADER */
+
+/*INSERITO IL CODICE CSS sotto per rimuovere width:100% alle td dei campi dei modelli, risolve il problema degli Help molto distanti dal campo*/
+td.VerticalModel_Value table tbody tr td {
+  width: auto;
+}
+
+
+
+
+/*INIZIO PER LE LISTE dentro i campi RTE non EDITABILI settiamo i css di default*/
+.RTE_NotEditable ul {
+  list-style-type: disc;
+  padding: 20px;
+}
+
+.RTE_NotEditable ol {
+  list-style-type: decimal;
+  padding: 20px;
+}
+
+.RTE_NotEditable h3 {
+  display: block;
+  font-size: 1.17em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  font-weight: bold;
+}
+
+.RTE_NotEditable * {
+
+  all: revert;
+  line-height: 1.4;
+
+}
+
+
+/*FINE PER LE LISTE dentro i campi RTE non EDITABILI settiamo i css di default*/
+
+/*per riga pdf quesitilato oe*/
+#areapdfquesiti th {
+  background: #666;
+  color: #fff;
+}
+
+/*sovrascrive la classe presente in main,css per togliere il text-transform capitalize*/
+th {
+  background: #515151;
+  text-transform: none !important;
+  font-weight: bold;
+  color: #ececec;
+  vertical-align: middle;
+  border: 1px solid #666;
+  padding: 0.5em;
+}
+
+/*per allineare le label dei domini chiusi ai campi quando si aprono in una finestra a parte*/
+#Div_ViewerFiltro table td {
+  vertical-align: middle;
+}
+
+/*per aumentare altezza dei domini chiusi adeguati agli altri campi*/
+#Div_ViewerFiltro .FldDomainValue {
+  padding: 0.2em 0em !important;
+}
+
+
+
+.dettagli_label_numerorighe {
+  font-size: 0.85em;
+  color: #515151;
+}
+
+.dettagli_numerorighe {
+  font-size: 0.85em;
+  color: #333;
+  font-weight: bold;
+}
+
+.Cell_NumRow_Grid {
+  width: 7em;
+}
+
+
+/*stili per la progress bar nella lista processi*/
+
+TABLE.Caption_Fixed {
+  FONT-WEIGHT: normal;
+  FONT-SIZE: 20px;
+  MARGIN-BOTTOM: 2px;
+  COLOR: #555;
+  BORDER-BOTTOM: #A2ABBA 2px solid;
+  FONT-FAMILY: arial;
+  background-color: white;
+  position: fixed;
+  top: 0;
+}
+
+TD.CellGridExecProcess {
+  padding-top: 20px;
+}
+
+
+
+
+
+
+TD.CellProgressBar {
+  background-color: white;
+  margin-top: 28px;
+  position: fixed;
+  width: 98.5%;
+  margin-right: 10px;
+}
+
+
+TD.Sep_Row_ProgressBar {
+  background-color: white;
+  position: fixed;
+  margin-top: 11px;
+  z-index: 50;
+}
+
+/*fine classi per la progress bar*/
+
+
+
+/*nuove classi introdotte con gestione attach multivalore*/
+
+.DIV_ATTACH_EMPTY {
+  float: left;
+  width: 95%;
+  /*background-color:#eee;*/
+  padding: 4px;
+  border: 1px solid #ccc !important;
+}
+
+.DIV_ATTACH_BTN {
+  float: right;
+  padding-left: 15px !important;
+}
+
+.DIV_ATTACH_CONTAINER {
+  width: 100%;
+
+}
+
+.DIV_ATTACH_SINGLE {
+  float: left;
+  width: 100%;
+
+}
+
+.ATTACH_CONTAINER {
+  width: auto;
+
+}
+
+TABLE.ATTACH_CONTAINER td {
+  width: 100%;
+  padding: 0 !important;
+}
+
+.TD_ATTACH_BTN {
+  width: 30px !important;
+}
+
+TABLE.ATTACH_CONTAINER TD.TD_ATTACH_ALL {
+  width: 88%;
+}
+
+.Attach_button {
+  cursor: pointer;
+}
+
+#template_doc td.TD_ATTACH_ALL {
+  border: none !important;
+}
+
+/*fine classi per  attach multivalore*/
+
+.style_bold {
+  font-weight: bold;
+}
+
+/*per le righe di posto dispari delle griglie*/
+tr.GR0 {
+  background: #ffffff;
+}
+
+/*classi per ricoprire quelle di bootstrap css per il DGUE*/
+.ESPD_IDENTIFIER_ALL,
+.ESPD_IDENTIFIER_SEL {
+  width: 99%;
+  height: 100px !important
+}
+
+
+/*classe per lo sfondo del tooltip del dgue*/
+.TTBS {
+  background: #ffffff;
+  padding: 5px;
+}
+
+/*classi di base per domini estesi e gerarchici: fatti uguale alla classe .Date presente in main.css*/
+.FldHier_edit_new,
+.FldExtDom_edit_new {
+  background: white;
+}
+
+
+.Fld_Not_Essential,
+.Fld_Not_Essential_edit_new {
+  background: #ade0e0 !important;
+}
+
+
+.DOM_Desc_MultiValue {
+  display: inline;
+  padding-right: 5px;
+}
+
+.DOM_Desc_MultiValue_AFTER {
+  display: inline;
+  padding-left: 5px;
+
+}
+
+td.DOM_OPT {
+  padding: 5px 5px 5px 5px;
+}
+
+input.DomCheck_Opt {
+  margin-top: 2px;
+}
+
+/* 
+ * Inizio css per il modulo questionario
+ */
+.ModuloQuestionarioSectionOpen {
+  margin-bottom: 1em;
+}
+
+.ModuloQuestionarioSectionTitle {
+  /* background-color: #ececec; */
+  /* width:95%; */
+  background-color: #1A9DDA !important;
+  padding: 0.3em 0em 0.3em 0em;
+  color: white !important;
+  font-style: inherit !important;
+  /* text-align: center; */
+}
+
+.ModuloQuestionarioHr {
+  width: 100%;
+  margin: 0.75em 0 0.75em 0.2em;
+  height: 0.1em;
+  border-width: 0;
+  color: gray;
+  background-color: gray;
+}
+
+.ModuloQuestionarioConditionedSection {
+  font-size: 0.8125em;
+  /* padding-left: 30px;
+  font-style: italic; */
+  padding: 0em 0em 0em 1em;
+  color: #FEC825;
+}
+
+.ModuloQuestionarioParameterNoteContainer {
+  margin: 0 1em 1em 1.5em;
+}
+
+.DescrizioneEstesaSezione {
+  font-size: large;
+  font-weight: bold;
+  padding-bottom: 0.5em;
+}
+
+/*
+.DescrizioneSezione{
+  padding-bottom: 1em;
+}
+
+.DescrizioneSinteticaSezione {
+  font-size: large;
+  font-weight: bold;
+}
+
+.DescrizioneEstesaSezione {
+  font-size: large;
+  padding-bottom: 0.5em;
+  // margin-left: 0.5em;
+  font-weight: bold;
+}
+*/
+
+.rowParameterNote{
+  padding-left: 0em;
+  padding-right: 0em;
+  padding-top: 0em;
+}
+
+.Questionario_Parametro_Titolo {
+  font-size: 16px;
+  padding-bottom: 0.2em;
+}
+
+.Questionario_Parametro_Descrizione {
+  font-size: 14px;
+  /* padding: 5px; */
+}
+
+.ModuloQuestionarioNote {
+  font-size: 16px;
+  /* padding: 10px */
+  padding-top: 0.2em;
+}
+
+.ModuloQuestionarioNoteDescription {
+  font-size: 14px;
+  /* background-color: #FAFAFA; */
+  /* padding-left: 30px */
+}
+/* 
+ * Fine css per il modulo questionario
+*/
+
+
+/* 
+ * Inizio css per il QUESTIONARIO_PARAMETRO_... (esempio QUESTIONARIO_PARAMETRO_SceltaSingola), la modale
+*/
+.Scrollbar_GridElencoValori {
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* overflow: auto; */
+  height: 15.5rem;
+}
+
+.TableFirstRowSticky {
+  position: sticky;
+  top: -0.01em;
+  z-index: 1;
+}
+
+/* These GR_Q_S (Sezione), GR_Q_P (Parametro) and GR_Q_N (Nota) are classes added for QUESTIONARIO_AMMINISTRATIVO and used for the type of parameter (see column Tipo in the grid) */
+.GR_Q_S {
+  background-color: #0091d354 !important;
+  /* background-color: #BFD2F3 !important; */
+}
+
+/*
+.GR_Q_P {
+  background-color: navajowhite !important;
+}
+.GR_Q_N {
+  background-color: paleturquoise !important;
+}
+*/
+/* 
+ * Fine css per il QUESTIONARIO_PARAMETRO_... (esempio QUESTIONARIO_PARAMETRO_SceltaMultipla), la modale
+ */
+
+/* Used for field that contains the attch for the QUESTIONARIO_AMMINISTRATIVO in the doc in the OE side */
+table.VerticalModel_ReadOnlyField td#Cell_AllegatoQuestionario {
+  background: #fff;
+}
+
+#DIV_QUESTIONARIO_AMMINISTRATIVO table table {
+  width: 20em;
+}
+
+#DIV_QUESTIONARIO_AMMINISTRATIVO table {
+  border: none;
+}
+
+#DIV_QUESTIONARIO_AMMINISTRATIVO table tr td {
+  padding-left: 0.5em;
+}
+
+.compilaQuestionario {
+  width: 150px;
+  height: 32px;
+  background: url(../images/General/CompilaQuestionario.png) bottom left no-repeat;
+  border: none;
+  color: #990000;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 11px;
+}
+/*fine css per il modulo questionario*/
+
+.custom-iframe 
+{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* inizio classi per interoperabilità e-forms*/
+.iconDownloadXml
+{
+	content:"\f019";
+	display:inline-block;
+	font-size: 1.5em;
+	margin-bottom:0.5em;
+	font-weight:bold;
+}
+/* fine classi e-forms*/
+
+.TextArea_NotEditable {
+
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	word-break: normal;
+}
+
+/* inizio classi OTP */
+
+.otp-container 
+{
+	width: 100%;
+	display:flex;
+	padding-top: 20px;
+	padding-bottom: 20px;
+	justify-content:center;
+}
+			
+.otp
+{
+	text-align: center;
+	line-height: inherit;
+	padding: 10px;
+	margin-bottom: 16px;
+	border-radius: 4px;
+}
+
+.otp-button 
+{
+	display: block;
+	width: 100%;
+	padding: 12px;
+}
+			
+.has_text_centered
+{
+	text-align:center;
+}
+
+.otp-helper 
+{
+	margin: 10px 8% 20px 8%;
+	background-color: #f2f2f2;
+	border-radius: 10px;
+	padding: 20px;
+	box-sizing: border-box;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.otp-helper h2 
+{
+	color: #333;
+}
+
+.otp-helper p 
+{
+	color: #666;
+}
+
+.otp-container_inner{
+	display: flex;
+	column-gap: 1rem;
+	
+}
+
+.otp-container_inner>*{
+	flex: 1 1 0px;
+}
+
+.otp-container_inner>a{
+	text-decoration: none;
+	background: url(../../images/BgButtons.png) top left no-repeat;
+	font-weight: bold;
+	color: #333;
+	font-size: 0.80em;
+	cursor: pointer;
+	border: 1px solid #666;
+	font-weight: normal;
+}
+
+.otp-container_inner>a:hover{
+	text-decoration: underline;
+	color: #CB1D15;
+}
+/* fine classi OTP */

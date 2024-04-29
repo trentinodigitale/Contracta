@@ -1,0 +1,41 @@
+BODY.BodyAttachments
+{
+    BACKGROUND-COLOR: white
+}
+TABLE.GridNotes
+{
+    WIDTH: 100%;
+    HEIGHT: 100%;
+    BACKGROUND-COLOR: white
+}
+TD.CellGridNotes
+{
+    WIDTH: 100%;
+    HEIGHT: 100%;
+    BACKGROUND-COLOR: white
+}
+.FontTextAreaNotes
+{
+    FONT-SIZE: 12px;
+    COLOR: #333;
+    FONT-FAMILY: arial
+}
+TEXTAREA.FontTextAreaNotesEditable
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: #333;
+    FONT-FAMILY: arial;
+    HEIGHT: 100%;
+    BACKGROUND-COLOR: white
+}
+TEXTAREA.FontTextAreaNotes
+{
+    FONT-SIZE: 12px;
+    WIDTH: 100%;
+    COLOR: #333;
+    FONT-FAMILY: arial;
+    HEIGHT: 100%;
+    BACKGROUND-COLOR: #efefef;
+	padding:3px;
+}

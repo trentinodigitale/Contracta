@@ -1,0 +1,7 @@
+﻿#ESECUZIONE SENZA FILE DI CONFIGURAZIONE (il file di configurazione si chiama appsettings.config ed è nella cartella dell'eseguibile)
+D:\TFS\afs\PRJ001\Applications\AfService\bin\Debug\AfService.exe
+#ESECUZIONE CON IL SOLO NOME DEL FILE DI CONFIGURAIZONE PRESENTE PERO' NELLA STESSA DIRECTORY DELL'ESEGUIBILE
+D:\TFS\afs\PRJ001\Applications\AfService\bin\Debug\AfService.exe,settingsfile:appsettings.config
+#ESECUZIONE CON IL FILE DI CONFIGURAIZONE COMPLETAMENTE INDIRIZZATO TRAMITE PERCORSO COMPLETO
+D:\TFS\afs\PRJ001\Applications\AfService\bin\Debug\AfService.exe,settingsfile:D:\TFS\afs\PRJ001\Applications\AfService\bin\Debug\papero.conf
+

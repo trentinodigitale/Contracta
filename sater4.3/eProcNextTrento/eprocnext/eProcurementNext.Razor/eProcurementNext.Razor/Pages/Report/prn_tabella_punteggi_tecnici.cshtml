@@ -1,0 +1,614 @@
+@page "/Report/prn_tabella_punteggi_tecnici.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic
+@using System.Globalization
+@using static eProcurementNext.CommonDB.Basic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.prn_tabella_punteggi_tecniciModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.Report.prn_tabella_punteggi_tecniciModel
+@{
+    CommonDbFunctions cdf = new();
+    LoadSession(HttpContext, session);
+    EprocResponse htmlToReturn = new();
+}
+@{
+
+    string versioneAflink = URLEncode(CStr(ApplicationCommon.Application["VERSIONE_AFLINK"]));
+    string pathRoot = "../";
+    htmlToReturn.Write($@"
+	<html>
+	<meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">
+	<link rel=""stylesheet"" href=""" + pathRoot + $@"""CTL_Library/Themes/main_base.css?v=""" + versioneAflink + $@""" type=""text/css"" media=""screen,projection""/>
+	<link rel=""stylesheet"" href=""" + pathRoot + $@"CTL_Library/Themes/main.css?v=""" + versioneAflink + $@""" type=""text/css"" media=""screen,projection""/>
+	<link rel=""stylesheet"" href=""" + pathRoot + $@"""CTL_Library/Themes/main_stampa.css?v=""" + versioneAflink + $@""" type=""text/css"" media=""print""  />");
+    htmlToReturn.Write($@"
+	<style>
+		.totale {{font-size:13px;font-weight:bold; background-color: yellow;}}
+		.ragionesociale{{text-align:center}}
+		.intestazione{{font-size:13px;text-align:center; font-weight:bold;}}
+		.intestazione_report{{font-size:13px;text-align:left;  border:0px;}}
+		.valore_report{{font-size:13px;text-align:left;  }}
+		.caption_report{{font-size:13px;text-align:left; font-weight:bold;}}
+
+		.descrizione{{text-align:left;font-size:13px}}
+		.valore{{text-align:center;font-size:13px}}
+		.numeri{{text - align:right;font-size:13px }}
+		td {{ padding: 5px;}}
+	</style>");
+    htmlToReturn.Write($@"
+	<title>" + ApplicationCommon.CNV("Tabella Valutazione") + $@"</title>
+	<body >");
+    int NumeroLotto = 0;
+    int Idlottopda = 0;
+    int IdPda = 0;
+    int IdGara = 0;
+    string SQL_Where = "";
+    int nVis_Col_Rip_Complessivo = 0;
+    int NumForn;
+    int NumCriteri_Soggettivi;
+    int NumCriteri_Oggettivi;
+    //int IdHeader_Pda_Offerte
+    int IdModelloGara = 0;
+    Dictionary<string, string> g_col_Attrib;
+    Dictionary<string, string> g_col_Attrib_Type;
+    Dictionary<string, string> g_col_Attrib_Domain;
+    string Titolo_Gara = string.Empty;
+    string? Divisione_Lotti = null;
+    string Descrizione_Prodotto = string.Empty;
+    string CIG = string.Empty;
+    string CIG_LOTTO = string.Empty;
+    string Nome_Punteggio_Da_Sommare = string.Empty;
+    string Nome_Punteggio_Criteri = string.Empty;
+    double PunteggioRiparametrato = 0;
+
+    nVis_Col_Rip_Complessivo = 0;
+    //'--RECUPERO PARAMETRO DI FILTRO
+    SQL_Where = GetParamURL(Request.QueryString.ToString(), "WHERE_SQL");
+
+    validate("WHERE_SQL", SQL_Where, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 1, HttpContext, session);
+    //'-- se presente nella where idheader vuol dire che vengo dalla PDA e sono su una monolotto
+    //'-- allora recupero idlottopda in modo da fare le stesse query sia quando vengo dalla pda che quando vengo dal dettaglio di un lotto della PDA (per le gare multilotto)
+    string strSQL = string.Empty;
+    strSQL = $"select top 1 idlottopda , NumeroLotto, idheader from DASHBOARD_VIEW_LOTTO_GIUDIZI_ESPRESSI where {SQL_Where}";
+    TSRecordSet? rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        rs.MoveFirst();
+        IdPda = CInt(rs["idheader"]!);
+        Idlottopda = CInt(rs["idlottopda"]!);
+        NumeroLotto = CInt(rs["NumeroLotto"]!);
+    }
+    //'response.write Idlottopda
+    //'response.end
+
+    //'response.write
+    //set rs = nothing
+    //'--recupero id gara e id modello della gara dalla pda
+    var sqlParams = new Dictionary<string, object?>();
+    sqlParams.Add("@NumeroLotto", NumeroLotto);
+    sqlParams.Add("@IdPda", IdPda);
+    strSQL = @"select
+				M.id as idModello, PDA.LinkedDoc as IdGara, divisione_lotti, Gara.titolo, Lotti_Gara.descrizione as Descrizione_Prodotto, Dett_Gara.CIG, isnull(Lotti_Gara.CIG,'') as CIG_LOTTO
+				from ctl_doc PDA with (nolock)
+					inner join CTL_DOC M with (nolock) on M.LinkedDoc=PDA.LinkedDoc and M.TipoDoc='CONFIG_MODELLI_LOTTI' and M.StatoFunzionale ='Pubblicato'
+					inner join CTL_DOC Gara with (nolock) on Gara.Id = PDA.LinkedDoc
+					inner join Document_Bando Dett_Gara	with (nolock) on Dett_Gara.idHeader = Gara.Id
+					inner join Document_MicroLotti_Dettagli Lotti_Gara with (nolock) on Lotti_Gara.IdHeader = Gara.Id and Lotti_Gara.tipodoc=Gara.tipodoc and voce=0 and numerolotto=@NumeroLotto
+				where PDA.id = @IdPda";
+    //'response.write strSQL
+    //'response.end
+    rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        rs.MoveFirst();
+        IdGara = CInt(rs["IdGara"]!);
+        IdModelloGara = CInt(rs["idModello"]!);
+        Titolo_Gara = CStr(rs["titolo"]);
+        Divisione_Lotti = CStr(rs["Divisione_Lotti"]);
+        Descrizione_Prodotto = CStr(rs["Descrizione_Prodotto"]);
+        CIG = CStr(rs["CIG"]);
+        CIG_LOTTO = CStr(rs["CIG_LOTTO"]);
+    }
+    //'--se si tratta di una gara non a lotti allora CIG è quello della testata
+
+    if (Divisione_Lotti == "0")
+    {
+        CIG_LOTTO = CIG;
+    }
+    //'--recupero info lotto voce per gli attributi dell aparte tecnica obbligaroti del modello e li metto in una mappa
+    sqlParams.Clear();
+    sqlParams.Add("@IdModelloGara", IdModelloGara);
+    strSQL = @"select
+				ATTR.Value as Attributo, LV.Value as LottoVoce, DZT_TYPE, isnull(DZT_DM_ID,'') as DZT_DM_ID
+				from
+					CTL_DOC_Value OT with (nolock)
+					inner join CTL_DOC_Value ATTR with (nolock) on ATTR.IdHeader=OT.idheader and OT.DSE_ID = ATTR.DSE_ID  and ATTR.DZT_Name ='DZT_Name' and ATTR.Row=OT.row
+					inner join CTL_DOC_Value LV with (nolock) on LV.IdHeader = OT.idheader and LV.DZT_Name='LottoVoce' and LV.Row=OT.row
+					inner join LIB_Dictionary DIZ with (nolock) on DIZ.DZT_name = ATTR.Value
+				where
+					OT.idheader= @IdModelloGara and OT.DSE_ID='MODELLI' and OT.dzt_name='MOD_OffertaTec' and OT.Value='obblig' ";
+    //'response.write strSQL
+    //'response.end
+    rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+    g_col_Attrib = new Dictionary<string, string>();
+    g_col_Attrib_Type = new Dictionary<string, string>();
+    g_col_Attrib_Domain = new Dictionary<string, string>();
+
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        while (!rs.EOF)
+        {
+            //'response.write "---" & rs.fields("Attributo").value & "---" & rs.fields("LottoVoce").value & "---<br>"
+            g_col_Attrib.Add(CStr(rs["Attributo"]).ToLower(), CStr(rs["LottoVoce"]));
+            g_col_Attrib_Type.Add(CStr(rs["Attributo"]).ToLower(), CStr(rs["DZT_TYPE"]));
+            g_col_Attrib_Domain.Add(CStr(rs["Attributo"]).ToLower(), CStr(rs["DZT_DM_ID"]));
+
+            rs.MoveNext();
+        }
+    }
+    //'response.write strSQL
+    //'response.end
+    //
+    //'--vado a vedere se devo visualizzare la colonna "Punteggio tecnico complessivo riparametrato"
+    //'--controllando se
+    sqlParams.Clear();
+    sqlParams.Add("@IdGara", IdGara);
+    sqlParams.Add("@NumeroLotto", NumeroLotto);
+    strSQL = @"select
+							idLotto, PunteggioTEC_100, PunteggioTEC_TipoRip from BANDO_GARA_CRITERI_VALUTAZIONE_PER_LOTTO
+						where idBando = @IdGara and N_Lotto= @NumeroLotto";      //'--& "  and PunteggioTEC_100 <> 0 and PunteggioTEC_TipoRip in (1,3) "
+
+    rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+    if (rs is not null && rs.RecordCount > 0)
+    {
+        rs.MoveFirst();
+        //'--se esiste l ariparametrazione come attributo da sommare pconsidero PunteggioRiparametrato , altrimenti PunteggioTecnico nella vista DASHBOARD_VIEW_LOTTO_GIUDIZI_ESPRESSI
+        if (CStr(rs["PunteggioTEC_100"]) != "0")
+        {
+            Nome_Punteggio_Da_Sommare = "PunteggioRiparametrato";
+            Nome_Punteggio_Criteri = "PunteggioRiparametrato";
+        }
+        else
+        {
+            Nome_Punteggio_Da_Sommare = "PunteggioTecnico";
+            Nome_Punteggio_Criteri = "value";
+        }
+        //	'--se esiste la riparametrazione sul TOTALE, oppure CRITERI E TOTALE allora devo visualizzare la colonna
+
+        if (CStr(rs["PunteggioTEC_100"]) != "0" && (CStr(rs["PunteggioTEC_TipoRip"]) == "1") || CStr(rs["PunteggioTEC_TipoRip"]) == "3")
+        {
+            nVis_Col_Rip_Complessivo = 1;
+            Nome_Punteggio_Da_Sommare = "PunteggioTecnico";
+            Nome_Punteggio_Criteri = "value";
+        }
+    }
+    //'--RECUPERO LA SOMMA DEL PUNTEGGIO PER I CRITERI SOGGETTIVI e PER I CRITERI OGGETTIVO PER OGNI FORNITORE
+    strSQL = " select aziragionesociale,criteriovalutazione, SUM (" + Nome_Punteggio_Da_Sommare + " ) as Punteggio ";
+    //'--in caso di riparametrazione sul totola aggiungo la colonna PunteggioRiparametrato
+    if (nVis_Col_Rip_Complessivo == 1)
+    {
+        strSQL = $"{strSQL}, PunteggioTecnicoRiparTotale ";
+    }
+    strSQL = $@"{strSQL} from
+											DASHBOARD_VIEW_LOTTO_GIUDIZI_ESPRESSI where statoriga not in ('escluso','daValutare') and {SQL_Where}
+											group by aziragionesociale,aziRagioneSociale_SORT,criteriovalutazione ";
+    if (nVis_Col_Rip_Complessivo == 1)
+    {
+        strSQL = $"{strSQL}, PunteggioTecnicoRiparTotale ";
+    }
+    strSQL = $"{strSQL} order by aziRagioneSociale_SORT,criteriovalutazione";
+    //'response.write strSQL
+    //'response.end
+    TSRecordSet? Rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString);
+    //'--controllo se esistono criteri SOGGETTIVI
+    Rs.Filter(" criteriovalutazione='soggettivo' ");
+    NumCriteri_Soggettivi = Rs.RecordCount;
+
+    Rs.Filter("");
+    //'--controllo se esistono criteri OGGETTIVI
+    Rs.Filter(" criteriovalutazione <> 'soggettivo' ");
+    NumCriteri_Oggettivi = Rs.RecordCount;
+    Rs.Filter("");
+
+    //'response.write "NumCriteri_Soggettivi=" & NumCriteri_Soggettivi & "<br>"
+    //'response.write "NumCriteri_Oggettivi=" & NumCriteri_Oggettivi
+    //'response.end
+
+    //'--DISEGNAMO INFO GENERALI
+    htmlToReturn.Write($@"<table width=""92%"" style=""margin:5px auto; border:0px;"" >");
+    htmlToReturn.Write($@"<tr>");
+    htmlToReturn.Write($@"<td class=intestazione_report></td>");
+    htmlToReturn.Write($@"</tr>");
+
+
+    htmlToReturn.Write($@"<tr>");
+
+    htmlToReturn.Write($@"<td class=intestazione_report><label class=caption_report >" + ApplicationCommon.CNV("Label Bando") + $@"</label><label class=valore_report > " + Titolo_Gara + $@"</label><label class=caption_report > " + ApplicationCommon.CNV("CIG") + $@" </label><label class=valore_report > " + CIG_LOTTO + $@"</label></td>");
+    htmlToReturn.Write($@"</tr>");
+
+    htmlToReturn.Write($@"<tr>");
+    htmlToReturn.Write($@"<td class=intestazione_report><label class=caption_report >" + ApplicationCommon.CNV("Descrizione") + $@"</label>:<label class=valore_report >" + Descrizione_Prodotto + $@"</label> </td>");
+
+    htmlToReturn.Write($@"</tr>");
+
+
+    htmlToReturn.Write("</table><br>");
+    double PunteggioTotale = 0;
+    //'response.end
+    //'--TABELLA COMPLESSIVA DEI PUNTEGGI PER OGNI FORNITORI--------------------
+    string strRagSoc_Current = string.Empty;
+    if (Rs.RecordCount > 0)
+    {
+        htmlToReturn.Write($@"<table  width=""92%"" style=""margin:5px auto;"" ><thead>");
+        htmlToReturn.Write($@"<tr>");
+        htmlToReturn.Write($@"<td colspan=6 class=intestazione>" + ApplicationCommon.CNV("TABELLA PUNTEGGI TECNICI COMPLESSIVI") + "</td>");
+        htmlToReturn.Write($@"</tr></thead>");
+        htmlToReturn.Write($@"</table><br>");
+
+        htmlToReturn.Write($@"<table  width=""92%"" style=""margin:5px auto;"" ><thead>");
+        htmlToReturn.Write($@"<tr>");
+
+        htmlToReturn.Write($@"<td  colspan=2 class=intestazione>" + ApplicationCommon.CNV("Impresa Concorrente") + "</td>");
+        htmlToReturn.Write($@"<td  class=intestazione>" + ApplicationCommon.CNV("Totale punteggio tecnico discrezionale") + "</td>");
+        htmlToReturn.Write($@"<td  class=intestazione>" + ApplicationCommon.CNV("Totale punteggio tecnico tabellare/quantitativo") + "</td>");
+        htmlToReturn.Write($@"<td  class=intestazione>" + ApplicationCommon.CNV("Punteggio tecnico complessivo") + "</td>");
+
+        if (nVis_Col_Rip_Complessivo == 1)
+        {
+            htmlToReturn.Write($@"<td style=""width:70px;"" class=intestazione>" + ApplicationCommon.CNV("Punteggio tecnico complessivo riparametrato") + "</td>");
+        }
+        htmlToReturn.Write("</tr>");
+
+        Rs.MoveFirst();
+
+        NumForn = 0;
+
+        strRagSoc_Current = CStr(Rs["aziRagioneSociale"]);
+        double PunteggioSoggettivo = 0;
+        double PunteggioOggettivo = 0;
+        PunteggioRiparametrato = 0;
+        while (!Rs.EOF)
+        {
+            //'--quando cambia fornitore disegno la nuova riga con i punteggi
+            if (strRagSoc_Current != CStr(Rs["aziRagioneSociale"]))
+            {
+                htmlToReturn.Write("<tr>");
+
+                NumForn = NumForn + 1;
+
+                htmlToReturn.Write("<tr>");
+                htmlToReturn.Write($@"<td class=descrizione>" + NumForn + "</td>");
+
+                htmlToReturn.Write($@"<td class=descrizione>" + strRagSoc_Current + "</td>");
+
+                htmlToReturn.Write($@"<td class=numeri>");
+
+                if (PunteggioSoggettivo != 0)
+                {
+                    htmlToReturn.Write(F(PunteggioSoggettivo));
+                }
+                htmlToReturn.Write("</td>");
+
+                htmlToReturn.Write("<td class=numeri>");
+                if (PunteggioOggettivo != 0)
+                {
+                    htmlToReturn.Write(F(PunteggioOggettivo));
+                }
+                htmlToReturn.Write($@"</td>");
+
+                htmlToReturn.Write($@"<td class=numeri>");
+                htmlToReturn.Write(F(PunteggioTotale));
+                htmlToReturn.Write("</td>");
+
+                if (nVis_Col_Rip_Complessivo == 1)
+                {
+                    htmlToReturn.Write("<td class=numeri>" + F(PunteggioRiparametrato) + "</td>");
+                }
+                htmlToReturn.Write("</tr>");
+
+                strRagSoc_Current = CStr(Rs["aziRagioneSociale"]);
+                PunteggioTotale = 0;
+                PunteggioSoggettivo = 0;
+                PunteggioOggettivo = 0;
+                PunteggioRiparametrato = 0;
+            }
+
+            if (CStr(Rs["criteriovalutazione"]) == "soggettivo")
+            {
+                if (!IsNull(CDbl(Rs["Punteggio"])))
+                {
+                    PunteggioSoggettivo = ConvDbl(CStr(Rs["Punteggio"]));
+                    PunteggioTotale = PunteggioTotale + ConvDbl(CStr(Rs["Punteggio"]));
+                }
+            }
+
+            if (CStr(Rs["criteriovalutazione"]) != "soggettivo")
+            {
+                if (!IsNull(CDbl(Rs["Punteggio"])))
+                {
+                    PunteggioOggettivo = ConvDbl(CStr(Rs["Punteggio"]));
+                    PunteggioTotale = PunteggioTotale + ConvDbl(CStr(Rs["Punteggio"]));
+                }
+            }
+
+            if (nVis_Col_Rip_Complessivo == 1)
+            {
+                PunteggioRiparametrato = ConvDbl(CStr(Rs["PunteggioTecnicoRiparTotale"]));  
+            }
+            //'response.write PunteggioSoggettivo & "<br>"
+
+            Rs.MoveNext();
+        }
+        //'--aggiungo la riga dell'ultimo fornitore che non comprendo nel ciclo
+
+        htmlToReturn.Write("<tr>");
+
+        NumForn = NumForn + 1;
+
+        htmlToReturn.Write("<tr>");
+        htmlToReturn.Write("<td class=descrizione>" + NumForn + "</td>");
+
+        htmlToReturn.Write("<td class=descrizione>" + strRagSoc_Current + "</td>");
+
+        htmlToReturn.Write("<td class=numeri>");
+        if (PunteggioSoggettivo != 0)
+        {
+            htmlToReturn.Write(F(PunteggioSoggettivo));
+        }
+        htmlToReturn.Write("</td>");
+
+        htmlToReturn.Write($@"<td class=numeri>");
+        if (PunteggioOggettivo != 0)
+        {
+            htmlToReturn.Write(F(PunteggioOggettivo));
+        }
+        htmlToReturn.Write("</td>");
+
+        htmlToReturn.Write("<td class=numeri>");
+        //'if PunteggioOggettivo <> 0 then
+        htmlToReturn.Write(F(PunteggioTotale));
+        //'response.write PunteggioTotale
+        //'end if
+        htmlToReturn.Write("</td>");
+
+        if (nVis_Col_Rip_Complessivo == 1)
+        {
+            htmlToReturn.Write("<td class=numeri>" + F(PunteggioRiparametrato) + "</td>");
+        }
+
+        htmlToReturn.Write("</tr>");
+        //'--ultimo fornitore
+
+        htmlToReturn.Write("</thead></table><br><br>");
+    }
+    //'--FINE TABELLA COMPLESSIVA DEI PUNTEGGI PER OGNI FORNITORE--------------------
+
+    //'--RECUPERO LA LISTA DEI FORNITORI
+    sqlParams = new Dictionary<string, object?>();
+    sqlParams.Add("@Idlottopda", Idlottopda);
+    strSQL = @" select P.IdRow, P.aziRagioneSociale, DO.IdHeader
+					from PDA_LST_BUSTE_TEC_OFFERTE_VIEW P
+					inner join Document_MicroLotti_Dettagli DO with (nolock) on DO.Id = P.IdRow
+					where P.id = @Idlottopda and P.StatoRiga not in ('escluso','davalutare') order by P.NumRiga asc";
+
+    //'response.write strSQL
+    //'response.end
+    TSRecordSet? rsForn = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+    if (NumCriteri_Soggettivi > 0)
+    {
+        Display_Tabella_Criteri(rsForn, "Soggettivo");
+    }
+    if (NumCriteri_Oggettivi > 0)
+    {
+        htmlToReturn.Write("<br><br>");
+        Display_Tabella_Criteri(rsForn, "Oggettivo");
+    }
+    void Display_Tabella_Criteri(TSRecordSet RsForn, string TipologiaCriteri)
+    {
+        string strIntestTable = string.Empty;
+        if (TipologiaCriteri == "Oggettivo")
+        {
+            strIntestTable = ApplicationCommon.CNV("TABELLA PUNTEGGI TECNICI DEI CRITERI NON DISCREZIONALI IMPUTATI DIRETTAMENTE IN PIATTAFORMA");
+        }
+        else
+        {
+            strIntestTable = ApplicationCommon.CNV("TABELLA PUNTEGGI TECNICI DEI CRITERI DISCREZIONALI IMPUTATI DIRETTAMENTE IN PIATTAFORMA");
+        }
+        htmlToReturn.Write($@"<table  width=""92%"" style=""margin:5px auto;"" ><thead>");
+        htmlToReturn.Write("<tr>");
+        htmlToReturn.Write("<td colspan=6 class=intestazione>" + strIntestTable + "</td>");
+        htmlToReturn.Write("</tr>");
+        htmlToReturn.Write("</table><br>");
+
+        //'--PER OGNI FORNITORE STAMPO LA LISTA DEI CRITERI NON DISCREZIONALI ( QUELLI OGGETTIVI)
+        int Prog;
+        Prog = 0;
+        if (RsForn.RecordCount > 0)
+        {
+            RsForn.MoveFirst();
+            while (!RsForn.EOF)
+            {
+                Prog = Prog + 1;
+
+                if (Prog > 1)
+                {
+                    htmlToReturn.Write("<br>");
+                }
+                htmlToReturn.Write($@"<p style=""padding-left:50px;"">" + Prog + ")" + "&nbsp;" + CStr(RsForn["aziRagioneSociale"]).ToUpper() + "</p>");
+
+                //'--recupero la scheda di valutazione tecnica legata lotto offerto
+                //'--idrow è id del lotto offerto (document_microlotti_dettagli con tipodoc='pda_offerte' e )
+
+                sqlParams.Clear();
+                sqlParams.Add("@IdRow", CInt(RsForn["IdRow"]!));
+                strSQL = "select Id from CTL_DOC with (nolock) where LinkedDoc = @IdRow and TipoDoc='PDA_VALUTA_LOTTO_TEC' and StatoFunzionale='Confermato'";
+
+                //'response.write strSQL & "<br>"
+
+                TSRecordSet? rsScheda = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+                if (rsScheda is not null && rsScheda.RecordCount > 0)
+                {
+                    rsScheda.MoveFirst();
+                    Display_Criteri(CStr(rsScheda["Id"]), TipologiaCriteri, CStr(RsForn["IdHeader"]));
+                }
+                RsForn.MoveNext();
+            }
+        }
+    }
+    void Display_Criteri(string IdScheda, string TipologiaCriteri, string IdHeader_Pda_Offerte)
+    {
+        string strSQL_Criteri = string.Empty;
+        double PunteggioTotale = 0;
+        htmlToReturn.Write($@"<table  width=""92%"" style=""margin:5px auto;"" ><thead>");
+
+        htmlToReturn.Write("<tr>");
+        htmlToReturn.Write("<td class=intestazione>" + ApplicationCommon.CNV("Descrizione Criterio") + "</td>");
+        htmlToReturn.Write("<td class=intestazione>" + ApplicationCommon.CNV("Punteggio Max") + "</td>");
+
+        if (TipologiaCriteri == "Oggettivo")
+        {
+            htmlToReturn.Write("<td class=intestazione>" + ApplicationCommon.CNV("Offerta") + "</td>");
+        }
+        htmlToReturn.Write("<td class=intestazione>" + ApplicationCommon.CNV("Punteggio Tecnico") + "</td>");
+
+        htmlToReturn.Write("</tr>");
+
+        //	'--recupero i criteri della scheda
+        sqlParams.Clear();
+        sqlParams.Add("@Nome_Punteggio_Criteri", Nome_Punteggio_Criteri);
+        sqlParams.Add("@IdScheda", CInt(IdScheda));
+        if (TipologiaCriteri == "Soggettivo")
+        {
+            strSQL_Criteri = @"
+				select
+					DESC_C.Value as Descrizione, PMax.Value as PunteggioMAx , Punt.Value as PunteggioTecnico
+				from
+					PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW CO
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW DESC_C on DESC_C.IdHeader = CO.IdHeader and DESC_C.DSE_ID = CO.DSE_ID
+								and DESC_C.DZT_Name='DescrizioneCriterio' and DESC_C.Row = CO.Row
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW PMax on PMax.IdHeader = CO.IdHeader and PMax.DSE_ID = CO.DSE_ID
+								and PMax.DZT_Name='PunteggioMax' and PMax.Row = CO.Row
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW Punt on Punt.IdHeader = CO.IdHeader and Punt.DSE_ID = CO.DSE_ID
+								and Punt.DZT_Name=@Nome_Punteggio_Criteri and Punt.Row = CO.Row
+				where
+					CO.IdHeader =@IdScheda and CO.DSE_ID='PDA_VALUTA_LOTTO_TEC' and CO.DZT_Name='CriterioValutazione' and CO.Value='soggettivo' ";
+            //'response.write strSQL_Criteri
+            //'response.end
+        }
+        else
+        {
+            strSQL_Criteri = @"
+				select
+					DESC_C.Value as Descrizione, PMax.Value as PunteggioMAx , Punt.Value as PunteggioTecnico, dbo.getpos(AttrCri.value,'.',2) as AttributoCriterio
+				from
+					PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW CO
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW DESC_C on DESC_C.IdHeader = CO.IdHeader and DESC_C.DSE_ID = CO.DSE_ID
+								and DESC_C.DZT_Name='DescrizioneCriterio' and DESC_C.Row = CO.Row
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW PMax on PMax.IdHeader = CO.IdHeader and PMax.DSE_ID = CO.DSE_ID
+								and PMax.DZT_Name='PunteggioMax' and PMax.Row = CO.Row
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW Punt on Punt.IdHeader = CO.IdHeader and Punt.DSE_ID = CO.DSE_ID
+								and Punt.DZT_Name=@Nome_Punteggio_Criteri and Punt.Row = CO.Row
+				inner join PDA_VALUTA_LOTTO_TEC_VALUTAZIONE_VIEW AttrCri on AttrCri.IdHeader = CO.IdHeader and AttrCri.DSE_ID = CO.DSE_ID
+								and AttrCri.DZT_Name='AttributoCriterio' and AttrCri.Row = CO.Row
+				where
+					CO.IdHeader = @IdScheda and CO.DSE_ID='PDA_VALUTA_LOTTO_TEC' and CO.DZT_Name='CriterioValutazione' and CO.Value <> 'soggettivo' ";
+            //'response.write strSQL_Criteri
+            //'response.end
+        }
+        //'--PER I CRITERI OGGETTI RECUPERO DAL DIZIONARIO IL TIPO (DZT_TYPE)
+        TSRecordSet? rsCriteri = cdf.GetRSReadFromQuery_(strSQL_Criteri, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rsCriteri is not null && rsCriteri.RecordCount > 0)
+        {
+            rsCriteri.MoveFirst();
+            PunteggioTotale = 0;
+            while (!rsCriteri.EOF)
+            {
+                htmlToReturn.Write("<tr>");
+                htmlToReturn.Write("<td class=descrizione>" + CStr(rsCriteri["Descrizione"]) + $@"</td>");
+                htmlToReturn.Write("<td class=numeri>" + F(CStr(rsCriteri["PunteggioMAx"])) + "</td>");
+
+                if (TipologiaCriteri == "Oggettivo")
+                {
+                    htmlToReturn.Write("<td class=valore>");
+                    //'response.write g_col_Attrib.count
+                    //'response.write rsCriteri("AttributoCriterio") & "-" & IdHeader_Pda_Offerte & "-" & g_col_Attrib(lcase(rsCriteri("AttributoCriterio"))) & "-" & NumeroLotto
+                    htmlToReturn.Write(Get_Valore_Attributo_Criterio(CStr(rsCriteri["AttributoCriterio"]), IdHeader_Pda_Offerte, g_col_Attrib[CStr(rsCriteri["AttributoCriterio"]).ToLower()], NumeroLotto));
+
+                    htmlToReturn.Write("</td>");
+                }
+
+                htmlToReturn.Write("<td class=numeri>" + F(CStr(rsCriteri["PunteggioTecnico"])) + "</td>");
+                htmlToReturn.Write("</tr>");
+
+                string v = CStr(rsCriteri["PunteggioTecnico"]);
+                if (InStr(1, CStr(0.5), ",") > 0)
+                {
+                    v = Replace(v, ".", ",");
+                }
+
+                PunteggioTotale = PunteggioTotale + ConvDbl(CStr(rsCriteri["PunteggioTecnico"]));
+
+                rsCriteri.MoveNext();
+            }
+        }
+        //'--aggiungo la riga del totale
+        htmlToReturn.Write("<tr class=totale>");
+        htmlToReturn.Write("<td class=descrizione>" + ApplicationCommon.CNV("Totale") + "</td>");
+        htmlToReturn.Write("<td class=descrizione></td>");
+
+        if (TipologiaCriteri == "Oggettivo")
+        {
+            htmlToReturn.Write("<td class=descrizione></td>");
+        }
+
+        htmlToReturn.Write("<td class=numeri>" + F(PunteggioTotale) + "</td>");
+        //'response.write "<td class=numeri>" & PunteggioTotale     & "</td>"
+
+        htmlToReturn.Write("</tr>");
+        htmlToReturn.Write("</table>");
+    }
+
+    string Get_Valore_Attributo_Criterio(string AttributoCriterio, string IdHeader_Pda_Offerte, string Info_LottoVoce, int NumeroLotto)
+    {
+        string _Get_Valore_Attributo_Criterio = string.Empty;
+        string Dzt_Type_Attrib = g_col_Attrib_Type[(AttributoCriterio).ToLower()];
+        string Dzt_Domain_Attrib = g_col_Attrib_Domain[(AttributoCriterio).ToLower()];
+
+        var sqlParams = new Dictionary<string, object?>();
+        sqlParams.Add("@AttributoCriterio", AttributoCriterio);
+        sqlParams.Add("@IdHeader_Pda_Offerte", CInt(IdHeader_Pda_Offerte));
+        sqlParams.Add("@Info_LottoVoce", Info_LottoVoce);
+        sqlParams.Add("@NumeroLotto", CStr(NumeroLotto));
+        sqlParams.Add("@Dzt_Type_Attrib", Dzt_Type_Attrib);
+        sqlParams.Add("@Dzt_Domain_Attrib", Dzt_Domain_Attrib);
+        string strSql = "exec Get_Valore_Attributo_CriterioTecnico @AttributoCriterio, @IdHeader_Pda_Offerte, @Info_LottoVoce, @NumeroLotto, @Dzt_Type_Attrib, @Dzt_Domain_Attrib";
+
+        TSRecordSet? rsValore = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+
+        if (rsValore is not null && rsValore.RecordCount > 0)
+        {
+            rsValore.MoveFirst();
+
+            _Get_Valore_Attributo_Criterio = CStr(rsValore["Descrizione"]);
+        }
+        //'Get_Valore_Attributo_Criterio = strSql
+        return _Get_Valore_Attributo_Criterio;
+    }
+
+    htmlToReturn.Write($@"
+	</body>
+	</html>");
+
+}@Html.Raw(htmlToReturn.Out())

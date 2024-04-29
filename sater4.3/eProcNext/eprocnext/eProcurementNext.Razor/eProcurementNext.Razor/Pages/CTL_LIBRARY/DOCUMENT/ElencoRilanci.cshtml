@@ -1,0 +1,132 @@
+﻿@page "/CTL_LIBRARY/DOCUMENT/ElencoRilanci.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.elencoRilanciModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	string DOCUMENT = GetParamURL(Request.QueryString.ToString(), "DOCUMENT");
+	string IDDOC = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+	validate("DOCUMENT", GetParamURL(Request.QueryString.ToString(), "DOCUMENT").Replace(".", "_"), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate("IDDOC", GetParamURL(Request.QueryString.ToString(), "IDDOC"), TIPO_PARAMETRO_NUMERO, CInt(""), "", 0, HttpContext, session);
+
+	string idpfu = CStr(session["idpfu"]);
+	string idAzi = CStr(session["IDAZI"]);
+	string strSQL_ASTA = string.Empty;
+	string strSQL = string.Empty;
+
+	var sqlParams = new Dictionary<string, object?>();
+	var sqlASTAParams = new Dictionary<string, object?>();
+
+	if (DOCUMENT == "OFFERTA_ASTA")
+	{
+		//'--  NELLE SELECT, PER MOTIVI DI SICUREZZA, SONO PRESENTI LE RESTRIZIONI SULL'UTENTE COLLEGATO. L'IDPFU DELL'OFFERTA ASTA O L'IDPFUINCHARGE DEVONO COINCIDONO CON L'IDPFU IN SESSIONE
+		strSQL_ASTA = @"select o.linkedDoc as IdAsta, StatoAsta , isnull(ML_Description,DMV_DescML) as DescrizioneStatoAsta , convert( varchar(10) , DataScadenzaAsta , 103 ) + ' ' + convert( varchar(8) , DataScadenzaAsta , 108 ) as DataScadenzaAsta  , datediff( s , getdate() , DataScadenzaAsta  ) as Residuo 
+								, BaseCalcolo , RilancioMinimo ,  datediff( s  , DataInizio , DataScadenzaAsta ) as SecDurataAsta  ,  datediff( s  , DataInizio , DataScadOrig ) as SecDurataOrig   
+								from CTL_DOC o with(nolock) inner join Document_ASTA a on o.linkedDoc = a.idheader 
+								left join LIB_DomainValues on DMV_DM_ID='StatoFunzionale' and DMV_Cod=StatoAsta 
+								left join LIB_Multilinguismo on ML_KEY=DMV_DescML and ML_LNG=@SuffLing 
+								where o.tipodoc = 'OFFERTA_ASTA' and ( o.IdPfu = @idpfu or o.idPfuInCharge = @idpfu ) and o.id  = @IDDOC";
+
+		strSQL = "select convert( varchar(10) , DataRilancio , 103 ) + ' ' + convert( varchar(8) , DataRilancio , 108 ) as DataRilancio , ValoreRilancio , case when azienda = idAziFornitore then 'BLUE' else '' end as aziRagioneSociale , 0 as RilancioSec from CTL_DOC o inner join Document_Asta_Rilanci r on r.idheader = o.linkeddoc ";
+		strSQL = strSQL + "	where o.tipodoc = 'OFFERTA_ASTA' and /*( o.IdPfu = " + idpfu + " or o.idPfuInCharge = " + idpfu + " ) and o.id  = " + IDDOC + " order by r.idrow desc ";
+		//'response.write strSQL
+	}
+	if (DOCUMENT == "BANDO_ASTA")
+	{
+		//'-- L'IDPFU DI SESSIONE DEVE ESSERE UNO DEGLI UTENTI DELL'ENTE DELL'ASTA OPPURE UN UTENTE DELL'AZIMASTER
+		strSQL = @"select top 1 p.IdPfu
+							from CTL_DOC a with(nolock)
+							inner join ProfiliUtente p with(nolock) on p.pfuIdAzi = a.Azienda
+							where a.Id = @IDDOC and a.TipoDoc = 'BANDO_ASTA' and p.IdPfu = @idpfu";
+
+		sqlParams.Add("@IDDOC", CInt(IDDOC));
+		sqlParams.Add("@idpfu", CInt(idpfu));
+		TSRecordSet rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams); 
+		if (rs.RecordCount >0 || idAzi == "35152001")
+		{
+			strSQL_ASTA = @"select idheader as IdAsta, StatoAsta, isnull(ML_Description,DMV_DescML) as DescrizioneStatoAsta, convert( varchar(10), DataScadenzaAsta, 103) + ' ' + convert( varchar(8) , DataScadenzaAsta , 108 ) as DataScadenzaAsta, isnull( datediff(s, getdate(), DataScadenzaAsta), 1) as Residuo 
+									, BaseCalcolo, RilancioMinimo, isnull(datediff(s, DataInizio, DataScadenzaAsta), 1) as SecDurataAsta, isnull(datediff(s, DataInizio, DataScadOrig), 1) as SecDurataOrig 
+									from Document_ASTA a left join LIB_DomainValues on DMV_DM_ID='StatoFunzionale' and DMV_Cod=StatoAsta 
+									left join LIB_Multilinguismo on ML_KEY=DMV_DescML and ML_LNG=@SuffLing where a.idheader = @IDDOC";
+
+			strSQL = @"select convert( varchar(10), DataRilancio, 103) + ' ' + convert(varchar(8), DataRilancio, 108) as DataRilancio, isnull(ValoreRilancio, 0) as ValoreRilancio, aziRagioneSociale 
+							 , datediff(s, DataInizio, DataRilancio) as RilancioSec 
+							 from  Document_Asta_Rilanci r INNER JOIN AZIENDE a on r.idAziFornitore = a.idazi 
+							 inner join document_Asta b on b.idheader = r.idheader where r.idheader = @IDDOC order by r.idrow desc ";
+		}
+	}
+	if (!string.IsNullOrEmpty(strSQL_ASTA))
+	{
+		TSRecordSet? rs = null;
+		try
+		{
+			sqlParams.Clear();
+			sqlParams.Add("@SuffLing", CStr(session["strSuffLing"]));
+			sqlParams.Add("@IDDOC", CInt(IDDOC));
+			sqlParams.Add("@idpfu", CInt(idpfu));
+			rs = cdf.GetRSReadFromQuery_(strSQL_ASTA, ApplicationCommon.Application.ConnectionString, sqlParams);
+		}
+		catch
+		{
+
+		}
+		if (rs is not null && rs.RecordCount > 0)
+		{
+			rs.MoveFirst();
+
+			htmlToReturn.Write($" VarStatoAsta = '{CStr(rs["StatoAsta"])}';");
+			htmlToReturn.Write($" VarStatoAstaCNV = '{CStr(rs["DescrizioneStatoAsta"])}';");
+			htmlToReturn.Write($" VarDataScadenzaAsta = '{CStr(rs["DataScadenzaAsta"])}';");
+			htmlToReturn.Write($" VarResiduo = '{CStr(rs["Residuo"])}';");
+
+			htmlToReturn.Write($" SecDurataOrig = '{CStr(rs["SecDurataOrig"])}';");
+			htmlToReturn.Write($" SecDurataAsta = '{CStr(rs["SecDurataAsta"])}';");
+
+			htmlToReturn.Write($" BaseCalcolo = {CStr(rs["BaseCalcolo"]).Replace(",", ".")};");
+			htmlToReturn.Write($" RilancioMinimo = {CStr(rs["RilancioMinimo"]).Replace(",", ".")};");
+
+			sqlParams.Clear();
+			sqlParams.Add("@IDDOC", CInt(IDDOC));
+			rs = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+			//'response.write cstr( strSQL )
+			htmlToReturn.Write($" NumeroRilanci = {rs.RecordCount};");
+			if(rs.RecordCount >0)
+			{
+				htmlToReturn.Write($@" VarRilanci  = [");
+				rs.MoveFirst();
+				while(!rs.EOF)
+				{
+					htmlToReturn.Write($"['{CStr(rs["DataRilancio"])}' , {CStr(rs["ValoreRilancio"]).Replace(",", ".")} , '{CStr(rs["aziRagioneSociale"])}', {CStr(rs["RilancioSec"])}  ],");
+					rs.MoveNext();
+				}
+				htmlToReturn.Write("['FINE',0,'FINE',0]];");
+			}
+			//'--se il tempo residuo è finito innesco chiusura asta
+			//'--questa cosa serve quando appena è finito il tempo a far aggiornare lo stato del documento offerta a video 
+			//'--perchè il servizio per la chiusura dell'asta potrebbe non essere scattato ancora
+
+			if (rs is not null && CInt(rs["Residuo"]!) <= 0)
+			{
+				sqlParams.Clear();
+				sqlParams.Add("@IdAsta", CInt(rs["IdAsta"]!));
+				sqlParams.Add("@User", CInt(session["IdPfu"]));
+				string strSql = "exec ASTA_CHIUSURA @IdAsta, @User";
+				cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection: sqlParams);
+			}
+		}
+	}
+}@Html.Raw(htmlToReturn.Out())

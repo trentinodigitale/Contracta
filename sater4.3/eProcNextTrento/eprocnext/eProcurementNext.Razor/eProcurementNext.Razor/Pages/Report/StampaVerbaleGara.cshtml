@@ -1,0 +1,276 @@
+﻿@page "/Report/StampaVerbaleGara.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.StampaVerbaleGaraModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.StampaVerbaleGaraModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+	objDoc = PrintDocument(session, htmlToReturn, HttpContext, Response, Request);//PrintDocument ok
+}
+@{
+
+	htmlToReturn.Write($@"<html>
+
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8""/>
+	<title>" + GetParamURL(Request.QueryString.ToString(), "PDF_NAME") + $@"</title>
+
+	<style>
+
+		.contenitore_stampa
+		{{
+			width:100%;
+			margin: 0 auto;
+
+		}}
+
+		table 
+		{{
+			width: 100%;
+
+		}}
+
+
+		.page-break	{{ display: block; page-break-before: always; }}
+
+	    div#footer_wrapper 
+		{{
+			margin: 0px 2px 0px 7px;
+			position: fixed;
+			bottom: 0;
+		}}
+
+		 #footer {{
+			position: fixed;
+			bottom: 0;
+			width: 100%;
+			height: 50px;
+
+		  }}
+
+		  /* Print progressive page numbers */
+		  .page-number:before {{
+			/* counter-increment: page; */
+			content: ""Pagina "" counter(page);
+		  }}		
+
+	</style>	
+
+	</head>
+
+	<body>
+
+
+	<div class=""contenitore_stampa"" >");
+
+
+	int NumPag;
+	NumPag = 0;
+
+	//'-- tolti gli stili per far vincere quelli usati nei template
+	//'<link rel="stylesheet" href="CSS/verbaledigara.css" type="text/css" media="screen,projection">
+	//'<!-- #Include File="css/verbaledigaraprint.css" -->
+
+	//'--DIV CONTENTITORE DELLA PAGINA CORRENTE
+	htmlToReturn.Write($@"<table id=""TABLE_CONTENTITORE"" align="""" style=""width: 100%; height: auto;"">" + Environment.NewLine);
+	//'Response.Write "<table  >" & vbCrLf 
+
+	//'--DISEGNO TESTATA DELLA PAGINA
+	//'Response.Write "<THEAD>"
+	//'call TestataPagina
+	//'Response.Write "</THEAD>"
+
+
+	int nr = DOC_NumRow("DETTAGLI", "");
+	if (nr >= 0) {
+
+		//'--DIV CONTENTITORE DEL CORPO DELLA PRIMA PAGINA
+		htmlToReturn.Write($@"<tr height=""100%"" width=""100%""><td id=TD_CORPO style=""height:100%; width:100%; vertical-align:top; "" >" + Environment.NewLine);
+		//'Response.Write "<tr height=""1050px"" width=""100%""><td id=TD_CORPO style=""height:1050px; width:100%; vertical-align:top; "" >" & vbCrLf 
+
+		for (int i = 0; i <= nr - 1; i++)
+		{ //to nr-1
+				//'for i = 1 to 0
+
+			//'--per tutte le sezioni selezionate
+			if (DOC_FieldRowTecnical("DETTAGLI", "SelRow", i) == "1")
+			{
+
+				string strSection = DOC_FieldRowTecnical("DETTAGLI", "DescrizioneEstesa", i);
+
+				//'--gestione del salto pagina
+				int nPosSaltoPagina = 0;
+				//'--nPosSaltoPagina=instr (1,strSection,"@@@SALTOPAGINA@@@")
+
+				if (nPosSaltoPagina > 0)
+				{
+					while (nPosSaltoPagina > 0)
+					{
+
+
+
+						//'--DISEGNO la parte che deve andare nel corpo della pagina  corrente
+						string strCurrBody = Strings.Left(strSection, nPosSaltoPagina - 1);
+						htmlToReturn.Write(strCurrBody + Environment.NewLine);
+
+						//'--CHIUSURA DIV CORPO DELLA PAGINA CORRENTE
+						htmlToReturn.Write($@"</tr>" + Environment.NewLine);
+
+
+						//'--DISEGNO PIEPAGINA
+						PiePagina();
+
+						//'--CHIUSURA DIV CONTENTITORE PAGINA CORRENTE
+						htmlToReturn.Write($@"</table>" + Environment.NewLine);
+						htmlToReturn.Write($@"</div>");
+
+						//'--INSERIMENTO SALTO PAGINA
+						SaltoPagina(htmlToReturn);
+
+						htmlToReturn.Write($@"<div class=""contenitore_stampa"" >");
+
+						//'--DIV CONTENTITORE DELLA NUOVA PAGINA
+						//'Response.Write "<table id=TABLE_CONTENTITORE align=center style=""width:25cm; margin-left:1cm; margin-right:1cm;"">" & vbCrLf 
+						htmlToReturn.Write($@"<table >");
+
+						//'--DISEGNO TESTATA DELLA NUOVA PAGINA
+						TestataPaginaSuccessive();
+
+						//'--DIV CONTENTITORE DEL CORPO DELLA NUOVA PAGINA
+						htmlToReturn.Write($@"<tr height=""1250px"" width=""100%""><td id=TD_CORPO style=""height:1250px; width:100%; vertical-align:top;"" width=""100%"">" + Environment.NewLine);
+
+						//'--DISEGNO la parte che deve andare nel corpo della NUOVA PAGINA
+						strSection = Strings.Mid(strSection, nPosSaltoPagina + 17);
+
+						nPosSaltoPagina = 0;
+						nPosSaltoPagina = Strings.InStr(1, strSection, "@@@SALTOPAGINA@@@");
+
+					}
+
+					htmlToReturn.Write(strSection + Environment.NewLine);
+
+				}
+				else
+				{
+					strSection = strSection.Replace(@"@@@SALTOPAGINA@@@", @"<div class=""page-break""></div>");
+
+					htmlToReturn.Write(strSection + Environment.NewLine);
+
+				}
+
+			}
+		}
+
+		//'--CHIUSURA DIV CORPO DELLA PAGINA CORRENTE
+		htmlToReturn.Write($@"</td></tr >" + Environment.NewLine);
+
+		//'Response.write " <TFOOT  >"
+		//'call PiePagina 
+		//'--Response.write "	<TR> <TD> TEST FINEPAGINA" & DOC_Field( "TESTATA2", "PiePagina" ) & "</td> </TR>"
+		//'Response.write "</TFOOT>"
+
+
+
+	}
+
+	//'call PiePagina 
+
+	//'--CHIUSURA DIV CONTENTITORE PAGINA CORRENTE
+	htmlToReturn.Write($@"</table >" + Environment.NewLine);
+
+
+
+	void TestataPagina() {
+
+		//'--DIV CONTENTITORE DELLA TESTATA DELLA PAGINA
+		htmlToReturn.Write($@"<tr id=TR_TESTATA>" + Environment.NewLine);
+
+		htmlToReturn.Write($@"<td id=TR_TESTATA style=""height:4cm"">");
+
+		htmlToReturn.Write(DOC_Field("TESTATA2", "Testata") + Environment.NewLine);
+
+		htmlToReturn.Write($@"</td>");
+		//'Response.write "testata 1"
+		//'Response.Write "</tr><tr><td>&nbsp;</td></tr>"& vbCrLf 
+	}
+
+	void TestataPaginaSuccessive() {
+
+		//'--DIV CONTENTITORE DELLA TESTATA DELLA PAGINA
+		htmlToReturn.Write($@"<tr id=TR_TESTATA_SUCCESSIVA>" + Environment.NewLine);
+
+		htmlToReturn.Write($@"<td id=TR_TESTATA_SUCCESSIVA style=""height:1cm"">");
+
+		htmlToReturn.Write(DOC_Field("TESTATA2", "Testata2") + Environment.NewLine);
+
+		htmlToReturn.Write($@"</td>");
+		//'Response.write "testata 2"
+		htmlToReturn.Write($@"</tr ><tr><td>&nbsp;</td></tr>" + Environment.NewLine);
+
+	}
+
+	void PiePagina(){
+
+		//'--DIV CONTENTITORE DEL PIEPAGINA DELLA PAGINA
+		htmlToReturn.Write($@"<tr id=TR_PIEPAGINA>" + Environment.NewLine);
+
+		htmlToReturn.Write($@"<td id=TD_PIEPAGINA style=""height:1.5cm"">");
+
+		if (DOC_Field( "TESTATA2", "PiePagina" ) == "@@@footer@@@") {
+			footer();
+		}else{
+			htmlToReturn.Write(DOC_Field("TESTATA2", "PiePagina") + Environment.NewLine);
+		}
+		htmlToReturn.Write($@"</td>");
+		htmlToReturn.Write($@"</tr >" + Environment.NewLine);
+
+	}
+
+	void footer(){
+
+		NumPag = NumPag + 1;
+		htmlToReturn.Write($@"<table width=""100%"" height=""10px"" style=""vertical-align: bottom; bottom: 0px""> ");
+		htmlToReturn.Write($@"  <tr><td valign=""bottom"" align=""right"" >");
+		htmlToReturn.Write($@"<br>");
+		htmlToReturn.Write($@"                Pag. " + NumPag);
+		htmlToReturn.Write($@"       </td>");
+		htmlToReturn.Write($@" </tr>");
+		htmlToReturn.Write($@"    </table>");
+
+	}
+
+
+
+		htmlToReturn.Write($@"</body>
+	</html>");
+
+
+
+
+	//'-- Testo aggiunto in automatico per liberare la memoria dei nuovi report
+
+	try
+	{
+		FreeMemDocument(session);
+	}
+	catch
+	{
+
+	}
+
+
+
+}
+@Html.Raw(htmlToReturn.Out())

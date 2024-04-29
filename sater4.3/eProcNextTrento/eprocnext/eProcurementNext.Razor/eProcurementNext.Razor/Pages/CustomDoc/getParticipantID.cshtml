@@ -1,0 +1,106 @@
+﻿@page "/CustomDoc/getParticipantID.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.getParticipantIDModel;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@model eProcurementNext.Razor.Pages.CustomDoc.getParticipantIDModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	string tipo = GetParamURL(Request.QueryString.ToString(), "tipo").ToUpper();
+	string cod = GetParamURL(Request.QueryString.ToString(), "cod").Trim();
+	string ente_ext = GetParamURL(Request.QueryString.ToString(), "ente_ext");
+	string rag_soc = GetParamURL(Request.QueryString.ToString(), "rag_soc");
+
+	//'*******************************************
+	//'*****  VALIDAZIONE DELL'INPUT UTENTE  *****
+	//'*******************************************
+
+	validate("tipo", tipo.Replace(":", ""), TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	string strSQL = "";
+	TSRecordSet? rs = null;
+	string pid = string.Empty;
+	if(ente_ext == "1")
+	{
+		var SqlParameters = new Dictionary<string, object?>();
+		SqlParameters.Add("@ipdfu", CInt(session["idpfu"]));
+		SqlParameters.Add("@nome", "CodiceIPA_Notier");
+		SqlParameters.Add("@id_PDA", cod);
+		//'-- l'insieme base è dato da tutti gli id peppol associati ai codici IPA collegati all'utente collegato
+		strSQL = @"select d.ID_PEPPOL 
+							from ProfiliUtenteAttrib p1 with(nolock)
+							inner join Document_NoTIER_Destinatari d with(nolock) on d.ID_IPA = p1.attValue and d.bDeleted = 0 
+							where p1.IdPfu = @ipdfu and p1.dztNome = @nome";
+		if(tipo == "IT:IPA" && !string.IsNullOrEmpty(cod))
+		{
+			//'-- dei possibili N uffici ne recuperiamo solo 1
+			strSQL = $"{strSQL} and d.ID_IPA = @id_PDA";
+		}
+		rs = cdf.GetRSReadFromQuery_(strSQL,ApplicationCommon.Application.ConnectionString, SqlParameters);
+		if(rs.RecordCount >0)
+		{
+			rs.MoveFirst();
+
+			pid = string.Empty;
+			while(!rs.EOF)
+			{
+				pid = $"{pid}{CStr(rs["ID_PEPPOL"])}###";
+				rs.MoveNext();
+			}
+			pid = Left(pid, pid.Length - 3);
+			htmlToReturn.Write(pid.ToUpper());
+			//'else
+			//'
+			//'	strSQL = "select vatValore_FT as ID_PEPPOL from DM_Attributi with(nolock) where lnk = " & cstr(session("ICodeAzi")) & " and dztNome = 'PARTICIPANTID' and idApp = 1"
+			//'	set rs =  objdb.GetRSReadFromQuery( cstr(strSql ) , cstr(Application("ConnectionString")) )
+			//'	
+			//'	pid = ""
+			//'	
+			//'	if rs.recordcount > 0 then
+			//'	
+			//'		rs.movefirst
+			//'		
+			//'		pid = pid & cstr(rs("ID_PEPPOL")) & "###"
+			//'		response.write ucase(pid)
+			//'	
+			//'	end if
+		}
+		else
+		{	
+			var SqlParameters1 = new Dictionary<string, object?>();
+			SqlParameters1.Add("@cod", cod);
+			string strSql = string.Empty;
+			if(tipo == "IT:VAT" )
+			{
+				strSql = "select vatValore_FT as pid,aziRagioneSociale from aziende with(nolock) inner join DM_Attributi with(nolock) on lnk = idazi and dztNome = 'PARTICIPANTID' and ltrim(rtrim(isnull(vatValore_FT,''))) <> '' where aziPartitaIVA = @cod and aziDeleted = 0";
+			}
+			else
+			{
+				//'--IT:CF
+				strSql = "select c.vatValore_FT as pid, a.aziRagioneSociale from aziende a with(nolock) inner join DM_Attributi b with(nolock) on b.lnk = a.idazi and b.dztNome = 'codicefiscale' inner join DM_Attributi c with(nolock) on c.lnk = a.idazi and c.dztNome = 'PARTICIPANTID' and ltrim(rtrim(isnull(c.vatValore_FT,''))) <> '' where b.vatValore_FT = @cod and aziDeleted = 0";
+			}
+			rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, SqlParameters1);
+			if(rs.RecordCount >0)
+			{
+				rs.MoveFirst();
+				pid = CStr(rs["pid"]);
+				string ragSoc = CStr(rs["aziRagioneSociale"]);
+				htmlToReturn.Write($"{(pid).Trim().ToUpper()}###{CStr(ragSoc)}");
+			}
+		}
+	}
+}
+@Html.Raw(htmlToReturn.Out())

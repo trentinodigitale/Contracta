@@ -1,0 +1,50 @@
+﻿@page "/alertRedirect"
+@*@using eProcurementNext.Razor.Enums;*@
+@using eProcurementNext.Razor.Pages.Functions;
+@model eProcurementNext.Razor.Pages.CheckSessionRedirect
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+    LoadSession(HttpContext, session);
+
+    var strType = HttpContext.Request.Query["type"];
+    string message = "";
+    string href = "";
+
+    int type = -1;
+    int.TryParse(strType, out type);
+
+    // codice non più compilato perchè dipende
+    // da altri metodi non più compilati
+    #if false 
+    switch (type)
+    {
+        case (int)CheckSessionRedirectType.ExitExpired:
+            message = CTL_LIBRARY.functions.CheckSessionModel.ExitExpiredRedirectMessage();
+            href = CTL_LIBRARY.functions.CheckSessionModel.ExitExpiredRedirectHref(session);
+            MainGlobalAsa.SessionAbandon(session);
+            break;
+        case (int)CheckSessionRedirectType.ExitDos:
+            message = CTL_LIBRARY.functions.CheckSessionModel.ExitDosRedirectMessage();
+            href = CTL_LIBRARY.functions.CheckSessionModel.ExitDosRedirectHref();
+            MainGlobalAsa.SessionAbandon(session);
+            break;
+        case (int)CheckSessionRedirectType.ExitMultiSession:
+            message = CTL_LIBRARY.functions.CheckSessionModel.ExitMultiSessionRedirectMessage();
+            href = CTL_LIBRARY.functions.CheckSessionModel.ExitMultiSessionRedirectHref();
+            MainGlobalAsa.SessionAbandon(session);
+            break;
+        default:    // TODO cosa fare qui
+            break;
+    }
+    #endif
+}
+
+<script type="text/javascript">
+	@{
+	<text>
+	alert(@(message));
+	window.location.href = '@(href)';
+	</text>
+	}
+</script>

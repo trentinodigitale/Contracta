@@ -1,0 +1,7 @@
+﻿<STATIC15 desc="Informazioni Aggiuntive" type="Static" />
+<HR6 desc="HR6" type="HR" />
+<APPALTO_VERDE desc="Appalto Verde" type="Domain" />
+<MOTIVAZIONE_APPALTO_VERDE desc="Motivazione Appalto Verde" type="TextArea" />
+<ACQUISTO_SOCIALE desc="Appalto Sociale" type="Domain" />
+<MOTIVAZIONE_ACQUISTO_SOCIALE desc="Motivazione Appalto Sociale" type="TextArea" />
+<MERCEOLOGIA desc="Merceologia" type="Domain" />

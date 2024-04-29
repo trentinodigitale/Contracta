@@ -1,0 +1,67 @@
+﻿@page "/SSO/checksso.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using Microsoft.VisualBasic;
+@using System.Globalization
+@model eProcurementNext.Razor.Pages.SSO.CheckssoModel;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse();
+}
+@{
+
+	//'-------------------------------------------------------------------------------------------------------------------------------------------------------
+	//'---- QUESTA PAGINA DEVE ESSERE INVOCATA SOLO DOPO AVER EFFETTUATO UN LOGIN SPID CON SUCCESSO VERIFICANDO LA PRESENZA DELLO SPID CODE IN SESSIONE ------
+	//'-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	string attivaAccessoSSO = Strings.UCase(CStr(ApplicationCommon.Application["ATTIVA_SSO"]));
+
+	//'-- PER LA FASE DI SVILUPPO
+	//'attivaAccessoSSO = "YES"
+
+	//'-- PER I CLIENTI SENZA L'INTEGRAZIONE SPID ATTIVA BLOCCHIAMO SUBITO
+	if (attivaAccessoSSO != "YES") {
+
+		htmlToReturn.Write("ACCESSO DISABILITATO");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "ACCESSO DISABILITATO");
+	}
+
+	string OtpToken = GetParamURL(Request.QueryString.ToString(), "otptoken");
+
+	if (string.IsNullOrEmpty(OtpToken)) {
+		htmlToReturn.Write("ACCESSO NON CONSENTITO.ERRORE NEL RECUPERO DEL TOKEN OTP");
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "ACCESSO NON CONSENTITO.ERRORE NEL RECUPERO DEL TOKEN OTP");
+	}
+
+	validate("otptoken", OtpToken, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	//on error resume next
+	Dictionary<string, dynamic?> parColl = new();
+	parColl.Add("@OtpToken", OtpToken);
+	TSRecordSet rsTOKEN;
+	string strSQL = "SELECT cf, token from CTL_SSO_TOKENS with(nolock) where token = @OtpToken and DATEDIFF(SECOND, created, GETDATE()) < 10; DELETE FROM CTL_SSO_TOKENS where token = @OtpToken";
+	CommonDbFunctions cdf = new();
+	rsTOKEN = cdf.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, parColl);
+
+	//'-- nel caso sia ritornato un solo utente si accede direttamente
+	if (rsTOKEN.RecordCount == 1) {
+		rsTOKEN.MoveFirst();
+		session["SPID_FISCALNUMBER"] = rsTOKEN["cf"];
+		session["SPID_OTP"] = rsTOKEN["token"];
+
+		//set rsTOKEN = nothing
+		throw new ResponseRedirectException("../spid/loginsso.asp?lo=lista_attivita", Response);
+	} else {
+		htmlToReturn.Write("TOKEN NON VALIDO O SCADUTO");
+	}
+
+
+}
+@Html.Raw(htmlToReturn.Out())

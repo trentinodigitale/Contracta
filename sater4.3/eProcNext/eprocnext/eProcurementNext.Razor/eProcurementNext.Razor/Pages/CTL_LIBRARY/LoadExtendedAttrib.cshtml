@@ -1,0 +1,217 @@
+﻿@page "/CTL_LIBRARY/LoadExtendedAttrib.asp"
+@inject eProcurementNext.Session.ISession session;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.getDomValueModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.trace_in_log_utenteModel;
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic;
+@using System.Web
+@using static eProcurementNext.Session.SessionMiddleware
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.loadExtendedAttribModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+
+	IFormCollection? Request_Form = null;
+	if (HttpContext.Request.HasFormContentType)
+	{
+		Request_Form = HttpContext.Request.Form;
+	}
+	//'-- recupero il Filter prima dal form. se non lo trovo passo a recuperarlo dalla querystring
+	string strFilter = GetValueFromForm(Request, "FILTER");
+	if (string.IsNullOrEmpty(strFilter))
+	{
+		strFilter = GetParamURL(Request.QueryString.ToString(), "Filter").Trim();
+	}
+	string IdDomain = GetParamURL(Request.QueryString.ToString(), "IdDomain");
+	string Attrib = GetParamURL(Request.QueryString.ToString(), "Attrib");
+	string Format = GetParamURL(Request.QueryString.ToString(), "Format");
+	string Editable = GetParamURL(Request.QueryString.ToString(), "Editable");
+
+	validate( "IdDomain",IdDomain , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate( "Attrib", Replace(Replace(Attrib,"(","_"),")","_") , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate( "Format", Format , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+	validate( "Editable", Editable , TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_TABLE, "", 0, HttpContext, session);
+
+	//'-- SE nel parametro filter c'è un sql_where
+	if (Left(strFilter, 10).ToUpper() == "SQL_WHERE=")
+	{
+		strFilter = MidVb6(strFilter, 11);
+		validate( "Filter",strFilter, TIPO_PARAMETRO_STRING, SOTTO_TIPO_PARAMETRO_FILTROSQL, "", 0, HttpContext, session);
+	}
+
+	//Response.CodePage = 65001
+
+	htmlToReturn.Write("<html>");
+	htmlToReturn.Write("<head>");
+
+	htmlToReturn.Write($@"<meta http-equiv=""X-UA-Compatible"" content=""IE=9; IE=8; IE=7; IE=EDGE""/>");
+
+	htmlToReturn.Write($@"    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">");
+	if (!Response.Headers.ContainsKey("X-XSS-Protection"))
+	{
+		Response.Headers.Add("X-XSS-Protection", "0");
+	}
+
+	string versioneAflink = "";
+	versioneAflink = HttpUtility.UrlEncode(CStr(ApplicationCommon.Application["VERSIONE_AFLINK"]));
+
+	htmlToReturn.Write($@"
+	<link rel=""stylesheet"" href=""jscript/jquery/jquery-ui.css?v={versioneAflink}"" />
+	<link rel=""stylesheet"" href=""Themes/bootstrap.css?v={versioneAflink}"" type=""text/css"">
+	<link rel=""stylesheet"" href=""Themes/bodyExtField.css?v={versioneAflink}"" type=""text/css"">
+	<link rel=""stylesheet"" href=""Themes/field.css?v={versioneAflink}"" type=""text/css"">
+	<link rel=""stylesheet"" href=""Themes/main_base.css?v={versioneAflink}"" type=""text/css"" media=""screen,projection""/> 
+
+	<style>
+		#loading 
+		{{
+			background: white url(images/ajax-loading_big.gif) no-repeat center center;
+			height: 100%;
+			width: 100%;
+			position: fixed;
+			left: 0px;
+			top: 0px;
+			margin: 0 0 0 0;
+			z-index: 1000;
+		}}
+		#tree
+		{{
+			display:none;
+			height:65%;
+		}}
+		#lazy_loading
+		{{
+			margin: 30px;
+			background-color: grey;
+			border: 1px solid black;
+			opacity: 0.8;
+			height: 100%;
+			width: 100%;
+			position: fixed;
+			left: 0px;
+			top: 0px;
+			margin: 0 0 0 0;
+			z-index: 1000;
+			vertical-align: middle;
+			padding: 200 0 0 0;
+		}}
+
+	</style>
+
+	<div id=""loading""></div>
+	<div id=""lazy_loading"" style=""display:none""></div>
+
+	");
+
+	if (CStr(session["HomePageLight"]) == "1")
+	{ 
+		htmlToReturn.Write($@"<script>var BrowseInPage=1;</script>" + Environment.NewLine);
+	}
+	else
+	{
+		htmlToReturn.Write($@"<script>var BrowseInPage=0;</script>" + Environment.NewLine);
+	}
+
+	//'-- avvio pagina
+	string[] v = "ctlDB.LoadExtendedAttrib".Split(".");
+
+	//dim ObjSession
+
+	//ObjSession = session("Session")
+	//set ObjSession(0) = Request.QueryString
+	//set ObjSession(1) = Request.form
+
+	//'-- Passiamo di nuovo anche la request all'indice 3 per permettere alla classe ctldb.blacklist di recuperare l'ip
+	//set ObjSession(3) = request
+	//set ObjSession(5) = session
+	//set ObjSession(6) = application
+	//ObjSession(9) = application("Server_RDS")
+	//ObjSession(10) = session("Funzionalita")' permessi utenti
+
+	//set ObjSession(13) = objNewDizMlng("MultiLinguismo")
+
+	//dim Objects
+	//dim objDB
+
+	LoadExtendedAttrib Objects = new LoadExtendedAttrib(context: HttpContext, session);
+	//set Objects = server.createobject(ProgID)
+
+	//dim objAttivaGlobal
+	//set objAttivaGlobal = server.createObject("ctldb.clsTabManage")
+
+	//EprocNext.CommonDB.CommonDbFunctions.setProfilerDB( cstr( ApplicationCommon.Application["ATTIVA_DB_PROFILER"] ) )//TODO: da implementare?
+	//EprocNext.CommonDB.CommonDbFunctions.setGlobalConnectionString( cstr(ApplicationCommon.Application["ConnectionString"]) )//TODO: da implementare?
+	//err.clear 
+	try
+	{
+		Objects.run(htmlToReturn); 
+		if (GetParamURL(Request.QueryString.ToString(),"ajax") != "1")
+		{
+			//'-- chiusura pagina
+			htmlToReturn.Write("</body>");
+			htmlToReturn.Write("</html>");
+		}
+
+		traceInLogUtente(1, "ServerPage(  )", "TerminatePage. QueryString:" + GetQueryStringFromContext(Request.QueryString), HttpContext, session);
+	}
+	catch(Exception ex)
+	{
+		//'-- gestione errore
+
+		int n = 1;//ex.number;
+		int s = 1;//ex.source
+		int d = 1;//ex.description
+
+		//'-- Scriviamo l'errore nell'event viewer
+		eProcurementNext.CommonDB.Basic.TraceErr(ex,ApplicationCommon.Application["ConnectionString"],"CTLDB.UpdateFieldVisual");
+
+		traceInLogUtente(0, "ServerPage()", "Descrizione:" + ex.Message + " --- QueryString:" + GetQueryStringFromContext(Request.QueryString),HttpContext,session);
+		htmlToReturn.Clear();
+
+		htmlToReturn.Write("<html>");
+		htmlToReturn.Write("<head>");
+
+		if (IsEmpty( ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] ) || ApplicationCommon.Application["DISATTIVA_MODALE_MULTIVALORE"] == "0" ){
+			htmlToReturn.Write($@"<meta http-equiv=""X-UA-Compatible"" content=""IE=8"">");
+		}
+
+		htmlToReturn.Write($@"    <meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">");
+		if(!Response.Headers.ContainsKey("X-XSS-Protection")){
+			Response.Headers.Add("X-XSS-Protection", "0");
+		}
+
+		htmlToReturn.Write("</head><body>");
+
+		//'-- Se � attiva la modalit� debug visualizziamo pi� informazioni riguardo l'errore, query sql comprese
+		if ((CStr(ApplicationCommon.Application["debug-mode"]).ToLower() == "yes") || (CStr(ApplicationCommon.Application["debug-mode"]).ToLower() == "si") || (CStr(ApplicationCommon.Application["debug-mode"]) == "true"))
+		{
+			htmlToReturn.Write("object:" + "ctlDB.LoadExtendedAttrib" + " <br> " + "Desc:" + d + " <br> " +  "Number:" + n + " <br> " +  "Source:" + s);
+		}
+		else
+		{
+			//'-- Se � disattivato il debug-mode ma � attiva ma la SYS di visione degli errori tecnici 
+			if (CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "yes" || CStr(ApplicationCommon.Application["dettaglio-errori"]).ToLower() == "si") 
+			{
+				htmlToReturn.Write( "object:" + "ctlDB.LoadExtendedAttrib" + " <br> " + "Desc:" + d + " <br> " +  "Number:" + n + " <br> " +  "Source:" + s);
+			}
+			else
+			{
+				htmlToReturn.Write(ApplicationCommon.Application["INFO_UTENTE_ERRORE_PROCESSO"] + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+			}
+		}
+
+		htmlToReturn.Write("</body>");
+		htmlToReturn.Write("</html>");
+	}
+
+	htmlToReturn.Write($@" 
+			<script language=""javascript""> 
+				var msgEsito_Vuoto = ' " + ApplicationCommon.CNV("Non sono stati trovati elementi. Ripetere la ricerca.", session) + @"';
+			</script>");
+}
+@Html.Raw(htmlToReturn.Out())

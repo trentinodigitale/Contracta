@@ -1,0 +1,77 @@
+﻿@page "/Functions/errore.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonModule
+@using Microsoft.VisualBasic;
+@using System.Web
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.CommonModule.Basic;
+@using static eProcurementNext.Razor.Pages.Functions.costanti;
+@using eProcurementNext.CommonDB;
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new CommonDbFunctions();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new EprocResponse(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	Response.Headers.TryAdd("Pragma", "no-cache");
+
+	htmlToReturn.Write($@"
+		<link rel=""stylesheet"" href=""../CTL_LIBRARY/Themes/main.css"" type=""text/css"">
+		<HTML>
+		<HEAD>
+		<meta http-equiv=""Content-Type"" content=""text/html;charset=UTF-8"">
+		<TITLE>" + ApplicationCommon.CNV("Errore") + $@"</TITLE>
+		</HEAD>
+		<BODY  >
+
+		<table class=""MsgBox"" width=""100%"" height=""100%"" style=""margin-top:50px;"">
+
+			<tr >
+				<td valign=""middle"" align=""center"" >
+					<table   width=100% height=auto   class=""MsgBox_Caption"">
+						<tr>
+						<td valign=""top"" align=""center"" wrap >
+	");
+
+	htmlToReturn.Write( ApplicationCommon.CNV("Attenzione"));
+	htmlToReturn.Write($@"
+
+						</td> 
+						</tr>
+					</table>
+				</td>
+			</tr>
+
+			<tr>
+				<td>
+				<table cellspacing=""0"" cellpadding=""0"" border=""0"">
+					<tbody>
+					<tr>
+						<td valign=""middle"" align=""center"">
+						<img alt="""" src=""../CTL_Library/images/MsgBox/err.gif"">
+						</td>
+						<td class=""MsgBox_Message"" valign=""middle"" align=""center"">
+
+	");
+	string strCaption = "INFO_UTENTE_ERRORE_PROCESSO";
+	htmlToReturn.Write(ApplicationCommon.CNV(strCaption) + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+	htmlToReturn.Write($@"
+
+						</td>
+					</tr>
+				</table>
+				</td>
+			</tr>
+
+
+		</table>
+		</BODY>
+		</HTML>
+		
+	");
+
+}
+@Html.Raw(htmlToReturn.Out())

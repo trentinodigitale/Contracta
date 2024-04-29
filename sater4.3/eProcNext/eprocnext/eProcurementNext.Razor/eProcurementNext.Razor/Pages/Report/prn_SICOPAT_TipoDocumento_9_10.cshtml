@@ -1,0 +1,186 @@
+﻿@page "/Report/prn_SICOPAT_TipoDocumento_9_10.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.print_documentModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.DOCUMENT.CommonModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.Report.StampaVerbaleGaraModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.Report.prn_SICOPAT_TipoDocumento_9_10Model
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	LoadSession(HttpContext, session);
+
+	EprocResponse htmlToReturn = new();
+	CommonDbFunctions cdf = new();
+	TSRecordSet rs = new();
+	var sqlParams = new Dictionary<string, object?>();
+
+}
+
+@{
+
+	string id = GetParamURL(Request.QueryString.ToString(), "IDDOC");
+
+	validate("IDDOC", id, TIPO_PARAMETRO_INT, SOTTO_TIPO_VUOTO, "", 1, HttpContext, session);
+
+	htmlToReturn.Write($@"
+	<html>
+	<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8"">
+
+	<link rel=""stylesheet"" type=""text/css"" href=""../ctl_library/themes/GridPrint.css""  />
+
+
+	<style>
+
+		.contenitore_stampa
+		{{
+			width:950px ;
+			margin: 0 auto ;
+
+		}}
+
+		table
+		{{
+			width: 100%;
+
+		}}
+
+
+		.page-break	{{ display: block; page-break-before: always; }}
+
+	    div#footer_wrapper
+		{{
+			margin: 0px 2px 0px 7px;
+			position: fixed;
+			bottom: 0;
+		}}
+
+		 #footer {{
+			position: fixed;
+			bottom: 0;
+			width: 100%;
+			height: 50px;
+
+		  }}
+
+		  /* Print progressive page numbers */
+		  .page-number:before {{
+			/* counter-increment: page; */
+			content: ""Pagina "" counter(page);
+		  }}
+
+
+		.size1
+		{{
+			FONT-SIZE: 12pt;
+			FONT-FAMILY: Arial
+		}}
+
+
+		.display_none
+		{{
+			display: none;
+
+		}}
+	</style>
+
+
+
+	<title>Provvedimento per eventuali esclusioni</title>
+	</head>");
+
+	htmlToReturn.Write($@"<body>
+	<div class=""contenitore_stampa"" >
+	<!-- Header lo produce in automatico con la vista la chiamata al pdf per ogni pagina
+	<table style=""font-weight:bold; align=center; vertical-align:center;"" width=""100%"" >
+
+	</table>-->
+	<br>
+	<br>
+
+	<!-- Fornitore -->");
+
+	TSRecordSet rsAzi = null;
+	sqlParams.Clear();
+	sqlParams.Add("@id", id);
+	rsAzi = cdf.GetRSReadFromQuery_("select	a.aziragionesociale,a.aziIndirizzoLeg,a.aziE_Mail,dm.vatValore_FT,comG.Note, a.aziPartitaIVA, comG.Body, comG.ProtocolloRiferimento from CTL_DOC i with(nolock)	INNER JOIN CTL_DOC_Value AS iv with(nolock) on iv.IdHeader = i.id and DSE_ID = 'SICOPAT' and DZT_Name = 'ID_Comunicazione' inner join CTL_DOC comG with(nolock) on comG.Id = iv.Value inner	join aziende a with(nolock) on comG.Destinatario_Azi = a.IdAzi inner join dm_attributi dm with(nolock) on dm.lnk = a.idazi and  dztNome = 'codicefiscale' where i.Id =  @id", ApplicationCommon.Application.ConnectionString, sqlParams);
+	htmlToReturn.Write($@"<table border=""0""  width=""100%""  >
+				<tr>
+					<td width=""70%"">&nbsp;
+	</td>
+					<td align=""left"" ><b><font class=""size1"">
+						Spett.le Operatore Economico<br></b>"
+		+ rsAzi.Fields["aziragionesociale"] + $@"<br>"
+		+ rsAzi.Fields["aziIndirizzoLeg"] + $@"<br>C.F."
+		+ rsAzi.Fields["vatValore_FT"] + $@" - P.IVA" + rsAzi.Fields["aziPartitaIVA"] + $@"<br> PEC"
+		+ rsAzi.Fields["aziE_Mail"] + $@"<br>
+
+						</font>
+					</td>
+				</tr>
+			</table>
+
+			<br>
+			<br>
+
+	<table cellpadding=0 cellspacing=0>
+		 <thead>
+
+
+
+    	<tr><td>&nbsp;</td></tr>
+
+		<tr>
+    	  <td nowrap style=""font-size:18px; align=left""><b>Oggetto:</b>" + rsAzi.Fields["Body"] + $@"- <b>Protocollo di Riferimento:</b>" + rsAzi.Fields["ProtocolloRiferimento"] + $@"</td>
+    	</tr>
+		<tr><td>&nbsp;</td></tr>
+		<tr>
+    	  <td nowrap style=""font-size:18px; align=left""><b>Testo della Comunicazione:</b></td>
+    	</tr>
+		<tr>
+    	  <td>" + rsAzi.Fields["Note"] + $@"</td>
+    	</tr>
+
+		<tr><td>&nbsp;</td></tr>
+
+
+
+        <tr><td>&nbsp;</td></tr>
+        <tr ><td style=""border:0px;"" ><label style=""font-size:18px; font-weight:bold; align:left"">
+
+        <tr><td>&nbsp;</td></tr>
+        </thead>
+
+     </table>
+	<br/><br/><br/>
+
+	<table border=""0""  width=""100%""  >
+				<tr>
+
+					<td align=""left"" width=""80%"">&nbsp;</td>
+					<td align=""center"" nowrap>
+						<b><font class=""size1"">
+
+						F.to Il Dirigente</b><br>
+
+
+
+						</font>
+
+					</td>
+					<td align=""left"" width=""10%"">&nbsp;</td>
+
+				</tr>
+			</table>
+
+
+	</body>
+	</html>");
+}@Html.Raw(htmlToReturn.Out())

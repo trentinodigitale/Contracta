@@ -1,0 +1,54 @@
+﻿@page "/CustomDoc/EXAMPLE_TEMPLATE_REQUEST_GROUP.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.verificaBrowserModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.securityModel;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.initialize_ComponentModel;
+@using static eProcurementNext.Razor.Pages.CustomDoc.EXAMPLE_TEMPLATE_REQUEST_GROUPModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.EXAMPLE_TEMPLATE_REQUEST_GROUPModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	htmlToReturn.Write($@"<style>
+	.ui-tooltip {{
+
+		padding: 4px;
+		position: absolute;
+		z-index: 9999; 
+		-webkit-box-shadow: 0 0 5px #aaa;
+		box-shadow: 0 0 5px #aaa;
+		width:inherit;
+		max-width:inherit;
+		background:#FFFFF2;
+
+		font-size: 0.8em;
+		line-height: 1;
+		font-family: ""Lucida Sans Unicode"", ""Lucida Grande"", sans-serif;
+
+				text - align: left;
+
+			}}
+	</style>");
+	string IDMODULO = GetParamURL(Request.QueryString.ToString(), "IDMODULO");
+
+	validate("IDMODULO", IDMODULO, TIPO_PARAMETRO_INT, 0, "", 0, HttpContext, session);
+
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@IDMODULO", CInt(IDMODULO));
+	TSRecordSet rs = cdf.GetRSReadFromQuery_("select [dbo].[GetHtmlModuloRequest] ( @IDMODULO, 'TEST' , 0, '', '') as html", ApplicationCommon.Application.ConnectionString, sqlParams);
+	if (rs is not null && rs.RecordCount > 0)
+	{
+		htmlToReturn.Write(CStr(rs["html"]));
+	}
+}
+@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,28 @@
+﻿@page "/CTL_LIBRARY/GetRelVal.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.HTML.BasicFunction;
+@using static eProcurementNext.Session.SessionMiddleware
+@using Microsoft.VisualBasic	
+@model eProcurementNext.Razor.Pages.CTL_LIBRARY.GetRelValModel
+@{
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	var sqlParams = new Dictionary<string, object?>();
+	sqlParams.Add("@reltype", GetParamURL(Request.QueryString.ToString(), "REL_Type"));
+	sqlParams.Add("@relValueinput", GetParamURL(Request.QueryString.ToString(), "REL_ValueInput"));
+	string strSQL = "select REL_ValueOutput from CTL_Relations where REL_Type = @reltype and REL_ValueInput = @relValueinput ";
+	CommonDbFunctions cdb = new();
+	TSRecordSet rs = cdb.GetRSReadFromQuery_(strSQL, ApplicationCommon.Application.ConnectionString, sqlParams);
+	if(rs.RecordCount >0)
+	{
+		htmlToReturn.Write(CStr(rs["REL_ValueOutput"]));
+	}
+}@Html.Raw(htmlToReturn.Out())

@@ -1,0 +1,40 @@
+﻿<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xb="xmlbeans.massload.simog.avlp.it">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <xb:@@@METODO_SOAP@@@>
+      <ticket>@@@TICKET@@@</ticket>
+      <indexCollaborazione>@@@INDEX@@@</indexCollaborazione>
+      @@@ID_GARA_PER_MODIFICA@@@
+      <datiGara>
+        <DatiGara
+          xb:OGGETTO="@@@OGGETTO@@@"
+          xb:ID_STAZIONE_APPALTANTE="@@@ID_STAZIONE_APPALTANTE@@@"
+          xb:DENOM_STAZIONE_APPALTANTE="@@@DENOM_STAZIONE_APPALTANTE@@@"
+          xb:CF_AMMINISTRAZIONE="@@@CF_AMMINISTRAZIONE@@@"
+          xb:DENOM_AMMINISTRAZIONE="@@@DENOM_AMMINISTRAZIONE@@@"
+          xb:CF_UTENTE="@@@CF_UTENTE@@@"
+          xb:IMPORTO_GARA="@@@IMPORTO_GARA@@@"
+          xb:TIPO_SCHEDA="@@@TIPO_SCHEDA@@@"
+          xb:MODO_REALIZZAZIONE="@@@MODO_REALIZZAZIONE@@@"
+          @@@CIG_ACC_QUADRO@@@
+          xb:NUMERO_LOTTI="@@@NUMERO_LOTTI@@@"
+          xb:ESCLUSO_AVCPASS="@@@ESCLUSO_AVCPASS@@@"
+          xb:URGENZA_DL133="@@@URGENZA_DL133@@@"
+          @@@MOTIVAZIONE_CIG@@@
+          @@@STRUMENTO_SVOLGIMENTO@@@
+          @@@ESTREMA_URGENZA@@@
+          @@@MODO_INDIZIONE@@@
+          @@@ALLEGATO_IX@@@
+          @@@DURATA_ACCQUADRO_CONVENZIONE@@@
+		  xb:FLAG_SA_AGENTE_GARA="N"
+          >
+
+          <CATEGORIE_MERC>
+            @@@CATEGORIE@@@
+          </CATEGORIE_MERC>
+
+        </DatiGara>
+      </datiGara>
+    </xb:@@@METODO_SOAP@@@>
+  </soapenv:Body>
+</soapenv:Envelope>

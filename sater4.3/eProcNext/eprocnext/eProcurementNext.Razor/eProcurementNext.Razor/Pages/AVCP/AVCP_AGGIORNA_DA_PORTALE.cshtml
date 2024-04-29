@@ -1,0 +1,97 @@
+﻿@page "/AVCP/AVCP_AGGIORNA_DA_PORTALE.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using Microsoft.VisualBasic;
+@using static eProcurementNext.Razor.Pages.CTL_LIBRARY.functions.intestModel;
+@model eProcurementNext.Razor.Pages.AVCP.AVCP_AGGIORNA_DA_PORTALEModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new(GetParamURL(HttpContext.Request.QueryString.ToString(), "XML_ATTACH_TYPE"));
+}
+@{
+	htmlToReturn.Clear();
+	string ente = string.Empty;
+	string anno = string.Empty;
+	string strSql = string.Empty;
+	TSRecordSet? rs = null;
+	ente = GetParamURL(Request.QueryString.ToString(), "ENTE");
+	anno = GetParamURL(Request.QueryString.ToString(), "ANNO");
+	var sqlParams = new Dictionary<string, object?>();
+
+	if( GetParamURL(Request.QueryString.ToString(), "LFN_CONDITION") == "YES" && !string.IsNullOrEmpty(ente))
+	{
+		sqlParams.Add("@funzionale", "Pubblicato");
+		sqlParams.Add("@ente", ente);
+		//'se ci sono warning sulle gare di quell'ente li disabilito entrambi
+		strSql = @"select * from CTL_DOC with(nolock) 
+						inner join document_AVCP_lotti with(nolock) on idheader=Id and cast(Warning as varchar(8000)) <> '' 
+						where deleted = 0 and TipoDoc in ('AVCP_LOTTO','AVCP_GARA')
+						and statoFunzionale = @funzionale and Azienda= @ente";
+		rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rs.RecordCount >0)
+		{
+			htmlToReturn.Write("Warning");
+			throw new ResponseEndException(htmlToReturn.Out(), Response,"");
+		}
+		//'se non ci sta il doc di Config per l'ente disabilito Download_XML_Da_Pubblicare
+		sqlParams.Clear();
+		sqlParams.Add("@tipoDoc", "AVCP_CONFIG");
+		sqlParams.Add("@funzionale", "Pubblicato");
+		sqlParams.Add("@ente", ente);
+		strSql = @"select * from CTL_DOC with(nolock) where deleted = 0 and statoFunzionale = @funzionale 
+						 and TipoDoc = @tipoDoc and Azienda=@ente";  
+		//'response.write strSql
+		//'response.end
+		rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+		if (rs is null || rs.RecordCount == 0)
+		{
+			htmlToReturn.Write("Download_XML_Da_Pubblicare_Disabled");
+			throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		}
+		//'se non ci sta il doc di Config per l'ente ed il percorso di rete associato disabilito  Pubblicazione_XML
+		strSql = @"select * from CTL_DOC c with(nolock) 
+						inner join Document_AVCP_CONFIG with(nolock) on idheader=C.Id and ISNULL(PercorsodiRete,'') <> '' 
+						where deleted = 0 and statoFunzionale = @funzionale  and TipoDoc = @tipoDoc and azienda= @ente";
+		htmlToReturn.Write(strSql);
+		throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+		try
+		{
+			rs = cdf.GetRSReadFromQuery_(strSql, ApplicationCommon.Application.ConnectionString, sqlParams);
+			if(rs is null && rs.RecordCount == 0)
+			{
+				htmlToReturn.Write("Pubblicazione_XML_Disabled");
+				throw new ResponseEndException(htmlToReturn.Out(), Response, "");
+			}
+		}
+		catch (Exception ex)
+		{
+
+			throw new Exception("Errore durante l'esecuzione della Stored.");
+			//ShowError( "Errore durante l'esecuzione della Stored.");	
+		}
+	}
+	if(GetParamURL(Request.QueryString.ToString(), "UPDATE") == "YES")
+	{
+		sqlParams.Clear();
+		sqlParams.Add("@anno", CInt(anno));
+		sqlParams.Add("@ente", ente);
+		strSql = "Exec AVCP_POPOLA @anno,@ente";
+
+		try
+		{
+			cdf.Execute(strSql, ApplicationCommon.Application.ConnectionString, parCollection:sqlParams);
+		}
+		catch (Exception ex)
+		{
+			throw new Exception("Errore durante l'esecuzione della Stored.");
+			//ShowError("Errore durante l'esecuzione della Stored.");
+		}
+	}
+}@Html.Raw(htmlToReturn.Out())

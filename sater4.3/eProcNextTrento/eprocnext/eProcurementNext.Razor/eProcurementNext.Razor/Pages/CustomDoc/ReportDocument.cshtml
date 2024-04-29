@@ -1,0 +1,46 @@
+﻿@page "/CustomDoc/ReportDocument.asp"
+@inject eProcurementNext.Session.ISession session;
+@using eProcurementNext.CommonDB;
+@using eProcurementNext.CommonModule;
+@using static eProcurementNext.CommonModule.Basic;
+@using eProcurementNext.BizDB;
+@using eProcurementNext.HTML;
+@using eProcurementNext.Application;
+@using static eProcurementNext.Razor.Pages.CustomDoc.ReportDocumentModel;
+@using Microsoft.VisualBasic;
+@model eProcurementNext.Razor.Pages.CustomDoc.ReportDocumentModel
+@using static eProcurementNext.Session.SessionMiddleware
+@{
+	CommonDbFunctions cdf = new();
+	LoadSession(HttpContext, session);
+	EprocResponse htmlToReturn = new();
+}
+@{
+	TSRecordSet? rs = null;
+	bool b = false;
+
+	string strDoc = GetParamURL(Request.QueryString.ToString(), "IDDOC").Replace("_", "/");
+	var SqlParameters = new Dictionary<string, object?>();
+	SqlParameters.Add("@strDoc", strDoc);
+	rs = cdf.GetRSReadFromQuery_("select IdRow from dbo.Document_Progetti as a inner join Document_Progetti_Lotti as b on a.IdProgetto = b.IdProgetto where ProtocolloBando = @strDoc and Storico = 0", ApplicationCommon.Application.ConnectionString, SqlParameters);
+	if (rs is not null)
+	{
+		if(rs.RecordCount >0)
+		{
+			b = true;
+			throw new ResponseRedirectException("../ctl_library/document/document.asp?" + GetQueryStringFromContext(Request.QueryString).Replace("IDDOC=" + GetParamURL(Request.QueryString.ToString(), "IDDOC"), "IDDOC=" + CInt(rs["IdRow"]!)), Response);
+		}
+	}
+	if(!b)
+	{
+		htmlToReturn.Write($@"
+		<script src=""../CTL_Library/jscript/ExecFunction.js"" ></script>
+		<script src=""../CTL_Library/jscript/document/document.js"" ></script>
+
+		<script>
+			DMessageBox( '../CTL_Library/' , 'Documento non presente in archivio' , 'Attenzione' , 2 , 400 , 300 );
+			self.close();
+		</script>");
+	}
+}
+@Html.Raw(htmlToReturn.Out())
