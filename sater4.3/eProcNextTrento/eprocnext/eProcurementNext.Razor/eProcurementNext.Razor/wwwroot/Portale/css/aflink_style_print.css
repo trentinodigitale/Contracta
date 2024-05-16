@@ -1,9 +1,0 @@
-#header, #breadcrumbs, #nav, #table-function, div#div-feed-rss, div#paginazione, h2{ display:none;}
-h3.aflink_link_suggerimenti, #vertical_slide{ display:none;}
-td.bottone.large.active{ font-weight:bold; text-transform:uppercase; font-size:16px; color:#000;}
-td.bottone.large.pink{ display:none;}
-table.button.bar, table.button.bar th, table.button.bar td, table.button.bar tr{ border:none; color:#000;}
-table.button.bar td a{ color:#000;}
-#table-lista-bandi th, #table-lista-bandi td{ color:#000; border:1px solid #000;}
-#template_doc th{ border:1px solid #000;}
-#template_doc td{ margi:5px;}

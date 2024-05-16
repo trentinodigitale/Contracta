@@ -1,9 +1,0 @@
-﻿@page
-@using System.Web;
-@using eProcurementNext.CommonModule;
-@using static eProcurementNext.Session.SessionMiddleware;
-@model eProcurementNext.Razor.Pages.HOME.IndexModel
-@inject eProcurementNext.Application.IEprocNextApplication application;
-@{
-	throw new ResponseRedirectException($"{DefaultHomePage}", Response);
-}
